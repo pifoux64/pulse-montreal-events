@@ -30,10 +30,16 @@ const mockCategories: EventCategory[] = [
     icon: '🎵',
     color: '#e74c3c',
     subCategories: [
-      { id: '1-1', name: 'Reggae', nameEn: 'Reggae', categoryId: '1' },
-      { id: '1-2', name: 'Jazz', nameEn: 'Jazz', categoryId: '1' },
-      { id: '1-3', name: 'Rock', nameEn: 'Rock', categoryId: '1' },
-      { id: '1-4', name: 'Électronique', nameEn: 'Electronic', categoryId: '1' },
+      { id: '1-1', name: 'reggae', nameEn: 'Reggae', categoryId: '1' },
+      { id: '1-2', name: 'jazz', nameEn: 'Jazz', categoryId: '1' },
+      { id: '1-3', name: 'rock', nameEn: 'Rock', categoryId: '1' },
+      { id: '1-4', name: 'electronic', nameEn: 'Electronic', categoryId: '1' },
+      { id: '1-5', name: 'pop', nameEn: 'Pop', categoryId: '1' },
+      { id: '1-6', name: 'hip-hop', nameEn: 'Hip-Hop', categoryId: '1' },
+      { id: '1-7', name: 'classical', nameEn: 'Classical', categoryId: '1' },
+      { id: '1-8', name: 'folk', nameEn: 'Folk', categoryId: '1' },
+      { id: '1-9', name: 'alternative', nameEn: 'Alternative', categoryId: '1' },
+      { id: '1-10', name: 'indie', nameEn: 'Indie', categoryId: '1' },
     ]
   },
   {
@@ -246,8 +252,12 @@ export default function CartePage() {
             },
             category: event.category === 'music' ? 'Musique' : 
                      event.category === 'arts & theatre' ? 'Art & Culture' :
-                     event.category === 'sports' ? 'Sport' : 'Autre',
-            subCategory: event.subcategory || '',
+                     event.category === 'sports' ? 'Sport' :
+                     event.category === 'family' ? 'Famille' :
+                     event.category === 'community' ? 'Art & Culture' :
+                     event.category === 'education' ? 'Famille' :
+                     event.category === 'miscellaneous' ? 'Autre' : 'Musique',
+            subCategory: event.tags && event.tags.length > 0 ? event.tags[0] : '',
             tags: event.tags || [],
             price: { 
               amount: event.priceMin || 0, 

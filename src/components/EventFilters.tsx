@@ -30,18 +30,21 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
   };
 
   const handleCategoryChange = (categoryId: string, isChecked: boolean) => {
+    const category = categories.find(cat => cat.id === categoryId);
+    const categoryName = category?.name || categoryId;
+    
     const currentCategories = localFilters.categories || [];
     const newCategories = isChecked
-      ? [...currentCategories, categoryId]
-      : currentCategories.filter(id => id !== categoryId);
+      ? [...currentCategories, categoryName]
+      : currentCategories.filter(name => name !== categoryName);
     handleFilterChange('categories', newCategories);
   };
 
-  const handleSubCategoryChange = (subCategoryId: string, isChecked: boolean) => {
+  const handleSubCategoryChange = (subCategoryName: string, isChecked: boolean) => {
     const currentSubCategories = localFilters.subCategories || [];
     const newSubCategories = isChecked
-      ? [...currentSubCategories, subCategoryId]
-      : currentSubCategories.filter(id => id !== subCategoryId);
+      ? [...currentSubCategories, subCategoryName]
+      : currentSubCategories.filter(name => name !== subCategoryName);
     handleFilterChange('subCategories', newSubCategories);
   };
 
@@ -139,7 +142,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
                 <input
                   type="checkbox"
                   checked={localFilters.categories?.includes(category.name) || false}
-                  onChange={(e) => handleCategoryChange(category.name, e.target.checked)}
+                  onChange={(e) => handleCategoryChange(category.id, e.target.checked)}
                   className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                 />
                 <span className="text-xs text-gray-700">{category.name}</span>
@@ -154,14 +157,14 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
             <h4 className="font-medium text-gray-900 mb-3">Sous-catégories</h4>
             <div className="grid grid-cols-2 gap-2">
               {categories
-                .filter(cat => localFilters.categories?.includes(cat.id))
+                .filter(cat => localFilters.categories?.includes(cat.name))
                 .flatMap(cat => cat.subCategories)
                 .map((subCat) => (
                   <label key={subCat.id} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
-                      checked={localFilters.subCategories?.includes(subCat.id) || false}
-                      onChange={(e) => handleSubCategoryChange(subCat.id, e.target.checked)}
+                      checked={localFilters.subCategories?.includes(subCat.name) || false}
+                      onChange={(e) => handleSubCategoryChange(subCat.name, e.target.checked)}
                       className="rounded border-gray-300 text-pulse-primary focus:ring-pulse-primary"
                     />
                     <span className="text-sm text-gray-700">{subCat.name}</span>
