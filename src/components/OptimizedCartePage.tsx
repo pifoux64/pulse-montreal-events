@@ -23,8 +23,8 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 };
 
-// Import dynamique de la carte simple pour éviter les erreurs SSR
-const SimpleEventMap = dynamic(() => import('@/components/SimpleEventMap'), {
+// Import dynamique de la carte stable pour éviter les erreurs SSR
+const StableEventMap = dynamic(() => import('@/components/StableEventMap'), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full bg-gray-100 rounded-lg flex items-center justify-center">
@@ -277,8 +277,8 @@ export default function OptimizedCartePage() {
               )}
             </div>
 
-            {/* Carte avec cache optimisé */}
-            <SimpleEventMap
+            {/* Carte stable sans bugs */}
+            <StableEventMap
               events={filteredEvents}
               center={mapViewState.center}
               zoom={mapViewState.zoom}
