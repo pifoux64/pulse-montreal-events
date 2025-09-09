@@ -35,13 +35,13 @@ export default function RootLayout({
       <body className="font-poppins antialiased" suppressHydrationWarning>
         {process.env.NODE_ENV === 'development' && <DevErrorSuppressor />}
         <ExtensionCleaner />
-        <QueryProvider>
-          <ErrorBoundary>
+        <ErrorBoundary>
+          <QueryProvider>
             <ClientLayout>
               {children}
             </ClientLayout>
-          </ErrorBoundary>
-        </QueryProvider>
+          </QueryProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
