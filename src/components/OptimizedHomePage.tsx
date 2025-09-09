@@ -162,7 +162,7 @@ export default function OptimizedHomePage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             {/* Logo et titre avec animation */}
-            <div className="inline-flex items-center space-x-4 mb-8">
+            {/* <div className="inline-flex items-center space-x-4 mb-8">
               <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-2xl">
                 <Sparkles className="w-10 h-10 text-white animate-pulse" />
               </div>
@@ -171,8 +171,8 @@ export default function OptimizedHomePage() {
                   Pulse
                 </h1>
                 <p className="text-xl text-white/90 font-medium">Montréal</p>
-              </div>
-            </div>
+              </div> 
+            </div>*/}
 
             <h2 className="text-2xl md:text-4xl font-bold text-white mb-6 leading-tight">
               Découvrez les événements qui font vibrer
@@ -183,7 +183,7 @@ export default function OptimizedHomePage() {
             
             <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
               Plus de <span className="font-bold">{events.length}</span> événements en temps réel. 
-              Concerts, festivals, expositions, sports - tout ce qui compte à Montréal.
+              Concerts, festivals, expositions, sports
             </p>
 
             {/* Barre de recherche moderne */}
