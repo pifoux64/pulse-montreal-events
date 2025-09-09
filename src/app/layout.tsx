@@ -1,6 +1,7 @@
 import { Poppins } from 'next/font/google';
 import type { Metadata } from 'next';
 import './globals.css';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import ClientLayout from '@/components/ClientLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ExtensionCleaner from '@/components/ExtensionCleaner';

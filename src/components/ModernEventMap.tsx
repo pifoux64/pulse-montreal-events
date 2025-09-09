@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import Map, { Marker, Popup, NavigationControl, GeolocateControl, ScaleControl } from 'react-map-gl/maplibre';
+import Map, { Marker, Popup, NavigationControl, GeolocateControl, ScaleControl } from 'react-map-gl';
 import { Event, MapViewState } from '@/types';
 import { MapPin, Calendar, DollarSign, Users, Clock } from 'lucide-react';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -179,6 +179,7 @@ const ModernEventMap = ({
         {...viewState}
         onMove={handleMapMove}
         mapStyle={MAP_STYLE}
+        mapLib={import('maplibre-gl')}
         style={{ width: '100%', height: '100%' }}
         attributionControl={false}
         logoPosition="bottom-left"
