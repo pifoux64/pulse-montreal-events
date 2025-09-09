@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Event, EventFilter, EventCategory, MapViewState } from '@/types';
 import { useEvents, useFilteredEvents } from '@/hooks/useEvents';
@@ -124,6 +124,13 @@ export default function OptimizedCartePage() {
   const [locationName, setLocationName] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Stabiliser les dépendances avec useMemo
+  const stableFilters = useMemo(() => JSON.stringify(filters), [filters]);
+  const stableUserLocation = useMemo(() => 
+    userLocation ? `${userLocation[0]},${userLocation[1]}` : null, 
+    [userLocation]
+  );
+
   // Appliquer les filtres
   useEffect(() => {
     let filtered = [...events];
@@ -167,7 +174,7 @@ export default function OptimizedCartePage() {
     }
 
     setFilteredEvents(filtered);
-  }, [events, filters, userLocation]);
+  }, [events, stableFilters, stableUserLocation, filters, userLocation]);
 
   // Gestionnaires d'événements stables
   const handleFiltersChange = useCallback((newFilters: EventFilter) => {
@@ -180,11 +187,8 @@ export default function OptimizedCartePage() {
         (position) => {
           const location: [number, number] = [position.coords.latitude, position.coords.longitude];
           setUserLocation(location);
-          setMapViewState(prev => ({
-            ...prev,
-            center: location,
-            zoom: 14
-          }));
+          // Ne pas changer mapViewState pour éviter les re-renders
+          // La carte se centrera automatiquement via StableEventMap
         },
         (error) => {
           console.error('Erreur de géolocalisation:', error);
@@ -213,7 +217,8 @@ export default function OptimizedCartePage() {
   }, []);
 
   const handleMapViewChange = useCallback((viewState: MapViewState) => {
-    setMapViewState(viewState);
+    // Ne pas mettre à jour mapViewState pour éviter les boucles infinies
+    // La carte gère sa propre vue interne
   }, []);
 
   return (
@@ -277,8 +282,8 @@ export default function OptimizedCartePage() {
             {/* Carte stable sans bugs */}
             <StableEventMap
               events={filteredEvents}
-              center={mapViewState.center}
-              zoom={mapViewState.zoom}
+              center={[45.5017, -73.5673]} // Centre fixe de Montréal
+              zoom={12} // Zoom initial fixe
               onEventClick={handleEventClick}
               onLocationClick={handleLocationClick}
               onMapViewChange={handleMapViewChange}
