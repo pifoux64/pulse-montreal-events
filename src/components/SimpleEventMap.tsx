@@ -33,23 +33,29 @@ const SimpleEventMap = ({
   // Debug: afficher le nombre d'événements reçus
   console.log('SimpleEventMap reçoit:', events.length, 'événements');
 
-  // Couleurs pour les marqueurs
+  // Couleurs pour les marqueurs - MAPPÉES SELON LES VRAIES CATÉGORIES API
   const categoryColors: Record<string, string> = {
+    // Catégories principales de l'API
+    'music': '#E11D48',           // Rouge pour musique (266 événements)
+    'sports': '#2563EB',          // Bleu pour sports (140 événements)
+    'sport': '#2563EB',           // Bleu pour sport (variante)
+    'arts & theatre': '#059669',  // Vert pour arts & théâtre (28 événements)
+    'art & culture': '#059669',   // Vert pour art & culture (variante)
+    'community': '#D97706',       // Orange pour community (17 événements)
+    'miscellaneous': '#9333ea',   // Violet pour miscellaneous (52 événements)
+    'education': '#f59e0b',       // Jaune pour education
+    'gastronomie': '#C026D3',     // Magenta pour gastronomie
+    'famille': '#DC2626',         // Rouge foncé pour famille
+    'family': '#DC2626',          // Rouge foncé pour family
+    
+    // Fallbacks français
     'musique': '#E11D48',
-    'music': '#E11D48',
-    'art & culture': '#059669',
-    'arts & theatre': '#059669',
-    'sport': '#2563EB',
-    'sports': '#2563EB',
-    'famille': '#DC2626',
-    'family': '#DC2626',
     'culture': '#D97706',
-    'community': '#D97706',
-    'gastronomie': '#C026D3',
-    'food': '#C026D3',
     'autre': '#6b7280',
-    'other': '#6b7280',
-    'default': '#7C3AED'
+    'food': '#C026D3',
+    
+    // Défaut
+    'default': '#6b7280'
   };
 
   // Grouper les événements par lieu
@@ -103,6 +109,9 @@ const SimpleEventMap = ({
       try {
         // Import dynamique de MapLibre GL
         const maplibregl = await import('maplibre-gl');
+        
+        // Rendre MapLibre disponible globalement pour les autres useEffect
+        (window as any).maplibregl = maplibregl;
         
         if (!mapRef.current || mapInstanceRef.current) return;
 
@@ -297,12 +306,14 @@ const SimpleEventMap = ({
       const primaryColor = categoryColors[category] || categoryColors.default;
       
       // Debug: afficher les catégories pour le débogage
-      if (index < 5) {
-        console.log(`Événement ${index}:`, {
+      if (index < 10) {
+        console.log(`🎨 Pin ${index}:`, {
           title: firstEvent.title,
           category: firstEvent.category,
           categoryLower: category,
-          color: primaryColor
+          color: primaryColor,
+          eventCount: eventCount,
+          availableColors: Object.keys(categoryColors)
         });
       }
 
@@ -341,7 +352,13 @@ const SimpleEventMap = ({
       const lat = firstEvent.location?.coordinates?.lat || (firstEvent as any).lat || 45.5088;
       const lng = firstEvent.location?.coordinates?.lng || (firstEvent as any).lon || -73.5542;
       
-      const maplibregl = (window as any).maplibregl || require('maplibre-gl');
+      // Utiliser l'import MapLibre depuis l'instance de la carte
+      const maplibregl = (window as any).maplibregl;
+      if (!maplibregl) {
+        console.error('MapLibre GL non disponible');
+        return;
+      }
+      
       const marker = new maplibregl.Marker(markerElement)
         .setLngLat([lng, lat])
         .addTo(map);
