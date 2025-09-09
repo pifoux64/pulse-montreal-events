@@ -38,6 +38,7 @@
     "dotenv": "^17.2.2",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.539.0",
+    "mapbox-gl": "^3.14.0",
     "maplibre-gl": "^5.7.1",
     "next": "15.4.6",
     "next-auth": "^4.24.10",
