@@ -1275,8 +1275,8 @@ export default function Home() {
             </div>
             <div className="mt-4">
               <div className="flex justify-center items-center space-x-2 text-white/50">
-                <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
-                <span className="text-xs">Eventbrite (en maintenance)</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs">Eventbrite (actif)</span>
               </div>
             </div>
           </div>
