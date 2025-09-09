@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Event, MapViewState } from '@/types';
 
 interface StableEventMapProps {
@@ -49,8 +49,8 @@ const StableEventMap = ({
     'default': '#6b7280'          // Couleur par défaut
   } as const;
 
-  // Fonction pour nettoyer tous les marqueurs
-  const clearAllMarkers = () => {
+  // Fonction stable pour nettoyer tous les marqueurs
+  const clearAllMarkers = useCallback(() => {
     console.log('🧹 Nettoyage de', markersRef.current.length, 'marqueurs');
     markersRef.current.forEach(marker => {
       if (marker && typeof marker.remove === 'function') {
@@ -58,10 +58,10 @@ const StableEventMap = ({
       }
     });
     markersRef.current = [];
-  };
+  }, []); // Fonction stable
 
-  // Fonction pour grouper les événements par lieu
-  const groupEventsByLocation = (events: Event[]) => {
+  // Fonction stable pour grouper les événements par lieu
+  const groupEventsByLocation = useCallback((events: Event[]) => {
     const groups = new Map<string, Event[]>();
     
     events.forEach(event => {
@@ -81,10 +81,10 @@ const StableEventMap = ({
     });
     
     return Array.from(groups.values());
-  };
+  }, []); // Fonction stable
 
-  // Fonction pour créer les marqueurs
-  const createMarkers = async (mapInstance: any, eventGroups: Event[][]) => {
+  // Fonction stable pour créer les marqueurs
+  const createMarkers = useCallback(async (mapInstance: any, eventGroups: Event[][]) => {
     console.log('📍 Création de', eventGroups.length, 'groupes de marqueurs');
     
     // Nettoyer les anciens marqueurs d'abord
@@ -166,10 +166,10 @@ const StableEventMap = ({
         console.log('🖱️ Clic sur marqueur:', firstEvent.title, 'événements:', eventCount);
         
         if (eventCount === 1) {
-          onEventClick(firstEvent);
-        } else if (onLocationClick) {
+          onEventClickRef.current(firstEvent);
+        } else if (onLocationClickRef.current) {
           const locationName = firstEvent.location?.name || (firstEvent as any).venue?.name || 'Lieu inconnu';
-          onLocationClick(locationEvents, locationName);
+          onLocationClickRef.current(locationEvents, locationName);
         }
       });
 
@@ -183,7 +183,7 @@ const StableEventMap = ({
     });
 
     console.log('✅ Marqueurs créés:', markersRef.current.length);
-  };
+  }, [clearAllMarkers]); // Dépendances du useCallback
 
   // Initialisation de la carte (une seule fois)
   useEffect(() => {
@@ -283,9 +283,26 @@ const StableEventMap = ({
     };
   }, []); // Seulement à l'initialisation
 
-  // Mise à jour des marqueurs quand les événements changent
+  // Références stables pour les callbacks
+  const onEventClickRef = useRef(onEventClick);
+  const onLocationClickRef = useRef(onLocationClick);
+  
+  // Mettre à jour les références quand les props changent
+  useEffect(() => {
+    onEventClickRef.current = onEventClick;
+    onLocationClickRef.current = onLocationClick;
+  }, [onEventClick, onLocationClick]);
+
+  // Mise à jour des marqueurs quand les événements changent (STABLE)
   useEffect(() => {
     if (!isMapReady || !mapInstanceRef.current || !events || events.length === 0) {
+      return;
+    }
+
+    // Éviter les re-renders inutiles
+    const currentMarkersCount = markersRef.current.length;
+    if (currentMarkersCount > 0 && events.length === 0) {
+      console.log('🔄 Événements vides, pas de mise à jour');
       return;
     }
 
@@ -294,7 +311,7 @@ const StableEventMap = ({
     const eventGroups = groupEventsByLocation(events);
     createMarkers(mapInstanceRef.current, eventGroups);
     
-  }, [events, isMapReady, onEventClick, onLocationClick]);
+  }, [events, isMapReady, groupEventsByLocation, createMarkers]); // Fonctions stables incluses
 
   // Mise à jour de la vue de la carte
   useEffect(() => {
