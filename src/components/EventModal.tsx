@@ -18,11 +18,14 @@ import {
   Navigation,
   Phone,
   Mail,
-  Globe
+  Globe,
+  User,
+  ArrowRight
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { generateMusicTags, getGenreEmoji, getGenreColor } from '@/lib/musicTags';
+import Link from 'next/link';
 
 interface EventModalProps {
   event: Event | null;
@@ -428,17 +431,32 @@ const EventModal = ({
             {event.organizer && (
               <div className="border-t border-gray-200 pt-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">Organisateur</h2>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">
-                      {event.organizer.name.charAt(0).toUpperCase()}
-                    </span>
+                <Link
+                  href={`/organisateur/${event.organizerId}`}
+                  className="group glass-effect hover-lift p-4 rounded-2xl border border-white/20 block transition-all duration-300 hover:shadow-lg"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <span className="text-white font-bold text-lg">
+                          {event.organizer.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900 group-hover:text-violet-600 transition-colors duration-300">
+                          {event.organizer.name}
+                        </h3>
+                        <p className="text-gray-600 text-sm capitalize">
+                          {event.organizer.role} • Voir tous ses événements
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2 text-gray-400 group-hover:text-violet-500 transition-colors duration-300">
+                      <User className="w-4 h-4" />
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{event.organizer.name}</h3>
-                    <p className="text-gray-600 text-sm capitalize">{event.organizer.role}</p>
-                  </div>
-                </div>
+                </Link>
               </div>
             )}
           </div>

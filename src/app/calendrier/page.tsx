@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Event, EventFilter, EventCategory } from '@/types';
 import { useEvents } from '@/hooks/useEvents';
+import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
@@ -79,6 +80,10 @@ const mockCategories: EventCategory[] = [
 export default function CalendrierPage() {
   // Utilisation de l'API réelle comme sur la carte
   const { data: events = [], isLoading, error } = useEvents();
+  
+  // Système de favoris
+  const { isFavorite, toggleFavorite } = useFavorites(events);
+  
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [filters, setFilters] = useState<EventFilter>({});
   const [showFilters, setShowFilters] = useState(true);
@@ -212,7 +217,7 @@ export default function CalendrierPage() {
   }, [selectedDate, eventsByDay]);
 
   const handleFavoriteToggle = (eventId: string) => {
-    // TODO: Implémenter la logique des favoris
+    toggleFavorite(eventId);
     console.log('Toggle favori pour l\'événement:', eventId);
   };
 
@@ -263,7 +268,7 @@ export default function CalendrierPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             <span className="ml-3 text-gray-600">Chargement des événements...</span>
@@ -278,7 +283,7 @@ export default function CalendrierPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
           <div className="text-center py-12">
             <div className="text-red-600 mb-4">
               <Calendar className="w-16 h-16 mx-auto mb-4" />
@@ -295,7 +300,7 @@ export default function CalendrierPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête de la page */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
@@ -534,9 +539,13 @@ export default function CalendrierPage() {
                                 e.stopPropagation();
                                 handleFavoriteToggle(event.id);
                               }}
-                              className="p-2 text-gray-400 hover:text-red-500 transition-colors duration-200"
+                              className={`p-2 transition-colors duration-200 ${
+                                isFavorite(event.id) 
+                                  ? 'text-red-500' 
+                                  : 'text-gray-400 hover:text-red-500'
+                              }`}
                             >
-                              <Heart className="w-4 h-4" />
+                              <Heart className={`w-4 h-4 ${isFavorite(event.id) ? 'fill-current' : ''}`} />
                             </button>
                             
                             <span className={`px-2 py-1 text-xs rounded-full ${getCategoryColor(event.category)}`}>
@@ -565,7 +574,7 @@ export default function CalendrierPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onFavoriteToggle={handleFavoriteToggle}
-        isFavorite={false}
+        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
       />
     </div>
   );

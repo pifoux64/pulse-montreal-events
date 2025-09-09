@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Event, EventFilter, EventCategory, MapViewState } from '@/types';
 import { useEvents, useFilteredEvents } from '@/hooks/useEvents';
+import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
@@ -110,6 +111,9 @@ const mockCategories: EventCategory[] = [
 export default function OptimizedCartePage() {
   // Utilisation du hook React Query optimisé
   const { data: events = [], isLoading: loading, error } = useEvents();
+  
+  // Système de favoris
+  const { isFavorite, toggleFavorite } = useFavorites(events);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [filters, setFilters] = useState<EventFilter>({});
   const [mapViewState, setMapViewState] = useState<MapViewState>({
@@ -159,11 +163,22 @@ export default function OptimizedCartePage() {
 
     // ===== FILTRE PAR SOUS-CATÉGORIE =====
     if (filters.subCategories && filters.subCategories.length > 0) {
-      filtered = filtered.filter(event => 
-        filters.subCategories!.some(subCat => 
-          event.tags.includes(subCat) || event.subCategory === subCat
-        )
-      );
+      filtered = filtered.filter(event => {
+        // Vérifier si l'événement a une sous-catégorie qui correspond
+        const eventSubCategory = event.subCategory || (event as any).subcategory;
+        if (eventSubCategory) {
+          return filters.subCategories!.some(subCat => 
+            eventSubCategory.toLowerCase() === subCat.toLowerCase()
+          );
+        }
+        
+        // Si pas de sous-catégorie exacte, chercher dans les tags et la description
+        return filters.subCategories!.some(subCat => 
+          event.tags?.some(tag => tag.toLowerCase().includes(subCat.toLowerCase())) ||
+          event.description.toLowerCase().includes(subCat.toLowerCase()) ||
+          event.title.toLowerCase().includes(subCat.toLowerCase())
+        );
+      });
     }
 
     // ===== FILTRE PAR PRIX (ÉVÉNEMENTS GRATUITS) =====
@@ -318,8 +333,9 @@ export default function OptimizedCartePage() {
   }, []);
 
   const handleFavoriteToggle = useCallback((eventId: string) => {
+    toggleFavorite(eventId);
     console.log('Toggle favori pour l\'événement:', eventId);
-  }, []);
+  }, [toggleFavorite]);
 
   const handleEventClick = useCallback((event: Event) => {
     setSelectedEvent(event);
@@ -344,7 +360,7 @@ export default function OptimizedCartePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main className="h-[calc(100vh-4rem)]">
+      <main className="h-[calc(100vh-5rem)] mt-20">
         <div className="flex h-full">
           {/* Panneau des filtres */}
           <div className={`${showFilters ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 overflow-hidden flex flex-col`}>
@@ -381,6 +397,8 @@ export default function OptimizedCartePage() {
                   <span>Filtres</span>
                 </button>
               )}
+              
+              {showFilters && <div></div>}
               
               {loading && (
                 <div className="p-2 bg-white rounded-lg shadow-md flex items-center space-x-2">
@@ -477,6 +495,7 @@ export default function OptimizedCartePage() {
                         event={event}
                         onFavoriteToggle={handleFavoriteToggle}
                         onEventClick={handleEventClick}
+                        isFavorite={isFavorite(event.id)}
                         showImage={false}
                       />
                     ))}
@@ -502,7 +521,7 @@ export default function OptimizedCartePage() {
           setSelectedEvent(null);
         }}
         onFavoriteToggle={handleFavoriteToggle}
-        isFavorite={false} // TODO: Implémenter la logique des favoris
+        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
       />
     </div>
   );

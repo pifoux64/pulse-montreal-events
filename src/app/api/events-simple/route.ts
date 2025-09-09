@@ -800,7 +800,9 @@ export async function GET(request: NextRequest) {
               category: event.classifications?.[0]?.segment?.name?.toLowerCase().includes('music') ? 'music' : 
                        event.classifications?.[0]?.segment?.name?.toLowerCase().includes('theatre') || 
                        event.classifications?.[0]?.segment?.name?.toLowerCase().includes('arts') ? 'art & culture' : 'culture',
-              subcategory: event.classifications?.[0]?.genre?.name || 'Festival',
+              subcategory: event.classifications?.[0]?.genre?.name === 'Danse' ? 'Danse' :
+                       event.classifications?.[0]?.genre?.name === 'Littérature' ? 'Littérature' : 
+                       event.classifications?.[0]?.genre?.name === 'Francophone' ? 'Pop' : 'Festival',
               tags: generateMusicTags({
                 title: event.name,
                 description: event.description,
@@ -846,7 +848,9 @@ export async function GET(request: NextRequest) {
               imageUrl: event.images?.[0]?.url || 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=400&h=300&fit=crop',
               category: event.classifications?.[0]?.segment?.name?.toLowerCase().includes('food') ? 'gastronomie' : 
                        event.classifications?.[0]?.segment?.name?.toLowerCase().includes('community') ? 'community' : 'culture',
-              subcategory: event.classifications?.[0]?.genre?.name || 'Tourisme',
+              subcategory: event.classifications?.[0]?.genre?.name === 'Tourisme' ? 'Visite guidée' :
+                       event.classifications?.[0]?.genre?.name === 'Marché' ? 'Marché' :
+                       event.classifications?.[0]?.genre?.name === 'Patrimoine' ? 'Visite guidée' : 'Tourisme',
               tags: generateMusicTags({
                 title: event.name,
                 description: event.description,
@@ -896,7 +900,14 @@ export async function GET(request: NextRequest) {
                        event.classifications?.[0]?.segment?.name?.toLowerCase() === 'music' ? 'music' :
                        event.classifications?.[0]?.segment?.name?.toLowerCase() === 'arts & theatre' ? 'art & culture' :
                        event.classifications?.[0]?.segment?.name?.toLowerCase() === 'sports' ? 'sport' : 'autre',
-              subcategory: event.classifications?.[0]?.genre?.name?.toLowerCase() || 'communautaire',
+              subcategory: event.classifications?.[0]?.genre?.name === 'Festival' ? 'Festival' :
+                       event.classifications?.[0]?.genre?.name === 'Karaoke' ? 'Karaoke' :
+                       event.classifications?.[0]?.genre?.name === 'Workshop' ? 'Cours de cuisine' :
+                       event.classifications?.[0]?.genre?.name === 'Poker' ? 'Jeux' :
+                       event.classifications?.[0]?.genre?.name === 'Yoga' ? 'Yoga' :
+                       event.classifications?.[0]?.genre?.name === 'Open Mic' ? 'Performance' :
+                       event.classifications?.[0]?.genre?.name === 'Sale' ? 'Marché' :
+                       event.classifications?.[0]?.genre?.name === 'Tasting' ? 'Dégustation' : 'Activités communautaires',
               tags: generateMusicTags({
                 title: event.name,
                 description: event.description,
@@ -943,7 +954,10 @@ export async function GET(request: NextRequest) {
                    event.category_id === '105' ? 'arts & theatre' :
                    event.category_id === '108' ? 'sports' :
                    event.category_id === '115' ? 'family' : 'miscellaneous',
-          subcategory: event.subcategory?.name || '',
+          subcategory: event.subcategory?.name || 
+                   (event.category_id === '103' ? 'Jazz' : 
+                    event.category_id === '105' ? 'Exposition' : 
+                    event.category_id === '110' ? 'Cours de cuisine' : 'Autre'),
           tags: generateMusicTags({
             title: event.name?.text || '',
             description: event.description?.text || '',
@@ -980,7 +994,30 @@ export async function GET(request: NextRequest) {
           url: event.url,
           imageUrl: event.images?.[0]?.url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
           category: event.classifications?.[0]?.segment?.name?.toLowerCase() || 'music',
-          subcategory: event.classifications?.[0]?.genre?.name?.toLowerCase() || '',
+          subcategory: event.classifications?.[0]?.genre?.name?.toLowerCase() === 'rock' ? 'Rock' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'pop' ? 'Pop' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'jazz' ? 'Jazz' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'electronic' ? 'Électronique' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'hip-hop' ? 'Hip-Hop' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'classical' ? 'Classique' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'folk' ? 'Folk' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'metal' ? 'Métal' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'country' ? 'Country' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'blues' ? 'Blues' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'reggae' ? 'Reggae' :
+                   event.classifications?.[0]?.genre?.name?.toLowerCase() === 'indie' ? 'Indie' :
+                   event.classifications?.[0]?.segment?.name?.toLowerCase() === 'sports' ? 
+                     (event.classifications?.[0]?.genre?.name?.toLowerCase().includes('hockey') ? 'Hockey' :
+                      event.classifications?.[0]?.genre?.name?.toLowerCase().includes('football') ? 'Football' :
+                      event.classifications?.[0]?.genre?.name?.toLowerCase().includes('basketball') ? 'Basketball' :
+                      event.classifications?.[0]?.genre?.name?.toLowerCase().includes('baseball') ? 'Baseball' :
+                      event.classifications?.[0]?.genre?.name?.toLowerCase().includes('tennis') ? 'Tennis' : 'Sport') :
+                   event.classifications?.[0]?.segment?.name?.toLowerCase().includes('arts') || event.classifications?.[0]?.segment?.name?.toLowerCase().includes('theatre') ?
+                     (event.classifications?.[0]?.genre?.name?.toLowerCase().includes('theatre') ? 'Théâtre' :
+                      event.classifications?.[0]?.genre?.name?.toLowerCase().includes('dance') ? 'Danse' :
+                      event.classifications?.[0]?.genre?.name?.toLowerCase().includes('opera') ? 'Opéra' :
+                      event.classifications?.[0]?.genre?.name?.toLowerCase().includes('comedy') ? 'Performance' : 'Exposition') :
+                   'Autre',
           tags: generateMusicTags({
             title: event.name,
             description: event.info || event.pleaseNote || '',

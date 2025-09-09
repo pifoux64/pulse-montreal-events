@@ -3,10 +3,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Event, EventFilter, EventCategory } from '@/types';
 import { useEvents, usePrefetchEvents, useFilteredEvents } from '@/hooks/useEvents';
+import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
 import EventModal from '@/components/EventModal';
+import ModernLoader from '@/components/ModernLoader';
 import { MapPin, List, Grid, Filter, Search, Calendar, Users, Star, TrendingUp, Clock, Sparkles, ArrowRight, Play, Zap, Globe, Heart, Award, Music, Palette, Trophy, Users2, Utensils } from 'lucide-react';
 
 // Données de test pour les catégories
@@ -18,10 +20,18 @@ const mockCategories: EventCategory[] = [
     icon: '🎵',
     color: '#ef4444',
     subCategories: [
-      { id: '1-1', name: 'Reggae', nameEn: 'Reggae', categoryId: '1' },
-      { id: '1-2', name: 'Jazz', nameEn: 'Jazz', categoryId: '1' },
-      { id: '1-3', name: 'Rock', nameEn: 'Rock', categoryId: '1' },
-      { id: '1-4', name: 'Électronique', nameEn: 'Electronic', categoryId: '1' },
+      { id: '1-1', name: 'Rock', nameEn: 'Rock', categoryId: '1' },
+      { id: '1-2', name: 'Pop', nameEn: 'Pop', categoryId: '1' },
+      { id: '1-3', name: 'Jazz', nameEn: 'Jazz', categoryId: '1' },
+      { id: '1-4', name: 'Blues', nameEn: 'Blues', categoryId: '1' },
+      { id: '1-5', name: 'Électronique', nameEn: 'Electronic', categoryId: '1' },
+      { id: '1-6', name: 'Hip-Hop', nameEn: 'Hip-Hop', categoryId: '1' },
+      { id: '1-7', name: 'Reggae', nameEn: 'Reggae', categoryId: '1' },
+      { id: '1-8', name: 'Classique', nameEn: 'Classical', categoryId: '1' },
+      { id: '1-9', name: 'Folk', nameEn: 'Folk', categoryId: '1' },
+      { id: '1-10', name: 'Indie', nameEn: 'Indie', categoryId: '1' },
+      { id: '1-11', name: 'Métal', nameEn: 'Metal', categoryId: '1' },
+      { id: '1-12', name: 'Country', nameEn: 'Country', categoryId: '1' },
     ]
   },
   {
@@ -34,6 +44,14 @@ const mockCategories: EventCategory[] = [
       { id: '2-1', name: 'Exposition', nameEn: 'Exhibition', categoryId: '2' },
       { id: '2-2', name: 'Théâtre', nameEn: 'Theater', categoryId: '2' },
       { id: '2-3', name: 'Cinéma', nameEn: 'Cinema', categoryId: '2' },
+      { id: '2-4', name: 'Danse', nameEn: 'Dance', categoryId: '2' },
+      { id: '2-5', name: 'Opéra', nameEn: 'Opera', categoryId: '2' },
+      { id: '2-6', name: 'Littérature', nameEn: 'Literature', categoryId: '2' },
+      { id: '2-7', name: 'Photographie', nameEn: 'Photography', categoryId: '2' },
+      { id: '2-8', name: 'Sculpture', nameEn: 'Sculpture', categoryId: '2' },
+      { id: '2-9', name: 'Peinture', nameEn: 'Painting', categoryId: '2' },
+      { id: '2-10', name: 'Performance', nameEn: 'Performance', categoryId: '2' },
+      { id: '2-11', name: 'Arts numériques', nameEn: 'Digital Arts', categoryId: '2' },
     ]
   },
   {
@@ -45,7 +63,16 @@ const mockCategories: EventCategory[] = [
     subCategories: [
       { id: '3-1', name: 'Football', nameEn: 'Soccer', categoryId: '3' },
       { id: '3-2', name: 'Basketball', nameEn: 'Basketball', categoryId: '3' },
-      { id: '3-3', name: 'Course', nameEn: 'Running', categoryId: '3' },
+      { id: '3-3', name: 'Hockey', nameEn: 'Hockey', categoryId: '3' },
+      { id: '3-4', name: 'Baseball', nameEn: 'Baseball', categoryId: '3' },
+      { id: '3-5', name: 'Tennis', nameEn: 'Tennis', categoryId: '3' },
+      { id: '3-6', name: 'Course', nameEn: 'Running', categoryId: '3' },
+      { id: '3-7', name: 'Cyclisme', nameEn: 'Cycling', categoryId: '3' },
+      { id: '3-8', name: 'Natation', nameEn: 'Swimming', categoryId: '3' },
+      { id: '3-9', name: 'Fitness', nameEn: 'Fitness', categoryId: '3' },
+      { id: '3-10', name: 'Yoga', nameEn: 'Yoga', categoryId: '3' },
+      { id: '3-11', name: 'Arts martiaux', nameEn: 'Martial Arts', categoryId: '3' },
+      { id: '3-12', name: 'Sports d\'hiver', nameEn: 'Winter Sports', categoryId: '3' },
     ]
   },
   {
@@ -58,6 +85,13 @@ const mockCategories: EventCategory[] = [
       { id: '4-1', name: 'Activités enfants', nameEn: 'Kids activities', categoryId: '4' },
       { id: '4-2', name: 'Parcs', nameEn: 'Parks', categoryId: '4' },
       { id: '4-3', name: 'Éducation', nameEn: 'Education', categoryId: '4' },
+      { id: '4-4', name: 'Ateliers créatifs', nameEn: 'Creative workshops', categoryId: '4' },
+      { id: '4-5', name: 'Spectacles enfants', nameEn: 'Kids shows', categoryId: '4' },
+      { id: '4-6', name: 'Jeux', nameEn: 'Games', categoryId: '4' },
+      { id: '4-7', name: 'Contes', nameEn: 'Storytelling', categoryId: '4' },
+      { id: '4-8', name: 'Activités plein air', nameEn: 'Outdoor activities', categoryId: '4' },
+      { id: '4-9', name: 'Musées pour enfants', nameEn: 'Children museums', categoryId: '4' },
+      { id: '4-10', name: 'Fêtes d\'anniversaire', nameEn: 'Birthday parties', categoryId: '4' },
     ]
   },
   {
@@ -70,6 +104,62 @@ const mockCategories: EventCategory[] = [
       { id: '5-1', name: 'Festival culinaire', nameEn: 'Food festival', categoryId: '5' },
       { id: '5-2', name: 'Dégustation', nameEn: 'Tasting', categoryId: '5' },
       { id: '5-3', name: 'Restaurant', nameEn: 'Restaurant', categoryId: '5' },
+      { id: '5-4', name: 'Cours de cuisine', nameEn: 'Cooking classes', categoryId: '5' },
+      { id: '5-5', name: 'Marché', nameEn: 'Market', categoryId: '5' },
+      { id: '5-6', name: 'Bar à vin', nameEn: 'Wine bar', categoryId: '5' },
+      { id: '5-7', name: 'Brasserie', nameEn: 'Brewery', categoryId: '5' },
+      { id: '5-8', name: 'Food truck', nameEn: 'Food truck', categoryId: '5' },
+      { id: '5-9', name: 'Brunch', nameEn: 'Brunch', categoryId: '5' },
+      { id: '5-10', name: 'Cocktails', nameEn: 'Cocktails', categoryId: '5' },
+      { id: '5-11', name: 'Café', nameEn: 'Coffee', categoryId: '5' },
+    ]
+  },
+  {
+    id: '6',
+    name: 'Technologie',
+    nameEn: 'Technology',
+    icon: '💻',
+    color: '#10b981',
+    subCategories: [
+      { id: '6-1', name: 'Conférence tech', nameEn: 'Tech conference', categoryId: '6' },
+      { id: '6-2', name: 'Hackathon', nameEn: 'Hackathon', categoryId: '6' },
+      { id: '6-3', name: 'Startup', nameEn: 'Startup', categoryId: '6' },
+      { id: '6-4', name: 'IA', nameEn: 'AI', categoryId: '6' },
+      { id: '6-5', name: 'Blockchain', nameEn: 'Blockchain', categoryId: '6' },
+      { id: '6-6', name: 'Développement', nameEn: 'Development', categoryId: '6' },
+      { id: '6-7', name: 'Design', nameEn: 'Design', categoryId: '6' },
+      { id: '6-8', name: 'Gaming', nameEn: 'Gaming', categoryId: '6' },
+    ]
+  },
+  {
+    id: '7',
+    name: 'Affaires',
+    nameEn: 'Business',
+    icon: '💼',
+    color: '#6366f1',
+    subCategories: [
+      { id: '7-1', name: 'Networking', nameEn: 'Networking', categoryId: '7' },
+      { id: '7-2', name: 'Formation', nameEn: 'Training', categoryId: '7' },
+      { id: '7-3', name: 'Conférence', nameEn: 'Conference', categoryId: '7' },
+      { id: '7-4', name: 'Entrepreneuriat', nameEn: 'Entrepreneurship', categoryId: '7' },
+      { id: '7-5', name: 'Finance', nameEn: 'Finance', categoryId: '7' },
+      { id: '7-6', name: 'Marketing', nameEn: 'Marketing', categoryId: '7' },
+      { id: '7-7', name: 'Leadership', nameEn: 'Leadership', categoryId: '7' },
+    ]
+  },
+  {
+    id: '8',
+    name: 'Bien-être',
+    nameEn: 'Wellness',
+    icon: '🧘',
+    color: '#f97316',
+    subCategories: [
+      { id: '8-1', name: 'Méditation', nameEn: 'Meditation', categoryId: '8' },
+      { id: '8-2', name: 'Spa', nameEn: 'Spa', categoryId: '8' },
+      { id: '8-3', name: 'Massage', nameEn: 'Massage', categoryId: '8' },
+      { id: '8-4', name: 'Thérapie', nameEn: 'Therapy', categoryId: '8' },
+      { id: '8-5', name: 'Nutrition', nameEn: 'Nutrition', categoryId: '8' },
+      { id: '8-6', name: 'Développement personnel', nameEn: 'Personal development', categoryId: '8' },
     ]
   }
 ];
@@ -96,6 +186,9 @@ export default function OptimizedHomePage() {
 
   // Utilisation du hook React Query pour charger tous les événements
   const { data: events = [], isLoading: loading, error } = useEvents();
+  
+  // Système de favoris
+  const { isFavorite, toggleFavorite } = useFavorites(events);
 
   // Filtrage des événements basé sur la recherche et les filtres
   const filteredEvents = useMemo(() => {
@@ -110,15 +203,45 @@ export default function OptimizedHomePage() {
         event.tags?.some(tag => tag.toLowerCase().includes(query)) ||
         event.location?.name?.toLowerCase().includes(query) ||
         (event as any).venue?.name?.toLowerCase().includes(query) ||
-        event.category.toLowerCase().includes(query)
+        event.category.toLowerCase().includes(query) ||
+        (event as any).subCategory?.toLowerCase().includes(query)
       );
     }
 
-    // Filtre par catégorie sélectionnée
+    // Filtre par catégories sélectionnées
+    if (filters.categories && filters.categories.length > 0) {
+      filtered = filtered.filter(event => 
+        filters.categories!.some(cat => 
+          event.category.toLowerCase() === cat.toLowerCase()
+        )
+      );
+    }
+
+    // Filtre par catégorie sélectionnée (pour compatibilité)
     if (selectedCategory) {
       filtered = filtered.filter(event => 
         event.category.toLowerCase() === selectedCategory.toLowerCase()
       );
+    }
+
+    // Filtre par sous-catégories sélectionnées
+    if (filters.subCategories && filters.subCategories.length > 0) {
+      filtered = filtered.filter(event => {
+        // Vérifier si l'événement a une sous-catégorie qui correspond
+        const eventSubCategory = (event as any).subCategory;
+        if (eventSubCategory) {
+          return filters.subCategories!.some(subCat => 
+            eventSubCategory.toLowerCase() === subCat.toLowerCase()
+          );
+        }
+        
+        // Si pas de sous-catégorie exacte, chercher dans les tags et la description
+        return filters.subCategories!.some(subCat => 
+          event.tags?.some(tag => tag.toLowerCase().includes(subCat.toLowerCase())) ||
+          event.description.toLowerCase().includes(subCat.toLowerCase()) ||
+          event.title.toLowerCase().includes(subCat.toLowerCase())
+        );
+      });
     }
 
     // Filtre par événements gratuits si activé
@@ -127,7 +250,7 @@ export default function OptimizedHomePage() {
     }
 
     return filtered;
-  }, [events, searchQuery, selectedCategory, showFreeOnly]);
+  }, [events, searchQuery, selectedCategory, showFreeOnly, filters.categories, filters.subCategories]);
 
   // Récupérer le paramètre de recherche de l'URL
   useEffect(() => {
@@ -153,6 +276,7 @@ export default function OptimizedHomePage() {
 
   // Gestion des événements
   const handleFavoriteToggle = (eventId: string) => {
+    toggleFavorite(eventId);
     console.log('Toggle favori pour l\'événement:', eventId);
   };
 
@@ -191,14 +315,18 @@ export default function OptimizedHomePage() {
   const displayedEvents = filteredEvents;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 transition-colors duration-500">
       <Navigation />
       
-      {/* Hero Section moderne avec glassmorphism */}
+      {/* Hero Section ultra-moderne avec glassmorphism et animations */}
       <section className="relative pt-24 pb-32 overflow-hidden">
-        {/* Background avec animations */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90"></div>
-        <div className="absolute inset-0 opacity-20 bg-pattern"></div>
+        {/* Background avec gradients animés */}
+        <div className="absolute inset-0 gradient-aurora opacity-90"></div>
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
+        </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
@@ -215,16 +343,21 @@ export default function OptimizedHomePage() {
               </div> 
             </div>*/}
 
-            <h2 className="text-2xl md:text-4xl font-bold text-white mb-6 leading-tight">
-              Découvrez les événements qui font vibrer
-              <span className="block bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
-                la métropole culturelle
-              </span>
-            </h2>
+            <div className="animate-slide-up">
+              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
+                Découvrez les événements qui font
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-cyan-300 animate-pulse-glow">
+                  vibrer Montréal
+                </span>
+              </h2>
+              <p className="text-xl md:text-2xl text-white/90 mb-8 font-light">
+                La métropole culturelle vous ouvre ses portes
+              </p>
+            </div>
             
             <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
               Plus de <span className="font-bold">{events.length}</span> événements en temps réel. 
-              Concerts, festivals, expositions, sports
+              Concerts, festivals, expositions, sports cli
             </p>
 
             {/* Barre de recherche moderne */}
@@ -349,19 +482,14 @@ export default function OptimizedHomePage() {
             </div>
           )}
 
-          {/* Affichage des événements avec état de chargement optimisé */}
+          {/* Affichage des événements avec loader ultra-moderne */}
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="bg-gray-200 h-48 rounded-t-lg"></div>
-                  <div className="p-4 space-y-3">
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  </div>
-                </div>
-              ))}
+            <div className="py-16">
+              <ModernLoader 
+                size="lg" 
+                text="Chargement des événements exceptionnels..." 
+                variant="default" 
+              />
             </div>
           ) : error ? (
             <div className="text-center py-12">
@@ -390,6 +518,7 @@ export default function OptimizedHomePage() {
                       event={event}
                       onFavoriteToggle={handleFavoriteToggle}
                       onEventClick={handleEventClick}
+                      isFavorite={isFavorite(event.id)}
                       showImage={true}
                     />
                   </div>
@@ -506,7 +635,7 @@ export default function OptimizedHomePage() {
           setSelectedEvent(null);
         }}
         onFavoriteToggle={handleFavoriteToggle}
-        isFavorite={false} // TODO: Implémenter la logique des favoris
+        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
       />
     </div>
   );

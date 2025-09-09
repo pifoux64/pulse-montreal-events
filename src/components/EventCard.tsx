@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music } from 'lucide-react';
+import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User } from 'lucide-react';
 import { Event } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { generateMusicTags, getGenreEmoji, getGenreColor } from '@/lib/musicTags';
+import Link from 'next/link';
 
 interface EventCardProps {
   event: Event;
@@ -94,8 +95,10 @@ const EventCard = ({
 
   return (
     <div 
-      className="bg-white rounded-3xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer group"
+      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl"
       onClick={() => onEventClick(event)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image avec design simplifié */}
       {showImage && event.imageUrl && !imageError && (
@@ -110,30 +113,30 @@ const EventCard = ({
           {/* Overlay subtil */}
           <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
           
-          {/* Prix simple */}
+          {/* Prix avec glassmorphism */}
           <div className="absolute top-4 left-4">
-            <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
+            <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
               event.price.isFree 
-                ? 'bg-green-500 text-white' 
-                : 'bg-white text-gray-900'
-            }`}>
+                ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' 
+                : 'glass-effect text-gray-900 border border-white/30'
+            } ${isHovered ? 'scale-105' : ''}`}>
               {formatPrice(event.price)}
             </span>
           </div>
           
-          {/* Favori simple */}
+          {/* Favori avec effet moderne */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               onFavoriteToggle(event.id);
             }}
-            className={`absolute top-4 right-4 p-2 rounded-full transition-all duration-200 ${
+            className={`absolute top-4 right-4 p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 group/heart ${
               isFavorite 
-                ? 'bg-red-500 text-white' 
-                : 'bg-white/90 text-gray-700 hover:bg-white'
-            }`}
+                ? 'text-red-500 hover:scale-110' 
+                : 'text-gray-600 hover:text-red-500 hover:scale-110'
+            } ${isHovered ? 'scale-105' : ''}`}
           >
-            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
+            <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite ? 'fill-current scale-110' : 'group-hover/heart:scale-110'}`} />
           </button>
         </div>
       )}
@@ -176,6 +179,20 @@ const EventCard = ({
             <MapPin className="w-4 h-4 mr-2 text-green-500" />
             <span className="font-medium truncate">{event.location.name}</span>
           </div>
+
+          {/* Organisateur */}
+          {event.organizer && (
+            <Link
+              href={`/organisateur/${event.organizerId}`}
+              onClick={(e) => e.stopPropagation()}
+              className="flex items-center text-sm text-gray-600 hover:text-violet-600 transition-colors duration-200 group"
+            >
+              <User className="w-4 h-4 mr-2 text-violet-500" />
+              <span className="font-medium truncate group-hover:underline">
+                {event.organizer.name}
+              </span>
+            </Link>
+          )}
         </div>
 
         {/* Tags secondaires (max 3) */}

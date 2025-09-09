@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { Event, EventFilter, EventCategory } from '@/types';
+import { useEvents } from '@/hooks/useEvents';
+import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
-import { Heart, Filter, Trash2, Share2, Calendar, MapPin } from 'lucide-react';
+import EventModal from '@/components/EventModal';
+import ModernLoader from '@/components/ModernLoader';
+import { Heart, Filter, Trash2, Share2, Calendar, MapPin, Sparkles } from 'lucide-react';
 
 // Données de test pour le développement
 const mockCategories: EventCategory[] = [
@@ -102,13 +106,16 @@ const mockFavoriteEvents: Event[] = [
       hearingAssistance: false,
       visualAssistance: false,
       quietSpace: false,
-      genderNeutralBathrooms: true,
-      other: []
+      signLanguage: false,
+      audioDescription: false,
+      braille: false
     },
     targetAudience: ['Adulte', 'Famille'],
-    maxCapacity: 5000,
-    currentAttendees: 3200,
-    isActive: true,
+    currentCapacity: 3200,
+    isFeatured: false,
+    isVerified: true,
+    rating: 4.5,
+    reviewCount: 127,
     createdAt: new Date(),
     updatedAt: new Date()
   },
@@ -140,26 +147,34 @@ const mockFavoriteEvents: Event[] = [
       hearingAssistance: true,
       visualAssistance: true,
       quietSpace: true,
-      genderNeutralBathrooms: true,
-      other: []
+      signLanguage: true,
+      audioDescription: true,
+      braille: true
     },
     targetAudience: ['Adulte', 'Famille', 'Étudiant'],
-    maxCapacity: 200,
-    currentAttendees: 45,
-    isActive: true,
+    currentCapacity: 45,
+    isFeatured: true,
+    isVerified: true,
+    rating: 4.8,
+    reviewCount: 89,
     createdAt: new Date(),
     updatedAt: new Date()
   }
 ];
 
 export default function FavorisPage() {
-  const [favoriteEvents, setFavoriteEvents] = useState<Event[]>(mockFavoriteEvents);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>(mockFavoriteEvents);
+  // Charger tous les événements et les favoris
+  const { data: allEvents = [], isLoading: loading, error } = useEvents();
+  const { favoriteEvents, isFavorite, toggleFavorite, clearAllFavorites } = useFavorites(allEvents);
+  
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [filters, setFilters] = useState<EventFilter>({});
   const [showFilters, setShowFilters] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Application des filtres
   useEffect(() => {
@@ -213,7 +228,7 @@ export default function FavorisPage() {
   }, [favoriteEvents, filters]);
 
   const handleFavoriteToggle = (eventId: string) => {
-    setFavoriteEvents(prev => prev.filter(event => event.id !== eventId));
+    toggleFavorite(eventId);
     setSelectedEvents(prev => {
       const newSet = new Set(prev);
       newSet.delete(eventId);
@@ -222,8 +237,8 @@ export default function FavorisPage() {
   };
 
   const handleEventClick = (event: Event) => {
-    // TODO: Navigation vers la page de détails
-    console.log('Clic sur l\'événement:', event.title);
+    setSelectedEvent(event);
+    setIsModalOpen(true);
   };
 
   const handleSelectEvent = (eventId: string) => {
@@ -243,7 +258,7 @@ export default function FavorisPage() {
   const handleRemoveSelected = () => {
     if (selectedEvents.size > 0) {
       if (confirm(`Êtes-vous sûr de vouloir retirer ${selectedEvents.size} événement(s) de vos favoris ?`)) {
-        setFavoriteEvents(prev => prev.filter(event => !selectedEvents.has(event.id)));
+        selectedEvents.forEach(eventId => toggleFavorite(eventId));
         setSelectedEvents(new Set());
         setIsSelectMode(false);
       }
@@ -311,11 +326,45 @@ export default function FavorisPage() {
     }
   };
 
+  // Affichage du loader
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <Navigation />
+        <div className="pt-24">
+          <ModernLoader 
+            size="lg" 
+            text="Chargement de vos favoris..." 
+            variant="default" 
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Affichage d'erreur
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+        <Navigation />
+        <div className="pt-24 text-center py-12">
+          <div className="text-red-500 mb-4">
+            <Heart className="w-16 h-16 mx-auto mb-4" />
+            <p className="text-xl font-semibold">Erreur de chargement</p>
+            <p className="text-gray-600 mt-2">
+              Impossible de charger vos favoris. Veuillez réessayer.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 transition-colors duration-500">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête de la page */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
@@ -414,6 +463,21 @@ export default function FavorisPage() {
               </div>
 
               <div className="flex items-center space-x-2">
+                {/* Vider tous les favoris */}
+                {favoriteEvents.length > 0 && (
+                  <button
+                    onClick={() => {
+                      if (confirm(`Êtes-vous sûr de vouloir supprimer tous vos ${favoriteEvents.length} favoris ?`)) {
+                        clearAllFavorites();
+                      }
+                    }}
+                    className="px-4 py-2 rounded-lg font-medium text-red-600 border border-red-300 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Vider tout</span>
+                  </button>
+                )}
+
                 {/* Mode sélection */}
                 <button
                   onClick={() => {
@@ -543,7 +607,7 @@ export default function FavorisPage() {
                       onFavoriteToggle={handleFavoriteToggle}
                       onEventClick={handleEventClick}
                       showImage={viewMode === 'grid'}
-                      isFavorite={true}
+                      isFavorite={isFavorite(event.id)}
                     />
                   </div>
                 ))}
@@ -575,6 +639,18 @@ export default function FavorisPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal événement */}
+      <EventModal
+        event={selectedEvent}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onFavoriteToggle={handleFavoriteToggle}
+        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
+      />
     </div>
   );
 }

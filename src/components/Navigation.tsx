@@ -16,19 +16,21 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-white/20 shadow-2xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          {/* Logo agrandi sans texte */}
+          {/* Logo avec animation float ajustée */}
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center group">
-              <div className="relative w-16 h-16 lg:w-20 lg:h-20 group-hover:scale-110 transition-transform duration-300">
+              <div className="relative w-16 h-16 lg:w-20 lg:h-20 group-hover:scale-105 transition-all duration-300" style={{
+                animation: 'float-gentle 4s ease-in-out infinite'
+              }}>
                 <Image
                   src="/Pulse_Logo.png"
                   alt="Pulse Logo"
                   fill
                   sizes="(max-width: 768px) 64px, 80px"
-                  className="object-contain"
+                  className="object-contain drop-shadow-lg"
                   priority
                 />
               </div>
@@ -44,47 +46,54 @@ export default function Navigation() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="px-6 py-3 rounded-2xl text-sm font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300 flex items-center space-x-3 group"
+                    className="group relative px-6 py-3 rounded-2xl text-sm font-semibold text-gray-700 hover:text-white transition-all duration-300 flex items-center space-x-3"
                   >
-                    <Icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                    <span>{item.name}</span>
+                    {/* Background gradient on hover */}
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    
+                    <Icon className="w-5 h-5 relative z-10" />
+                    <span className="relative z-10">{item.name}</span>
                   </Link>
                 );
               })}
             </div>
           </div>
 
-          {/* Actions utilisateur modernes */}
+          {/* Actions utilisateur ultra-modernes */}
           <div className="hidden lg:flex items-center space-x-4">
-            {/* Barre de recherche rapide */}
+            {/* Barre de recherche avec glassmorphism */}
             <div className="relative group">
-              <div className="relative bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2 flex items-center space-x-3 hover:bg-gray-100 transition-all duration-300">
-                <Search className="w-4 h-4 text-gray-500" />
-                  <input
-                    type="text"
-                    placeholder="Recherche rapide..."
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        const query = (e.target as HTMLInputElement).value;
-                        if (query.trim()) {
-                          window.location.href = `/?search=${encodeURIComponent(query)}`;
-                        }
+              <div className="relative glass-effect rounded-2xl px-4 py-2 flex items-center space-x-3 hover-lift border border-white/20">
+                <Search className="w-4 h-4 text-gray-500 group-focus-within:text-violet-500 transition-colors duration-300" />
+                <input
+                  type="text"
+                  placeholder="Recherche rapide..."
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      const query = (e.target as HTMLInputElement).value;
+                      if (query.trim()) {
+                        window.location.href = `/?search=${encodeURIComponent(query)}`;
                       }
-                    }}
-                    className="bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 w-32 focus:w-40 transition-all duration-300"
-                  />
+                    }
+                  }}
+                  className="bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 w-32 focus:w-48 transition-all duration-300"
+                />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/5 to-purple-500/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
               </div>
             </div>
 
-            {/* Notifications */}
-            <button className="p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all duration-300 relative group">
-              <Bell className="w-5 h-5 text-gray-600 group-hover:scale-110 transition-transform duration-300" />
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+
+            {/* Notifications avec animation */}
+            <button className="glass-effect hover-lift p-3 rounded-2xl text-gray-600 hover:text-violet-600 transition-all duration-300 relative group border border-white/20">
+              <Bell className="w-5 h-5 group-hover:animate-pulse" />
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-xs text-white flex items-center justify-center font-bold animate-pulse">3</div>
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
 
-            {/* Profil utilisateur */}
-            <button className="p-3 rounded-2xl bg-gray-50 hover:bg-gray-100 border border-gray-200 transition-all duration-300 group">
-              <User className="w-5 h-5 text-gray-600 group-hover:scale-110 transition-transform duration-300" />
+            {/* Profil utilisateur avec avatar moderne */}
+            <button className="glass-effect hover-lift p-3 rounded-2xl text-gray-600 hover:text-violet-600 transition-all duration-300 relative group border border-white/20">
+              <User className="w-5 h-5" />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
           </div>
 
