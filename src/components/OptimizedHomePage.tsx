@@ -96,12 +96,8 @@ export default function OptimizedHomePage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Utilisation du hook React Query optimisé avec filtrage local
-  const { events, isLoading: loading, error, total } = useFilteredEvents(
-    searchQuery, 
-    selectedCategory,
-    filters.sort as 'date' | 'name' | 'price'
-  );
+  // Utilisation du hook React Query pour charger tous les événements
+  const { data: events = [], isLoading: loading, error } = useEvents();
 
   // Préchargement intelligent des données
   const prefetchEvents = usePrefetchEvents();
@@ -146,8 +142,8 @@ export default function OptimizedHomePage() {
     }
   };
 
-  // Affichage des événements paginés
-  const displayedEvents = events.slice(0, 20);
+  // Affichage de tous les événements (pagination future)
+  const displayedEvents = events;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -182,7 +178,7 @@ export default function OptimizedHomePage() {
             </h2>
             
             <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Plus de <span className="font-bold">{total}</span> événements en temps réel. 
+              Plus de <span className="font-bold">{events.length}</span> événements en temps réel. 
               Concerts, festivals, expositions, sports - tout ce qui compte à Montréal.
             </p>
 
@@ -374,7 +370,7 @@ export default function OptimizedHomePage() {
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
-              <div className="text-3xl font-bold text-white mb-2">{total}</div>
+              <div className="text-3xl font-bold text-white mb-2">{events.length}</div>
               <div className="text-white/80">Événements actifs</div>
             </div>
 
