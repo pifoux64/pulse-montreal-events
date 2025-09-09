@@ -35,43 +35,57 @@ const ModernEventMap = ({
     pitch: 0
   });
 
-  // Style moderne avec OpenStreetMap (sans clé API requise)
+  // Style ultra-moderne avec Stadia Maps (gratuit et beau)
   const MAP_STYLE = {
     version: 8,
     sources: {
-      'raster-tiles': {
+      'stadia-dark': {
         type: 'raster',
         tiles: [
-          'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+          'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
         ],
         tileSize: 256,
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© Stadia Maps © OpenMapTiles © OpenStreetMap contributors'
       }
     },
     layers: [
       {
-        id: 'simple-tiles',
+        id: 'background',
+        type: 'background',
+        paint: {
+          'background-color': '#0f1419'
+        }
+      },
+      {
+        id: 'stadia-tiles',
         type: 'raster',
-        source: 'raster-tiles'
+        source: 'stadia-dark',
+        paint: {
+          'raster-opacity': 1.0,
+          'raster-brightness-min': 0.0,
+          'raster-brightness-max': 1.0,
+          'raster-contrast': 0.1,
+          'raster-saturation': 0.1
+        }
       }
     ]
   };
 
-  // Couleurs modernes par catégorie
+  // Couleurs vibrantes pour fond sombre
   const categoryColors: Record<string, string> = {
-    'musique': '#FF6B6B',
-    'music': '#FF6B6B',
-    'art': '#4ECDC4',
-    'arts & theatre': '#4ECDC4',
-    'sport': '#45B7D1',
-    'sports': '#45B7D1',
-    'famille': '#96CEB4',
-    'family': '#96CEB4',
-    'culture': '#FFEAA7',
-    'community': '#FFEAA7',
-    'gastronomie': '#FD79A8',
-    'education': '#FD79A8',
-    'default': '#74B9FF'
+    'musique': '#FF3B82',
+    'music': '#FF3B82',
+    'art': '#06FFA5',
+    'arts & theatre': '#06FFA5',
+    'sport': '#3B82F6',
+    'sports': '#3B82F6',
+    'famille': '#10B981',
+    'family': '#10B981',
+    'culture': '#F59E0B',
+    'community': '#F59E0B',
+    'gastronomie': '#EC4899',
+    'education': '#EC4899',
+    'default': '#8B5CF6'
   };
 
   // Fonction pour créer un marqueur personnalisé
@@ -195,13 +209,14 @@ const ModernEventMap = ({
             }}
           >
             <div
-              className="w-8 h-8 rounded-full border-3 border-white shadow-lg cursor-pointer transition-all duration-300 hover:scale-125 flex items-center justify-center"
+              className="w-8 h-8 rounded-full border-2 border-white shadow-2xl cursor-pointer transition-all duration-300 hover:scale-125 flex items-center justify-center relative"
               style={{ 
                 backgroundColor: categoryColors[event.category.toLowerCase()] || categoryColors.default,
-                zIndex: selectedEvent?.id === event.id ? 1000 : 1
+                zIndex: selectedEvent?.id === event.id ? 1000 : 1,
+                boxShadow: `0 0 20px ${categoryColors[event.category.toLowerCase()] || categoryColors.default}40, 0 4px 15px rgba(0,0,0,0.3)`
               }}
             >
-              <MapPin className="w-4 h-4 text-white" />
+              <MapPin className="w-4 h-4 text-white drop-shadow-sm" />
             </div>
           </Marker>
         ))}
@@ -217,21 +232,21 @@ const ModernEventMap = ({
             closeOnClick={false}
             className="modern-popup"
           >
-            <div className="p-4 min-w-[280px] max-w-[320px]">
+            <div className="p-4 min-w-[280px] max-w-[320px] bg-gradient-to-br from-gray-900 to-gray-800 text-white">
               <div className="flex items-start space-x-3">
                 {selectedEvent.imageUrl && (
                   <img
                     src={selectedEvent.imageUrl}
                     alt={selectedEvent.title}
-                    className="w-20 h-20 object-cover rounded-xl flex-shrink-0"
+                    className="w-20 h-20 object-cover rounded-xl flex-shrink-0 ring-2 ring-white/10"
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-gray-900 text-sm leading-tight mb-2 line-clamp-2">
+                  <h3 className="font-bold text-white text-sm leading-tight mb-2 line-clamp-2">
                     {selectedEvent.title}
                   </h3>
 
-                  <div className="space-y-1.5 text-xs text-gray-600">
+                  <div className="space-y-1.5 text-xs text-gray-300">
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-3 h-3 text-blue-500 flex-shrink-0" />
                       <span>{formatDate(selectedEvent.startDate)}</span>
