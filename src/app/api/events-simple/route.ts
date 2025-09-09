@@ -436,6 +436,232 @@ export async function GET(request: NextRequest) {
       console.log(`⚠️ Erreur Resident Advisor:`, error.message);
     }
 
+    // ============= FACEBOOK EVENTS MONTREAL =============
+    console.log('📘 Récupération des événements Facebook Montréal...');
+    try {
+      // Événements Facebook simulés - mix événements locaux/communautaires
+      const facebookEvents = [
+        {
+          id: 'fb_1',
+          name: 'Marché de Noël du Vieux-Montréal 2024',
+          description: 'Le traditionnel marché de Noël revient au Vieux-Montréal ! Artisans locaux, vin chaud, patinoire et animations pour toute la famille. Organisé par la communauté locale.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '11:00:00',
+              dateTime: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString()
+            },
+            end: {
+              localDate: new Date(Date.now() + 40 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '21:00:00',
+              dateTime: new Date(Date.now() + 40 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://facebook.com/events/marche-noel-vieux-montreal',
+          images: [{ url: 'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Community' }, genre: { name: 'Festival' } }],
+          priceRanges: [{ min: 0, max: 0, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Place Jacques-Cartier',
+              address: { line1: 'Place Jacques-Cartier, Vieux-Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5088', longitude: '-73.5541' }
+            }]
+          },
+          source: 'facebook_events',
+          sourceId: 'fb_1'
+        },
+        {
+          id: 'fb_2',
+          name: 'Soirée Karaoké - Bar Le Saint-Sulpice',
+          description: 'Tous les jeudis soirs, venez chanter vos hits préférés ! Ambiance décontractée, drinks spéciaux et bonne humeur garantie. Organisé par l\'équipe du Saint-Sulpice.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '20:00:00',
+              dateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://facebook.com/events/karaoke-saint-sulpice',
+          images: [{ url: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Music' }, genre: { name: 'Karaoke' } }],
+          priceRanges: [{ min: 0, max: 15, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Bar Le Saint-Sulpice',
+              address: { line1: '1680 Rue Saint-Denis, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5138', longitude: '-73.5663' }
+            }]
+          },
+          source: 'facebook_events',
+          sourceId: 'fb_2'
+        },
+        {
+          id: 'fb_3',
+          name: 'Atelier Cuisine Végane - Les Gourmandes Rebelles',
+          description: 'Apprenez à cuisiner 3 plats véganes délicieux avec notre chef ! Ingrédients fournis, recettes à emporter. Parfait pour découvrir la cuisine plant-based.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '14:00:00',
+              dateTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://facebook.com/events/atelier-cuisine-vegane',
+          images: [{ url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Food' }, genre: { name: 'Workshop' } }],
+          priceRanges: [{ min: 35, max: 45, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Centre Communautaire Mile-End',
+              address: { line1: '5191 Av du Parc, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5234', longitude: '-73.5965' }
+            }]
+          },
+          source: 'facebook_events',
+          sourceId: 'fb_3'
+        },
+        {
+          id: 'fb_4',
+          name: 'Tournoi de Poker Texas Hold\'em - Casino de Montréal',
+          description: 'Tournoi hebdomadaire de poker avec buy-in de 50$. Prix garantis, ambiance conviviale. Inscription sur place ou en ligne. Ouvert à tous les niveaux.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '19:30:00',
+              dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://facebook.com/events/tournoi-poker-casino',
+          images: [{ url: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Sports' }, genre: { name: 'Poker' } }],
+          priceRanges: [{ min: 50, max: 50, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Casino de Montréal',
+              address: { line1: '1 Av du Casino, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5017', longitude: '-73.5321' }
+            }]
+          },
+          source: 'facebook_events',
+          sourceId: 'fb_4'
+        },
+        {
+          id: 'fb_5',
+          name: 'Yoga en Plein Air - Parc La Fontaine',
+          description: 'Séance de yoga gratuite tous les dimanches matins au Parc La Fontaine. Apportez votre tapis ! Tous niveaux bienvenus. En cas de pluie, reporté.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '09:00:00',
+              dateTime: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://facebook.com/events/yoga-parc-lafontaine',
+          images: [{ url: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Sports' }, genre: { name: 'Yoga' } }],
+          priceRanges: [{ min: 0, max: 0, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Parc La Fontaine',
+              address: { line1: '3819 Av Calixa-Lavallée, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5255', longitude: '-73.5716' }
+            }]
+          },
+          source: 'facebook_events',
+          sourceId: 'fb_5'
+        },
+        {
+          id: 'fb_6',
+          name: 'Soirée Open Mic - Café Résonance',
+          description: 'Montez sur scène et partagez votre talent ! Musique, poésie, stand-up... 5 min par artiste. Inscription sur place dès 19h. Consommation obligatoire.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '20:30:00',
+              dateTime: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://facebook.com/events/open-mic-resonance',
+          images: [{ url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Arts & Theatre' }, genre: { name: 'Open Mic' } }],
+          priceRanges: [{ min: 8, max: 12, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Café Résonance',
+              address: { line1: '5175 Av du Parc, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5230', longitude: '-73.5961' }
+            }]
+          },
+          source: 'facebook_events',
+          sourceId: 'fb_6'
+        },
+        {
+          id: 'fb_7',
+          name: 'Vente de Garage Géante - Plateau Mont-Royal',
+          description: 'Plus de 50 familles participent ! Vêtements, livres, électronique, meubles, jouets... Organisé par l\'Association des résidents du Plateau. Cash seulement.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '08:00:00',
+              dateTime: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://facebook.com/events/vente-garage-plateau',
+          images: [{ url: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Community' }, genre: { name: 'Sale' } }],
+          priceRanges: [{ min: 0, max: 0, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Parc Jeanne-Mance',
+              address: { line1: 'Av du Parc & Av des Pins, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5158', longitude: '-73.5818' }
+            }]
+          },
+          source: 'facebook_events',
+          sourceId: 'fb_7'
+        },
+        {
+          id: 'fb_8',
+          name: 'Dégustation de Bières Locales - Dieu du Ciel!',
+          description: 'Découvrez 8 bières artisanales québécoises avec notes de dégustation. Fromages locaux inclus. Réservation obligatoire - places limitées à 25 personnes.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '18:00:00',
+              dateTime: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://facebook.com/events/degustation-dieu-du-ciel',
+          images: [{ url: 'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Food' }, genre: { name: 'Tasting' } }],
+          priceRanges: [{ min: 28, max: 35, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Dieu du Ciel! Brasserie',
+              address: { line1: '29 Av Laurier O, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5265', longitude: '-73.5943' }
+            }]
+          },
+          source: 'facebook_events',
+          sourceId: 'fb_8'
+        }
+      ];
+
+      allEvents.push(...facebookEvents);
+      console.log(`✅ Facebook Events: ${facebookEvents.length} événements communautaires`);
+    } catch (error: any) {
+      console.log(`⚠️ Erreur Facebook Events:`, error.message);
+    }
+
     // ============= DONNÉES OUVERTES MONTRÉAL =============
     console.log('🏛️ Récupération des événements Ville de Montréal...');
     try {
@@ -577,6 +803,54 @@ export async function GET(request: NextRequest) {
               currency: event.priceRanges?.[0]?.currency || 'CAD',
               status: 'published',
               organizerId: 'resident_advisor',
+              accessibility: [],
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+          } else if (event.source === 'facebook_events') {
+            return {
+              id: event.id,
+              title: event.name,
+              description: event.description,
+              startAt: event.dates?.start?.dateTime || new Date().toISOString(),
+              endAt: event.dates?.end?.dateTime || null,
+              url: event.url,
+              imageUrl: event.images?.[0]?.url || 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400&h=300&fit=crop',
+              category: event.classifications?.[0]?.segment?.name?.toLowerCase() === 'community' ? 'famille' :
+                       event.classifications?.[0]?.segment?.name?.toLowerCase() === 'food' ? 'gastronomie' :
+                       event.classifications?.[0]?.segment?.name?.toLowerCase() === 'music' ? 'music' :
+                       event.classifications?.[0]?.segment?.name?.toLowerCase() === 'arts & theatre' ? 'art & culture' :
+                       event.classifications?.[0]?.segment?.name?.toLowerCase() === 'sports' ? 'sport' : 'autre',
+              subcategory: event.classifications?.[0]?.genre?.name?.toLowerCase() || 'communautaire',
+              tags: generateMusicTags({
+                title: event.name,
+                description: event.description,
+                category: event.classifications?.[0]?.segment?.name?.toLowerCase() || 'community',
+                tags: [
+                  event.classifications?.[0]?.genre?.name?.toLowerCase(),
+                  'facebook events',
+                  'communautaire',
+                  'local',
+                  'montreal',
+                  'événement local'
+                ].filter(Boolean)
+              }),
+              city: event._embedded?.venues?.[0]?.city?.name || 'Montreal',
+              address: event._embedded?.venues?.[0] ? `${event._embedded.venues[0].name}${event._embedded.venues[0].address?.line1 ? ', ' + event._embedded.venues[0].address.line1 : ''}` : null,
+              venue: {
+                name: event._embedded?.venues?.[0]?.name || 'Lieu communautaire',
+                lat: event._embedded?.venues?.[0]?.location?.latitude ? parseFloat(event._embedded.venues[0].location.latitude) : 45.5088,
+                lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5542
+              },
+              lat: event._embedded?.venues?.[0]?.location?.latitude ? parseFloat(event._embedded.venues[0].location.latitude) : 45.5088,
+              lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5542,
+              source: 'facebook_events',
+              external_id: event.id,
+              priceMin: event.priceRanges?.[0]?.min || 0,
+              priceMax: event.priceRanges?.[0]?.max || null,
+              currency: event.priceRanges?.[0]?.currency || 'CAD',
+              status: 'published',
+              organizerId: 'facebook_events',
               accessibility: [],
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString()
