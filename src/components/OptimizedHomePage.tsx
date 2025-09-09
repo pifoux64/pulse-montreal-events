@@ -157,7 +157,7 @@ export default function OptimizedHomePage() {
       <section className="relative pt-24 pb-32 overflow-hidden">
         {/* Background avec animations */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/90 via-purple-600/90 to-pink-600/90"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+        <div className="absolute inset-0 opacity-20 bg-pattern"></div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
@@ -382,7 +382,7 @@ export default function OptimizedHomePage() {
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-6 h-6 text-white" />
               </div>
-              <div className="text-3xl font-bold text-white mb-2">4</div>
+              <div className="text-3xl font-bold text-white mb-2">5</div>
               <div className="text-white/80">Sources actives</div>
             </div>
 
@@ -411,10 +411,14 @@ export default function OptimizedHomePage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span className="text-sm">Ticketmaster</span>
               </div>
-              <div className="flex items-center space-x-2 text-white/80">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-sm">Eventbrite (actif)</span>
-              </div>
+            <div className="flex items-center space-x-2 text-white/80">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm">Eventbrite</span>
+            </div>
+            <div className="flex items-center space-x-2 text-white/80">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm">Ville de Montréal</span>
+            </div>
               <div className="flex items-center space-x-2 text-white/80">
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                 <span className="text-sm">Meetup</span>

@@ -265,45 +265,86 @@ export async function GET(request: NextRequest) {
     // ============= DONNÉES OUVERTES MONTRÉAL =============
     console.log('🏛️ Récupération des événements Ville de Montréal...');
     try {
-      // API des données ouvertes de la Ville de Montréal
-      const montrealResponse = await fetch('https://donnees.montreal.ca/api/3/action/datastore_search?resource_id=5866cc2f-2c2a-4b3f-b9e1-6d8c4c02c8b9&limit=50');
+      // API des données ouvertes de la Ville de Montréal (nouveau endpoint 2024)
+      const montrealResponse = await fetch('https://donnees.montreal.ca/api/3/action/datastore_search?resource_id=6decf611-6f11-4f34-bb36-324d804c9bad&limit=100');
       
       if (montrealResponse.ok) {
         const montrealData = await montrealResponse.json();
         const montrealEvents = montrealData.result?.records || [];
         
-        const transformedMontrealEvents = montrealEvents.map((event: any, index: number) => ({
-          id: `mtl_${event._id || index}`,
-          name: event.nom || event.title || 'Événement municipal',
-          description: event.description || event.resume || 'Événement organisé par la Ville de Montréal',
+        // Filtrer les événements futurs et valides
+        const validEvents = montrealEvents.filter((event: any) => {
+          if (!event.date_debut || event.date_debut === 'nan') return false;
+          const eventDate = new Date(event.date_debut);
+          const now = new Date();
+          return eventDate >= now; // Événements futurs uniquement
+        });
+        
+        const transformedMontrealEvents = validEvents.map((event: any) => ({
+          id: `mtl_${event._id}`,
+          name: event.titre || 'Événement municipal',
+          description: event.description || 'Événement organisé par la Ville de Montréal',
           dates: {
             start: {
-              localDate: event.date_debut || new Date().toISOString().split('T')[0],
-              localTime: event.heure_debut || '19:00:00',
-              dateTime: event.date_debut || new Date().toISOString()
-            }
+              localDate: event.date_debut,
+              localTime: '19:00:00', // Heure par défaut
+              dateTime: `${event.date_debut}T19:00:00`
+            },
+            end: event.date_fin ? {
+              localDate: event.date_fin,
+              localTime: '22:00:00',
+              dateTime: `${event.date_fin}T22:00:00`
+            } : undefined
           },
-          url: event.url_evenement || 'https://montreal.ca',
-          images: [{ url: 'https://images.unsplash.com/photo-1444927714506-8492d94b5ba0?w=400&h=300&fit=crop' }],
-          classifications: [{ segment: { name: 'Community' }, genre: { name: event.categorie || 'Municipal' } }],
-          priceRanges: [{ min: 0, max: 0, currency: 'CAD' }],
+          url: event.url_fiche || 'https://montreal.ca/calendrier',
+          images: [{ 
+            url: event.type_evenement?.toLowerCase().includes('exposition') ? 
+              'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop' :
+              event.type_evenement?.toLowerCase().includes('spectacle') ?
+              'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop' :
+              'https://images.unsplash.com/photo-1444927714506-8492d94b5ba0?w=400&h=300&fit=crop'
+          }],
+          classifications: [{ 
+            segment: { name: 'Community' }, 
+            genre: { name: event.type_evenement || 'Municipal' } 
+          }],
+          priceRanges: [{ 
+            min: event.cout === 'Gratuit' ? 0 : 10, 
+            max: event.cout === 'Gratuit' ? 0 : 25, 
+            currency: 'CAD' 
+          }],
           _embedded: {
             venues: [{
-              name: event.lieu || 'Lieu municipal',
-              address: { line1: event.adresse || 'Montreal, QC' },
+              name: event.titre_adresse && event.titre_adresse !== 'nan' ? 
+                    event.titre_adresse : 
+                    `${event.arrondissement || 'Ville de Montréal'}`,
+              address: { 
+                line1: event.adresse_principale && event.adresse_principale !== 'nan' ? 
+                       event.adresse_principale : 
+                       'Montréal, QC' 
+              },
               city: { name: 'Montreal' },
               location: { 
-                latitude: event.latitude || '45.5088', 
-                longitude: event.longitude || '-73.5542' 
+                latitude: event.lat && event.lat !== 'nan' ? event.lat : '45.5088', 
+                longitude: event.long && event.long !== 'nan' ? event.long : '-73.5542' 
               }
             }]
           },
+          // Métadonnées supplémentaires Ville de Montréal
+          montreal: {
+            type_evenement: event.type_evenement,
+            public_cible: event.public_cible,
+            emplacement: event.emplacement,
+            inscription: event.inscription,
+            cout: event.cout,
+            arrondissement: event.arrondissement
+          },
           source: 'montreal_opendata',
-          sourceId: event._id || `mtl_${index}`
+          sourceId: event._id
         }));
         
         allEvents.push(...transformedMontrealEvents);
-        console.log(`✅ Ville de Montréal: ${montrealEvents.length} événements`);
+        console.log(`✅ Ville de Montréal: ${validEvents.length} événements (${montrealEvents.length} total, ${validEvents.length} futurs)`);
       } else {
         console.log(`⚠️ Erreur API Ville de Montréal: ${montrealResponse.status}`);
       }
