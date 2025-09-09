@@ -7,6 +7,7 @@ import { useEvents, useFilteredEvents } from '@/hooks/useEvents';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
+import EventModal from '@/components/EventModal';
 import { MapPin, List, Map, Filter, X } from 'lucide-react';
 
 // Import dynamique de la carte simple pour éviter les erreurs SSR
@@ -108,6 +109,7 @@ export default function OptimizedCartePage() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [locationEvents, setLocationEvents] = useState<Event[] | null>(null);
   const [locationName, setLocationName] = useState<string>('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Mettre à jour les événements filtrés quand les données changent
   useEffect(() => {
@@ -199,8 +201,9 @@ export default function OptimizedCartePage() {
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
+    setIsModalOpen(true);
     setLocationEvents(null); // Fermer le panneau de lieu si ouvert
-    setShowEventList(true);
+    setShowEventList(false); // Fermer la sidebar
   };
 
   const handleLocationClick = (events: Event[], locationName: string) => {
@@ -353,6 +356,18 @@ export default function OptimizedCartePage() {
           )}
         </div>
       </main>
+
+      {/* Modal événement */}
+      <EventModal
+        event={selectedEvent}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onFavoriteToggle={handleFavoriteToggle}
+        isFavorite={false} // TODO: Implémenter la logique des favoris
+      />
     </div>
   );
 }

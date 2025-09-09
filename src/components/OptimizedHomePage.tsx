@@ -6,6 +6,7 @@ import { useEvents, usePrefetchEvents, useFilteredEvents } from '@/hooks/useEven
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
+import EventModal from '@/components/EventModal';
 import { MapPin, List, Grid, Filter, Search, Calendar, Users, Star, TrendingUp, Clock, Sparkles, ArrowRight, Play, Zap, Globe, Heart, Award, Music, Palette, Trophy, Users2, Utensils } from 'lucide-react';
 
 // Données de test pour les catégories
@@ -95,6 +96,8 @@ export default function OptimizedHomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Utilisation du hook React Query pour charger tous les événements
   const { data: events = [], isLoading: loading, error } = useEvents();
@@ -113,7 +116,8 @@ export default function OptimizedHomePage() {
   };
 
   const handleEventClick = (event: Event) => {
-    console.log('Clic sur l\'événement:', event);
+    setSelectedEvent(event);
+    setIsModalOpen(true);
   };
 
   const handleFiltersChange = (newFilters: EventFilter) => {
@@ -435,6 +439,18 @@ export default function OptimizedHomePage() {
           </div>
         </div>
       </section>
+
+      {/* Modal événement */}
+      <EventModal
+        event={selectedEvent}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedEvent(null);
+        }}
+        onFavoriteToggle={handleFavoriteToggle}
+        isFavorite={false} // TODO: Implémenter la logique des favoris
+      />
     </div>
   );
 }
