@@ -35,17 +35,15 @@ const ModernEventMap = ({
     pitch: 0
   });
 
-  // Style ultra-moderne avec Stadia Maps (gratuit et beau)
+  // Style moderne sombre avec OpenStreetMap (garanti de fonctionner)
   const MAP_STYLE = {
     version: 8,
     sources: {
-      'stadia-dark': {
+      'osm': {
         type: 'raster',
-        tiles: [
-          'https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png'
-        ],
+        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
         tileSize: 256,
-        attribution: '© Stadia Maps © OpenMapTiles © OpenStreetMap contributors'
+        attribution: '© OpenStreetMap contributors'
       }
     },
     layers: [
@@ -53,19 +51,20 @@ const ModernEventMap = ({
         id: 'background',
         type: 'background',
         paint: {
-          'background-color': '#0f1419'
+          'background-color': '#1a1a2e'
         }
       },
       {
-        id: 'stadia-tiles',
+        id: 'osm-tiles',
         type: 'raster',
-        source: 'stadia-dark',
+        source: 'osm',
         paint: {
-          'raster-opacity': 1.0,
-          'raster-brightness-min': 0.0,
-          'raster-brightness-max': 1.0,
-          'raster-contrast': 0.1,
-          'raster-saturation': 0.1
+          'raster-opacity': 0.7,
+          'raster-brightness-min': 0.1,
+          'raster-brightness-max': 0.4,
+          'raster-contrast': 0.3,
+          'raster-saturation': -0.8,
+          'raster-hue-rotate': 200
         }
       }
     ]
