@@ -3,10 +3,9 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
-import { Menu, X, Map, Calendar, Heart, Plus, Home, Filter, Search, User, Bell } from 'lucide-react';
+import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell } from 'lucide-react';
 
 const navigationItems = [
-  { name: 'Accueil', href: '/', icon: Home },
   { name: 'Carte', href: '/carte', icon: Map },
   { name: 'Calendrier', href: '/calendrier', icon: Calendar },
   { name: 'Mes Favoris', href: '/favoris', icon: Heart },
