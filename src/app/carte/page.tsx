@@ -8,14 +8,14 @@ import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
 import { MapPin, List, Map, Filter, X } from 'lucide-react';
 
-// Import dynamique de la carte pour éviter les erreurs SSR
-const EventMap = dynamic(() => import('@/components/EventMap'), {
+// Import dynamique de la nouvelle carte moderne pour éviter les erreurs SSR
+const ModernEventMap = dynamic(() => import('@/components/ModernEventMap'), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full bg-gray-100 rounded-lg flex items-center justify-center">
       <div className="text-center">
         <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-        <p className="text-gray-600">Chargement de la carte...</p>
+        <p className="text-gray-600">Chargement de la carte moderne...</p>
       </div>
     </div>
   )
@@ -505,7 +505,7 @@ export default function CartePage() {
             </div>
 
             {/* Carte */}
-            <EventMap
+            <ModernEventMap
               events={filteredEvents}
               center={mapViewState.center}
               zoom={mapViewState.zoom}
