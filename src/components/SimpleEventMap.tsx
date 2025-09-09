@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { Event, MapViewState } from '@/types';
 import { MapPin, Calendar, DollarSign, Clock } from 'lucide-react';
 
@@ -75,7 +75,27 @@ const SimpleEventMap = ({
     return Array.from(groups.values());
   };
 
-  const locationGroups = groupEventsByLocation(events);
+  // Grouper les événements de manière stable
+  const locationGroups = useMemo(() => groupEventsByLocation(events), [events]);
+  
+  // Référence pour les marqueurs actuels
+  const markersRef = useRef<any[]>([]);
+
+  // Fonction de nettoyage des marqueurs
+  const clearMarkers = useCallback(() => {
+    markersRef.current.forEach(marker => {
+      if (marker && marker.remove) {
+        marker.remove();
+      }
+    });
+    markersRef.current = [];
+  }, []);
+
+  // Stabiliser onMapViewChange pour éviter les re-renders
+  const stableOnMapViewChange = useCallback((viewState: MapViewState) => {
+    // Throttle les appels pour éviter trop de mises à jour
+    onMapViewChange(viewState);
+  }, [onMapViewChange]);
 
   // Initialiser la carte avec MapLibre GL JS directement
   useEffect(() => {
@@ -215,14 +235,18 @@ const SimpleEventMap = ({
           }
         });
 
-        // Gérer les changements de vue
+        // Gérer les changements de vue avec throttling
+        let moveTimeout: NodeJS.Timeout;
         map.on('moveend', () => {
-          const center = map.getCenter();
-          const zoom = map.getZoom();
-          onMapViewChange({
-            center: [center.lat, center.lng],
-            zoom: zoom
-          });
+          clearTimeout(moveTimeout);
+          moveTimeout = setTimeout(() => {
+            const center = map.getCenter();
+            const zoom = map.getZoom();
+            stableOnMapViewChange({
+              center: [center.lat, center.lng],
+              zoom: zoom
+            });
+          }, 100); // Throttle à 100ms
         });
 
         mapInstanceRef.current = map;
@@ -237,19 +261,107 @@ const SimpleEventMap = ({
     // Cleanup
     return () => {
       if (mapInstanceRef.current) {
+        clearMarkers();
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
     };
-  }, [center, zoom, userLocation]);
+  }, []); // Seulement à l'initialisation
+
+  // Mettre à jour la vue de la carte quand center/zoom changent
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    
+    const map = mapInstanceRef.current;
+    map.flyTo({
+      center: [center[1], center[0]], // [lng, lat]
+      zoom: zoom,
+      duration: 1000
+    });
+  }, [center, zoom]);
 
   // Mettre à jour les marqueurs quand les événements changent
   useEffect(() => {
-    if (!mapLoaded || !mapInstanceRef.current) return;
+    if (!mapLoaded || !mapInstanceRef.current || locationGroups.length === 0) return;
 
-    // Cette logique pourrait être étendue pour mettre à jour les marqueurs dynamiquement
-    // Pour l'instant, on recharge la carte complète
-  }, [events, mapLoaded]);
+    const map = mapInstanceRef.current;
+    
+    // Nettoyer les anciens marqueurs
+    clearMarkers();
+
+    // Ajouter les nouveaux marqueurs
+    locationGroups.forEach((locationEvents, index) => {
+      const firstEvent = locationEvents[0];
+      const eventCount = locationEvents.length;
+      const category = firstEvent.category?.toLowerCase() || 'default';
+      const primaryColor = categoryColors[category] || categoryColors.default;
+      
+      // Debug: afficher les catégories pour le débogage
+      if (index < 5) {
+        console.log(`Événement ${index}:`, {
+          title: firstEvent.title,
+          category: firstEvent.category,
+          categoryLower: category,
+          color: primaryColor
+        });
+      }
+
+      // Créer l'élément du marqueur
+      const markerElement = document.createElement('div');
+      markerElement.className = 'custom-marker';
+      markerElement.style.cssText = `
+        width: ${eventCount > 1 ? '36px' : '32px'};
+        height: ${eventCount > 1 ? '36px' : '32px'};
+        background-color: ${primaryColor};
+        border: 2px solid white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 0 20px ${primaryColor}40, 0 4px 15px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease;
+        color: white;
+        font-weight: bold;
+        font-size: ${eventCount > 1 ? '14px' : '12px'};
+        z-index: 1000;
+      `;
+      
+      markerElement.innerHTML = eventCount > 1 ? eventCount.toString() : '📍';
+      
+      // Ajouter les effets hover
+      markerElement.addEventListener('mouseenter', () => {
+        markerElement.style.transform = 'scale(1.25)';
+      });
+      markerElement.addEventListener('mouseleave', () => {
+        markerElement.style.transform = 'scale(1)';
+      });
+
+      // Créer le marqueur avec support pour les deux structures
+      const lat = firstEvent.location?.coordinates?.lat || (firstEvent as any).lat || 45.5088;
+      const lng = firstEvent.location?.coordinates?.lng || (firstEvent as any).lon || -73.5542;
+      
+      const maplibregl = (window as any).maplibregl || require('maplibre-gl');
+      const marker = new maplibregl.Marker(markerElement)
+        .setLngLat([lng, lat])
+        .addTo(map);
+
+      // Stocker la référence du marqueur
+      markersRef.current.push(marker);
+
+      // Ajouter l'événement de clic
+      markerElement.addEventListener('click', () => {
+        console.log('Clic sur marqueur:', firstEvent.title);
+        if (eventCount === 1) {
+          setSelectedEvent(firstEvent);
+          onEventClick(firstEvent);
+        } else if (onLocationClick) {
+          const locationName = firstEvent.location?.name || (firstEvent as any).venue?.name || 'Lieu inconnu';
+          onLocationClick(locationEvents, locationName);
+        }
+      });
+    });
+  }, [mapLoaded, locationGroups, clearMarkers, onEventClick, onLocationClick]);
 
   return (
     <div className="h-full w-full rounded-lg overflow-hidden relative">
