@@ -138,7 +138,7 @@ const StableEventMap = ({
         box-shadow: 0 0 20px ${color}40, 0 4px 15px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
         position: relative;
-        z-index: 1000;
+        z-index: 100;
       `;
       
       // Design élégant avec icône MapPin ou chiffre
@@ -158,13 +158,13 @@ const StableEventMap = ({
       
       // Événements hover stables (sans scale qui cause des problèmes)
       markerElement.addEventListener('mouseenter', () => {
-        markerElement.style.zIndex = '1001';
+        markerElement.style.zIndex = '101';
         markerElement.style.boxShadow = `0 0 25px ${color}80, 0 6px 20px rgba(0,0,0,0.4)`;
         markerElement.style.borderWidth = '4px';
       });
       
       markerElement.addEventListener('mouseleave', () => {
-        markerElement.style.zIndex = '1000';
+        markerElement.style.zIndex = '100';
         markerElement.style.boxShadow = `0 0 20px ${color}40, 0 4px 15px rgba(0,0,0,0.3)`;
         markerElement.style.borderWidth = '3px';
       });
