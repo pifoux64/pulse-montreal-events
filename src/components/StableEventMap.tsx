@@ -137,7 +137,6 @@ const StableEventMap = ({
         cursor: pointer;
         box-shadow: 0 0 20px ${color}40, 0 4px 15px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
-        position: relative;
         z-index: 100;
       `;
       
@@ -184,13 +183,13 @@ const StableEventMap = ({
         }
       });
 
-      // Créer le marqueur MapLibre
+      // Créer le marqueur MapLibre avec ancrage correct
+      console.log('📍 Coordonnées marqueur:', firstEvent.title, '→', { lat, lng });
       const maplibreglLib = (window as any).maplibregl || maplibregl.default || maplibregl;
-      const marker = new maplibreglLib.Marker({
-        element: markerElement,
-        anchor: 'center'
-      })
-        .setLngLat([lng, lat])
+      
+      // Créer marqueur avec élément personnalisé mais ancrage stable
+      const marker = new maplibreglLib.Marker(markerElement)
+        .setLngLat([lng, lat]) // MapLibre utilise [longitude, latitude]
         .addTo(mapInstance);
 
       // Stocker la référence
