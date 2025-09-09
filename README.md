@@ -1,36 +1,231 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pulse - Plateforme d'événements à Montréal
 
-## Getting Started
+Une application web moderne pour découvrir et organiser des événements culturels, sportifs et festifs à Montréal.
 
-First, run the development server:
+## 🎯 Fonctionnalités
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 🏠 **Page d'accueil**
+- Liste des événements avec filtres avancés
+- Vue grille et liste
+- Recherche en temps réel
+- Filtres par catégorie, date, prix, localisation
+- Détection automatique de la position GPS
+
+### 🗺️ **Carte interactive**
+- Carte Leaflet avec marqueurs d'événements
+- Filtrage géographique
+- Calcul de distance et rayon de recherche
+- Vue satellite et plan
+
+### 📅 **Calendrier**
+- Vue mensuelle des événements
+- Navigation entre les mois
+- Filtrage par date
+- Affichage des événements par jour
+
+### ❤️ **Mes Favoris**
+- Gestion des événements favoris
+- Filtrage et tri des favoris
+- Partage d'événements
+- Export au format ICS
+
+### ✨ **Publier un événement**
+- Formulaire complet de création
+- Validation des données
+- Upload d'images
+- Gestion des catégories et sous-catégories
+
+## 🛠️ Technologies utilisées
+
+- **Frontend** : Next.js 15, React 19
+- **Styling** : Tailwind CSS 4
+- **Typographie** : Poppins (Google Fonts)
+- **Cartographie** : Leaflet.js avec React-Leaflet
+- **Formulaires** : React Hook Form avec Zod
+- **Icônes** : Lucide React
+- **Dates** : date-fns
+- **Base de données** : PostgreSQL via Supabase
+- **Déploiement** : Vercel (recommandé)
+
+## 🎨 Palette de couleurs
+
+L'application utilise une palette de couleurs personnalisée et moderne :
+
+- **Primaire** : `#1abc9c` (Vert-bleu)
+- **Secondaire** : `#2ecc71` (Vert)
+- **Accent** : `#3498db` (Bleu)
+- **Violet** : `#9b59b6`
+- **Foncé** : `#34495e` (Bleu foncé)
+- **Gris** : `#95a5a6`
+- **Clair** : `#ecf0f1` (Blanc cassé)
+- **Danger** : `#e74c3c` (Rouge)
+- **Warning** : `#e67e22` (Orange)
+- **Success** : `#f1c40f` (Jaune)
+
+## 🗄️ Base de données
+
+### Structure Supabase
+- **Tables principales** : `users`, `events`, `categories`, `sub_categories`
+- **Relations** : `favorites`, `user_preferences`, `notifications`
+- **Extensions** : `postgis` pour la géolocalisation
+- **Sécurité** : RLS (Row Level Security) activé
+- **Données d'exemple** : Catégories et sous-catégories pré-remplies
+
+### Schéma principal
+```sql
+-- Tables principales
+events (id, title, description, dates, location, category, price, etc.)
+categories (id, name, icon, color)
+sub_categories (id, name, category_id)
+users (id, email, name, role)
+favorites (user_id, event_id)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🧩 Composants principaux
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Composants de base
+- `Navigation` - Barre de navigation avec logo Pulse
+- `EventCard` - Carte d'événement avec actions
+- `EventFilters` - Filtres avancés avec géolocalisation
+- `EventMap` - Carte interactive Leaflet
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Composants avancés
+- `SearchBar` - Recherche intelligente avec suggestions
+- `EventStats` - Statistiques et insights
+- `Pagination` - Navigation entre pages
+- `EventSort` - Tri des événements
+- `Notification` - Système de notifications
 
-## Learn More
+## 📱 Pages
 
-To learn more about Next.js, take a look at the following resources:
+1. **Accueil** (`/`) - Liste des événements avec filtres
+2. **Carte** (`/carte`) - Vue cartographique
+3. **Calendrier** (`/calendrier`) - Vue calendaire
+4. **Favoris** (`/favoris`) - Gestion des favoris
+5. **Publier** (`/publier`) - Création d'événements
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🎨 Personnalisation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Thème
+- Police Poppins pour tous les textes
+- Palette de couleurs cohérente
+- Composants réutilisables et personnalisables
+- Design responsive et moderne
 
-## Deploy on Vercel
+### Composants personnalisables
+- Classes CSS utilitaires pour les couleurs
+- Composants avec props configurables
+- Système de badges et boutons cohérent
+- Animations et transitions fluides
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚀 Fonctionnalités avancées
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Système de recherche
+- Recherche en temps réel
+- Suggestions intelligentes
+- Historique des recherches
+- Recherche par tags et catégories
+
+### Géolocalisation
+- Détection automatique de la position
+- Calcul de distance et rayon
+- Filtrage géographique
+- Marqueurs de position utilisateur
+
+### Accessibilité
+- Support des lecteurs d'écran
+- Navigation au clavier
+- Contraste élevé
+- Textes alternatifs
+
+## 📋 Roadmap
+
+### Phase 1 ✅ (Terminée)
+- [x] Structure de base Next.js
+- [x] Composants principaux
+- [x] Pages de base
+- [x] Palette de couleurs
+- [x] Police Poppins
+- [x] Logo Pulse
+
+### Phase 2 🔄 (En cours)
+- [ ] Intégration Supabase
+- [ ] Authentification utilisateur
+- [ ] CRUD événements
+- [ ] Système de favoris
+
+### Phase 3 📅 (Prévue)
+- [ ] Notifications push
+- [ ] Application mobile PWA
+- [ ] API publique
+- [ ] Analytics et métriques
+
+## 🚀 Installation
+
+1. **Cloner le projet**
+   ```bash
+   git clone <repository-url>
+   cd montreal-events
+   ```
+
+2. **Installer les dépendances**
+   ```bash
+   npm install
+   ```
+
+3. **Configuration Supabase**
+   - Créer un projet Supabase
+   - Exécuter `database/schema.sql`
+   - Configurer les variables d'environnement
+
+4. **Lancer en développement**
+   ```bash
+   npm run dev
+   ```
+
+5. **Ouvrir l'application**
+   - Naviguer vers `http://localhost:3000`
+   - L'application Pulse devrait s'afficher avec votre logo
+
+## 🔧 Configuration
+
+### Variables d'environnement
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Base de données
+- Exécuter le script `database/schema.sql` dans Supabase
+- Vérifier que les extensions `postgis` et `uuid-ossp` sont activées
+
+## 🐛 Problèmes connus
+
+- **Port 3000 occupé** : L'application utilise automatiquement le port suivant disponible
+- **Images** : Utilisation d'images d'exemple depuis Unsplash
+- **Données** : Données mockées pour le développement frontend
+
+## 🤝 Contribution
+
+1. Fork le projet
+2. Créer une branche feature (`git checkout -b feature/AmazingFeature`)
+3. Commit les changements (`git commit -m 'Add some AmazingFeature'`)
+4. Push vers la branche (`git push origin feature/AmazingFeature`)
+5. Ouvrir une Pull Request
+
+## 📄 Licence
+
+Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
+
+## 🙏 Remerciements
+
+- **Next.js** pour le framework React
+- **Tailwind CSS** pour le système de design
+- **Supabase** pour la base de données
+- **Leaflet** pour la cartographie
+- **Poppins** pour la typographie
+- **Lucide** pour les icônes
+
+---
+
+**Pulse** - Découvrez le rythme des événements montréalais ! 🎉
