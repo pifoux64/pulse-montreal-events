@@ -156,17 +156,17 @@ const StableEventMap = ({
         `;
       }
       
-      // Événements hover élégants (style ModernEventMap)
+      // Événements hover stables (sans scale qui cause des problèmes)
       markerElement.addEventListener('mouseenter', () => {
-        markerElement.style.transform = 'scale(1.25)';
         markerElement.style.zIndex = '1001';
-        markerElement.style.boxShadow = `0 0 25px ${color}60, 0 6px 20px rgba(0,0,0,0.4)`;
+        markerElement.style.boxShadow = `0 0 25px ${color}80, 0 6px 20px rgba(0,0,0,0.4)`;
+        markerElement.style.borderWidth = '4px';
       });
       
       markerElement.addEventListener('mouseleave', () => {
-        markerElement.style.transform = 'scale(1)';
         markerElement.style.zIndex = '1000';
         markerElement.style.boxShadow = `0 0 20px ${color}40, 0 4px 15px rgba(0,0,0,0.3)`;
+        markerElement.style.borderWidth = '3px';
       });
 
       // Événement clic
@@ -174,10 +174,10 @@ const StableEventMap = ({
         e.preventDefault();
         e.stopPropagation();
         
-        console.log('🖱️ Clic sur marqueur:', firstEvent.title, 'événements:', eventCount);
-        
         if (eventCount === 1) {
-          onEventClickRef.current(firstEvent);
+          if (onEventClickRef.current) {
+            onEventClickRef.current(firstEvent);
+          }
         } else if (onLocationClickRef.current) {
           const locationName = firstEvent.location?.name || (firstEvent as any).venue?.name || 'Lieu inconnu';
           onLocationClickRef.current(locationEvents, locationName);
@@ -185,7 +185,11 @@ const StableEventMap = ({
       });
 
       // Créer le marqueur MapLibre
-      const marker = new maplibregl.default.Marker(markerElement)
+      const maplibreglLib = (window as any).maplibregl || maplibregl.default || maplibregl;
+      const marker = new maplibreglLib.Marker({
+        element: markerElement,
+        anchor: 'center'
+      })
         .setLngLat([lng, lat])
         .addTo(mapInstance);
 
