@@ -29,12 +29,15 @@ const SimpleEventMap = ({
   const mapInstanceRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  
+  // Debug: afficher le nombre d'événements reçus
+  console.log('SimpleEventMap reçoit:', events.length, 'événements');
 
   // Couleurs pour les marqueurs
   const categoryColors: Record<string, string> = {
     'musique': '#E11D48',
     'music': '#E11D48',
-    'art': '#059669',
+    'art & culture': '#059669',
     'arts & theatre': '#059669',
     'sport': '#2563EB',
     'sports': '#2563EB',
@@ -42,6 +45,10 @@ const SimpleEventMap = ({
     'family': '#DC2626',
     'culture': '#D97706',
     'community': '#D97706',
+    'gastronomie': '#C026D3',
+    'food': '#C026D3',
+    'autre': '#6b7280',
+    'other': '#6b7280',
     'default': '#7C3AED'
   };
 
@@ -50,9 +57,14 @@ const SimpleEventMap = ({
     const groups = new Map<string, Event[]>();
     
     events.forEach(event => {
-      const lat = Math.round(event.location.coordinates.lat * 1000) / 1000;
-      const lng = Math.round(event.location.coordinates.lng * 1000) / 1000;
-      const key = `${event.location.name}-${lat}-${lng}`;
+      // Support pour les deux structures de données
+      const lat = event.location?.coordinates?.lat || (event as any).lat || 45.5088;
+      const lng = event.location?.coordinates?.lng || (event as any).lon || -73.5542;
+      const locationName = event.location?.name || (event as any).venue?.name || 'Lieu inconnu';
+      
+      const latRounded = Math.round(lat * 1000) / 1000;
+      const lngRounded = Math.round(lng * 1000) / 1000;
+      const key = `${locationName}-${latRounded}-${lngRounded}`;
       
       if (!groups.has(key)) {
         groups.set(key, []);
@@ -122,7 +134,18 @@ const SimpleEventMap = ({
           locationGroups.forEach((locationEvents, index) => {
             const firstEvent = locationEvents[0];
             const eventCount = locationEvents.length;
-            const primaryColor = categoryColors[firstEvent.category.toLowerCase()] || categoryColors.default;
+            const category = firstEvent.category?.toLowerCase() || 'default';
+            const primaryColor = categoryColors[category] || categoryColors.default;
+            
+            // Debug: afficher les catégories pour le débogage
+            if (index < 5) {
+              console.log(`Événement ${index}:`, {
+                title: firstEvent.title,
+                category: firstEvent.category,
+                categoryLower: category,
+                color: primaryColor
+              });
+            }
 
             // Créer l'élément du marqueur
             const markerElement = document.createElement('div');
@@ -154,9 +177,12 @@ const SimpleEventMap = ({
               markerElement.style.transform = 'scale(1)';
             });
 
-            // Créer le marqueur
+            // Créer le marqueur avec support pour les deux structures
+            const lat = firstEvent.location?.coordinates?.lat || (firstEvent as any).lat || 45.5088;
+            const lng = firstEvent.location?.coordinates?.lng || (firstEvent as any).lon || -73.5542;
+            
             const marker = new maplibregl.Marker(markerElement)
-              .setLngLat([firstEvent.location.coordinates.lng, firstEvent.location.coordinates.lat])
+              .setLngLat([lng, lat])
               .addTo(map);
 
             // Ajouter l'événement de clic
