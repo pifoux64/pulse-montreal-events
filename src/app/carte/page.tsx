@@ -221,6 +221,8 @@ export default function CartePage() {
   const [showEventList, setShowEventList] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [locationEvents, setLocationEvents] = useState<Event[] | null>(null);
+  const [locationName, setLocationName] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -450,7 +452,16 @@ export default function CartePage() {
 
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
+    setLocationEvents(null); // Fermer le panneau de lieu si ouvert
     setShowEventList(true);
+  };
+
+  const handleLocationClick = (events: Event[], locationName: string) => {
+    setLocationEvents(events);
+    setLocationName(locationName);
+    setSelectedEvent(null); // Fermer le popup d'événement si ouvert
+    setShowEventList(true); // Afficher le panneau latéral
+    console.log(`Lieu sélectionné: ${locationName} avec ${events.length} événements`);
   };
 
   const handleMapViewChange = (viewState: MapViewState) => {
@@ -520,6 +531,7 @@ export default function CartePage() {
               center={mapViewState.center}
               zoom={mapViewState.zoom}
               onEventClick={handleEventClick}
+              onLocationClick={handleLocationClick}
               onMapViewChange={handleMapViewChange}
               userLocation={userLocation}
               searchRadius={filters.location?.radius}
@@ -531,22 +543,48 @@ export default function CartePage() {
             <div className="w-96 bg-white border-l border-gray-200 overflow-hidden">
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Événements ({filteredEvents.length})
-                  </h3>
-                  <button
-                    onClick={() => setShowEventList(false)}
-                    className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
+                      {locationEvents ? `${locationName}` : 'Événements'}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      {locationEvents ? 
+                        `${locationEvents.length} événement${locationEvents.length !== 1 ? 's' : ''} à ce lieu` :
+                        `${filteredEvents.length} événement${filteredEvents.length !== 1 ? 's' : ''}`
+                      }
+                    </p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {locationEvents && (
+                      <button
+                        onClick={() => {
+                          setLocationEvents(null);
+                          setLocationName('');
+                        }}
+                        className="p-1 hover:bg-gray-100 rounded transition-colors duration-200 text-gray-500"
+                        title="Voir tous les événements"
+                      >
+                        <List className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        setShowEventList(false);
+                        setLocationEvents(null);
+                        setLocationName('');
+                      }}
+                      className="p-1 hover:bg-gray-100 rounded transition-colors duration-200"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
               
               <div className="h-full overflow-y-auto">
-                {filteredEvents.length > 0 ? (
+                {(locationEvents || filteredEvents).length > 0 ? (
                   <div className="p-4 space-y-4">
-                    {filteredEvents.map((event) => (
+                    {(locationEvents || filteredEvents).map((event) => (
                       <EventCard
                         key={event.id}
                         event={event}

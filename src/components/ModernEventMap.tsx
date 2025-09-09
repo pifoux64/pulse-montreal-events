@@ -11,6 +11,7 @@ interface ModernEventMapProps {
   center: [number, number];
   zoom: number;
   onEventClick: (event: Event) => void;
+  onLocationClick?: (events: Event[], locationName: string) => void;
   onMapViewChange: (viewState: MapViewState) => void;
   userLocation?: [number, number] | null;
   searchRadius?: number;
@@ -21,6 +22,7 @@ const ModernEventMap = ({
   center,
   zoom,
   onEventClick,
+  onLocationClick,
   onMapViewChange,
   userLocation,
   searchRadius
@@ -76,6 +78,27 @@ const ModernEventMap = ({
     'education': '#C026D3',
     'default': '#7C3AED'
   };
+
+  // Grouper les événements par lieu (même nom et coordonnées proches)
+  const groupEventsByLocation = (events: Event[]) => {
+    const groups = new Map<string, Event[]>();
+    
+    events.forEach(event => {
+      // Créer une clé basée sur le nom du lieu et les coordonnées arrondies
+      const lat = Math.round(event.location.coordinates.lat * 1000) / 1000;
+      const lng = Math.round(event.location.coordinates.lng * 1000) / 1000;
+      const key = `${event.location.name}-${lat}-${lng}`;
+      
+      if (!groups.has(key)) {
+        groups.set(key, []);
+      }
+      groups.get(key)!.push(event);
+    });
+    
+    return Array.from(groups.values());
+  };
+
+  const locationGroups = groupEventsByLocation(events);
 
   // Fonction pour créer un marqueur personnalisé
   const createMarkerElement = (event: Event) => {
@@ -184,31 +207,49 @@ const ModernEventMap = ({
           </Marker>
         )}
 
-        {/* Marqueurs des événements */}
-        {events.map((event) => (
-          <Marker
-            key={event.id}
-            longitude={event.location.coordinates.lng}
-            latitude={event.location.coordinates.lat}
-            anchor="center"
-            onClick={(e) => {
-              e.originalEvent.stopPropagation();
-              setSelectedEvent(event);
-              onEventClick(event);
-            }}
-          >
-            <div
-              className="w-8 h-8 rounded-full border-2 border-white shadow-2xl cursor-pointer transition-all duration-300 hover:scale-125 flex items-center justify-center relative"
-              style={{ 
-                backgroundColor: categoryColors[event.category.toLowerCase()] || categoryColors.default,
-                zIndex: selectedEvent?.id === event.id ? 1000 : 1,
-                boxShadow: `0 0 20px ${categoryColors[event.category.toLowerCase()] || categoryColors.default}40, 0 4px 15px rgba(0,0,0,0.3)`
+        {/* Marqueurs groupés par lieu */}
+        {locationGroups.map((locationEvents, index) => {
+          const firstEvent = locationEvents[0];
+          const eventCount = locationEvents.length;
+          const primaryColor = categoryColors[firstEvent.category.toLowerCase()] || categoryColors.default;
+          
+          return (
+            <Marker
+              key={`location-${index}`}
+              longitude={firstEvent.location.coordinates.lng}
+              latitude={firstEvent.location.coordinates.lat}
+              anchor="center"
+              onClick={(e) => {
+                e.originalEvent.stopPropagation();
+                if (eventCount === 1) {
+                  setSelectedEvent(firstEvent);
+                  onEventClick(firstEvent);
+                } else if (onLocationClick) {
+                  onLocationClick(locationEvents, firstEvent.location.name);
+                }
               }}
             >
-              <MapPin className="w-4 h-4 text-white drop-shadow-sm" />
-            </div>
-          </Marker>
-        ))}
+              <div
+                className="rounded-full border-2 border-white shadow-2xl cursor-pointer transition-all duration-300 hover:scale-125 flex items-center justify-center relative"
+                style={{ 
+                  backgroundColor: primaryColor,
+                  width: eventCount > 1 ? '36px' : '32px',
+                  height: eventCount > 1 ? '36px' : '32px',
+                  zIndex: 1,
+                  boxShadow: `0 0 20px ${primaryColor}40, 0 4px 15px rgba(0,0,0,0.3)`
+                }}
+              >
+                {eventCount > 1 ? (
+                  <span className="text-white font-bold text-sm drop-shadow-sm">
+                    {eventCount}
+                  </span>
+                ) : (
+                  <MapPin className="w-4 h-4 text-white drop-shadow-sm" />
+                )}
+              </div>
+            </Marker>
+          );
+        })}
 
         {/* Popup moderne pour l'événement sélectionné */}
         {selectedEvent && (
