@@ -1,0 +1,382 @@
+// Pulse - Schéma Prisma complet pour l'agenda culturel de Montréal
+// Générateur et configuration
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ORGANIZER
+  ADMIN
+}
+
+enum EventSource {
+  INTERNAL
+  EVENTBRITE
+  TICKETMASTER
+  MEETUP
+  BANDSINTOWN
+  SEATGEEK
+  MTL_OPEN_DATA
+}
+
+enum EventStatus {
+  SCHEDULED
+  UPDATED
+  CANCELLED
+}
+
+enum EventLanguage {
+  FR
+  EN
+  BOTH
+}
+
+enum EventCategory {
+  MUSIC
+  THEATRE
+  EXHIBITION
+  FAMILY
+  SPORT
+  NIGHTLIFE
+  EDUCATION
+  COMMUNITY
+  OTHER
+}
+
+enum PromotionKind {
+  FEATURED
+  HOMEPAGE
+  MAP_TOP
+  LIST_TOP
+}
+
+enum SubscriptionPlan {
+  PRO
+  BASIC
+}
+
+enum AdPlacementArea {
+  HOMEPAGE
+  SIDEBAR
+  LIST
+  MAP
+}
+
+enum ImportJobStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  ERROR
+}
+
+// Modèles principaux
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String?
+  email     String   @unique
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  organizer     Organizer?
+  favorites     Favorite[]
+  preferences   UserPreferences?
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Organizer {
+  id          String  @id @default(uuid()) @db.Uuid
+  userId      String  @unique @map("user_id") @db.Uuid
+  displayName String  @map("display_name")
+  website     String?
+  socials     Json?   // JSON pour réseaux sociaux
+  verified    Boolean @default(false)
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events        Event[]
+  subscriptions Subscription[]
+
+  @@map("organizers")
+}
+
+model Venue {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  address      String
+  city         String
+  postalCode   String   @map("postal_code")
+  lat          Float
+  lon          Float
+  neighborhood String?
+  phone        String?
+  website      String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  events Event[]
+
+  // Index pour recherche géospatiale
+  @@index([lat, lon], name: "idx_venue_coordinates")
+  @@map("venues")
+}
+
+model Event {
+  id            String        @id @default(uuid()) @db.Uuid
+  source        EventSource   @default(INTERNAL)
+  sourceId      String?       @map("source_id")
+  title         String
+  description   String        @db.Text
+  startAt       DateTime      @map("start_at")
+  endAt         DateTime?     @map("end_at")
+  timezone      String        @default("America/Montreal")
+  status        EventStatus   @default(SCHEDULED)
+  organizerId   String?       @map("organizer_id") @db.Uuid
+  venueId       String?       @map("venue_id") @db.Uuid
+  url           String?
+  priceMin      Int?          @map("price_min") // en cents
+  priceMax      Int?          @map("price_max") // en cents
+  currency      String        @default("CAD")
+  language      EventLanguage @default(FR)
+  imageUrl      String?       @map("image_url")
+  tags          String[]      @default([])
+  category      EventCategory
+  subcategory   String?
+  accessibility String[]      @default([]) // ["wheelchair", "hearing_aid", etc.]
+  ageRestriction String?      @map("age_restriction")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  organizer    Organizer?     @relation(fields: [organizerId], references: [id], onDelete: SetNull)
+  venue        Venue?         @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  features     EventFeature[]
+  favorites    Favorite[]
+  promotions   Promotion[]
+  notifications Notification[]
+
+  // Index pour performance
+  @@index([title], name: "idx_event_title")
+  @@index([startAt], name: "idx_event_start_at")
+  @@index([category], name: "idx_event_category")
+  @@index([tags], name: "idx_event_tags")
+  @@index([status], name: "idx_event_status")
+  @@index([organizerId], name: "idx_event_organizer")
+  @@index([venueId], name: "idx_event_venue")
+  @@unique([sourceId, source], name: "unique_source_event")
+  @@map("events")
+}
+
+model EventFeature {
+  id           String @id @default(uuid()) @db.Uuid
+  eventId      String @map("event_id") @db.Uuid
+  featureKey   String @map("feature_key")
+  featureValue Json   @map("feature_value")
+
+  // Relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, featureKey], name: "unique_event_feature")
+  @@map("event_features")
+}
+
+model Favorite {
+  id      String @id @default(uuid()) @db.Uuid
+  userId  String @map("user_id") @db.Uuid
+  eventId String @map("event_id") @db.Uuid
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId], name: "unique_user_event_favorite")
+  @@map("favorites")
+}
+
+model Promotion {
+  id         String        @id @default(uuid()) @db.Uuid
+  eventId    String        @map("event_id") @db.Uuid
+  kind       PromotionKind
+  startsAt   DateTime      @map("starts_at")
+  endsAt     DateTime      @map("ends_at")
+  priceCents Int           @map("price_cents") // prix en cents
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  // Relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@map("promotions")
+}
+
+model Subscription {
+  id             String           @id @default(uuid()) @db.Uuid
+  organizerId    String           @map("organizer_id") @db.Uuid
+  plan           SubscriptionPlan
+  billingMonthly Int              @map("billing_monthly") // prix mensuel en cents
+  active         Boolean          @default(true)
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  // Relations
+  organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}
+
+model AdPlacement {
+  id          String            @id @default(uuid()) @db.Uuid
+  sponsorName String            @map("sponsor_name")
+  area        AdPlacementArea
+  startsAt    DateTime          @map("starts_at")
+  endsAt      DateTime          @map("ends_at")
+  priceCents  Int               @map("price_cents")
+  targetJson  Json              @map("target_json") // ciblage par quartier, catégorie, etc.
+  createdAt   DateTime          @default(now()) @map("created_at")
+
+  @@map("ad_placements")
+}
+
+model ImportJob {
+  id        String          @id @default(uuid()) @db.Uuid
+  source    EventSource
+  status    ImportJobStatus @default(PENDING)
+  runAt     DateTime        @map("run_at")
+  stats     Json?           // statistiques d'import
+  errorText String?         @map("error_text") @db.Text
+
+  @@map("import_jobs")
+}
+
+// Modèles pour les utilisateurs
+
+model UserPreferences {
+  id                    String   @id @default(uuid()) @db.Uuid
+  userId                String   @unique @map("user_id") @db.Uuid
+  favoriteCategories    String[] @default([]) @map("favorite_categories")
+  favoriteSubcategories String[] @default([]) @map("favorite_subcategories")
+  favoriteNeighborhoods String[] @default([]) @map("favorite_neighborhoods")
+  notificationsEmail    Boolean  @default(true) @map("notifications_email")
+  notificationsPush     Boolean  @default(true) @map("notifications_push")
+  notificationsFavorites Boolean @default(true) @map("notifications_favorites")
+  language              String   @default("fr") @db.VarChar(2)
+  timezone              String   @default("America/Montreal")
+  defaultRadius         Int      @default(10) @map("default_radius") // en km
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Notification {
+  id      String  @id @default(uuid()) @db.Uuid
+  userId  String  @map("user_id") @db.Uuid
+  eventId String? @map("event_id") @db.Uuid
+  type    String  // 'favorite', 'reminder', 'new_event', 'custom'
+  title   String
+  message String  @db.Text
+  isRead  Boolean @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+}
+
+// Modèles pour les métadonnées
+
+model Category {
+  id            String @id @default(uuid()) @db.Uuid
+  name          String
+  nameEn        String @map("name_en")
+  slug          String @unique
+  icon          String
+  color         String
+  description   String?
+  descriptionEn String? @map("description_en")
+  sortOrder     Int     @default(0) @map("sort_order")
+
+  // Relations
+  subcategories Subcategory[]
+
+  @@map("categories")
+}
+
+model Subcategory {
+  id           String @id @default(uuid()) @db.Uuid
+  categoryId   String @map("category_id") @db.Uuid
+  name         String
+  nameEn       String @map("name_en")
+  slug         String
+  description  String?
+  descriptionEn String? @map("description_en")
+  sortOrder    Int     @default(0) @map("sort_order")
+
+  // Relations
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, slug], name: "unique_category_subcategory_slug")
+  @@map("subcategories")
+}
+
+model Neighborhood {
+  id        String @id @default(uuid()) @db.Uuid
+  name      String
+  nameEn    String @map("name_en")
+  slug      String @unique
+  city      String @default("Montréal")
+  province  String @default("QC")
+  country   String @default("CA")
+  bounds    Json?  // GeoJSON polygon pour les limites
+  centerLat Float? @map("center_lat")
+  centerLon Float? @map("center_lon")
+
+  @@map("neighborhoods")
+}
+
+// Modèles pour la recherche et analytics
+
+model SearchQuery {
+  id        String   @id @default(uuid()) @db.Uuid
+  query     String
+  filters   Json?    // filtres appliqués
+  results   Int      @default(0) // nombre de résultats
+  userId    String?  @map("user_id") @db.Uuid
+  sessionId String?  @map("session_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([query], name: "idx_search_query")
+  @@index([createdAt], name: "idx_search_created_at")
+  @@map("search_queries")
+}
+
+model EventView {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventId   String   @map("event_id") @db.Uuid
+  userId    String?  @map("user_id") @db.Uuid
+  sessionId String?  @map("session_id")
+  userAgent String?  @map("user_agent")
+  ipAddress String?  @map("ip_address")
+  referrer  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([eventId], name: "idx_event_view_event")
+  @@index([createdAt], name: "idx_event_view_created_at")
+  @@map("event_views")
+}
