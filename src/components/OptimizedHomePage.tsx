@@ -382,7 +382,7 @@ export default function OptimizedHomePage() {
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="w-6 h-6 text-white" />
               </div>
-              <div className="text-3xl font-bold text-white mb-2">5</div>
+              <div className="text-3xl font-bold text-white mb-2">6</div>
               <div className="text-white/80">Sources actives</div>
             </div>
 
@@ -423,10 +423,14 @@ export default function OptimizedHomePage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full"></div>
                 <span className="text-sm">Meetup</span>
               </div>
-              <div className="flex items-center space-x-2 text-white/80">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-sm">Ville de Montréal</span>
-              </div>
+            <div className="flex items-center space-x-2 text-white/80">
+              <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+              <span className="text-sm">Ville de Montréal</span>
+            </div>
+            <div className="flex items-center space-x-2 text-white/80">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm">Resident Advisor</span>
+            </div>
             </div>
           </div>
         </div>

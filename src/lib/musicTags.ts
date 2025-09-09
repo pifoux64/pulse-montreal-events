@@ -11,9 +11,9 @@ export const MUSIC_GENRES = {
   punk: ['punk', 'punk rock', 'hardcore punk', 'pop punk', 'post-punk'],
   
   // Electronic & Dance
-  electronic: ['electronic', 'edm', 'techno', 'house', 'trance', 'dubstep', 'ambient'],
-  techno: ['techno', 'minimal techno', 'detroit techno', 'acid techno'],
-  house: ['house', 'deep house', 'tech house', 'progressive house', 'electro house'],
+  electronic: ['electronic', 'edm', 'techno', 'house', 'trance', 'dubstep', 'ambient', 'nightlife'],
+  techno: ['techno', 'minimal techno', 'detroit techno', 'acid techno', 'drumcode', 'afterlife', 'industrial techno'],
+  house: ['house', 'deep house', 'tech house', 'progressive house', 'electro house', 'diynamic', 'innervisions'],
   dubstep: ['dubstep', 'brostep', 'melodic dubstep'],
   
   // Hip-Hop & R&B
