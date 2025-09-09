@@ -120,52 +120,100 @@ const StableEventMap = ({
       const lat = firstEvent.location?.coordinates?.lat || (firstEvent as any).lat || 45.5088;
       const lng = firstEvent.location?.coordinates?.lng || (firstEvent as any).lon || -73.5542;
 
-      // Créer l'élément HTML du marqueur
+      // Créer l'élément HTML du marqueur avec le logo Pulse
       const markerElement = document.createElement('div');
-      markerElement.className = 'stable-event-marker';
+      markerElement.className = 'pulse-event-marker';
       
-      // Style inline pour garantir l'application
+      // Convertir la couleur hex en filtre CSS pour colorer le logo
+      const getColorFilter = (hexColor: string) => {
+        // Conversion approximative des couleurs principales en filtres CSS
+        const colorFilters: Record<string, string> = {
+          '#E11D48': 'hue-rotate(340deg) saturate(1.5) brightness(0.9)', // Rouge/Rose pour Musique
+          '#2563EB': 'hue-rotate(220deg) saturate(1.3) brightness(1.1)', // Bleu pour Sport
+          '#059669': 'hue-rotate(140deg) saturate(1.4) brightness(1.0)', // Vert pour Art & Culture
+          '#D97706': 'hue-rotate(30deg) saturate(1.5) brightness(1.2)',  // Orange pour Community
+          '#9333ea': 'hue-rotate(270deg) saturate(1.3) brightness(1.1)', // Violet pour Miscellaneous
+          '#f59e0b': 'hue-rotate(45deg) saturate(1.4) brightness(1.3)',  // Jaune pour Education
+          '#C026D3': 'hue-rotate(300deg) saturate(1.2) brightness(1.0)', // Magenta pour Gastronomie
+          '#DC2626': 'hue-rotate(0deg) saturate(1.5) brightness(1.0)',   // Rouge pour Famille
+          '#6b7280': 'grayscale(1) brightness(0.8)',                     // Gris pour Autre
+        };
+        return colorFilters[hexColor] || 'hue-rotate(0deg) saturate(1.2) brightness(1.1)';
+      };
+      
+      // Style inline pour le conteneur (STABLE - MapLibre gère le centrage)
       markerElement.style.cssText = `
-        width: ${eventCount > 1 ? '36px' : '32px'};
-        height: ${eventCount > 1 ? '36px' : '32px'};
-        background: ${color};
-        border: 3px solid white;
-        border-radius: 50%;
+        width: ${eventCount > 1 ? '40px' : '36px'};
+        height: ${eventCount > 1 ? '40px' : '36px'};
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 0 20px ${color}40, 0 4px 15px rgba(0,0,0,0.3);
-        transition: all 0.3s ease;
+        transition: filter 0.3s ease;
         z-index: 100;
+        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+        pointer-events: auto;
       `;
       
-      // Design élégant avec icône MapPin ou chiffre
+      // Design avec logo Pulse coloré + chiffre si multiple
       if (eventCount > 1) {
         markerElement.innerHTML = `
-          <span style="color: white; font-weight: bold; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
-            ${eventCount}
-          </span>
+          <div style="position: relative; width: 100%; height: 100%;">
+            <img 
+              src="/Pulse_Logo_only_heart.png" 
+              alt="Pulse Event" 
+              style="
+                width: 100%; 
+                height: 100%; 
+                filter: ${getColorFilter(color)};
+                object-fit: contain;
+              "
+            />
+            <div style="
+              position: absolute; 
+              top: -4px; 
+              right: -4px; 
+              background: ${color}; 
+              color: white; 
+              border-radius: 50%; 
+              width: 18px; 
+              height: 18px; 
+              display: flex; 
+              align-items: center; 
+              justify-content: center; 
+              font-size: 10px; 
+              font-weight: bold;
+              border: 2px solid white;
+              box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+            ">
+              ${eventCount}
+            </div>
+          </div>
         `;
       } else {
         markerElement.innerHTML = `
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
-            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-          </svg>
+          <img 
+            src="/Pulse_Logo_only_heart.png" 
+            alt="Pulse Event" 
+            style="
+              width: 100%; 
+              height: 100%; 
+              filter: ${getColorFilter(color)};
+              object-fit: contain;
+            "
+          />
         `;
       }
       
-      // Événements hover stables (sans scale qui cause des problèmes)
+      // Événements hover pour le logo Pulse (SANS SCALE - stable)
       markerElement.addEventListener('mouseenter', () => {
         markerElement.style.zIndex = '101';
-        markerElement.style.boxShadow = `0 0 25px ${color}80, 0 6px 20px rgba(0,0,0,0.4)`;
-        markerElement.style.borderWidth = '4px';
+        markerElement.style.filter = `drop-shadow(0 4px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 20px ${color}80) brightness(1.1)`;
       });
       
       markerElement.addEventListener('mouseleave', () => {
         markerElement.style.zIndex = '100';
-        markerElement.style.boxShadow = `0 0 20px ${color}40, 0 4px 15px rgba(0,0,0,0.3)`;
-        markerElement.style.borderWidth = '3px';
+        markerElement.style.filter = 'drop-shadow(0 2px 8px rgba(0,0,0,0.3)) brightness(1)';
       });
 
       // Événement clic
@@ -183,12 +231,14 @@ const StableEventMap = ({
         }
       });
 
-      // Créer le marqueur MapLibre avec ancrage correct
-      console.log('📍 Coordonnées marqueur:', firstEvent.title, '→', { lat, lng });
+      // Créer le marqueur MapLibre avec élément personnalisé
       const maplibreglLib = (window as any).maplibregl || maplibregl.default || maplibregl;
       
-      // Créer marqueur avec élément personnalisé mais ancrage stable
-      const marker = new maplibreglLib.Marker(markerElement)
+      // IMPORTANT: Utiliser notre élément HTML personnalisé pour garder les couleurs/icônes
+      const marker = new maplibreglLib.Marker({
+        element: markerElement,  // ← Notre élément personnalisé avec couleurs/icônes
+        anchor: 'center'  // ← Assure un centrage correct par MapLibre
+      })
         .setLngLat([lng, lat]) // MapLibre utilise [longitude, latitude]
         .addTo(mapInstance);
 

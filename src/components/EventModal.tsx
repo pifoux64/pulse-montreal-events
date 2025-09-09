@@ -132,7 +132,7 @@ const EventModal = ({
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-3xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-4xl max-h-[95vh] bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col">
         
         {/* Header avec image */}
         <div className="relative">
@@ -206,17 +206,18 @@ const EventModal = ({
             </div>
           )}
 
-          {/* Bouton fermer */}
-          <button
-            onClick={onClose}
-            className="absolute top-6 right-6 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors duration-200"
-          >
-            <X className="w-6 h-6" />
-          </button>
         </div>
 
+        {/* Bouton fermer - DÉPLACÉ à l'extérieur pour être toujours visible */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-3 bg-white text-gray-600 rounded-full hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 shadow-lg z-10"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
         {/* Contenu scrollable */}
-        <div className="max-h-[calc(90vh-16rem)] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           <div className="p-8">
             
             {/* Titre et tags principaux */}

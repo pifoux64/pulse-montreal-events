@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Event, EventFilter, EventCategory } from '@/types';
+import { useEvents } from '@/hooks/useEvents';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
+import EventModal from '@/components/EventModal';
 import { Calendar, Filter, ChevronLeft, ChevronRight, MapPin, Clock, Users, Heart } from 'lucide-react';
 
 // Données de test pour le développement
@@ -72,208 +74,26 @@ const mockCategories: EventCategory[] = [
   }
 ];
 
-// Événements de test avec plus de dates
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Festival Reggae Montréal 2024',
-    description: 'Le plus grand festival de reggae de l\'été à Montréal ! Venez danser au rythme des meilleurs artistes internationaux.',
-    shortDescription: 'Festival de reggae avec artistes internationaux',
-    startDate: new Date('2024-08-15T18:00:00'),
-    endDate: new Date('2024-08-15T23:00:00'),
-    location: {
-      name: 'Parc Jean-Drapeau',
-      address: '1 Circuit Gilles Villeneuve',
-      city: 'Montréal',
-      postalCode: 'H3C 1A9',
-      coordinates: { lat: 45.5088, lng: -73.5542 }
-    },
-    category: 'Musique',
-    subCategory: 'Reggae',
-    tags: ['reggae', 'festival', 'été', 'plein air'],
-    price: { amount: 45, currency: 'CAD', isFree: false },
-    imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
-    ticketUrl: 'https://example.com/tickets',
-    organizerId: 'org1',
-    organizer: { id: 'org1', email: 'org@example.com', name: 'Festival Montréal', role: 'organizer', createdAt: new Date(), updatedAt: new Date() },
-    customFilters: [],
-    accessibility: {
-      wheelchairAccessible: true,
-      hearingAssistance: false,
-      visualAssistance: false,
-      quietSpace: false,
-      genderNeutralBathrooms: true,
-      other: []
-    },
-    targetAudience: ['Adulte', 'Famille'],
-    maxCapacity: 5000,
-    currentAttendees: 3200,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '2',
-    title: 'Exposition d\'Art Contemporain',
-    description: 'Découvrez les œuvres des artistes montréalais les plus prometteurs dans cette exposition unique.',
-    shortDescription: 'Exposition d\'art contemporain montréalais',
-    startDate: new Date('2024-08-16T10:00:00'),
-    endDate: new Date('2024-08-16T18:00:00'),
-    location: {
-      name: 'Musée d\'Art Contemporain',
-      address: '185 Rue Sainte-Catherine Ouest',
-      city: 'Montréal',
-      postalCode: 'H2X 1K4',
-      coordinates: { lat: 45.5017, lng: -73.5673 }
-    },
-    category: 'Art & Culture',
-    subCategory: 'Exposition',
-    tags: ['art', 'contemporain', 'musée', 'culture'],
-    price: { amount: 15, currency: 'CAD', isFree: false },
-    imageUrl: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop',
-    ticketUrl: 'https://example.com/tickets',
-    organizerId: 'org2',
-    organizer: { id: 'org2', email: 'org2@example.com', name: 'MAC Montréal', role: 'organizer', createdAt: new Date(), updatedAt: new Date() },
-    customFilters: [],
-    accessibility: {
-      wheelchairAccessible: true,
-      hearingAssistance: true,
-      visualAssistance: true,
-      quietSpace: true,
-      genderNeutralBathrooms: true,
-      other: []
-    },
-    targetAudience: ['Adulte', 'Famille', 'Étudiant'],
-    maxCapacity: 200,
-    currentAttendees: 45,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '3',
-    title: 'Match de Basketball - Impact vs Alouettes',
-    description: 'Venez encourager l\'équipe locale dans ce match passionnant de basketball !',
-    shortDescription: 'Match de basketball professionnel',
-    startDate: new Date('2024-08-17T19:30:00'),
-    endDate: new Date('2024-08-17T22:00:00'),
-    location: {
-      name: 'Centre Bell',
-      address: '1909 Avenue des Canadiens-de-Montréal',
-      city: 'Montréal',
-      postalCode: 'H4B 5G0',
-      coordinates: { lat: 45.4961, lng: -73.5694 }
-    },
-    category: 'Sport',
-    subCategory: 'Basketball',
-    tags: ['basketball', 'sport', 'match', 'équipe locale'],
-    price: { amount: 35, currency: 'CAD', isFree: false },
-    imageUrl: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=400&h=300&fit=crop',
-    ticketUrl: 'https://example.com/tickets',
-    organizerId: 'org3',
-    organizer: { id: 'org3', email: 'org3@example.com', name: 'Centre Bell', role: 'organizer', createdAt: new Date(), updatedAt: new Date() },
-    customFilters: [],
-    accessibility: {
-      wheelchairAccessible: true,
-      hearingAssistance: false,
-      visualAssistance: false,
-      quietSpace: false,
-      genderNeutralBathrooms: true,
-      other: []
-    },
-    targetAudience: ['Adulte', 'Famille'],
-    maxCapacity: 21000,
-    currentAttendees: 18500,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '4',
-    title: 'Festival de Jazz en Plein Air',
-    description: 'Une soirée magique de jazz sous les étoiles dans le Vieux-Port de Montréal.',
-    shortDescription: 'Jazz en plein air au Vieux-Port',
-    startDate: new Date('2024-08-18T20:00:00'),
-    endDate: new Date('2024-08-18T23:00:00'),
-    location: {
-      name: 'Vieux-Port de Montréal',
-      address: '333 Rue de la Commune Ouest',
-      city: 'Montréal',
-      postalCode: 'H2Y 2E2',
-      coordinates: { lat: 45.5017, lng: -73.5542 }
-    },
-    category: 'Musique',
-    subCategory: 'Jazz',
-    tags: ['jazz', 'plein air', 'vieux-port', 'été'],
-    price: { amount: 0, currency: 'CAD', isFree: true },
-    imageUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=400&h=300&fit=crop',
-    ticketUrl: '',
-    organizerId: 'org4',
-    organizer: { id: 'org4', email: 'org4@example.com', name: 'Jazz Montréal', role: 'organizer', createdAt: new Date(), updatedAt: new Date() },
-    customFilters: [],
-    accessibility: {
-      wheelchairAccessible: true,
-      hearingAssistance: false,
-      visualAssistance: false,
-      quietSpace: false,
-      genderNeutralBathrooms: true,
-      other: []
-    },
-    targetAudience: ['Adulte', 'Famille'],
-    maxCapacity: 1000,
-    currentAttendees: 450,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '5',
-    title: 'Atelier de Cuisine Québécoise',
-    description: 'Apprenez à cuisiner les plats traditionnels du Québec avec nos chefs expérimentés.',
-    shortDescription: 'Atelier cuisine traditionnelle québécoise',
-    startDate: new Date('2024-08-19T14:00:00'),
-    endDate: new Date('2024-08-19T17:00:00'),
-    location: {
-      name: 'École Culinaire de Montréal',
-      address: '1234 Rue Saint-Denis',
-      city: 'Montréal',
-      postalCode: 'H2X 3K8',
-      coordinates: { lat: 45.5088, lng: -73.5673 }
-    },
-    category: 'Gastronomie',
-    subCategory: 'Dégustation',
-    tags: ['cuisine', 'québécois', 'atelier', 'apprentissage'],
-    price: { amount: 75, currency: 'CAD', isFree: false },
-    imageUrl: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop',
-    ticketUrl: 'https://example.com/tickets',
-    organizerId: 'org5',
-    organizer: { id: 'org5', email: 'org5@example.com', name: 'École Culinaire', role: 'organizer', createdAt: new Date(), updatedAt: new Date() },
-    customFilters: [],
-    accessibility: {
-      wheelchairAccessible: true,
-      hearingAssistance: true,
-      visualAssistance: false,
-      quietSpace: false,
-      genderNeutralBathrooms: true,
-      other: []
-    },
-    targetAudience: ['Adulte', 'Famille'],
-    maxCapacity: 20,
-    currentAttendees: 12,
-    isActive: true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-];
+// Les événements sont maintenant chargés via l'API useEvents()
 
 export default function CalendrierPage() {
-  const [events, setEvents] = useState<Event[]>(mockEvents);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>(mockEvents);
+  // Utilisation de l'API réelle comme sur la carte
+  const { data: events = [], isLoading, error } = useEvents();
+  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [filters, setFilters] = useState<EventFilter>({});
   const [showFilters, setShowFilters] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Initialiser les événements filtrés quand les événements arrivent
+  useEffect(() => {
+    if (events.length > 0) {
+      setFilteredEvents(events);
+    }
+  }, [events]);
 
   // Application des filtres
   useEffect(() => {
@@ -397,8 +217,8 @@ export default function CalendrierPage() {
   };
 
   const handleEventClick = (event: Event) => {
-    // TODO: Navigation vers la page de détails
-    console.log('Clic sur l\'événement:', event.title);
+    setSelectedEvent(event);
+    setIsModalOpen(true);
   };
 
   const formatDate = (date: Date) => {
@@ -437,6 +257,39 @@ export default function CalendrierPage() {
     };
     return colors[category.toLowerCase()] || 'bg-gray-100 text-gray-800';
   };
+
+  // Affichage du chargement
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Chargement des événements...</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Affichage des erreurs
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navigation />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <div className="text-red-600 mb-4">
+              <Calendar className="w-16 h-16 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold">Erreur de chargement</h2>
+              <p className="text-gray-600 mt-2">Impossible de charger les événements. Veuillez réessayer.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -705,6 +558,15 @@ export default function CalendrierPage() {
           </div>
         </div>
       </main>
+
+      {/* Modal des événements */}
+      <EventModal
+        event={selectedEvent}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onFavoriteToggle={handleFavoriteToggle}
+        isFavorite={false}
+      />
     </div>
   );
 }

@@ -7,6 +7,8 @@ import { prisma } from './prisma';
 import { ImportJobStatus, EventSource, EventStatus } from '@prisma/client';
 import { BaseConnector, UnifiedEvent, ImportStats } from '../ingestors/base';
 import { EventbriteConnector } from '../ingestors/eventbrite';
+import { QuartierSpectaclesConnector } from '../ingestors/quartier-spectacles';
+import { TourismeMontrealaConnector } from '../ingestors/tourisme-montreal';
 import { 
   findPotentialDuplicates, 
   resolveDuplicate, 
@@ -47,6 +49,16 @@ export class IngestionOrchestrator {
         apiKey: process.env.EVENTBRITE_TOKEN,
         batchSize: 100,
       },
+      {
+        source: EventSource.QUARTIER_SPECTACLES,
+        enabled: true, // Source officielle publique
+        batchSize: 30,
+      },
+      {
+        source: EventSource.TOURISME_MONTREAL,
+        enabled: true, // Source officielle publique
+        batchSize: 30,
+      },
       // TODO: Ajouter d'autres connecteurs
       // {
       //   source: EventSource.TICKETMASTER,
@@ -58,10 +70,18 @@ export class IngestionOrchestrator {
 
     // Initialiser les connecteurs activés
     for (const config of this.configs) {
-      if (config.enabled && config.apiKey) {
+      if (config.enabled) {
         switch (config.source) {
           case EventSource.EVENTBRITE:
-            this.connectors.set(config.source, new EventbriteConnector(config.apiKey));
+            if (config.apiKey) {
+              this.connectors.set(config.source, new EventbriteConnector(config.apiKey));
+            }
+            break;
+          case EventSource.QUARTIER_SPECTACLES:
+            this.connectors.set(config.source, new QuartierSpectaclesConnector());
+            break;
+          case EventSource.TOURISME_MONTREAL:
+            this.connectors.set(config.source, new TourismeMontrealaConnector());
             break;
           // Ajouter d'autres connecteurs ici
         }

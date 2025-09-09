@@ -1,9 +1,9 @@
-# Pulse - Plateforme d'événements à Montréal
+pourqus clive lil# Pulse - Plateforme d'événements à Montréal
 
 Une application web moderne pour découvrir et organiser des événements culturels, sportifs et festifs à Montréal.
 
 ## 🎯 Fonctionnalités
-
+e de elle
 ### 🏠 **Page d'accueil**
 - Liste des événements avec filtres avancés
 - Vue grille et liste

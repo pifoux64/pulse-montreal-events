@@ -25,6 +25,8 @@ enum EventSource {
   BANDSINTOWN
   SEATGEEK
   MTL_OPEN_DATA
+  QUARTIER_SPECTACLES
+  TOURISME_MONTREAL
 }
 
 enum EventStatus {

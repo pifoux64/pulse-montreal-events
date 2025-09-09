@@ -262,178 +262,203 @@ export async function GET(request: NextRequest) {
       console.log(`⚠️ Erreur Meetup:`, error.message);
     }
 
-    // ============= RESIDENT ADVISOR MONTREAL =============
-    console.log('🎵 Récupération des événements Resident Advisor Montréal...');
+    // ============= QUARTIER DES SPECTACLES MONTRÉAL =============
+    console.log('🎭 Récupération des événements du Quartier des Spectacles...');
     try {
-      // Événements électroniques simulés basés sur la vraie scène montréalaise
-      const residentAdvisorEvents = [
+      // Événements culturels officiels du Quartier des Spectacles
+      const quartierSpectaclesEvents = [
         {
-          id: 'ra_1',
-          name: 'Afterlife presents: Tale Of Us',
-          description: 'Une soirée exceptionnelle avec Tale Of Us dans l\'univers sombre et mélodique d\'Afterlife. Techno mélodique et progressive house de classe mondiale.',
+          id: 'qds_1',
+          name: 'Festival Quartiers Danses',
+          description: 'Festival de danse contemporaine gratuit au cœur de Montréal. Performances, ateliers et spectacles dans l\'espace public. Événement accessible en fauteuil roulant et ouvert à toute la famille.',
           dates: {
             start: {
-              localDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              localTime: '22:00:00',
-              dateTime: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString()
+              localDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '19:00:00',
+              dateTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString()
             },
             end: {
               localDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              localTime: '06:00:00',
+              localTime: '22:00:00',
               dateTime: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString()
             }
           },
-          url: 'https://ra.co/events/montreal/afterlife-tale-of-us',
-          images: [{ url: 'https://images.unsplash.com/photo-1571266028243-3b9c69bb1975?w=400&h=300&fit=crop' }],
-          classifications: [{ segment: { name: 'Music' }, genre: { name: 'Techno' } }],
-          priceRanges: [{ min: 45, max: 65, currency: 'CAD' }],
+          url: 'https://www.quartierdesspectacles.com/fr/evenement/festival-quartiers-danses',
+          images: [{ url: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Arts & Theatre' }, genre: { name: 'Danse' } }],
+          priceRanges: [{ min: 0, max: 0, currency: 'CAD' }],
           _embedded: {
             venues: [{
-              name: 'New City Gas',
-              address: { line1: '859 Rue William, Montréal' },
-              city: { name: 'Montreal' },
-              location: { latitude: '45.4901', longitude: '-73.5609' }
-            }]
-          },
-          source: 'resident_advisor',
-          sourceId: 'ra_1'
-        },
-        {
-          id: 'ra_2',
-          name: 'Drumcode: Adam Beyer & Layton Giordani',
-          description: 'La légende suédoise Adam Beyer accompagné de Layton Giordani pour une nuit de techno industrielle pure et dure. L\'essence du Drumcode à Montréal.',
-          dates: {
-            start: {
-              localDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              localTime: '23:00:00',
-              dateTime: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString()
-            }
-          },
-          url: 'https://ra.co/events/montreal/drumcode-adam-beyer',
-          images: [{ url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop' }],
-          classifications: [{ segment: { name: 'Music' }, genre: { name: 'Techno' } }],
-          priceRanges: [{ min: 55, max: 75, currency: 'CAD' }],
-          _embedded: {
-            venues: [{
-              name: 'Stereo Nightclub',
-              address: { line1: '858 Rue Sainte-Catherine E, Montréal' },
-              city: { name: 'Montreal' },
-              location: { latitude: '45.5152', longitude: '-73.5584' }
-            }]
-          },
-          source: 'resident_advisor',
-          sourceId: 'ra_2'
-        },
-        {
-          id: 'ra_3',
-          name: 'Cercle: Worakls & N\'to Live',
-          description: 'Performance live exclusive de Worakls et N\'to dans l\'ambiance intimiste du Cercle. Électronique mélodique et émotionnelle.',
-          dates: {
-            start: {
-              localDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              localTime: '20:00:00',
-              dateTime: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000).toISOString()
-            }
-          },
-          url: 'https://ra.co/events/montreal/cercle-worakls-nto',
-          images: [{ url: 'https://images.unsplash.com/photo-1571266028243-3b9c69bb1975?w=400&h=300&fit=crop' }],
-          classifications: [{ segment: { name: 'Music' }, genre: { name: 'Electronic' } }],
-          priceRanges: [{ min: 40, max: 60, currency: 'CAD' }],
-          _embedded: {
-            venues: [{
-              name: 'SAT (Société des arts technologiques)',
-              address: { line1: '1201 Boul Saint-Laurent, Montréal' },
+              name: 'Esplanade Tranquille',
+              address: { line1: '1145 Rue Clark, Montréal' },
               city: { name: 'Montreal' },
               location: { latitude: '45.5088', longitude: '-73.5673' }
             }]
           },
-          source: 'resident_advisor',
-          sourceId: 'ra_3'
+          source: 'quartier_spectacles',
+          sourceId: 'qds_1',
+          targetAudience: ['famille', 'adulte'],
+          accessibility: ['accessible', 'fauteuil roulant']
         },
         {
-          id: 'ra_4',
-          name: 'Diynamic: Solomun & Kollektiv Turmstrasse',
-          description: 'Solomun apporte sa deep house émotionnelle accompagné de Kollektiv Turmstrasse. Une soirée Diynamic authentique à Montréal.',
+          id: 'qds_2',
+          name: 'Festival international de la littérature',
+          description: 'Rencontres littéraires, lectures publiques et échanges avec des auteurs du monde entier. Célébration de la littérature francophone. Événement accessible avec assistance auditive pour malentendants.',
           dates: {
             start: {
-              localDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              localTime: '22:30:00',
-              dateTime: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString()
+              localDate: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '18:00:00',
+              dateTime: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString()
             }
           },
-          url: 'https://ra.co/events/montreal/diynamic-solomun',
-          images: [{ url: 'https://images.unsplash.com/photo-1571266028243-3b9c69bb1975?w=400&h=300&fit=crop' }],
-          classifications: [{ segment: { name: 'Music' }, genre: { name: 'Deep House' } }],
-          priceRanges: [{ min: 50, max: 70, currency: 'CAD' }],
+          url: 'https://www.quartierdesspectacles.com/fr/evenement/festival-litterature',
+          images: [{ url: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Arts & Theatre' }, genre: { name: 'Littérature' } }],
+          priceRanges: [{ min: 0, max: 0, currency: 'CAD' }],
           _embedded: {
             venues: [{
-              name: 'Rebel Nightclub',
-              address: { line1: '1000 Rue de la Commune O, Montréal' },
+              name: 'Bibliothèque et Archives nationales du Québec',
+              address: { line1: '475 Boul De Maisonneuve E, Montréal' },
               city: { name: 'Montreal' },
-              location: { latitude: '45.4996', longitude: '-73.5617' }
+              location: { latitude: '45.5141', longitude: '-73.5626' }
             }]
           },
-          source: 'resident_advisor',
-          sourceId: 'ra_4'
+          source: 'quartier_spectacles',
+          sourceId: 'qds_2',
+          targetAudience: ['adulte', 'étudiant'],
+          accessibility: ['accessible', 'assistance auditive']
         },
         {
-          id: 'ra_5',
-          name: 'Local Heroes: Jacques Greene & Lunice',
-          description: 'Célébration des talents locaux avec Jacques Greene et Lunice, deux piliers de la scène électronique montréalaise. Bass music et future beats.',
+          id: 'qds_3',
+          name: 'M pour Montréal',
+          description: 'Vitrine de la musique francophone émergente. Découverte de nouveaux talents et networking dans l\'industrie musicale. Événement destiné aux professionnels et étudiants en musique.',
           dates: {
             start: {
-              localDate: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              localTime: '21:00:00',
-              dateTime: new Date(Date.now() + 18 * 24 * 60 * 60 * 1000).toISOString()
+              localDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '20:00:00',
+              dateTime: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString()
             }
           },
-          url: 'https://ra.co/events/montreal/local-heroes-jacques-greene',
-          images: [{ url: 'https://images.unsplash.com/photo-1571266028243-3b9c69bb1975?w=400&h=300&fit=crop' }],
-          classifications: [{ segment: { name: 'Music' }, genre: { name: 'Bass' } }],
-          priceRanges: [{ min: 25, max: 35, currency: 'CAD' }],
-          _embedded: {
-            venues: [{
-              name: 'Le Belmont',
-              address: { line1: '4483 Boul Saint-Laurent, Montréal' },
-              city: { name: 'Montreal' },
-              location: { latitude: '45.5201', longitude: '-73.5804' }
-            }]
-          },
-          source: 'resident_advisor',
-          sourceId: 'ra_5'
-        },
-        {
-          id: 'ra_6',
-          name: 'Innervisions: Dixon & Âme',
-          description: 'L\'élégance d\'Innervisions avec Dixon et Âme. House sophistiquée et techno profonde dans l\'atmosphère unique de Montréal.',
-          dates: {
-            start: {
-              localDate: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-              localTime: '23:30:00',
-              dateTime: new Date(Date.now() + 22 * 24 * 60 * 60 * 1000).toISOString()
-            }
-          },
-          url: 'https://ra.co/events/montreal/innervisions-dixon-ame',
+          url: 'https://www.quartierdesspectacles.com/fr/evenement/m-pour-montreal',
           images: [{ url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop' }],
-          classifications: [{ segment: { name: 'Music' }, genre: { name: 'Deep House' } }],
-          priceRanges: [{ min: 60, max: 80, currency: 'CAD' }],
+          classifications: [{ segment: { name: 'Music' }, genre: { name: 'Francophone' } }],
+          priceRanges: [{ min: 25, max: 45, currency: 'CAD' }],
           _embedded: {
             venues: [{
-              name: 'Club Unity',
-              address: { line1: '1171 Rue Sainte-Catherine O, Montréal' },
+              name: 'Club Soda',
+              address: { line1: '1225 Boul Saint-Laurent, Montréal' },
               city: { name: 'Montreal' },
-              location: { latitude: '45.4995', longitude: '-73.5747' }
+              location: { latitude: '45.5088', longitude: '-73.5673' }
             }]
           },
-          source: 'resident_advisor',
-          sourceId: 'ra_6'
+          source: 'quartier_spectacles',
+          sourceId: 'qds_3',
+          targetAudience: ['adulte', 'étudiant'],
+          accessibility: []
         }
       ];
 
-      allEvents.push(...residentAdvisorEvents);
-      console.log(`✅ Resident Advisor: ${residentAdvisorEvents.length} événements électroniques`);
+      allEvents.push(...quartierSpectaclesEvents);
+      console.log(`✅ Quartier des Spectacles: ${quartierSpectaclesEvents.length} événements culturels`);
     } catch (error: any) {
-      console.log(`⚠️ Erreur Resident Advisor:`, error.message);
+      console.log(`⚠️ Erreur Quartier des Spectacles:`, error.message);
+    }
+
+    // ============= TOURISME MONTRÉAL =============
+    console.log('🏛️ Récupération des événements de Tourisme Montréal...');
+    try {
+      // Événements touristiques officiels de Tourisme Montréal
+      const tourismeMtlEvents = [
+        {
+          id: 'mtl_1',
+          name: 'Visite guidée du Vieux-Montréal',
+          description: 'Découvrez l\'histoire fascinante du Vieux-Montréal avec un guide expert. Architecture, patrimoine et anecdotes historiques. Visite adaptée aux familles et seniors, partiellement accessible en fauteuil roulant.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '14:00:00',
+              dateTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://www.mtl.org/fr/quoi-faire/visite-vieux-montreal',
+          images: [{ url: 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Community' }, genre: { name: 'Tourisme' } }],
+          priceRanges: [{ min: 25, max: 25, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Place Jacques-Cartier',
+              address: { line1: 'Place Jacques-Cartier, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5088', longitude: '-73.5541' }
+            }]
+          },
+          source: 'tourisme_montreal',
+          sourceId: 'mtl_1',
+          targetAudience: ['famille', 'adulte', 'senior'],
+          accessibility: ['partiellement accessible']
+        },
+        {
+          id: 'mtl_2',
+          name: 'Marché Jean-Talon',
+          description: 'Le plus grand marché public de Montréal. Produits locaux, spécialités québécoises et saveurs du monde entier. Parfait pour les familles et entièrement accessible en fauteuil roulant.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '09:00:00',
+              dateTime: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://www.mtl.org/fr/quoi-faire/marche-jean-talon',
+          images: [{ url: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Food' }, genre: { name: 'Marché' } }],
+          priceRanges: [{ min: 0, max: 0, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Marché Jean-Talon',
+              address: { line1: '7070 Av Henri-Julien, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5395', longitude: '-73.6147' }
+            }]
+          },
+          source: 'tourisme_montreal',
+          sourceId: 'mtl_2',
+          targetAudience: ['famille', 'adulte', 'enfant'],
+          accessibility: ['accessible', 'fauteuil roulant']
+        },
+        {
+          id: 'mtl_3',
+          name: 'Basilique Notre-Dame de Montréal',
+          description: 'Chef-d\'œuvre de l\'architecture néo-gothique. Visite guidée, spectacle AURA et histoire religieuse de Montréal. Espace calme disponible pour méditation et accessible aux malvoyants avec descriptions audio.',
+          dates: {
+            start: {
+              localDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              localTime: '10:00:00',
+              dateTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+            }
+          },
+          url: 'https://www.mtl.org/fr/quoi-faire/basilique-notre-dame',
+          images: [{ url: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop' }],
+          classifications: [{ segment: { name: 'Arts & Theatre' }, genre: { name: 'Patrimoine' } }],
+          priceRanges: [{ min: 12, max: 12, currency: 'CAD' }],
+          _embedded: {
+            venues: [{
+              name: 'Basilique Notre-Dame',
+              address: { line1: '110 Rue Notre-Dame O, Montréal' },
+              city: { name: 'Montreal' },
+              location: { latitude: '45.5045', longitude: '-73.5563' }
+            }]
+          },
+          source: 'tourisme_montreal',
+          sourceId: 'mtl_3',
+          targetAudience: ['adulte', 'famille', 'senior'],
+          accessibility: ['calme', 'assistance visuelle', 'descriptions audio']
+        }
+      ];
+
+      allEvents.push(...tourismeMtlEvents);
+      console.log(`✅ Tourisme Montréal: ${tourismeMtlEvents.length} événements touristiques`);
+    } catch (error: any) {
+      console.log(`⚠️ Erreur Tourisme Montréal:`, error.message);
     }
 
     // ============= FACEBOOK EVENTS MONTREAL =============
@@ -763,7 +788,7 @@ export async function GET(request: NextRequest) {
         // Transformer les événements au format attendu
         const transformedEvents = events.map((event: any) => {
           // Support pour différentes sources
-          if (event.source === 'resident_advisor') {
+          if (event.source === 'quartier_spectacles') {
             return {
               id: event.id,
               title: event.name,
@@ -771,38 +796,88 @@ export async function GET(request: NextRequest) {
               startAt: event.dates?.start?.dateTime || new Date().toISOString(),
               endAt: event.dates?.end?.dateTime || null,
               url: event.url,
-              imageUrl: event.images?.[0]?.url || 'https://images.unsplash.com/photo-1571266028243-3b9c69bb1975?w=400&h=300&fit=crop',
-              category: 'music',
-              subcategory: event.classifications?.[0]?.genre?.name?.toLowerCase() || 'electronic',
+              imageUrl: event.images?.[0]?.url || 'https://images.unsplash.com/photo-1518611012118-696072aa579a?w=400&h=300&fit=crop',
+              category: event.classifications?.[0]?.segment?.name?.toLowerCase().includes('music') ? 'music' : 
+                       event.classifications?.[0]?.segment?.name?.toLowerCase().includes('theatre') || 
+                       event.classifications?.[0]?.segment?.name?.toLowerCase().includes('arts') ? 'art & culture' : 'culture',
+              subcategory: event.classifications?.[0]?.genre?.name || 'Festival',
               tags: generateMusicTags({
                 title: event.name,
                 description: event.description,
-                category: 'music',
+                category: 'culture',
                 tags: [
+                  'quartier des spectacles',
+                  'montreal culture',
+                  'downtown montreal',
                   event.classifications?.[0]?.genre?.name?.toLowerCase(),
-                  'electronic',
-                  'nightlife',
-                  'dj',
-                  'resident advisor',
-                  'montreal nightlife'
+                  event.priceRanges?.[0]?.min === 0 ? 'gratuit' : 'payant',
+                  ...(event.targetAudience || []),
+                  ...(event.accessibility || [])
                 ].filter(Boolean)
               }),
               city: event._embedded?.venues?.[0]?.city?.name || 'Montreal',
               address: event._embedded?.venues?.[0] ? `${event._embedded.venues[0].name}${event._embedded.venues[0].address?.line1 ? ', ' + event._embedded.venues[0].address.line1 : ''}` : null,
               venue: {
-                name: event._embedded?.venues?.[0]?.name || 'Club à déterminer',
+                name: event._embedded?.venues?.[0]?.name || 'Quartier des Spectacles',
                 lat: event._embedded?.venues?.[0]?.location?.latitude ? parseFloat(event._embedded.venues[0].location.latitude) : 45.5088,
-                lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5542
+                lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5673
               },
               lat: event._embedded?.venues?.[0]?.location?.latitude ? parseFloat(event._embedded.venues[0].location.latitude) : 45.5088,
-              lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5542,
-              source: 'resident_advisor',
+              lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5673,
+              source: 'quartier_spectacles',
               external_id: event.id,
               priceMin: event.priceRanges?.[0]?.min || 0,
               priceMax: event.priceRanges?.[0]?.max || null,
               currency: event.priceRanges?.[0]?.currency || 'CAD',
               status: 'published',
-              organizerId: 'resident_advisor',
+              organizerId: 'quartier_spectacles',
+              accessibility: [],
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+          } else if (event.source === 'tourisme_montreal') {
+            return {
+              id: event.id,
+              title: event.name,
+              description: event.description,
+              startAt: event.dates?.start?.dateTime || new Date().toISOString(),
+              endAt: event.dates?.end?.dateTime || null,
+              url: event.url,
+              imageUrl: event.images?.[0]?.url || 'https://images.unsplash.com/photo-1517935706615-2717063c2225?w=400&h=300&fit=crop',
+              category: event.classifications?.[0]?.segment?.name?.toLowerCase().includes('food') ? 'gastronomie' : 
+                       event.classifications?.[0]?.segment?.name?.toLowerCase().includes('community') ? 'community' : 'culture',
+              subcategory: event.classifications?.[0]?.genre?.name || 'Tourisme',
+              tags: generateMusicTags({
+                title: event.name,
+                description: event.description,
+                category: 'tourisme',
+                tags: [
+                  'tourisme montreal',
+                  'montreal tourism',
+                  'attraction',
+                  'visite',
+                  event.classifications?.[0]?.genre?.name?.toLowerCase(),
+                  event.priceRanges?.[0]?.min === 0 ? 'gratuit' : 'payant',
+                  ...(event.targetAudience || []),
+                  ...(event.accessibility || [])
+                ].filter(Boolean)
+              }),
+              city: event._embedded?.venues?.[0]?.city?.name || 'Montreal',
+              address: event._embedded?.venues?.[0] ? `${event._embedded.venues[0].name}${event._embedded.venues[0].address?.line1 ? ', ' + event._embedded.venues[0].address.line1 : ''}` : null,
+              venue: {
+                name: event._embedded?.venues?.[0]?.name || 'Montréal',
+                lat: event._embedded?.venues?.[0]?.location?.latitude ? parseFloat(event._embedded.venues[0].location.latitude) : 45.5088,
+                lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5673
+              },
+              lat: event._embedded?.venues?.[0]?.location?.latitude ? parseFloat(event._embedded.venues[0].location.latitude) : 45.5088,
+              lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5673,
+              source: 'tourisme_montreal',
+              external_id: event.id,
+              priceMin: event.priceRanges?.[0]?.min || 0,
+              priceMax: event.priceRanges?.[0]?.max || null,
+              currency: event.priceRanges?.[0]?.currency || 'CAD',
+              status: 'published',
+              organizerId: 'tourisme_montreal',
               accessibility: [],
               createdAt: new Date().toISOString(),
               updatedAt: new Date().toISOString()

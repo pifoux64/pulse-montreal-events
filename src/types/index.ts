@@ -63,6 +63,9 @@ export interface CustomFilter {
 
 export interface AccessibilityInfo {
   wheelchairAccessible: boolean;
+  hearingAssistance: boolean;
+  visualAssistance: boolean;
+  quietSpace: boolean;
   signLanguage: boolean;
   audioDescription: boolean;
   braille: boolean;

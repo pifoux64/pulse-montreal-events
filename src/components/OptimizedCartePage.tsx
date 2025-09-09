@@ -123,6 +123,7 @@ export default function OptimizedCartePage() {
   const [locationEvents, setLocationEvents] = useState<Event[] | null>(null);
   const [locationName, setLocationName] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showFreeOnly, setShowFreeOnly] = useState(false);
 
   // Stabiliser les dépendances avec useMemo
   const stableFilters = useMemo(() => JSON.stringify(filters), [filters]);
@@ -135,14 +136,28 @@ export default function OptimizedCartePage() {
   useEffect(() => {
     let filtered = [...events];
 
-    // Filtre par catégorie
+    // ===== FILTRE DE RECHERCHE TEXTUELLE =====
+    if (filters.searchQuery && filters.searchQuery.trim()) {
+      const query = filters.searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(event => 
+        event.title.toLowerCase().includes(query) ||
+        event.description.toLowerCase().includes(query) ||
+        event.tags.some(tag => tag.toLowerCase().includes(query)) ||
+        event.location?.name?.toLowerCase().includes(query) ||
+        (event as any).venue?.name?.toLowerCase().includes(query) ||
+        event.category.toLowerCase().includes(query) ||
+        event.subCategory?.toLowerCase().includes(query)
+      );
+    }
+
+    // ===== FILTRE PAR CATÉGORIE =====
     if (filters.categories && filters.categories.length > 0) {
       filtered = filtered.filter(event => 
         filters.categories!.includes(event.category)
       );
     }
 
-    // Filtre par sous-catégorie
+    // ===== FILTRE PAR SOUS-CATÉGORIE =====
     if (filters.subCategories && filters.subCategories.length > 0) {
       filtered = filtered.filter(event => 
         filters.subCategories!.some(subCat => 
@@ -151,9 +166,113 @@ export default function OptimizedCartePage() {
       );
     }
 
-    // Filtre par prix (géré séparément via showFreeOnly)
+    // ===== FILTRE PAR PRIX (ÉVÉNEMENTS GRATUITS) =====
+    if (showFreeOnly) {
+      filtered = filtered.filter(event => 
+        event.price?.isFree === true || 
+        event.price?.amount === 0 ||
+        (event as any).priceMin === 0
+      );
+    }
 
-    // Filtre par localisation
+    // ===== FILTRE PAR FOURCHETTE DE PRIX =====
+    if (filters.priceRange?.min !== undefined || filters.priceRange?.max !== undefined) {
+      filtered = filtered.filter(event => {
+        const eventPrice = event.price?.amount || (event as any).priceMin || 0;
+        const minPrice = filters.priceRange?.min || 0;
+        const maxPrice = filters.priceRange?.max || Infinity;
+        return eventPrice >= minPrice && eventPrice <= maxPrice;
+      });
+    }
+
+    // ===== FILTRE PAR DATES =====
+    if (filters.dateRange?.start || filters.dateRange?.end) {
+      filtered = filtered.filter(event => {
+        const eventDate = new Date(event.startDate);
+        if (filters.dateRange?.start && eventDate < filters.dateRange.start) return false;
+        if (filters.dateRange?.end && eventDate > filters.dateRange.end) return false;
+        return true;
+      });
+    }
+
+    // ===== FILTRE PAR PUBLIC CIBLE =====
+    if (filters.targetAudience && filters.targetAudience.length > 0) {
+      filtered = filtered.filter(event => {
+        // Vérifier dans les tags de l'événement
+        const eventTags = event.tags.map(tag => tag.toLowerCase());
+        const hasAudienceMatch = filters.targetAudience!.some(audience => {
+          const audienceLower = audience.toLowerCase();
+          return eventTags.some(tag => 
+            tag.includes(audienceLower) || 
+            (tag.includes('famille') && audienceLower === 'famille') ||
+            (tag.includes('enfant') && audienceLower === 'enfant') ||
+            (tag.includes('adult') && audienceLower === 'adulte') ||
+            (tag.includes('étudiant') && audienceLower === 'étudiant') ||
+            (tag.includes('senior') && audienceLower === 'senior')
+          );
+        });
+        
+        // Vérifier aussi dans la description pour des mots-clés
+        const description = event.description.toLowerCase();
+        const hasDescriptionMatch = filters.targetAudience!.some(audience => {
+          const audienceLower = audience.toLowerCase();
+          return description.includes(audienceLower) ||
+            (audienceLower === 'famille' && (description.includes('famille') || description.includes('enfant'))) ||
+            (audienceLower === 'enfant' && (description.includes('enfant') || description.includes('kid'))) ||
+            (audienceLower === 'adulte' && description.includes('adult')) ||
+            (audienceLower === 'étudiant' && (description.includes('étudiant') || description.includes('student'))) ||
+            (audienceLower === 'senior' && description.includes('senior'));
+        });
+
+        return hasAudienceMatch || hasDescriptionMatch;
+      });
+    }
+
+    // ===== FILTRE PAR ACCESSIBILITÉ =====
+    if (filters.accessibility && Object.values(filters.accessibility).some(Boolean)) {
+      filtered = filtered.filter(event => {
+        // Vérifier dans les tags et description pour les termes d'accessibilité
+        const eventText = `${event.description} ${event.tags.join(' ')}`.toLowerCase();
+        
+        let hasAccessibilityMatch = false;
+        
+        if (filters.accessibility?.wheelchairAccessible) {
+          hasAccessibilityMatch = hasAccessibilityMatch || 
+            eventText.includes('accessible') || 
+            eventText.includes('fauteuil roulant') ||
+            eventText.includes('wheelchair') ||
+            eventText.includes('handicap');
+        }
+        
+        if (filters.accessibility?.hearingAssistance) {
+          hasAccessibilityMatch = hasAccessibilityMatch || 
+            eventText.includes('malentendant') || 
+            eventText.includes('sourd') ||
+            eventText.includes('hearing') ||
+            eventText.includes('audio');
+        }
+        
+        if (filters.accessibility?.visualAssistance) {
+          hasAccessibilityMatch = hasAccessibilityMatch || 
+            eventText.includes('malvoyant') || 
+            eventText.includes('aveugle') ||
+            eventText.includes('braille') ||
+            eventText.includes('visual');
+        }
+        
+        if (filters.accessibility?.quietSpace) {
+          hasAccessibilityMatch = hasAccessibilityMatch || 
+            eventText.includes('calme') || 
+            eventText.includes('quiet') ||
+            eventText.includes('silence');
+        }
+
+        // Si aucun filtre d'accessibilité spécifique n'est sélectionné, inclure tous les événements
+        return Object.values(filters.accessibility || {}).every(v => !v) || hasAccessibilityMatch;
+      });
+    }
+
+    // ===== FILTRE PAR LOCALISATION =====
     if (filters.location && userLocation) {
       const radius = filters.location.radius || 10;
       filtered = filtered.filter(event => {
@@ -173,8 +292,9 @@ export default function OptimizedCartePage() {
       });
     }
 
+    console.log(`🔍 Filtrage: ${events.length} → ${filtered.length} événements (Public: ${filters.targetAudience?.length || 0}, Accessibilité: ${filters.accessibility ? Object.values(filters.accessibility).filter(Boolean).length : 0})`);
     setFilteredEvents(filtered);
-  }, [events, stableFilters, stableUserLocation, filters, userLocation]);
+  }, [events, stableFilters, stableUserLocation, filters, userLocation, showFreeOnly]);
 
   // Gestionnaires d'événements stables
   const handleFiltersChange = useCallback((newFilters: EventFilter) => {
@@ -269,14 +389,27 @@ export default function OptimizedCartePage() {
                 </div>
               )}
               
-              {/* Compteur d'événements */}
-              {!loading && (
-                <div className="px-3 py-2 bg-white rounded-lg shadow-md">
-                  <span className="text-sm font-medium text-gray-900">
-                    {filteredEvents.length} événement{filteredEvents.length !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center space-x-2">
+                {/* Filtre événements gratuits */}
+                <label className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg shadow-md cursor-pointer hover:shadow-lg transition-shadow">
+                  <input
+                    type="checkbox"
+                    checked={showFreeOnly}
+                    onChange={(e) => setShowFreeOnly(e.target.checked)}
+                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Gratuit seulement</span>
+                </label>
+                
+                {/* Compteur d'événements */}
+                {!loading && (
+                  <div className="px-3 py-2 bg-white rounded-lg shadow-md">
+                    <span className="text-sm font-medium text-gray-900">
+                      {filteredEvents.length} événement{filteredEvents.length !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Carte stable sans bugs */}
