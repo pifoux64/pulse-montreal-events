@@ -150,7 +150,7 @@ export default function OrganisateurPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50  transition-colors duration-500">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête organisateur */}
         <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-blue-600 relative overflow-hidden rounded-3xl">
           <div className="absolute inset-0 opacity-40">

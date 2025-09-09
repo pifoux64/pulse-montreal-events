@@ -112,7 +112,7 @@ const EventSort = ({ currentSort, onSortChange, className = "" }: EventSortProps
 
       {/* Menu déroulant */}
       {isOpen && (
-        <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+        <div className="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-40">
           <div className="p-2">
             <div className="text-xs font-medium text-gray-500 uppercase tracking-wide px-3 py-2">
               Options de tri

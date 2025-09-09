@@ -300,7 +300,7 @@ export default function CalendrierPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête de la page */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
@@ -319,7 +319,7 @@ export default function CalendrierPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filtres */}
           <div className="lg:w-80 flex-shrink-0">
-            <div className="sticky top-8">
+            <div className="sticky top-28">
               <EventFilters
                 filters={filters}
                 onFiltersChange={setFilters}

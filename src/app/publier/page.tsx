@@ -120,7 +120,7 @@ export default function PublierPage() {
     <div className="min-h-screen bg-gray-50">
       <Navigation />
       
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <main className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête de la page */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Event, EventFilter, EventCategory } from '@/types';
 import { useEvents } from '@/hooks/useEvents';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -167,7 +167,6 @@ export default function FavorisPage() {
   const { data: allEvents = [], isLoading: loading, error } = useEvents();
   const { favoriteEvents, isFavorite, toggleFavorite, clearAllFavorites } = useFavorites(allEvents);
   
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
   const [filters, setFilters] = useState<EventFilter>({});
   const [showFilters, setShowFilters] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
@@ -177,7 +176,8 @@ export default function FavorisPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Application des filtres
-  useEffect(() => {
+  // Filtrage des événements avec useMemo pour éviter les boucles infinies
+  const filteredEvents = useMemo(() => {
     let filtered = [...favoriteEvents];
 
     // Filtre par recherche textuelle
@@ -224,8 +224,8 @@ export default function FavorisPage() {
       });
     }
 
-    setFilteredEvents(filtered);
-  }, [favoriteEvents, filters]);
+    return filtered;
+  }, [favoriteEvents, filters.searchQuery, filters.categories, filters.subCategories, filters.dateRange, filters.priceRange]);
 
   const handleFavoriteToggle = (eventId: string) => {
     toggleFavorite(eventId);
@@ -364,7 +364,7 @@ export default function FavorisPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 transition-colors duration-500">
       <Navigation />
       
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête de la page */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
@@ -434,7 +434,7 @@ export default function FavorisPage() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filtres */}
           <div className="lg:w-80 flex-shrink-0">
-            <div className="sticky top-8">
+            <div className="sticky top-28">
               <EventFilters
                 filters={filters}
                 onFiltersChange={setFilters}

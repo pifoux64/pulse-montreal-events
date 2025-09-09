@@ -360,8 +360,8 @@ export default function OptimizedCartePage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <main className="h-[calc(100vh-5rem)] mt-20">
-        <div className="flex h-full">
+      <main className="min-h-screen pt-24">
+        <div className="flex h-[calc(100vh-6rem)]">
           {/* Panneau des filtres */}
           <div className={`${showFilters ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 overflow-hidden flex flex-col`}>
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
