@@ -35,56 +35,46 @@ const ModernEventMap = ({
     pitch: 0
   });
 
-  // Style moderne sombre avec OpenStreetMap (garanti de fonctionner)
+  // Style moderne CARTO Light (gratuit, sans clé API)
   const MAP_STYLE = {
     version: 8,
     sources: {
-      'osm': {
+      'carto-light': {
         type: 'raster',
-        tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+        tiles: [
+          'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+          'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+          'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+          'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+        ],
         tileSize: 256,
-        attribution: '© OpenStreetMap contributors'
+        attribution: '© CARTO © OpenStreetMap contributors'
       }
     },
     layers: [
       {
-        id: 'background',
-        type: 'background',
-        paint: {
-          'background-color': '#1a1a2e'
-        }
-      },
-      {
-        id: 'osm-tiles',
+        id: 'carto-tiles',
         type: 'raster',
-        source: 'osm',
-        paint: {
-          'raster-opacity': 0.7,
-          'raster-brightness-min': 0.1,
-          'raster-brightness-max': 0.4,
-          'raster-contrast': 0.3,
-          'raster-saturation': -0.8,
-          'raster-hue-rotate': 200
-        }
+        source: 'carto-light'
       }
     ]
   };
 
-  // Couleurs vibrantes pour fond sombre
+  // Couleurs modernes pour fond clair
   const categoryColors: Record<string, string> = {
-    'musique': '#FF3B82',
-    'music': '#FF3B82',
-    'art': '#06FFA5',
-    'arts & theatre': '#06FFA5',
-    'sport': '#3B82F6',
-    'sports': '#3B82F6',
-    'famille': '#10B981',
-    'family': '#10B981',
-    'culture': '#F59E0B',
-    'community': '#F59E0B',
-    'gastronomie': '#EC4899',
-    'education': '#EC4899',
-    'default': '#8B5CF6'
+    'musique': '#E11D48',
+    'music': '#E11D48',
+    'art': '#059669',
+    'arts & theatre': '#059669',
+    'sport': '#2563EB',
+    'sports': '#2563EB',
+    'famille': '#DC2626',
+    'family': '#DC2626',
+    'culture': '#D97706',
+    'community': '#D97706',
+    'gastronomie': '#C026D3',
+    'education': '#C026D3',
+    'default': '#7C3AED'
   };
 
   // Fonction pour créer un marqueur personnalisé
