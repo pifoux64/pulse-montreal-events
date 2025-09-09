@@ -128,34 +128,45 @@ const StableEventMap = ({
       markerElement.style.cssText = `
         width: ${eventCount > 1 ? '36px' : '32px'};
         height: ${eventCount > 1 ? '36px' : '32px'};
-        background-color: ${color} !important;
+        background: ${color};
         border: 3px solid white;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 0 15px ${color}60, 0 4px 12px rgba(0,0,0,0.3);
+        box-shadow: 0 0 20px ${color}40, 0 4px 15px rgba(0,0,0,0.3);
         transition: all 0.3s ease;
-        color: white;
-        font-weight: bold;
-        font-size: ${eventCount > 1 ? '13px' : '11px'};
-        z-index: 1000;
         position: relative;
+        z-index: 1000;
       `;
       
-      // Contenu du marqueur
-      markerElement.innerHTML = eventCount > 1 ? eventCount.toString() : '📍';
+      // Design élégant avec icône MapPin ou chiffre
+      if (eventCount > 1) {
+        markerElement.innerHTML = `
+          <span style="color: white; font-weight: bold; font-size: 14px; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+            ${eventCount}
+          </span>
+        `;
+      } else {
+        markerElement.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white" style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+          </svg>
+        `;
+      }
       
-      // Événements hover
+      // Événements hover élégants (style ModernEventMap)
       markerElement.addEventListener('mouseenter', () => {
-        markerElement.style.transform = 'scale(1.3)';
+        markerElement.style.transform = 'scale(1.25)';
         markerElement.style.zIndex = '1001';
+        markerElement.style.boxShadow = `0 0 25px ${color}60, 0 6px 20px rgba(0,0,0,0.4)`;
       });
       
       markerElement.addEventListener('mouseleave', () => {
         markerElement.style.transform = 'scale(1)';
         markerElement.style.zIndex = '1000';
+        markerElement.style.boxShadow = `0 0 20px ${color}40, 0 4px 15px rgba(0,0,0,0.3)`;
       });
 
       // Événement clic

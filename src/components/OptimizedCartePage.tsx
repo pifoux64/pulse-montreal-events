@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import { Event, EventFilter, EventCategory, MapViewState } from '@/types';
 import { useEvents, useFilteredEvents } from '@/hooks/useEvents';
@@ -144,10 +144,7 @@ export default function OptimizedCartePage() {
       );
     }
 
-    // Filtre par prix
-    if (filters.isFree) {
-      filtered = filtered.filter(event => event.price.isFree);
-    }
+    // Filtre par prix (géré séparément via showFreeOnly)
 
     // Filtre par localisation
     if (filters.location && userLocation) {
@@ -172,12 +169,12 @@ export default function OptimizedCartePage() {
     setFilteredEvents(filtered);
   }, [events, filters, userLocation]);
 
-  // Gestionnaires d'événements
-  const handleFiltersChange = (newFilters: EventFilter) => {
+  // Gestionnaires d'événements stables
+  const handleFiltersChange = useCallback((newFilters: EventFilter) => {
     setFilters(newFilters);
-  };
+  }, []);
 
-  const handleLocationDetect = () => {
+  const handleLocationDetect = useCallback(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -194,30 +191,30 @@ export default function OptimizedCartePage() {
         }
       );
     }
-  };
+  }, []);
 
-  const handleFavoriteToggle = (eventId: string) => {
+  const handleFavoriteToggle = useCallback((eventId: string) => {
     console.log('Toggle favori pour l\'événement:', eventId);
-  };
+  }, []);
 
-  const handleEventClick = (event: Event) => {
+  const handleEventClick = useCallback((event: Event) => {
     setSelectedEvent(event);
     setIsModalOpen(true);
     setLocationEvents(null); // Fermer le panneau de lieu si ouvert
     setShowEventList(false); // Fermer la sidebar
-  };
+  }, []);
 
-  const handleLocationClick = (events: Event[], locationName: string) => {
+  const handleLocationClick = useCallback((events: Event[], locationName: string) => {
     setLocationEvents(events);
     setLocationName(locationName);
     setSelectedEvent(null); // Fermer le popup d'événement si ouvert
     setShowEventList(true); // Afficher le panneau latéral
     console.log(`Lieu sélectionné: ${locationName} avec ${events.length} événements`);
-  };
+  }, []);
 
-  const handleMapViewChange = (viewState: MapViewState) => {
+  const handleMapViewChange = useCallback((viewState: MapViewState) => {
     setMapViewState(viewState);
-  };
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
