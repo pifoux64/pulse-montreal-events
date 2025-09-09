@@ -22,8 +22,8 @@ export async function GET(request: NextRequest) {
     }
     
     console.log('🔄 Récupération fraîche des données depuis les APIs...');
-    const TICKETMASTER_API_KEY = "02NvAxNFTMEGqxenoe3knPuMdYvUdBjx";
-    const EVENTBRITE_TOKEN = "BKVBGPTCMNIADQA3BATB"; // Private token
+    const TICKETMASTER_API_KEY = process.env.TICKETMASTER_API_KEY || "";
+    const EVENTBRITE_TOKEN = process.env.EVENTBRITE_TOKEN || "";
     
     const allEvents = [];
     
