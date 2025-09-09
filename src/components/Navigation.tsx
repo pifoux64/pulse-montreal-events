@@ -60,11 +60,19 @@ export default function Navigation() {
             <div className="relative group">
               <div className="relative bg-gray-50 border border-gray-200 rounded-2xl px-4 py-2 flex items-center space-x-3 hover:bg-gray-100 transition-all duration-300">
                 <Search className="w-4 h-4 text-gray-500" />
-                <input
-                  type="text"
-                  placeholder="Recherche rapide..."
-                  className="bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 w-32 focus:w-40 transition-all duration-300"
-                />
+                  <input
+                    type="text"
+                    placeholder="Recherche rapide..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const query = (e.target as HTMLInputElement).value;
+                        if (query.trim()) {
+                          window.location.href = `/?search=${encodeURIComponent(query)}`;
+                        }
+                      }
+                    }}
+                    className="bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 w-32 focus:w-40 transition-all duration-300"
+                  />
               </div>
             </div>
 
@@ -109,6 +117,14 @@ export default function Navigation() {
                   <input
                     type="text"
                     placeholder="Rechercher un événement..."
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const query = (e.target as HTMLInputElement).value;
+                        if (query.trim()) {
+                          window.location.href = `/?search=${encodeURIComponent(query)}`;
+                        }
+                      }
+                    }}
                     className="bg-transparent border-none outline-none text-base text-gray-700 placeholder-gray-400 flex-1"
                   />
                 </div>

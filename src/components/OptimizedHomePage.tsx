@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Event, EventFilter, EventCategory } from '@/types';
 import { useEvents, usePrefetchEvents, useFilteredEvents } from '@/hooks/useEvents';
 import Navigation from '@/components/Navigation';
@@ -81,15 +81,9 @@ export default function OptimizedHomePage() {
     subCategories: [],
     priceRange: { min: 0, max: 1000 },
     dateRange: { start: new Date(), end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
-    location: null,
+    location: undefined,
     tags: [],
-    accessibility: [],
-    isFree: false,
-    hasTicketsAvailable: false,
-    language: 'fr',
-    sort: 'date',
-    page: 1,
-    pageSize: 20
+    accessibility: undefined
   });
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,9 +92,56 @@ export default function OptimizedHomePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showFreeOnly, setShowFreeOnly] = useState(false);
 
   // Utilisation du hook React Query pour charger tous les événements
   const { data: events = [], isLoading: loading, error } = useEvents();
+
+  // Filtrage des événements basé sur la recherche et les filtres
+  const filteredEvents = useMemo(() => {
+    let filtered = [...events];
+
+    // Filtre par recherche textuelle
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(event =>
+        event.title.toLowerCase().includes(query) ||
+        event.description.toLowerCase().includes(query) ||
+        event.tags?.some(tag => tag.toLowerCase().includes(query)) ||
+        event.location?.name?.toLowerCase().includes(query) ||
+        (event as any).venue?.name?.toLowerCase().includes(query) ||
+        event.category.toLowerCase().includes(query)
+      );
+    }
+
+    // Filtre par catégorie sélectionnée
+    if (selectedCategory) {
+      filtered = filtered.filter(event => 
+        event.category.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    // Filtre par événements gratuits si activé
+    if (showFreeOnly) {
+      filtered = filtered.filter(event => event.price.isFree);
+    }
+
+    return filtered;
+  }, [events, searchQuery, selectedCategory, showFreeOnly]);
+
+  // Récupérer le paramètre de recherche de l'URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+      setSearchQuery(searchParam);
+      // Scroll vers les événements après un court délai
+      setTimeout(() => {
+        const eventsSection = document.getElementById('events-section');
+        eventsSection?.scrollIntoView({ behavior: 'smooth' });
+      }, 500);
+    }
+  }, []);
 
   // Préchargement intelligent des données
   const prefetchEvents = usePrefetchEvents();
@@ -146,8 +187,8 @@ export default function OptimizedHomePage() {
     }
   };
 
-  // Affichage de tous les événements (pagination future)
-  const displayedEvents = events;
+  // Affichage des événements filtrés (pagination future)
+  const displayedEvents = filteredEvents;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -196,9 +237,21 @@ export default function OptimizedHomePage() {
                     placeholder="Rechercher des événements, artistes, lieux..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        const eventsSection = document.getElementById('events-section');
+                        eventsSection?.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
                     className="flex-1 px-4 py-4 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none text-lg"
                   />
-                  <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                  <button 
+                    onClick={() => {
+                      const eventsSection = document.getElementById('events-section');
+                      eventsSection?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                  >
                     Explorer
                   </button>
                 </div>
@@ -241,7 +294,11 @@ export default function OptimizedHomePage() {
                 Événements à venir
               </h2>
               <p className="text-xl text-gray-600">
-                {loading ? 'Chargement...' : `${displayedEvents.length} événements disponibles`}
+                {loading ? 'Chargement...' : (
+                  searchQuery.trim() ? 
+                    `${displayedEvents.length} événement${displayedEvents.length !== 1 ? 's' : ''} trouvé${displayedEvents.length !== 1 ? 's' : ''} pour "${searchQuery}"` :
+                    `${displayedEvents.length} événements disponibles`
+                )}
               </p>
             </div>
             
