@@ -1,9 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateMusicTags } from '@/lib/musicTags';
 
+// Cache en mémoire pour optimiser les performances
+let cachedData: any = null;
+let cacheTimestamp = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 // API complète pour récupérer les événements de TOUTES les sources
 export async function GET(request: NextRequest) {
   try {
+    // Vérifier le cache en mémoire d'abord
+    const now = Date.now();
+    if (cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
+      console.log('🚀 Données servies depuis le cache (performance optimisée)');
+      return NextResponse.json(cachedData, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+          'X-Cache-Status': 'HIT'
+        }
+      });
+    }
+    
+    console.log('🔄 Récupération fraîche des données depuis les APIs...');
     const TICKETMASTER_API_KEY = "02NvAxNFTMEGqxenoe3knPuMdYvUdBjx";
     const EVENTBRITE_TOKEN = "BKVBGPTCMNIADQA3BATB"; // Private token
     
@@ -388,12 +406,25 @@ export async function GET(request: NextRequest) {
       }
     }).filter((event: any) => event.startAt);
     
-    return NextResponse.json({
+    // Préparer la réponse
+    const response = {
       items: transformedEvents,
       total: transformedEvents.length,
       page: 1,
       pageSize: transformedEvents.length,
       totalPages: 1,
+    };
+
+    // Mettre en cache les données fraîches
+    cachedData = response;
+    cacheTimestamp = Date.now();
+    console.log(`💾 Données mises en cache: ${transformedEvents.length} événements`);
+
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'X-Cache-Status': 'MISS'
+      }
     });
 
   } catch (error) {

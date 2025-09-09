@@ -5,6 +5,7 @@ import ClientLayout from '@/components/ClientLayout';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ExtensionCleaner from '@/components/ExtensionCleaner';
 import DevErrorSuppressor from '@/components/DevErrorSuppressor';
+import QueryProvider from '@/components/QueryProvider';
 import { suppressHydrationWarnings } from '@/lib/suppressHydrationWarnings';
 
 const poppins = Poppins({
@@ -33,11 +34,13 @@ export default function RootLayout({
       <body className="font-poppins antialiased" suppressHydrationWarning>
         {process.env.NODE_ENV === 'development' && <DevErrorSuppressor />}
         <ExtensionCleaner />
-        <ErrorBoundary>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </ErrorBoundary>
+        <QueryProvider>
+          <ErrorBoundary>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </ErrorBoundary>
+        </QueryProvider>
       </body>
     </html>
   );
