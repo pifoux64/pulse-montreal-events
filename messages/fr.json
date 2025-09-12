@@ -273,5 +273,17 @@
     "max": "Maximum {max}",
     "future": "La date doit être dans le futur",
     "past": "La date doit être dans le passé"
+  },
+  "cookies": {
+    "title": "Gestion des cookies",
+    "description": "Nous utilisons des cookies pour améliorer votre expérience.",
+    "acceptAll": "Accepter tous les cookies",
+    "declineAll": "Refuser les cookies non-essentiels",
+    "savePreferences": "Sauvegarder mes préférences",
+    "showDetails": "Voir les détails",
+    "hideDetails": "Masquer les détails",
+    "necessary": "Cookies nécessaires",
+    "analytics": "Cookies analytiques", 
+    "marketing": "Cookies marketing"
   }
 }

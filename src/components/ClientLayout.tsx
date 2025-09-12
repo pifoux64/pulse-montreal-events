@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import AppWrapper from './AppWrapper';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -48,5 +49,9 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   }, []);
 
   // Afficher le contenu immédiatement
-  return <>{children}</>;
+  return (
+    <AppWrapper>
+      {children}
+    </AppWrapper>
+  );
 }

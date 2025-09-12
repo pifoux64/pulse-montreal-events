@@ -4,16 +4,18 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
 import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell } from 'lucide-react';
-
-const navigationItems = [
-  { name: 'Carte', href: '/carte', icon: Map },
-  { name: 'Calendrier', href: '/calendrier', icon: Calendar },
-  { name: 'Mes Favoris', href: '/favoris', icon: Heart },
-  { name: 'Publier', href: '/publier', icon: Plus },
-];
+import { useTranslations } from 'next-intl';
 
 export default function Navigation() {
+  const t = useTranslations('navigation');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const navigationItems = [
+    { name: t('map'), href: '/carte', icon: Map },
+    { name: t('calendar'), href: '/calendrier', icon: Calendar },
+    { name: t('favorites'), href: '/favoris', icon: Heart },
+    { name: t('publish'), href: '/publier', icon: Plus },
+  ];
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-effect border-b border-white/20 shadow-2xl">

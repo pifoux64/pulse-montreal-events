@@ -357,7 +357,7 @@ export default function OptimizedHomePage() {
             
             <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
               Plus de <span className="font-bold">{events.length}</span> événements en temps réel. 
-              Concerts, festivals, expositions, sports cli
+              Concerts, festivals, expositions et sports
             </p>
 
             {/* Barre de recherche moderne */}
