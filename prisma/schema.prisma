@@ -132,7 +132,7 @@ model Venue {
   events Event[]
 
   // Index pour recherche géospatiale
-  @@index([lat, lon], name: "idx_venue_coordinates")
+  @@index([lat, lon], name: "idx_venue_coordinates", type: Gist)
   @@map("venues")
 }
 
@@ -172,8 +172,8 @@ model Event {
 
   // Index pour performance
   @@index([title], name: "idx_event_title")
-  @@index([startAt], name: "idx_event_start_at")
-  @@index([category], name: "idx_event_category")
+  @@index([startAt], name: "idx_event_start_at", type: BTree)
+  @@index([category], name: "idx_event_category", type: BTree)
   @@index([tags], name: "idx_event_tags")
   @@index([status], name: "idx_event_status")
   @@index([organizerId], name: "idx_event_organizer")
