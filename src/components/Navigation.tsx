@@ -118,7 +118,7 @@ export default function Navigation() {
         </div>
       </div>
 
-      {/* Menu mobile moderne */}
+      {/* Menu mobile moderne !*/}
       {isMenuOpen && (
         <div className="lg:hidden border-t border-white/10 bg-slate-950/90 backdrop-blur-xl shadow-xl">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
