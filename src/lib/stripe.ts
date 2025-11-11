@@ -1,10 +1,20 @@
 import Stripe from 'stripe';
 
-// Configuration Stripe
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2024-12-18.acacia',
-  typescript: true,
-});
+const stripeSecret = process.env.STRIPE_SECRET_KEY;
+
+export const stripe = stripeSecret
+  ? new Stripe(stripeSecret, {
+      apiVersion: '2024-12-18.acacia',
+      typescript: true,
+    })
+  : null;
+
+const assertStripe = () => {
+  if (!stripe) {
+    throw new Error('Stripe is not configured. Please set STRIPE_SECRET_KEY in the environment.');
+  }
+  return stripe;
+};
 
 // Plans de monétisation selon le prompt
 export const PRICING_PLANS = {
@@ -100,7 +110,9 @@ export async function createPromotionCheckoutSession({
     throw new Error('Invalid plan type for promotion');
   }
 
-  const session = await stripe.checkout.sessions.create({
+  const client = assertStripe();
+
+  const session = await client.checkout.sessions.create({
     mode: 'payment',
     payment_method_types: ['card'],
     line_items: [
@@ -159,9 +171,11 @@ export async function createSubscriptionCheckoutSession({
     throw new Error('Invalid plan type for subscription');
   }
 
+  const client = assertStripe();
+
   // Créer ou récupérer le client Stripe
   let customer;
-  const existingCustomers = await stripe.customers.list({
+  const existingCustomers = await client.customers.list({
     email: userEmail,
     limit: 1,
   });
@@ -169,7 +183,7 @@ export async function createSubscriptionCheckoutSession({
   if (existingCustomers.data.length > 0) {
     customer = existingCustomers.data[0];
   } else {
-    customer = await stripe.customers.create({
+    customer = await client.customers.create({
       email: userEmail,
       metadata: {
         userId,
@@ -178,7 +192,7 @@ export async function createSubscriptionCheckoutSession({
   }
 
   // Créer le produit et prix récurrents
-  const product = await stripe.products.create({
+  const product = await client.products.create({
     name: plan.name,
     description: plan.description,
     metadata: {
@@ -188,7 +202,7 @@ export async function createSubscriptionCheckoutSession({
     },
   });
 
-  const price = await stripe.prices.create({
+  const price = await client.prices.create({
     product: product.id,
     unit_amount: plan.price,
     currency: plan.currency,
@@ -197,7 +211,7 @@ export async function createSubscriptionCheckoutSession({
     },
   });
 
-  const session = await stripe.checkout.sessions.create({
+  const session = await client.checkout.sessions.create({
     mode: 'subscription',
     payment_method_types: ['card'],
     customer: customer.id,
@@ -235,7 +249,8 @@ export async function createCustomerPortalSession({
   customerId: string;
   returnUrl: string;
 }) {
-  const session = await stripe.billingPortal.sessions.create({
+  const client = assertStripe();
+  const session = await client.billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   });
@@ -248,7 +263,8 @@ export async function createCustomerPortalSession({
  */
 export async function getSubscriptionStatus(subscriptionId: string) {
   try {
-    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const client = assertStripe();
+    const subscription = await client.subscriptions.retrieve(subscriptionId);
     return {
       status: subscription.status,
       currentPeriodEnd: subscription.current_period_end,
@@ -266,7 +282,8 @@ export async function getSubscriptionStatus(subscriptionId: string) {
  */
 export async function cancelSubscription(subscriptionId: string) {
   try {
-    const subscription = await stripe.subscriptions.update(subscriptionId, {
+    const client = assertStripe();
+    const subscription = await client.subscriptions.update(subscriptionId, {
       cancel_at_period_end: true,
     });
     return subscription;
