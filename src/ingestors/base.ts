@@ -3,7 +3,7 @@
  * Définit le contrat que chaque connecteur doit respecter
  */
 
-import { EventCategory, EventLanguage, EventSource } from '@prisma/client';
+import { EventCategory, EventLanguage, EventSource, EventStatus } from '@prisma/client';
 
 /**
  * Interface pour un événement unifié après mapping
@@ -19,6 +19,7 @@ export interface UnifiedEvent {
   startAt: Date;
   endAt?: Date;
   timezone: string;
+  status?: EventStatus;
   
   // Lieu
   venue?: {
@@ -58,6 +59,7 @@ export interface ImportStats {
   totalProcessed: number;
   totalCreated: number;
   totalUpdated: number;
+  totalCancelled: number;
   totalSkipped: number;
   totalErrors: number;
   errors: string[];

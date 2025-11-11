@@ -1,113 +1,182 @@
-import { BaseConnector, UnifiedEvent, ImportStats } from './base';
+import { BaseConnector, UnifiedEvent } from './base';
+import { EventLanguage, EventSource } from '@prisma/client';
 
 interface MeetupEvent {
   id: string;
-  name: string;
+  title: string;
   description?: string;
   dateTime: string;
   endTime?: string;
   eventUrl: string;
+  isOnline: boolean;
   featuredPhoto?: {
-    baseUrl: string;
-  };
-  venue?: {
-    name: string;
-    address: string;
-    city: string;
-    lat: number;
-    lng: number;
+    baseUrl?: string;
   };
   group: {
     name: string;
     urlname: string;
     description?: string;
   };
-  going: number;
-  maxTickets?: number;
-  isOnline: boolean;
-  currency?: string;
+  venue?: {
+    name?: string;
+    address?: string;
+    city?: string;
+    postalCode?: string;
+    lat?: number;
+    lng?: number;
+  };
   feeSettings?: {
-    amount: number;
-    currency: string;
+    amount?: number;
+    currency?: string;
+  };
+  going?: number;
+  maxTickets?: number;
+}
+
+interface MeetupGraphEdge {
+  node: {
+    id: string;
+    title: string;
+    description?: string;
+    dateTime: string;
+    endTime?: string;
+    eventUrl: string;
+    isOnline: boolean;
+    featuredPhoto?: {
+      baseUrl?: string;
+    };
+    group: {
+      name: string;
+      urlname: string;
+      description?: string;
+    };
+    venue?: {
+      name?: string;
+      address?: string;
+      city?: string;
+      postalCode?: string;
+      lat?: number;
+      lng?: number;
+    };
+    feeSettings?: {
+      amount?: number;
+      currency?: string;
+    };
+    going?: number;
+    maxTickets?: number;
   };
 }
 
 interface MeetupGraphQLResponse {
-  data: {
-    rankedEvents: {
-      edges: Array<{
-        node: MeetupEvent;
-      }>;
-      pageInfo: {
-        hasNextPage: boolean;
-        endCursor: string;
+  data?: {
+    rankedEvents?: {
+      edges?: MeetupGraphEdge[];
+      pageInfo?: {
+        hasNextPage?: boolean;
+        endCursor?: string;
       };
     };
   };
 }
 
+const MEETUP_GRAPHQL_ENDPOINT = 'https://api.meetup.com/gql';
+const MEETUP_SEARCH_TERMS = ['Montreal', 'Montréal', 'tech', 'startup', 'music', 'festival'];
+const MEETUP_MAX_PAGES = 3;
+
 export class MeetupConnector extends BaseConnector {
-  private readonly accessToken: string;
-  private readonly graphqlUrl = 'https://api.meetup.com/gql';
+  private readonly accessToken?: string;
 
-  constructor() {
-    super('MEETUP');
-    this.accessToken = process.env.MEETUP_TOKEN || '';
-    
-    if (!this.accessToken) {
-      console.warn('MEETUP_TOKEN not configured, using demo mode');
-    }
+  constructor(token?: string) {
+    super(EventSource.MEETUP, token, MEETUP_GRAPHQL_ENDPOINT, 2);
+    this.accessToken = token || process.env.MEETUP_TOKEN || undefined;
   }
 
-  async listUpdatedSince(since: Date): Promise<UnifiedEvent[]> {
+  async listUpdatedSince(since: Date, limit: number = 200): Promise<MeetupEvent[]> {
     if (!this.accessToken) {
-      console.log('🤝 Meetup: Generating demo events (API token not configured)');
-      return this.generateDemoEvents();
+      console.warn('MEETUP_TOKEN not configured. Meetup ingestion skipped.');
+      return [];
     }
 
-    try {
-      const events: UnifiedEvent[] = [];
-      
-      // Rechercher des événements à Montreal avec différents mots-clés
-      const searchTerms = [
-        'Montreal',
-        'Montréal', 
-        'tech',
-        'startup',
-        'networking',
-        'developer',
-        'design',
-        'entrepreneur',
-        'marketing',
-        'business',
-      ];
+    const events: MeetupEvent[] = [];
 
-      for (const term of searchTerms) {
-        try {
-          const termEvents = await this.fetchEventsByTerm(term, since);
-          events.push(...termEvents);
-        } catch (error) {
-          console.warn(`Failed to fetch Meetup events for term "${term}":`, error);
-        }
+    for (const term of MEETUP_SEARCH_TERMS) {
+      if (events.length >= limit) break;
+
+      try {
+        const termEvents = await this.fetchEventsByTerm(term, since, limit - events.length);
+        events.push(...termEvents);
+      } catch (error) {
+        console.warn(`Meetup fetch error for term "${term}":`, error);
       }
-
-      return this.deduplicateEvents(events);
-    } catch (error) {
-      console.error('Meetup API error:', error);
-      return this.generateDemoEvents();
     }
+
+    const deduped = this.deduplicate(events);
+    return deduped.slice(0, limit);
   }
 
-  private async fetchEventsByTerm(searchTerm: string, since: Date): Promise<UnifiedEvent[]> {
+  async mapToUnifiedEvent(rawEvent: MeetupEvent): Promise<UnifiedEvent> {
+    const startAt = new Date(rawEvent.dateTime);
+    const endAt = rawEvent.endTime ? new Date(rawEvent.endTime) : undefined;
+
+    const venueLat = rawEvent.venue?.lat;
+    const venueLon = rawEvent.venue?.lng;
+
+    const venue = rawEvent.venue
+      ? {
+          name: rawEvent.venue.name || (rawEvent.isOnline ? 'En ligne' : 'Lieu Meetup'),
+          address: rawEvent.venue.address || (rawEvent.isOnline ? 'Événement virtuel' : 'Montréal, QC'),
+          city: rawEvent.venue.city || 'Montréal',
+          postalCode: rawEvent.venue.postalCode || '',
+          lat: typeof venueLat === 'number' ? venueLat : 45.5088,
+          lon: typeof venueLon === 'number' ? venueLon : -73.5542,
+        }
+      : rawEvent.isOnline
+      ? {
+          name: 'Événement en ligne',
+          address: 'Événement virtuel',
+          city: 'Montréal',
+          postalCode: '',
+          lat: 45.5088,
+          lon: -73.5542,
+        }
+      : undefined;
+
+    const description = rawEvent.description || rawEvent.group.description || `Événement organisé par ${rawEvent.group.name}`;
+    const tags = ['meetup', rawEvent.group.urlname, ...(this.extractTags(rawEvent.title, rawEvent.description) || [])].filter(Boolean);
+    const category = this.categorizeEvent(rawEvent.title, description, tags);
+    const language: EventLanguage = this.detectLanguage(rawEvent.title, description);
+
+    return {
+      source: EventSource.MEETUP,
+      sourceId: rawEvent.id,
+      title: rawEvent.title,
+      description,
+      startAt,
+      endAt,
+      timezone: 'America/Montreal',
+      venue,
+      url: rawEvent.eventUrl,
+      priceMin: rawEvent.feeSettings?.amount ? Math.round(rawEvent.feeSettings.amount * 100) : undefined,
+      priceMax: rawEvent.feeSettings?.amount ? Math.round(rawEvent.feeSettings.amount * 100) : undefined,
+      currency: rawEvent.feeSettings?.currency || 'CAD',
+      language,
+      imageUrl: rawEvent.featuredPhoto?.baseUrl,
+      tags,
+      category,
+      subcategory: this.inferSubcategory(rawEvent.title, rawEvent.description, rawEvent.group.name),
+      accessibility: rawEvent.isOnline ? ['online'] : [],
+      ageRestriction: undefined,
+      lastModified: new Date(),
+    };
+  }
+
+  private async fetchEventsByTerm(term: string, since: Date, limit: number): Promise<MeetupEvent[]> {
     const query = `
       query($searchTerm: String!, $startDate: DateTime!, $endDate: DateTime!, $first: Int!, $after: String) {
         rankedEvents(
           filter: {
             query: $searchTerm
-            startDateRange: { 
-              startDate: $startDate
-              endDate: $endDate 
-            }
+            startDateRange: { startDate: $startDate, endDate: $endDate }
             lat: 45.5088
             lon: -73.5673
             radius: 50
@@ -123,370 +192,94 @@ export class MeetupConnector extends BaseConnector {
               dateTime
               endTime
               eventUrl
-              featuredPhoto {
-                baseUrl
-              }
-              venue {
-                name
-                address
-                city
-                lat
-                lng
-              }
-              group {
-                name
-                urlname
-                description
-              }
+              isOnline
+              featuredPhoto { baseUrl }
+              group { name urlname description }
+              venue { name address city postalCode lat lng }
+              feeSettings { amount currency }
               going
               maxTickets
-              isOnline
-              currency
-              feeSettings {
-                amount
-                currency
-              }
             }
           }
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
+          pageInfo { hasNextPage endCursor }
         }
       }
     `;
 
+    const results: MeetupEvent[] = [];
     const endDate = new Date(since);
-    endDate.setDate(endDate.getDate() + 60); // 60 jours dans le futur
+    endDate.setDate(endDate.getDate() + 60);
 
-    const variables = {
-      searchTerm,
-      startDate: since.toISOString(),
-      endDate: endDate.toISOString(),
-      first: 50,
-      after: null,
-    };
+    let cursor: string | null = null;
+    let pageCount = 0;
 
-    const response = await fetch(this.graphqlUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.accessToken}`,
-        'User-Agent': 'Pulse Montreal Events Platform',
-      },
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
-    });
+    while (pageCount < MEETUP_MAX_PAGES && results.length < limit) {
+      const variables = {
+        searchTerm: term,
+        startDate: since.toISOString(),
+        endDate: endDate.toISOString(),
+        first: Math.min(50, limit - results.length),
+        after: cursor,
+      };
 
-    if (!response.ok) {
-      throw new Error(`Meetup GraphQL API error: ${response.status}`);
+      const response = await fetch(MEETUP_GRAPHQL_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.accessToken}`,
+          'User-Agent': 'Pulse-Montreal/1.0',
+        },
+        body: JSON.stringify({ query, variables }),
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Meetup GraphQL error ${response.status}: ${body}`);
+      }
+
+      const data: MeetupGraphQLResponse = await response.json();
+      const edges = data?.data?.rankedEvents?.edges ?? [];
+
+      edges.forEach((edge) => {
+        const node = edge.node;
+        if (!node?.id || !node?.dateTime) {
+          return;
+        }
+
+        results.push({
+          id: node.id,
+          title: node.title,
+          description: node.description,
+          dateTime: node.dateTime,
+          endTime: node.endTime,
+          eventUrl: node.eventUrl,
+          isOnline: node.isOnline,
+          featuredPhoto: node.featuredPhoto,
+          group: node.group,
+          venue: node.venue,
+          feeSettings: node.feeSettings,
+          going: node.going,
+          maxTickets: node.maxTickets,
+        });
+      });
+
+      const pageInfo = data?.data?.rankedEvents?.pageInfo;
+      if (!pageInfo?.hasNextPage || !pageInfo.endCursor) {
+        break;
+      }
+
+      cursor = pageInfo.endCursor;
+      pageCount += 1;
+      await this.rateLimit();
     }
 
-    const data: MeetupGraphQLResponse = await response.json();
-    
-    if (!data.data?.rankedEvents?.edges) {
-      return [];
-    }
-
-    return data.data.rankedEvents.edges
-      .map(edge => this.mapToUnifiedEvent(edge.node))
-      .filter(event => this.isInMontreal(event));
+    return results.filter((event) => this.isMontrealEvent(event));
   }
 
-  private mapToUnifiedEvent(event: MeetupEvent): UnifiedEvent {
-    const startDate = new Date(event.dateTime);
-    const endDate = event.endTime ? new Date(event.endTime) : new Date(startDate.getTime() + 2 * 60 * 60 * 1000);
-
-    // Déterminer la catégorie basée sur le nom et la description
-    const category = this.inferCategory(event.name, event.description, event.group.name);
-    
-    return {
-      sourceId: event.id,
-      title: event.name,
-      description: event.description || `Événement organisé par ${event.group.name}`,
-      startAt: startDate,
-      endAt: endDate,
-      timezone: 'America/Montreal',
-      
-      venue: event.venue ? {
-        name: event.venue.name,
-        address: event.venue.address,
-        city: event.venue.city,
-        lat: event.venue.lat,
-        lng: event.venue.lng,
-      } : {
-        name: event.isOnline ? 'En ligne' : 'Lieu à confirmer',
-        address: event.isOnline ? 'Événement virtuel' : 'Montréal, QC',
-        city: 'Montréal',
-      },
-      
-      organizer: {
-        name: event.group.name,
-        website: `https://meetup.com/${event.group.urlname}`,
-      },
-      
-      category,
-      subcategory: this.inferSubcategory(event.name, event.description, event.group.name),
-      
-      imageUrl: event.featuredPhoto?.baseUrl,
-      url: event.eventUrl,
-      
-      tags: [
-        'meetup',
-        'networking',
-        event.group.urlname,
-        ...(event.isOnline ? ['online', 'virtual'] : ['in-person']),
-        ...this.extractTags(event.name, event.description),
-      ],
-      
-      language: this.inferLanguage(event.name, event.description),
-      accessibility: event.isOnline ? ['online'] : [],
-      
-      pricing: {
-        isFree: !event.feeSettings || event.feeSettings.amount === 0,
-        min: event.feeSettings?.amount,
-        currency: event.feeSettings?.currency || 'CAD',
-      },
-      
-      attendees: {
-        going: event.going,
-        capacity: event.maxTickets,
-      },
-      
-      lastModified: new Date(),
-    };
-  }
-
-  private inferCategory(name: string, description?: string, groupName?: string): string {
-    const text = `${name} ${description || ''} ${groupName || ''}`.toLowerCase();
-    
-    if (text.match(/tech|developer|programming|coding|software|startup|innovation/)) {
-      return 'EDUCATION';
-    }
-    if (text.match(/business|entrepreneur|marketing|sales|finance|leadership/)) {
-      return 'EDUCATION';
-    }
-    if (text.match(/art|design|creative|photography|music|culture/)) {
-      return 'EXHIBITION';
-    }
-    if (text.match(/sport|fitness|yoga|running|cycling|outdoor/)) {
-      return 'SPORT';
-    }
-    if (text.match(/family|kids|children|parent/)) {
-      return 'FAMILY';
-    }
-    if (text.match(/volunteer|charity|community|social/)) {
-      return 'COMMUNITY';
-    }
-    
-    return 'COMMUNITY';
-  }
-
-  private inferSubcategory(name: string, description?: string, groupName?: string): string {
-    const text = `${name} ${description || ''} ${groupName || ''}`.toLowerCase();
-    
-    // Tech subcategories
-    if (text.match(/javascript|js|react|vue|angular/)) return 'javascript';
-    if (text.match(/python|django|flask/)) return 'python';
-    if (text.match(/java|spring|kotlin/)) return 'java';
-    if (text.match(/data|analytics|science|ml|ai/)) return 'data-science';
-    if (text.match(/devops|cloud|aws|azure|kubernetes/)) return 'devops';
-    if (text.match(/mobile|ios|android|flutter/)) return 'mobile';
-    if (text.match(/blockchain|crypto|web3/)) return 'blockchain';
-    
-    // Business subcategories
-    if (text.match(/startup|entrepreneur/)) return 'startup';
-    if (text.match(/marketing|growth|seo/)) return 'marketing';
-    if (text.match(/finance|investment|fintech/)) return 'finance';
-    if (text.match(/hr|recruitment|talent/)) return 'hr';
-    
-    // Creative subcategories
-    if (text.match(/design|ux|ui/)) return 'design';
-    if (text.match(/photography|photo/)) return 'photography';
-    if (text.match(/writing|content|blog/)) return 'writing';
-    
-    return 'networking';
-  }
-
-  private inferLanguage(name: string, description?: string): 'FR' | 'EN' | 'BOTH' {
-    const text = `${name} ${description || ''}`;
-    
-    // Mots français communs
-    const frenchWords = /\b(et|ou|le|la|les|de|des|du|pour|avec|dans|sur|par|une|un|ce|cette|ces|français|francophone)\b/i;
-    // Mots anglais communs  
-    const englishWords = /\b(and|or|the|for|with|in|on|by|a|an|this|that|these|english|anglophone)\b/i;
-    
-    const hasFrench = frenchWords.test(text);
-    const hasEnglish = englishWords.test(text);
-    
-    if (hasFrench && hasEnglish) return 'BOTH';
-    if (hasFrench) return 'FR';
-    if (hasEnglish) return 'EN';
-    
-    return 'BOTH'; // Par défaut à Montréal
-  }
-
-  private extractTags(name: string, description?: string): string[] {
-    const text = `${name} ${description || ''}`.toLowerCase();
-    const tags: string[] = [];
-    
-    // Technologies
-    const techTags = ['javascript', 'python', 'react', 'vue', 'angular', 'nodejs', 'php', 'java', 'go', 'rust'];
-    techTags.forEach(tag => {
-      if (text.includes(tag)) tags.push(tag);
-    });
-    
-    // Concepts business
-    const businessTags = ['startup', 'entrepreneur', 'marketing', 'sales', 'finance', 'leadership'];
-    businessTags.forEach(tag => {
-      if (text.includes(tag)) tags.push(tag);
-    });
-    
-    // Formats d'événement
-    if (text.includes('workshop')) tags.push('workshop');
-    if (text.includes('conference')) tags.push('conference');
-    if (text.includes('panel')) tags.push('panel');
-    if (text.includes('demo')) tags.push('demo');
-    if (text.includes('hackathon')) tags.push('hackathon');
-    
-    return tags.slice(0, 5); // Limiter à 5 tags
-  }
-
-  private isInMontreal(event: UnifiedEvent): boolean {
-    if (!event.venue) return false;
-    
-    const city = event.venue.city?.toLowerCase() || '';
-    const address = event.venue.address?.toLowerCase() || '';
-    
-    return city.includes('montreal') || 
-           city.includes('montréal') || 
-           address.includes('montreal') ||
-           address.includes('montréal') ||
-           address.includes('qc') ||
-           address.includes('quebec');
-  }
-
-  private generateDemoEvents(): UnifiedEvent[] {
-    const baseDate = new Date();
-    
-    return [
-      {
-        sourceId: 'meetup-demo-1',
-        title: 'Montreal Tech Meetup - AI & Machine Learning',
-        description: 'Rejoignez-nous pour une soirée dédiée à l\'intelligence artificielle et au machine learning. Présentations par des experts locaux, networking et discussions.',
-        startAt: new Date(baseDate.getTime() + 3 * 24 * 60 * 60 * 1000), // +3 jours
-        endAt: new Date(baseDate.getTime() + 3 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000),
-        timezone: 'America/Montreal',
-        venue: {
-          name: 'Notman House',
-          address: '51 Rue Sherbrooke O, Montréal, QC',
-          city: 'Montréal',
-          lat: 45.5088,
-          lng: -73.5673,
-        },
-        organizer: {
-          name: 'Montreal Tech Community',
-          website: 'https://meetup.com/montreal-tech',
-        },
-        category: 'EDUCATION',
-        subcategory: 'data-science',
-        imageUrl: 'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&h=600',
-        url: 'https://meetup.com/montreal-tech/events/ai-ml-meetup',
-        tags: ['meetup', 'tech', 'ai', 'machine-learning', 'networking'],
-        language: 'BOTH',
-        accessibility: ['wheelchair'],
-        pricing: {
-          isFree: true,
-          currency: 'CAD',
-        },
-        attendees: {
-          going: 87,
-          capacity: 120,
-        },
-        lastModified: new Date(),
-      },
-
-      {
-        sourceId: 'meetup-demo-2',
-        title: 'Startup Grind Montreal - Pitch Night',
-        description: 'Soirée de présentation pour les startups montréalaises. Venez pitcher votre idée devant un panel d\'investisseurs et d\'entrepreneurs expérimentés.',
-        startAt: new Date(baseDate.getTime() + 10 * 24 * 60 * 60 * 1000), // +10 jours
-        endAt: new Date(baseDate.getTime() + 10 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000),
-        timezone: 'America/Montreal',
-        venue: {
-          name: 'WeWork Montreal',
-          address: '1250 Boulevard René-Lévesque O, Montréal, QC',
-          city: 'Montréal',
-          lat: 45.4995,
-          lng: -73.5747,
-        },
-        organizer: {
-          name: 'Startup Grind Montreal',
-          website: 'https://meetup.com/startup-grind-montreal',
-        },
-        category: 'EDUCATION',
-        subcategory: 'startup',
-        imageUrl: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=600',
-        url: 'https://meetup.com/startup-grind-montreal/events/pitch-night',
-        tags: ['meetup', 'startup', 'pitch', 'entrepreneur', 'investor'],
-        language: 'BOTH',
-        accessibility: ['wheelchair', 'hearing_assistance'],
-        pricing: {
-          isFree: false,
-          min: 15,
-          currency: 'CAD',
-        },
-        attendees: {
-          going: 45,
-          capacity: 80,
-        },
-        lastModified: new Date(),
-      },
-
-      {
-        sourceId: 'meetup-demo-3',
-        title: 'Montreal UX/UI Design Community - Design Critique',
-        description: 'Session de critique constructive de designs. Apportez vos projets en cours et recevez des feedback de designers expérimentés.',
-        startAt: new Date(baseDate.getTime() + 17 * 24 * 60 * 60 * 1000), // +17 jours
-        endAt: new Date(baseDate.getTime() + 17 * 24 * 60 * 60 * 1000 + 2.5 * 60 * 60 * 1000),
-        timezone: 'America/Montreal',
-        venue: {
-          name: 'Café Névé',
-          address: '151 Rue Rachel E, Montréal, QC',
-          city: 'Montréal',
-          lat: 45.5255,
-          lng: -73.5716,
-        },
-        organizer: {
-          name: 'Montreal Designers',
-          website: 'https://meetup.com/montreal-designers',
-        },
-        category: 'EDUCATION',
-        subcategory: 'design',
-        imageUrl: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=800&h=600',
-        url: 'https://meetup.com/montreal-designers/events/design-critique',
-        tags: ['meetup', 'design', 'ux', 'ui', 'critique'],
-        language: 'BOTH',
-        accessibility: [],
-        pricing: {
-          isFree: true,
-          currency: 'CAD',
-        },
-        attendees: {
-          going: 23,
-          capacity: 30,
-        },
-        lastModified: new Date(),
-      },
-    ];
-  }
-
-  private deduplicateEvents(events: UnifiedEvent[]): UnifiedEvent[] {
+  private deduplicate(events: MeetupEvent[]): MeetupEvent[] {
     const seen = new Set<string>();
-    return events.filter(event => {
-      const key = `${event.title}-${event.startAt.toISOString()}-${event.venue?.name}`;
+    return events.filter((event) => {
+      const key = `${event.id}-${event.dateTime}`;
       if (seen.has(key)) {
         return false;
       }
@@ -495,19 +288,26 @@ export class MeetupConnector extends BaseConnector {
     });
   }
 
-  async getImportStats(): Promise<ImportStats> {
-    return {
-      totalProcessed: 0,
-      totalCreated: 0,
-      totalUpdated: 0,
-      totalSkipped: 0,
-      totalErrors: 0,
-      categories: {},
-      venues: {},
-      timeRange: {
-        earliest: new Date(),
-        latest: new Date(),
-      },
-    };
+  private isMontrealEvent(event: MeetupEvent): boolean {
+    const city = event.venue?.city?.toLowerCase() || '';
+    const address = event.venue?.address?.toLowerCase() || '';
+    return (
+      city.includes('montreal') ||
+      city.includes('montréal') ||
+      address.includes('montreal') ||
+      address.includes('montréal') ||
+      address.includes('qc')
+    );
+  }
+
+  private inferSubcategory(title: string, description?: string, groupName?: string): string | undefined {
+    const text = `${title} ${description || ''} ${groupName || ''}`.toLowerCase();
+    if (text.includes('javascript') || text.includes('react') || text.includes('typescript')) return 'javascript';
+    if (text.includes('python') || text.includes('data')) return 'data-science';
+    if (text.includes('startup') || text.includes('entrepreneur')) return 'startup';
+    if (text.includes('marketing') || text.includes('growth')) return 'marketing';
+    if (text.includes('design') || text.includes('ux') || text.includes('ui')) return 'design';
+    if (text.includes('yoga') || text.includes('fitness')) return 'wellness';
+    return undefined;
   }
 }

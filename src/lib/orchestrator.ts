@@ -9,10 +9,12 @@ import { BaseConnector, UnifiedEvent, ImportStats } from '../ingestors/base';
 import { EventbriteConnector } from '../ingestors/eventbrite';
 import { QuartierSpectaclesConnector } from '../ingestors/quartier-spectacles';
 import { TourismeMontrealaConnector } from '../ingestors/tourisme-montreal';
-import { 
-  findPotentialDuplicates, 
-  resolveDuplicate, 
-  DeduplicationEvent 
+import { TicketmasterConnector } from '../ingestors/ticketmaster';
+import { MeetupConnector } from '../ingestors/meetup';
+import {
+  findPotentialDuplicates,
+  resolveDuplicate,
+  DeduplicationEvent,
 } from './deduplication';
 import { logger } from './logger';
 
@@ -59,11 +61,22 @@ export class IngestionOrchestrator {
         enabled: true, // Source officielle publique
         batchSize: 30,
       },
+      {
+        source: EventSource.TICKETMASTER,
+        enabled: !!process.env.TICKETMASTER_API_KEY,
+        apiKey: process.env.TICKETMASTER_API_KEY,
+        batchSize: 200,
+      },
+      {
+        source: EventSource.MEETUP,
+        enabled: true,
+        batchSize: 100,
+      },
       // TODO: Ajouter d'autres connecteurs
       // {
-      //   source: EventSource.TICKETMASTER,
-      //   enabled: !!process.env.TICKETMASTER_API_KEY,
-      //   apiKey: process.env.TICKETMASTER_API_KEY,
+      //   source: EventSource.BANDSINTOWN,
+      //   enabled: !!process.env.BANDSINTOWN_TOKEN,
+      //   apiKey: process.env.BANDSINTOWN_TOKEN,
       //   batchSize: 50,
       // },
     ];
@@ -82,6 +95,14 @@ export class IngestionOrchestrator {
             break;
           case EventSource.TOURISME_MONTREAL:
             this.connectors.set(config.source, new TourismeMontrealaConnector());
+            break;
+          case EventSource.TICKETMASTER:
+            if (config.apiKey) {
+              this.connectors.set(config.source, new TicketmasterConnector(config.apiKey));
+            }
+            break;
+          case EventSource.MEETUP:
+            this.connectors.set(config.source, new MeetupConnector(process.env.MEETUP_TOKEN));
             break;
           // Ajouter d'autres connecteurs ici
         }
@@ -134,6 +155,7 @@ export class IngestionOrchestrator {
       totalProcessed: 0,
       totalCreated: 0,
       totalUpdated: 0,
+      totalCancelled: 0,
       totalSkipped: 0,
       totalErrors: 0,
       errors: [],
@@ -177,23 +199,26 @@ export class IngestionOrchestrator {
       for (const rawEvent of rawEvents) {
         try {
           const unifiedEvent = await connector.mapToUnifiedEvent(rawEvent);
-          
-          if (!this.validateUnifiedEvent(unifiedEvent)) {
-            stats.totalSkipped++;
-            continue;
-          }
-
           const result = await this.processEvent(unifiedEvent);
-          
-          if (result === 'created') {
-            stats.totalCreated++;
-          } else if (result === 'updated') {
-            stats.totalUpdated++;
-          } else {
-            stats.totalSkipped++;
-          }
 
-          stats.totalProcessed++;
+          switch (result) {
+            case 'created':
+              stats.totalCreated++;
+              stats.totalProcessed++;
+              break;
+            case 'updated':
+              stats.totalUpdated++;
+              stats.totalProcessed++;
+              break;
+            case 'cancelled':
+              stats.totalCancelled++;
+              stats.totalProcessed++;
+              break;
+            case 'skipped':
+            default:
+              stats.totalSkipped++;
+              break;
+          }
 
         } catch (error) {
           stats.totalErrors++;
@@ -201,6 +226,8 @@ export class IngestionOrchestrator {
           logger.error('Erreur lors du traitement d\'un événement:', error);
         }
       }
+
+      stats.duration = Date.now() - startTime;
 
       // Marquer le job comme réussi
       await prisma.importJob.update({
@@ -212,6 +239,7 @@ export class IngestionOrchestrator {
       });
 
     } catch (error) {
+      stats.duration = Date.now() - startTime;
       // Marquer le job comme échoué
       await prisma.importJob.update({
         where: { id: importJob.id },
@@ -225,14 +253,42 @@ export class IngestionOrchestrator {
       throw error;
     }
 
-    stats.duration = Date.now() - startTime;
     return stats;
   }
 
   /**
    * Traite un événement unifié (déduplication + upsert)
    */
-  private async processEvent(unifiedEvent: UnifiedEvent): Promise<'created' | 'updated' | 'skipped'> {
+  private async processEvent(unifiedEvent: UnifiedEvent): Promise<'created' | 'updated' | 'cancelled' | 'skipped'> {
+    if (unifiedEvent.status === EventStatus.CANCELLED) {
+      const existing = await prisma.event.findFirst({
+        where: {
+          source: unifiedEvent.source,
+          sourceId: unifiedEvent.sourceId,
+        },
+      });
+
+      if (!existing) {
+        logger.debug(`Annulation reçue sans événement existant: ${unifiedEvent.source}#${unifiedEvent.sourceId}`);
+        return 'skipped';
+      }
+
+      await prisma.event.update({
+        where: { id: existing.id },
+        data: {
+          status: EventStatus.CANCELLED,
+          updatedAt: new Date(),
+        },
+      });
+
+      logger.debug(`Événement annulé: ${unifiedEvent.title}`);
+      return 'cancelled';
+    }
+
+    if (!this.validateUnifiedEvent(unifiedEvent)) {
+      return 'skipped';
+    }
+
     // Chercher les doublons potentiels
     const existingEvents = await this.getExistingEventsForDeduplication(unifiedEvent);
     const duplicates = await findPotentialDuplicates(
@@ -345,7 +401,7 @@ export class IngestionOrchestrator {
         startAt: unifiedEvent.startAt,
         endAt: unifiedEvent.endAt,
         timezone: unifiedEvent.timezone,
-        status: EventStatus.SCHEDULED,
+        status: unifiedEvent.status ?? EventStatus.SCHEDULED,
         venueId,
         url: unifiedEvent.url,
         priceMin: unifiedEvent.priceMin,
@@ -385,7 +441,7 @@ export class IngestionOrchestrator {
         subcategory: unifiedEvent.subcategory,
         accessibility: unifiedEvent.accessibility,
         ageRestriction: unifiedEvent.ageRestriction,
-        status: EventStatus.UPDATED,
+        status: unifiedEvent.status ?? EventStatus.UPDATED,
         updatedAt: new Date(),
       },
     });
@@ -395,6 +451,10 @@ export class IngestionOrchestrator {
    * Valide qu'un événement unifié est correct
    */
   private validateUnifiedEvent(event: UnifiedEvent): boolean {
+    if (event.status === EventStatus.CANCELLED) {
+      return Boolean(event.source && event.sourceId);
+    }
+
     return !!(
       event.title &&
       event.description &&
@@ -402,7 +462,7 @@ export class IngestionOrchestrator {
       event.source &&
       event.sourceId &&
       event.category &&
-      event.startAt > new Date() // Événements futurs seulement
+      event.startAt > new Date()
     );
   }
 }
