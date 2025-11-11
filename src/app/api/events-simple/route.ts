@@ -1,6 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateMusicTags } from '@/lib/musicTags';
 
+const DEFAULT_EVENT_IMAGE = 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop';
+const TICKETMASTER_PREFERRED_RATIOS = ['16_9', '3_2', '4_3', 'square'];
+const TICKETMASTER_EXCLUDED_IMAGE_PATTERNS = [
+  /ATTRACTION/i,
+  /ARTIST/i,
+  /PERFORMER/i,
+  /LOGO/i,
+  /TABLET/i,
+  /RETINA_PORTRAIT/i,
+  /_SQUARE_/i
+];
+
+const sortImagesByQuality = (images: any[] = []) =>
+  [...images]
+    .filter((image) => image?.url)
+    .sort((a, b) => (b?.width || 0) - (a?.width || 0));
+
+const pickPreferredImage = (images: any[] = []) => {
+  if (!images?.length) return undefined;
+
+  const sanitized = sortImagesByQuality(
+    images.filter((image) =>
+      !TICKETMASTER_EXCLUDED_IMAGE_PATTERNS.some((pattern) => pattern.test(image?.url || ''))
+    )
+  );
+
+  for (const ratio of TICKETMASTER_PREFERRED_RATIOS) {
+    const match = sanitized.find((image) => image?.ratio?.toLowerCase() === ratio.toLowerCase());
+    if (match?.url) return match.url;
+  }
+
+  return sanitized[0]?.url;
+};
+
+const selectTicketmasterImage = (event: any) => {
+  const primary = pickPreferredImage(event?.images);
+  if (primary) return primary;
+
+  const attractionImages =
+    event?._embedded?.attractions?.flatMap((attraction: any) => attraction?.images || []) || [];
+  const attractionImage = pickPreferredImage(attractionImages);
+  if (attractionImage) return attractionImage;
+
+  const venueImages =
+    event?._embedded?.venues?.flatMap((venue: any) => venue?.images || []) || [];
+  const venueImage = pickPreferredImage(venueImages);
+  if (venueImage) return venueImage;
+
+  return DEFAULT_EVENT_IMAGE;
+};
+
 // Cache en mémoire pour optimiser les performances
 let cachedData: any = null;
 let cacheTimestamp = 0;
@@ -984,6 +1035,7 @@ export async function GET(request: NextRequest) {
         const venue = event._embedded?.venues?.[0];
         const startDate = event.dates?.start?.localDate;
         const startTime = event.dates?.start?.localTime;
+        const imageUrl = selectTicketmasterImage(event);
         
         return {
           id: event.id,
@@ -992,7 +1044,7 @@ export async function GET(request: NextRequest) {
           startAt: startDate ? `${startDate}T${startTime || '19:00:00'}` : new Date().toISOString(),
           endAt: null,
           url: event.url,
-          imageUrl: event.images?.[0]?.url || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
+          imageUrl,
           category: event.classifications?.[0]?.segment?.name?.toLowerCase() || 'music',
           subcategory: event.classifications?.[0]?.genre?.name?.toLowerCase() === 'rock' ? 'Rock' :
                    event.classifications?.[0]?.genre?.name?.toLowerCase() === 'pop' ? 'Pop' :
