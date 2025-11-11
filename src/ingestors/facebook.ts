@@ -1,4 +1,4 @@
-import { DEFAULT_EVENT_IMAGE } from '@/lib/constants';
+import { DEFAULT_EVENT_IMAGE, MONTREAL_COORDINATES } from '@/lib/constants';
 
 export interface FacebookPageConfig {
   pageId: string;
@@ -23,6 +23,31 @@ const EVENT_FIELDS = [
   'is_canceled'
 ].join(',');
 
+const MONTREAL_RADIUS_KM = 75;
+
+const toRadians = (deg: number) => (deg * Math.PI) / 180;
+
+const haversineDistanceKm = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) => {
+  const R = 6371;
+  const dLat = toRadians(b.lat - a.lat);
+  const dLon = toRadians(b.lon - a.lon);
+  const lat1 = toRadians(a.lat);
+  const lat2 = toRadians(b.lat);
+
+  const h =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLon / 2) * Math.sin(dLon / 2) * Math.cos(lat1) * Math.cos(lat2);
+
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+};
+
+const parseCoordinate = (value?: string | number | null): number | undefined => {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
 type GraphEvent = {
   id: string;
   name?: string;
@@ -39,14 +64,27 @@ type GraphEvent = {
       city?: string;
       street?: string;
       zip?: string;
-      latitude?: number;
-      longitude?: number;
+      latitude?: number | string;
+      longitude?: number | string;
     };
   };
   attending_count?: number;
   interested_count?: number;
   maybe_count?: number;
   is_canceled?: boolean;
+};
+
+const isMontrealEvent = (event: GraphEvent) => {
+  const lat = parseCoordinate(event.place?.location?.latitude);
+  const lon = parseCoordinate(event.place?.location?.longitude);
+
+  if (typeof lat === 'number' && typeof lon === 'number') {
+    const distance = haversineDistanceKm({ lat, lon }, MONTREAL_COORDINATES);
+    return distance <= MONTREAL_RADIUS_KM;
+  }
+
+  const cityOrName = `${event.place?.location?.city || ''} ${event.place?.name || ''}`.toLowerCase();
+  return cityOrName.includes('montreal') || cityOrName.includes('montréal');
 };
 
 const toFacebookApiUrl = (pageId: string, accessToken: string, cursor?: string) => {
@@ -115,6 +153,9 @@ const mapGraphEventToUnified = (event: GraphEvent) => {
   const endDate = normaliseDate(event.end_time);
   const { segment, genre } = inferSegmentFromCategory(event.category, event.description);
 
+  const latitude = parseCoordinate(event.place?.location?.latitude);
+  const longitude = parseCoordinate(event.place?.location?.longitude);
+
   const venue = event.place?.location
     ? {
         name: event.place?.name || 'Lieu Facebook',
@@ -125,10 +166,13 @@ const mapGraphEventToUnified = (event: GraphEvent) => {
         city: {
           name: event.place?.location?.city || 'Montreal'
         },
-        location: {
-          latitude: String(event.place?.location?.latitude || 45.5088),
-          longitude: String(event.place?.location?.longitude || -73.5542)
-        }
+        location:
+          typeof latitude === 'number' && typeof longitude === 'number'
+            ? {
+                latitude: String(latitude),
+                longitude: String(longitude)
+              }
+            : undefined
       }
     : undefined;
 
@@ -140,9 +184,7 @@ const mapGraphEventToUnified = (event: GraphEvent) => {
       start: startDate,
       end: endDate
     },
-    url: event.ticket_uri
-      ? event.ticket_uri
-      : `https://www.facebook.com/events/${event.id}`,
+    url: event.ticket_uri ? event.ticket_uri : `https://www.facebook.com/events/${event.id}`,
     images: [
       {
         url: event.cover?.source || DEFAULT_EVENT_IMAGE
@@ -213,6 +255,7 @@ export async function fetchFacebookEvents(pages: FacebookPageConfig[]) {
 
         const mappedEvents = events
           .filter((evt) => !evt.is_canceled)
+          .filter(isMontrealEvent)
           .map(mapGraphEventToUnified);
 
         results.push(...mappedEvents);
