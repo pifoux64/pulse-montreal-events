@@ -85,8 +85,28 @@ export class TicketmasterConnector extends BaseConnector {
     const venue = rawEvent?._embedded?.venues?.[0];
     const priceRange = rawEvent?.priceRanges?.[0];
 
-    const venueLat = venue?.location?.latitude ? parseFloat(venue.location.latitude) : undefined;
-    const venueLon = venue?.location?.longitude ? parseFloat(venue.location.longitude) : undefined;
+    let venueLat = venue?.location?.latitude ? parseFloat(venue.location.latitude) : undefined;
+    let venueLon = venue?.location?.longitude ? parseFloat(venue.location.longitude) : undefined;
+
+    if ((!venueLat || !venueLon) && venue) {
+      const addressParts = [
+        venue.address?.line1,
+        venue.city?.name,
+        venue.state?.name,
+        venue.country?.name,
+        venue.postalCode,
+      ]
+        .filter(Boolean)
+        .join(', ');
+
+      if (addressParts) {
+        const coords = await this.geocodeAddress(addressParts, venue.city?.name || 'Montréal');
+        if (coords) {
+          venueLat = coords.lat;
+          venueLon = coords.lon;
+        }
+      }
+    }
 
     const title: string = rawEvent?.name || 'Événement Ticketmaster';
     const infoPieces = [rawEvent?.info, rawEvent?.pleaseNote, rawEvent?.description]?.filter(Boolean);

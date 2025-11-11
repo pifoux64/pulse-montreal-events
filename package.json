@@ -19,7 +19,8 @@
     "db:reset": "prisma migrate reset",
     "checkenv": "tsx scripts/checkEnv.ts",
     "setup-apis": "tsx scripts/setup-api-keys.ts",
-    "test-ingestion": "tsx scripts/test-ingestion.ts"
+    "test-ingestion": "tsx scripts/test-ingestion.ts",
+    "enrich:locations": "tsx scripts/enrichLocations.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -60,7 +61,7 @@
     "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.48.2",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

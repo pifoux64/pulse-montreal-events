@@ -118,8 +118,25 @@ export class MeetupConnector extends BaseConnector {
     const startAt = new Date(rawEvent.dateTime);
     const endAt = rawEvent.endTime ? new Date(rawEvent.endTime) : undefined;
 
-    const venueLat = rawEvent.venue?.lat;
-    const venueLon = rawEvent.venue?.lng;
+    let venueLat = rawEvent.venue?.lat;
+    let venueLon = rawEvent.venue?.lng;
+
+    if ((!venueLat || !venueLon) && rawEvent.venue && rawEvent.venue.address) {
+      const addressParts = [
+        rawEvent.venue.address,
+        rawEvent.venue.city,
+        rawEvent.venue.postalCode,
+        'Montréal, QC, Canada',
+      ]
+        .filter(Boolean)
+        .join(', ');
+
+      const coords = await this.geocodeAddress(addressParts, rawEvent.venue.city || 'Montréal');
+      if (coords) {
+        venueLat = coords.lat;
+        venueLon = coords.lon;
+      }
+    }
 
     const venue = rawEvent.venue
       ? {
