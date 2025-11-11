@@ -160,11 +160,11 @@ export default function CookieConsent() {
               </div>
 
               {/* Cookies marketing */}
-              <div className="flex items-start space-x-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
-                <Cookie className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start space-x-4 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-xl">
+                <Cookie className="h-5 w-5 text-teal-600 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-purple-900 dark:text-purple-100">
+                    <h3 className="font-semibold text-teal-900 dark:text-teal-100">
                       Cookies marketing
                     </h3>
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -177,10 +177,10 @@ export default function CookieConsent() {
                         }))}
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 dark:peer-focus:ring-teal-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-teal-600"></div>
                     </label>
                   </div>
-                  <p className="text-sm text-purple-700 dark:text-purple-300 mt-1">
+                  <p className="text-sm text-teal-700 dark:text-teal-300 mt-1">
                     Ces cookies permettent de personnaliser les publicités et le contenu 
                     selon vos intérêts. Ils sont utilisés par nos partenaires publicitaires.
                   </p>

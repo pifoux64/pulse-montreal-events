@@ -254,7 +254,7 @@ export default function CalendrierPage() {
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
       'musique': 'bg-red-100 text-red-800',
-      'art': 'bg-purple-100 text-purple-800',
+      'art': 'bg-sky-100 text-sky-800',
       'sport': 'bg-blue-100 text-blue-800',
       'famille': 'bg-orange-100 text-orange-800',
       'culture': 'bg-teal-100 text-teal-800',

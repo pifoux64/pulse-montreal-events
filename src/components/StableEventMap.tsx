@@ -37,15 +37,15 @@ const StableEventMap = ({
     'arts & theatre': '#059669',  // Vert pour arts & théâtre
     'art & culture': '#059669',   // Vert pour art & culture
     'community': '#D97706',       // Orange pour community
-    'miscellaneous': '#9333ea',   // Violet pour miscellaneous
+    'miscellaneous': '#0ea5e9',   // Bleu ciel pour miscellaneous
     'education': '#f59e0b',       // Jaune pour education
-    'gastronomie': '#C026D3',     // Magenta pour gastronomie
+    'gastronomie': '#14b8a6',     // Turquoise pour gastronomie
     'famille': '#DC2626',         // Rouge foncé pour famille
     'family': '#DC2626',          // Rouge foncé pour family
     'musique': '#E11D48',         // Fallback français
     'culture': '#D97706',         // Fallback français
     'autre': '#6b7280',           // Fallback français
-    'food': '#C026D3',            // Fallback anglais
+    'food': '#14b8a6',            // Fallback anglais
     'default': '#6b7280'          // Couleur par défaut
   } as const;
 
@@ -132,9 +132,9 @@ const StableEventMap = ({
           '#2563EB': 'hue-rotate(220deg) saturate(1.3) brightness(1.1)', // Bleu pour Sport
           '#059669': 'hue-rotate(140deg) saturate(1.4) brightness(1.0)', // Vert pour Art & Culture
           '#D97706': 'hue-rotate(30deg) saturate(1.5) brightness(1.2)',  // Orange pour Community
-          '#9333ea': 'hue-rotate(270deg) saturate(1.3) brightness(1.1)', // Violet pour Miscellaneous
+          '#0ea5e9': 'hue-rotate(190deg) saturate(1.1) brightness(1.1)', // Bleu ciel pour Miscellaneous
           '#f59e0b': 'hue-rotate(45deg) saturate(1.4) brightness(1.3)',  // Jaune pour Education
-          '#C026D3': 'hue-rotate(300deg) saturate(1.2) brightness(1.0)', // Magenta pour Gastronomie
+          '#14b8a6': 'hue-rotate(160deg) saturate(1.2) brightness(1.05)', // Turquoise pour Gastronomie
           '#DC2626': 'hue-rotate(0deg) saturate(1.5) brightness(1.0)',   // Rouge pour Famille
           '#6b7280': 'grayscale(1) brightness(0.8)',                     // Gris pour Autre
         };

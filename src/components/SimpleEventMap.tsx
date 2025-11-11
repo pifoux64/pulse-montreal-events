@@ -42,9 +42,9 @@ const SimpleEventMap = ({
     'arts & theatre': '#059669',  // Vert pour arts & théâtre (28 événements)
     'art & culture': '#059669',   // Vert pour art & culture (variante)
     'community': '#D97706',       // Orange pour community (17 événements)
-    'miscellaneous': '#9333ea',   // Violet pour miscellaneous (52 événements)
+    'miscellaneous': '#0ea5e9',   // Bleu ciel pour miscellaneous (52 événements)
     'education': '#f59e0b',       // Jaune pour education
-    'gastronomie': '#C026D3',     // Magenta pour gastronomie
+    'gastronomie': '#14b8a6',     // Turquoise pour gastronomie
     'famille': '#DC2626',         // Rouge foncé pour famille
     'family': '#DC2626',          // Rouge foncé pour family
     
@@ -52,7 +52,7 @@ const SimpleEventMap = ({
     'musique': '#E11D48',
     'culture': '#D97706',
     'autre': '#6b7280',
-    'food': '#C026D3',
+    'food': '#14b8a6',
     
     // Défaut
     'default': '#6b7280'

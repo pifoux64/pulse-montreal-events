@@ -71,8 +71,8 @@ const EventCard = ({
     const colors: Record<string, string> = {
       'musique': 'bg-red-500',
       'music': 'bg-red-500',
-      'art': 'bg-purple-500',
-      'arts & theatre': 'bg-purple-500',
+      'art': 'bg-sky-500',
+      'arts & theatre': 'bg-sky-500',
       'sport': 'bg-blue-500',
       'sports': 'bg-blue-500',
       'famille': 'bg-orange-500',
@@ -185,9 +185,9 @@ const EventCard = ({
             <Link
               href={`/organisateur/${event.organizerId}`}
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center text-sm text-gray-600 hover:text-violet-600 transition-colors duration-200 group"
+              className="flex items-center text-sm text-gray-600 hover:text-sky-600 transition-colors duration-200 group"
             >
-              <User className="w-4 h-4 mr-2 text-violet-500" />
+              <User className="w-4 h-4 mr-2 text-sky-500" />
               <span className="font-medium truncate group-hover:underline">
                 {event.organizer.name}
               </span>

@@ -28,7 +28,8 @@
   --gradient-accent: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --gradient-success: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
   --gradient-dark: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-aurora: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  --gradient-aurora: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 45%, #bbf7d0 100%);
+  --gradient-hero: linear-gradient(140deg, #0b1020 0%, #102347 45%, #0f766e 100%);
   
   /* ✨ GLASSMORPHISM VARIABLES */
   --glass-bg: rgba(255, 255, 255, 0.08);
@@ -118,6 +119,10 @@
   animation: aurora-shift 8s ease-in-out infinite;
 }
 
+.gradient-hero {
+  background: var(--gradient-hero);
+}
+
 /* 🌈 ANIMATIONS INNOVANTES */
 @keyframes aurora-shift {
   0%, 100% { background-position: 0% 50%; }
@@ -144,6 +149,24 @@
   50% { 
     box-shadow: 0 0 40px rgba(var(--primary-rgb), 0.6);
     transform: scale(1.02);
+  }
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(1.04);
+  }
+  30% {
+    transform: scale(0.99);
+  }
+  45% {
+    transform: scale(1.05);
+  }
+  55% {
+    transform: scale(1);
   }
 }
 
@@ -189,6 +212,11 @@
 
 .animate-float {
   animation: float 6s ease-in-out infinite;
+}
+
+.animate-heartbeat {
+  animation: heartbeat 3.2s ease-in-out infinite;
+  transform-origin: center;
 }
 
 .animate-pulse-glow {

@@ -269,7 +269,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
 
                   {/* Language */}
                   <div className="flex items-start gap-3">
-                    <div className="h-5 w-5 text-purple-600 mt-0.5 flex items-center justify-center">
+                    <div className="h-5 w-5 text-teal-600 mt-0.5 flex items-center justify-center">
                       🌐
                     </div>
                     <div>
@@ -340,7 +340,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                   href={event.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold py-4 px-6 rounded-2xl text-center hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="block w-full bg-gradient-to-r from-sky-600 to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-center hover:from-sky-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
                   Acheter des billets
                 </a>

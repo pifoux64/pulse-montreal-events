@@ -29,7 +29,7 @@ const ModernLoader = ({
   if (variant === 'minimal') {
     return (
       <div className="flex items-center justify-center">
-        <Loader2 className={`${sizeClasses[size]} animate-spin text-violet-500`} />
+        <Loader2 className={`${sizeClasses[size]} animate-spin text-sky-500`} />
       </div>
     );
   }
@@ -38,8 +38,8 @@ const ModernLoader = ({
     return (
       <div className="flex items-center justify-center">
         <div className="relative">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 to-purple-500 animate-ping opacity-20"></div>
-          <div className="relative rounded-full bg-gradient-to-r from-violet-500 to-purple-500 p-3">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-sky-500 to-emerald-500 animate-ping opacity-20"></div>
+          <div className="relative rounded-full bg-gradient-to-r from-sky-500 to-emerald-500 p-3">
             <Sparkles className="w-6 h-6 text-white animate-pulse" />
           </div>
         </div>
@@ -54,7 +54,7 @@ const ModernLoader = ({
         <div className="relative">
           <div className="absolute inset-0 rounded-2xl bg-gradient-aurora opacity-20 blur-xl animate-pulse"></div>
           <div className="relative glass-effect p-6 rounded-2xl border border-white/20">
-            <Loader2 className={`${sizeClasses[size]} animate-spin text-violet-500 mx-auto`} />
+            <Loader2 className={`${sizeClasses[size]} animate-spin text-sky-500 mx-auto`} />
           </div>
         </div>
         
@@ -68,7 +68,7 @@ const ModernLoader = ({
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="w-2 h-2 bg-violet-500 rounded-full animate-bounce"
+              className="w-2 h-2 bg-sky-500 rounded-full animate-bounce"
               style={{ animationDelay: `${i * 0.2}s` }}
             />
           ))}

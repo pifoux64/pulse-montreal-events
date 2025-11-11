@@ -329,7 +329,7 @@ export default function FavorisPage() {
   // Affichage du loader
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100">
         <Navigation />
         <div className="pt-24">
           <ModernLoader 
@@ -345,7 +345,7 @@ export default function FavorisPage() {
   // Affichage d'erreur
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100">
         <Navigation />
         <div className="pt-24 text-center py-12">
           <div className="text-red-500 mb-4">
@@ -361,7 +361,7 @@ export default function FavorisPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 transition-colors duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100 transition-colors duration-500">
       <Navigation />
       
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
@@ -418,7 +418,7 @@ export default function FavorisPage() {
           
           <div className="bg-white rounded-lg p-4 border border-gray-200">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-sky-500 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-bold">$</span>
               </div>
               <div>

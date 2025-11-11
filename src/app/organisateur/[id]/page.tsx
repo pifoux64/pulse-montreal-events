@@ -88,7 +88,7 @@ export default function OrganisateurPage() {
   // Affichage du loader
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50  transition-colors duration-500">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100  transition-colors duration-500">
         <Navigation />
         <div className="pt-24">
           <ModernLoader 
@@ -104,7 +104,7 @@ export default function OrganisateurPage() {
   // Affichage d'erreur
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50  transition-colors duration-500">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100  transition-colors duration-500">
         <Navigation />
         <div className="pt-24 text-center py-12">
           <div className="text-red-500 mb-4">
@@ -122,7 +122,7 @@ export default function OrganisateurPage() {
   // Organisateur non trouvé
   if (!organizer || organizerEvents.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50  transition-colors duration-500">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100  transition-colors duration-500">
         <Navigation />
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
             <div className="text-center py-12">
@@ -147,15 +147,15 @@ export default function OrganisateurPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50  transition-colors duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100  transition-colors duration-500">
       <Navigation />
       
       <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête organisateur */}
-        <div className="bg-gradient-to-br from-violet-600 via-purple-600 to-blue-600 relative overflow-hidden rounded-3xl">
+        <div className="bg-gradient-to-br from-sky-700 via-cyan-600 to-emerald-600 relative overflow-hidden rounded-3xl">
           <div className="absolute inset-0 opacity-40">
-            <div className="absolute top-20 left-20 w-72 h-72 bg-purple-300/30 rounded-full blur-3xl animate-float"></div>
-            <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-300/30 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
+            <div className="absolute top-20 left-20 w-72 h-72 bg-cyan-300/30 rounded-full blur-3xl animate-float" style={{ animationDuration: '14s' }}></div>
+            <div className="absolute bottom-20 right-20 w-96 h-96 bg-emerald-300/30 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s', animationDuration: '16s' }}></div>
           </div>
           
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -245,8 +245,8 @@ export default function OrganisateurPage() {
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-lg transition-colors duration-200 ${
                   viewMode === 'grid'
-                    ? 'bg-violet-500 text-white'
-                    : 'glass-effect text-gray-600 hover:text-violet-600 border border-white/20'
+                    ? 'bg-sky-600 text-white'
+                    : 'glass-effect text-gray-600 hover:text-sky-600 border border-white/20'
                 }`}
               >
                 <Grid className="w-5 h-5" />
@@ -255,8 +255,8 @@ export default function OrganisateurPage() {
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-lg transition-colors duration-200 ${
                   viewMode === 'list'
-                    ? 'bg-violet-500 text-white'
-                    : 'glass-effect text-gray-600 hover:text-violet-600 border border-white/20'
+                    ? 'bg-sky-600 text-white'
+                    : 'glass-effect text-gray-600 hover:text-sky-600 border border-white/20'
                 }`}
               >
                 <List className="w-5 h-5" />

@@ -74,7 +74,7 @@ const EventStats = ({ events, className = "" }: EventStatsProps) => {
         label: 'Villes',
         value: cities.size,
         icon: <MapPin className="w-5 h-5" />,
-        color: 'bg-purple-500',
+        color: 'bg-sky-500',
         description: 'Nombre de villes'
       },
       {
@@ -343,12 +343,12 @@ const EventStats = ({ events, className = "" }: EventStatsProps) => {
 const getCategoryColor = (category: string): string => {
   const colors: Record<string, string> = {
     'musique': 'bg-red-500',
-    'art': 'bg-purple-500',
+    'art': 'bg-sky-500',
     'sport': 'bg-blue-500',
     'famille': 'bg-orange-500',
     'culture': 'bg-teal-500',
     'gastronomie': 'bg-amber-500',
-    'théâtre': 'bg-pink-500',
+    'théâtre': 'bg-lime-500',
     'cinéma': 'bg-indigo-500',
     'festival': 'bg-yellow-500',
   };

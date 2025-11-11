@@ -78,21 +78,21 @@ export const GENRE_EMOJIS = {
 export const GENRE_COLORS = {
   rock: '#e74c3c',      // Rouge
   metal: '#2c3e50',     // Noir
-  punk: '#8e44ad',      // Violet foncé
+  punk: '#0f766e',      // Teal profond
   electronic: '#3498db', // Bleu
   techno: '#1abc9c',    // Turquoise
   house: '#f39c12',     // Orange
-  dubstep: '#9b59b6',   // Violet
+  dubstep: '#0ea5e9',   // Bleu ciel
   hiphop: '#34495e',    // Gris foncé
   rnb: '#e67e22',       // Orange foncé
-  pop: '#e91e63',       // Rose
+  pop: '#f59e0b',       // Ambre
   jazz: '#795548',      // Marron
   blues: '#607d8b',     // Bleu-gris
   reggae: '#4caf50',    // Vert
   latin: '#ff5722',     // Rouge-orange
   folk: '#8bc34a',      // Vert clair
   country: '#ffc107',   // Jaune
-  classical: '#673ab7',  // Violet profond
+  classical: '#1d4ed8',  // Bleu profond
   alternative: '#455a64', // Gris
   indie: '#ff9800',     // Orange
   funk: '#cddc39',      // Vert-jaune

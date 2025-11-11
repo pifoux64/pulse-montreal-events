@@ -315,21 +315,28 @@ export default function OptimizedHomePage() {
   const displayedEvents = filteredEvents;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 transition-colors duration-500">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100 transition-colors duration-500">
       <Navigation />
       
       {/* Hero Section ultra-moderne avec glassmorphism et animations */}
-      <section className="relative pt-24 pb-32 overflow-hidden">
+      <section className="relative pt-28 pb-32 overflow-hidden text-slate-50">
         {/* Background avec gradients animés */}
-        <div className="absolute inset-0 gradient-aurora opacity-90"></div>
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-purple-500/20 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-float" style={{animationDelay: '2s'}}></div>
-          <div className="absolute top-1/2 left-1/2 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl animate-float" style={{animationDelay: '4s'}}></div>
+        <div className="absolute inset-0 gradient-hero"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/0 to-black/45"></div>
+        <div className="absolute inset-0 opacity-50 mix-blend-screen">
+          <div
+            className="absolute -top-24 -left-32 w-[520px] h-[520px] rounded-full bg-sky-400/25 blur-3xl animate-float"
+            style={{ animationDuration: '16s' }}
+          ></div>
+          <div
+            className="absolute top-1/4 -right-36 w-[440px] h-[440px] rounded-full bg-emerald-400/25 blur-3xl animate-float"
+            style={{ animationDelay: '5s', animationDuration: '18s' }}
+          ></div>
+          <div className="absolute bottom-[-180px] left-1/3 w-[560px] h-[560px] rounded-full bg-cyan-500/20 blur-[140px]"></div>
         </div>
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center space-y-8">
             {/* Logo et titre avec animation */}
             {/* <div className="inline-flex items-center space-x-4 mb-8">
               <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-2xl">
@@ -343,28 +350,31 @@ export default function OptimizedHomePage() {
               </div> 
             </div>*/}
 
-            <div className="animate-slide-up">
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight tracking-tight">
+            <div className="animate-slide-up space-y-6">
+              <div className="inline-flex items-center justify-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-cyan-200 backdrop-blur-md">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                Montréal, Québec · Sélection quotidienne d’événements
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold text-white leading-tight tracking-tight">
                 Découvrez les événements qui font
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-300 to-cyan-300 animate-pulse-glow">
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-cyan-200 to-sky-200">
                   vibrer Montréal
                 </span>
               </h2>
-              <p className="text-xl md:text-2xl text-white/90 mb-8 font-light">
-                La métropole culturelle vous ouvre ses portes
+              <p className="text-lg md:text-xl text-slate-200 mx-auto max-w-3xl font-light">
+                La métropole culturelle vous ouvre ses portes. Concerts, festivals, expositions et activités incontournables, classés et actualisés en continu.
               </p>
             </div>
             
-            <p className="text-xl text-white/90 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Plus de <span className="font-bold">{events.length}</span> événements en temps réel. 
-              Concerts, festivals, expositions et sports
+            <p className="text-base md:text-lg text-slate-300">
+              <span className="font-semibold text-emerald-200">{events.length}</span> événements en temps réel · Concerts · Festivals · Expositions · Sports
             </p>
 
             {/* Barre de recherche moderne */}
             <div className="max-w-2xl mx-auto mb-12">
-              <div className="glass rounded-2xl p-2 shadow-2xl">
+              <div className="rounded-3xl p-2 border border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_30px_80px_-40px_rgba(15,118,110,0.8)]">
                 <div className="flex items-center">
-                  <Search className="w-6 h-6 text-gray-400 ml-4" />
+                  <Search className="w-6 h-6 text-slate-200 ml-4" />
                   <input
                     type="text"
                     placeholder="Rechercher des événements, artistes, lieux..."
@@ -376,14 +386,14 @@ export default function OptimizedHomePage() {
                         eventsSection?.scrollIntoView({ behavior: 'smooth' });
                       }
                     }}
-                    className="flex-1 px-4 py-4 bg-transparent text-gray-700 placeholder-gray-400 focus:outline-none text-lg"
+                    className="flex-1 px-4 py-4 bg-transparent text-slate-100 placeholder-slate-400 focus:outline-none text-lg"
                   />
                   <button 
                     onClick={() => {
                       const eventsSection = document.getElementById('events-section');
                       eventsSection?.scrollIntoView({ behavior: 'smooth' });
                     }}
-                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                    className="bg-gradient-to-r from-sky-500 via-emerald-500 to-emerald-400 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-emerald-500/40"
                   >
                     Explorer
                   </button>
@@ -395,7 +405,7 @@ export default function OptimizedHomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a
                 href="/carte"
-                className="glass rounded-2xl px-8 py-4 text-white font-semibold hover:bg-white/20 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-xl"
+                className="rounded-2xl px-8 py-4 text-slate-50 font-semibold transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 border border-white/15 bg-white/10 backdrop-blur-xl hover:bg-white/20"
               >
                 <MapPin className="w-5 h-5" />
                 <span>Voir la carte</span>
@@ -406,7 +416,7 @@ export default function OptimizedHomePage() {
                   const eventsSection = document.getElementById('events-section');
                   eventsSection?.scrollIntoView({ behavior: 'smooth' });
                 }}
-                className="bg-white/20 backdrop-blur-md rounded-2xl px-8 py-4 text-white font-semibold hover:bg-white/30 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2 shadow-xl"
+                className="border border-white/15 bg-transparent rounded-2xl px-8 py-4 text-slate-50 font-semibold hover:bg-white/10 transition-all duration-300 transform hover:scale-105 flex items-center space-x-2"
               >
                 <Calendar className="w-5 h-5" />
                 <span>Parcourir les événements</span>
@@ -543,7 +553,7 @@ export default function OptimizedHomePage() {
       </section>
 
       {/* Section des statistiques avec données en temps réel */}
-      <section className="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
+      <section className="py-16 bg-gradient-to-r from-sky-700 to-emerald-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-white mb-4">

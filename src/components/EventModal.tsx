@@ -151,7 +151,7 @@ const EventModal = ({
                 onError={() => setImageError(true)}
               />
               {!isImageLoaded && (
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-500 animate-pulse" />
+                <div className="absolute inset-0 bg-gradient-to-br from-sky-500 to-emerald-500 animate-pulse" />
               )}
               
               {/* Overlay gradient */}
@@ -193,7 +193,7 @@ const EventModal = ({
               </div>
             </div>
           ) : (
-            <div className="relative h-32 bg-gradient-to-br from-purple-500 to-pink-500">
+            <div className="relative h-32 bg-gradient-to-br from-sky-500 to-emerald-500">
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
               
               {/* Prix sans image */}
@@ -312,8 +312,8 @@ const EventModal = ({
                 </div>
 
                 {/* Prix et billets */}
-                <div className="flex items-start space-x-4 p-4 bg-purple-50 rounded-2xl">
-                  <div className="p-2 bg-purple-500 rounded-xl">
+                <div className="flex items-start space-x-4 p-4 bg-cyan-50 rounded-2xl">
+                  <div className="p-2 bg-cyan-500 rounded-xl">
                     <DollarSign className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1">
@@ -326,7 +326,7 @@ const EventModal = ({
                         href={event.ticketUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-2 mt-3 px-4 py-2 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 transition-colors duration-200"
+                        className="inline-flex items-center space-x-2 mt-3 px-4 py-2 bg-cyan-600 text-white rounded-xl font-medium hover:bg-cyan-700 transition-colors duration-200"
                       >
                         <ExternalLink className="w-4 h-4" />
                         <span>Acheter des billets</span>
@@ -437,13 +437,13 @@ const EventModal = ({
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-12 h-12 bg-gradient-to-br from-sky-500 to-emerald-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                         <span className="text-white font-bold text-lg">
                           {event.organizer.name.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 group-hover:text-violet-600 transition-colors duration-300">
+                        <h3 className="font-semibold text-gray-900 group-hover:text-sky-600 transition-colors duration-300">
                           {event.organizer.name}
                         </h3>
                         <p className="text-gray-600 text-sm capitalize">
@@ -451,7 +451,7 @@ const EventModal = ({
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 text-gray-400 group-hover:text-violet-500 transition-colors duration-300">
+                    <div className="flex items-center space-x-2 text-gray-400 group-hover:text-sky-500 transition-colors duration-300">
                       <User className="w-4 h-4" />
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                     </div>
