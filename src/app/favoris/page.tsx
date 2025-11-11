@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Event, EventFilter, EventCategory } from '@/types';
+import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Event, EventCategory } from '@/types';
 import { useEvents } from '@/hooks/useEvents';
 import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
@@ -10,6 +10,7 @@ import EventCard from '@/components/EventCard';
 import EventModal from '@/components/EventModal';
 import ModernLoader from '@/components/ModernLoader';
 import { Heart, Filter, Trash2, Share2, Calendar, MapPin, Sparkles } from 'lucide-react';
+import { usePersistentFilters } from '@/hooks/usePersistentFilters';
 
 // Données de test pour le développement
 const mockCategories: EventCategory[] = [
@@ -162,12 +163,12 @@ const mockFavoriteEvents: Event[] = [
   }
 ];
 
-export default function FavorisPage() {
+function FavorisPageContent() {
   // Charger tous les événements et les favoris
   const { data: allEvents = [], isLoading: loading, error } = useEvents();
   const { favoriteEvents, isFavorite, toggleFavorite, clearAllFavorites } = useFavorites(allEvents);
   
-  const [filters, setFilters] = useState<EventFilter>({});
+  const { filters, setFilters } = usePersistentFilters();
   const [showFilters, setShowFilters] = useState(true);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
@@ -652,6 +653,20 @@ export default function FavorisPage() {
         isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
       />
     </div>
+  );
+}
+
+export default function FavorisPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-100">
+          Chargement de vos favoris...
+        </div>
+      }
+    >
+      <FavorisPageContent />
+    </Suspense>
   );
 }
 

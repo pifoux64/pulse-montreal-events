@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { Event, EventFilter, EventCategory } from '@/types';
+import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Event, EventCategory } from '@/types';
 import { useEvents } from '@/hooks/useEvents';
 import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
@@ -9,6 +9,7 @@ import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
 import EventModal from '@/components/EventModal';
 import { Calendar, Filter, ChevronLeft, ChevronRight, MapPin, Clock, Users, Heart } from 'lucide-react';
+import { usePersistentFilters } from '@/hooks/usePersistentFilters';
 
 // Données de test pour le développement
 const mockCategories: EventCategory[] = [
@@ -77,7 +78,7 @@ const mockCategories: EventCategory[] = [
 
 // Les événements sont maintenant chargés via l'API useEvents()
 
-export default function CalendrierPage() {
+function CalendrierPageContent() {
   // Utilisation de l'API réelle comme sur la carte
   const { data: events = [], isLoading, error } = useEvents();
   
@@ -85,7 +86,7 @@ export default function CalendrierPage() {
   const { isFavorite, toggleFavorite } = useFavorites(events);
   
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [filters, setFilters] = useState<EventFilter>({});
+  const { filters, setFilters } = usePersistentFilters();
   const [showFilters, setShowFilters] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
@@ -298,9 +299,9 @@ export default function CalendrierPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navigation />
-      
-      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        <Navigation />
+        
+        <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête de la page */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
@@ -579,4 +580,19 @@ export default function CalendrierPage() {
     </div>
   );
 }
+
+export default function CalendrierPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-900 text-slate-100">
+          Chargement du calendrier...
+        </div>
+      }
+    >
+      <CalendrierPageContent />
+    </Suspense>
+  );
+}
+
 

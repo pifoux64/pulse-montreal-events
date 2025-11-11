@@ -11,13 +11,109 @@ interface EventFiltersProps {
   onLocationDetect: () => void;
 }
 
+type DatePresetKey = 'today' | 'tonight' | 'weekend';
+
+const startOfDay = (date: Date) => {
+  const copy = new Date(date);
+  copy.setHours(0, 0, 0, 0);
+  return copy;
+};
+
+const endOfDay = (date: Date) => {
+  const copy = new Date(date);
+  copy.setHours(23, 59, 59, 999);
+  return copy;
+};
+
+const getTonightRange = () => {
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(17, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+  end.setHours(5, 0, 0, 0);
+
+  return { start, end };
+};
+
+const getWeekendRange = () => {
+  const now = new Date();
+  const day = now.getDay(); // 0 = dimanche, 6 = samedi
+  const saturday = new Date(now);
+  const offset = (6 - day + 7) % 7; // Nombre de jours jusqu'au prochain samedi
+  saturday.setDate(saturday.getDate() + offset);
+  saturday.setHours(0, 0, 0, 0);
+
+  const sunday = new Date(saturday);
+  sunday.setDate(sunday.getDate() + 1);
+  sunday.setHours(23, 59, 59, 999);
+
+  return { start: saturday, end: sunday };
+};
+
+const DATE_PRESETS: Record<DatePresetKey, { label: string; compute: () => { start: Date; end: Date } }> = {
+  today: {
+    label: "Aujourd'hui",
+    compute: () => {
+      const now = new Date();
+      return { start: startOfDay(now), end: endOfDay(now) };
+    },
+  },
+  tonight: {
+    label: 'Ce soir',
+    compute: getTonightRange,
+  },
+  weekend: {
+    label: 'Week-end',
+    compute: getWeekendRange,
+  },
+};
+
+const isSameRange = (rangeA?: { start?: Date; end?: Date }, rangeB?: { start?: Date; end?: Date }) => {
+  if (!rangeA?.start || !rangeA?.end || !rangeB?.start || !rangeB?.end) return false;
+  const tolerance = 60 * 1000; // 1 minute
+  return (
+    Math.abs(rangeA.start.getTime() - rangeB.start.getTime()) < tolerance &&
+    Math.abs(rangeA.end.getTime() - rangeB.end.getTime()) < tolerance
+  );
+};
+
 const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }: EventFiltersProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [localFilters, setLocalFilters] = useState<EventFilter>(filters);
+  const [activePreset, setActivePreset] = useState<DatePresetKey | null>(null);
 
   useEffect(() => {
     setLocalFilters(filters);
   }, [filters]);
+
+  useEffect(() => {
+    const dateRange = localFilters.dateRange;
+    if (!dateRange?.start || !dateRange?.end) {
+      setActivePreset(null);
+      return;
+    }
+
+    const todayRange = DATE_PRESETS.today.compute();
+    const tonightRange = DATE_PRESETS.tonight.compute();
+    const weekendRange = DATE_PRESETS.weekend.compute();
+
+    if (isSameRange(dateRange, todayRange)) {
+      setActivePreset('today');
+      return;
+    }
+    if (isSameRange(dateRange, tonightRange)) {
+      setActivePreset('tonight');
+      return;
+    }
+    if (isSameRange(dateRange, weekendRange)) {
+      setActivePreset('weekend');
+      return;
+    }
+
+    setActivePreset(null);
+  }, [localFilters.dateRange?.start, localFilters.dateRange?.end]);
 
   const handleFilterChange = (key: keyof EventFilter, value: any) => {
     const newFilters = { ...localFilters, [key]: value };
@@ -49,6 +145,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
   };
 
   const handleDateRangeChange = (start: string, end: string) => {
+    setActivePreset(null);
     handleFilterChange('dateRange', {
       start: start ? new Date(start) : undefined,
       end: end ? new Date(end) : undefined,
@@ -72,6 +169,13 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
     const clearedFilters: EventFilter = {};
     setLocalFilters(clearedFilters);
     onFiltersChange(clearedFilters);
+    setActivePreset(null);
+  };
+
+  const applyDatePreset = (preset: DatePresetKey) => {
+    const range = DATE_PRESETS[preset].compute();
+    handleFilterChange('dateRange', range);
+    setActivePreset(preset);
   };
 
   const getActiveFiltersCount = () => {
@@ -180,6 +284,22 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
             <Calendar className="w-4 h-4" />
             <span>Période</span>
           </h4>
+          <div className="flex flex-wrap gap-2 mb-3">
+            {(Object.keys(DATE_PRESETS) as DatePresetKey[]).map((presetKey) => (
+              <button
+                key={presetKey}
+                type="button"
+                onClick={() => applyDatePreset(presetKey)}
+                className={`px-3 py-1 text-xs font-semibold rounded-full border transition-all ${
+                  activePreset === presetKey
+                    ? 'bg-sky-600 text-white border-sky-600 shadow'
+                    : 'border-slate-300 text-slate-600 hover:border-sky-400 hover:text-sky-600'
+                }`}
+              >
+                {DATE_PRESETS[presetKey].label}
+              </button>
+            ))}
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs text-gray-600 mb-1">Début</label>

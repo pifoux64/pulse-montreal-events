@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Event, EventFilter, EventCategory } from '@/types';
-import { useEvents, usePrefetchEvents, useFilteredEvents } from '@/hooks/useEvents';
+import { useEvents, usePrefetchEvents } from '@/hooks/useEvents';
 import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
@@ -10,6 +10,20 @@ import EventCard from '@/components/EventCard';
 import EventModal from '@/components/EventModal';
 import ModernLoader from '@/components/ModernLoader';
 import { MapPin, List, Grid, Filter, Search, Calendar, Users, Star, TrendingUp, Clock, Sparkles, ArrowRight, Play, Zap, Globe, Heart, Award, Music, Palette, Trophy, Users2, Utensils } from 'lucide-react';
+import { usePersistentFilters } from '@/hooks/usePersistentFilters';
+
+const toRadians = (value: number) => (value * Math.PI) / 180;
+const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = toRadians(lat2 - lat1);
+  const dLon = toRadians(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
 
 // Données de test pour les catégories
 const mockCategories: EventCategory[] = [
@@ -166,17 +180,7 @@ const mockCategories: EventCategory[] = [
 
 export default function OptimizedHomePage() {
   // États pour les filtres et la vue
-  const [filters, setFilters] = useState<EventFilter>({
-    categories: [],
-    subCategories: [],
-    priceRange: { min: 0, max: 1000 },
-    dateRange: { start: new Date(), end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
-    location: undefined,
-    tags: [],
-    accessibility: undefined
-  });
-
-  const [searchQuery, setSearchQuery] = useState('');
+  const { filters, setFilters } = usePersistentFilters();
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
@@ -195,16 +199,16 @@ export default function OptimizedHomePage() {
     let filtered = [...events];
 
     // Filtre par recherche textuelle
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
+    const textQuery = filters.searchQuery?.trim().toLowerCase() || '';
+    if (textQuery) {
       filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(query) ||
-        event.description.toLowerCase().includes(query) ||
-        event.tags?.some(tag => tag.toLowerCase().includes(query)) ||
-        event.location?.name?.toLowerCase().includes(query) ||
-        (event as any).venue?.name?.toLowerCase().includes(query) ||
-        event.category.toLowerCase().includes(query) ||
-        (event as any).subCategory?.toLowerCase().includes(query)
+        event.title.toLowerCase().includes(textQuery) ||
+        event.description.toLowerCase().includes(textQuery) ||
+        event.tags?.some(tag => tag.toLowerCase().includes(textQuery)) ||
+        event.location?.name?.toLowerCase().includes(textQuery) ||
+        (event as any).venue?.name?.toLowerCase().includes(textQuery) ||
+        event.category.toLowerCase().includes(textQuery) ||
+        (event as any).subCategory?.toLowerCase().includes(textQuery)
       );
     }
 
@@ -244,27 +248,53 @@ export default function OptimizedHomePage() {
       });
     }
 
+    // Filtre par période
+    if (filters.dateRange?.start || filters.dateRange?.end) {
+      const startTime = filters.dateRange?.start?.getTime();
+      const endTime = filters.dateRange?.end?.getTime();
+      filtered = filtered.filter(event => {
+        const eventStart = event.startDate instanceof Date ? event.startDate.getTime() : new Date(event.startDate).getTime();
+        const eventEnd = event.endDate instanceof Date && event.endDate
+          ? event.endDate.getTime()
+          : eventStart;
+
+        if (startTime && eventEnd < startTime) return false;
+        if (endTime && eventStart > endTime) return false;
+        return true;
+      });
+    }
+
+    // Filtre par prix
+    if (filters.priceRange) {
+      const { min, max } = filters.priceRange;
+      filtered = filtered.filter(event => {
+        const amount = event.price?.amount ?? 0;
+        if (typeof min === 'number' && amount < min) return false;
+        if (typeof max === 'number' && amount > max) return false;
+        return true;
+      });
+    }
+
+    // Filtre par localisation
+    if (filters.location?.lat && filters.location?.lng && filters.location?.radius) {
+      const { lat, lng, radius } = filters.location;
+      filtered = filtered.filter(event => {
+        const coordinates = event.location?.coordinates;
+        if (!coordinates || typeof coordinates.lat !== 'number' || typeof coordinates.lng !== 'number') {
+          return false;
+        }
+        const distance = calculateDistanceKm(lat, lng, coordinates.lat, coordinates.lng);
+        return distance <= radius;
+      });
+    }
+
     // Filtre par événements gratuits si activé
     if (showFreeOnly) {
       filtered = filtered.filter(event => event.price.isFree);
     }
 
     return filtered;
-  }, [events, searchQuery, selectedCategory, showFreeOnly, filters.categories, filters.subCategories]);
-
-  // Récupérer le paramètre de recherche de l'URL
-  useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const searchParam = urlParams.get('search');
-    if (searchParam) {
-      setSearchQuery(searchParam);
-      // Scroll vers les événements après un court délai
-      setTimeout(() => {
-        const eventsSection = document.getElementById('events-section');
-        eventsSection?.scrollIntoView({ behavior: 'smooth' });
-      }, 500);
-    }
-  }, []);
+  }, [events, filters, selectedCategory, showFreeOnly]);
 
   // Préchargement intelligent des données
   const prefetchEvents = usePrefetchEvents();
@@ -313,6 +343,7 @@ export default function OptimizedHomePage() {
 
   // Affichage des événements filtrés (pagination future)
   const displayedEvents = filteredEvents;
+  const activeSearchQuery = filters.searchQuery?.trim() || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100 transition-colors duration-500">
@@ -378,8 +409,8 @@ export default function OptimizedHomePage() {
                   <input
                     type="text"
                     placeholder="Rechercher des événements, artistes, lieux..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={filters.searchQuery ?? ''}
+                    onChange={(e) => setFilters((prev) => ({ ...prev, searchQuery: e.target.value }))}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         const eventsSection = document.getElementById('events-section');
@@ -438,8 +469,8 @@ export default function OptimizedHomePage() {
               </h2>
               <p className="text-xl text-gray-600">
                 {loading ? 'Chargement...' : (
-                  searchQuery.trim() ? 
-                    `${displayedEvents.length} événement${displayedEvents.length !== 1 ? 's' : ''} trouvé${displayedEvents.length !== 1 ? 's' : ''} pour "${searchQuery}"` :
+                  activeSearchQuery ? 
+                    `${displayedEvents.length} événement${displayedEvents.length !== 1 ? 's' : ''} trouvé${displayedEvents.length !== 1 ? 's' : ''} pour "${activeSearchQuery}"` :
                     `${displayedEvents.length} événements disponibles`
                 )}
               </p>

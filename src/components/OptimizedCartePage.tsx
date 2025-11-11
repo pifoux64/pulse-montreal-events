@@ -3,13 +3,14 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { Event, EventFilter, EventCategory, MapViewState } from '@/types';
-import { useEvents, useFilteredEvents } from '@/hooks/useEvents';
+import { useEvents } from '@/hooks/useEvents';
 import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
 import EventModal from '@/components/EventModal';
 import { MapPin, List, Map, Filter, X } from 'lucide-react';
+import { usePersistentFilters } from '@/hooks/usePersistentFilters';
 
 // Fonction de calcul de distance (hors composant pour éviter les re-créations)
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -115,7 +116,7 @@ export default function OptimizedCartePage() {
   // Système de favoris
   const { isFavorite, toggleFavorite } = useFavorites(events);
   const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
-  const [filters, setFilters] = useState<EventFilter>({});
+  const { filters, setFilters } = usePersistentFilters();
   const [mapViewState, setMapViewState] = useState<MapViewState>({
     center: [45.5017, -73.5673], // Centre de Montréal
     zoom: 12
