@@ -4,35 +4,38 @@
  */
 
 import pino from 'pino';
+import { createRequire } from 'module';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
+const require = createRequire(import.meta.url);
 
-export const logger = pino({
-  level: process.env.LOG_LEVEL || (isDevelopment ? 'debug' : 'info'),
-  
-  // Configuration pour le développement
-  ...(isDevelopment && {
-    transport: {
+let devTransport: pino.TransportSingleOptions | undefined;
+
+if (isDevelopment) {
+  try {
+    require.resolve('pino-pretty');
+    devTransport = {
       target: 'pino-pretty',
       options: {
         colorize: true,
         ignore: 'pid,hostname',
         translateTime: 'SYS:standard',
       },
-    },
-  }),
+    };
+  } catch (error) {
+    console.warn('pino-pretty non disponible, utilisation des logs JSON par défaut.');
+  }
+}
 
-  // Configuration pour la production
+export const logger = pino({
+  level: process.env.LOG_LEVEL || (isDevelopment ? 'debug' : 'info'),
+  transport: devTransport,
   ...(!isDevelopment && {
     formatters: {
-      level: (label) => {
-        return { level: label };
-      },
+      level: (label) => ({ level: label }),
     },
     timestamp: pino.stdTimeFunctions.isoTime,
   }),
-
-  // Informations de base
   base: {
     env: process.env.NODE_ENV,
     service: 'pulse-montreal',
