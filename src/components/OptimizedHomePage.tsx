@@ -289,8 +289,92 @@ export default function OptimizedHomePage() {
     }
 
     // Filtre par événements gratuits si activé
-    if (showFreeOnly) {
+    if (filters.freeOnly || showFreeOnly) {
       filtered = filtered.filter(event => event.price.isFree);
+    }
+
+    // Filtre par quartiers
+    if (filters.neighborhoods && filters.neighborhoods.length > 0) {
+      filtered = filtered.filter(event => {
+        const venueNeighborhood = (event as any).venue?.neighborhood || event.location?.name || '';
+        return filters.neighborhoods!.some(neighborhood => 
+          venueNeighborhood.toLowerCase().includes(neighborhood.toLowerCase())
+        );
+      });
+    }
+
+    // Filtre par sources
+    if (filters.sources && filters.sources.length > 0) {
+      filtered = filtered.filter(event => {
+        const eventSource = (event as any).source?.toLowerCase() || 'internal';
+        return filters.sources!.some(source => 
+          eventSource === source.toLowerCase() || 
+          (source === 'internal' && !eventSource || eventSource === 'internal')
+        );
+      });
+    }
+
+    // Filtre par langue
+    if (filters.language && filters.language !== 'BOTH') {
+      filtered = filtered.filter(event => {
+        const eventLang = (event as any).language?.toLowerCase() || 'fr';
+        return eventLang === filters.language!.toLowerCase();
+      });
+    }
+
+    // Filtre par restriction d'âge
+    if (filters.ageRestriction && filters.ageRestriction !== 'Tous') {
+      filtered = filtered.filter(event => {
+        const eventAgeRestriction = (event as any).ageRestriction || '';
+        return eventAgeRestriction === filters.ageRestriction;
+      });
+    }
+
+    // Tri des résultats
+    if (filters.sortBy) {
+      const sorted = [...filtered];
+      switch (filters.sortBy) {
+        case 'price':
+          sorted.sort((a, b) => (a.price.amount || 0) - (b.price.amount || 0));
+          break;
+        case 'popularity':
+          // Trier par nombre de favoris (si disponible) ou par date
+          sorted.sort((a, b) => {
+            const aFavs = (a as any)._count?.favorites || 0;
+            const bFavs = (b as any)._count?.favorites || 0;
+            if (aFavs !== bFavs) return bFavs - aFavs;
+            return a.startDate.getTime() - b.startDate.getTime();
+          });
+          break;
+        case 'distance':
+          // Trier par distance si location est définie
+          if (filters.location?.lat && filters.location?.lng) {
+            sorted.sort((a, b) => {
+              const aCoords = a.location?.coordinates;
+              const bCoords = b.location?.coordinates;
+              if (!aCoords || !bCoords) return 0;
+              const aDist = calculateDistanceKm(
+                filters.location!.lat,
+                filters.location!.lng,
+                aCoords.lat,
+                aCoords.lng
+              );
+              const bDist = calculateDistanceKm(
+                filters.location!.lat,
+                filters.location!.lng,
+                bCoords.lat,
+                bCoords.lng
+              );
+              return aDist - bDist;
+            });
+          }
+          break;
+        case 'date':
+        default:
+          sorted.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
+          break;
+      }
+      filtered = sorted;
     }
 
     return filtered;
@@ -519,6 +603,27 @@ export default function OptimizedHomePage() {
                 onFiltersChange={handleFiltersChange}
                 categories={mockCategories}
                 onLocationDetect={handleLocationDetect}
+                neighborhoods={[
+                  'Ville-Marie',
+                  'Plateau-Mont-Royal',
+                  'Rosemont-La Petite-Patrie',
+                  'Villeray-Saint-Michel-Parc-Extension',
+                  'Mercier-Hochelaga-Maisonneuve',
+                  'Côte-des-Neiges-Notre-Dame-de-Grâce',
+                  'Le Sud-Ouest',
+                  'Ahuntsic-Cartierville',
+                  'Outremont',
+                  'Verdun',
+                  'Saint-Laurent',
+                  'Montréal-Nord',
+                  'Anjou',
+                  'Rivière-des-Prairies-Pointe-aux-Trembles',
+                  'Lachine',
+                  'LaSalle',
+                  'Saint-Léonard',
+                  'Pierrefonds-Roxboro',
+                  'L\'Île-Bizard-Sainte-Geneviève',
+                ]}
               />
             </div>
           )}

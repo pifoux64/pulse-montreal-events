@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Filter, X, Search, MapPin, Calendar, DollarSign, Users, Accessibility } from 'lucide-react';
+import { Filter, X, Search, MapPin, Calendar, DollarSign, Users, Accessibility, Globe, Tag, Clock, TrendingUp, ArrowUpDown } from 'lucide-react';
 import { EventFilter, EventCategory } from '@/types';
 
 interface EventFiltersProps {
@@ -9,9 +9,10 @@ interface EventFiltersProps {
   onFiltersChange: (filters: EventFilter) => void;
   categories: EventCategory[];
   onLocationDetect: () => void;
+  neighborhoods?: string[]; // Liste des quartiers disponibles
 }
 
-type DatePresetKey = 'today' | 'tonight' | 'weekend';
+type DatePresetKey = 'today' | 'tonight' | 'weekend' | 'thisWeek' | 'thisMonth' | 'nextMonth';
 
 const startOfDay = (date: Date) => {
   const copy = new Date(date);
@@ -52,6 +53,42 @@ const getWeekendRange = () => {
   return { start: saturday, end: sunday };
 };
 
+const getThisWeekRange = () => {
+  const now = new Date();
+  const day = now.getDay();
+  const start = new Date(now);
+  start.setDate(start.getDate() - day); // Dimanche de cette semaine
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6); // Samedi de cette semaine
+  end.setHours(23, 59, 59, 999);
+  
+  return { start, end };
+};
+
+const getThisMonthRange = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  end.setHours(23, 59, 59, 999);
+  
+  return { start, end };
+};
+
+const getNextMonthRange = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  start.setHours(0, 0, 0, 0);
+  
+  const end = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+  end.setHours(23, 59, 59, 999);
+  
+  return { start, end };
+};
+
 const DATE_PRESETS: Record<DatePresetKey, { label: string; compute: () => { start: Date; end: Date } }> = {
   today: {
     label: "Aujourd'hui",
@@ -68,7 +105,38 @@ const DATE_PRESETS: Record<DatePresetKey, { label: string; compute: () => { star
     label: 'Week-end',
     compute: getWeekendRange,
   },
+  thisWeek: {
+    label: 'Cette semaine',
+    compute: getThisWeekRange,
+  },
+  thisMonth: {
+    label: 'Ce mois',
+    compute: getThisMonthRange,
+  },
+  nextMonth: {
+    label: 'Mois prochain',
+    compute: getNextMonthRange,
+  },
 };
+
+// Sources d'événements disponibles
+const EVENT_SOURCES = [
+  { id: 'ticketmaster', label: 'Ticketmaster' },
+  { id: 'eventbrite', label: 'Eventbrite' },
+  { id: 'meetup', label: 'Meetup' },
+  { id: 'internal', label: 'Pulse Montréal' },
+];
+
+// Options de tri
+const SORT_OPTIONS = [
+  { value: 'date', label: 'Date (plus proche)', icon: Clock },
+  { value: 'price', label: 'Prix (croissant)', icon: DollarSign },
+  { value: 'popularity', label: 'Popularité', icon: TrendingUp },
+  { value: 'distance', label: 'Distance', icon: MapPin },
+];
+
+// Restrictions d'âge
+const AGE_RESTRICTIONS = ['Tous', '18+', '21+', '16+', '13+'];
 
 const isSameRange = (rangeA?: { start?: Date; end?: Date }, rangeB?: { start?: Date; end?: Date }) => {
   if (!rangeA?.start || !rangeA?.end || !rangeB?.start || !rangeB?.end) return false;
@@ -79,10 +147,11 @@ const isSameRange = (rangeA?: { start?: Date; end?: Date }, rangeB?: { start?: D
   );
 };
 
-const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }: EventFiltersProps) => {
+const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, neighborhoods = [] }: EventFiltersProps) => {
   const [isExpanded, setIsExpanded] = useState(true);
   const [localFilters, setLocalFilters] = useState<EventFilter>(filters);
   const [activePreset, setActivePreset] = useState<DatePresetKey | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     setLocalFilters(filters);
@@ -95,21 +164,12 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
       return;
     }
 
-    const todayRange = DATE_PRESETS.today.compute();
-    const tonightRange = DATE_PRESETS.tonight.compute();
-    const weekendRange = DATE_PRESETS.weekend.compute();
-
-    if (isSameRange(dateRange, todayRange)) {
-      setActivePreset('today');
-      return;
-    }
-    if (isSameRange(dateRange, tonightRange)) {
-      setActivePreset('tonight');
-      return;
-    }
-    if (isSameRange(dateRange, weekendRange)) {
-      setActivePreset('weekend');
-      return;
+    // Vérifier tous les presets
+    for (const [key, preset] of Object.entries(DATE_PRESETS)) {
+      if (isSameRange(dateRange, preset.compute())) {
+        setActivePreset(key as DatePresetKey);
+        return;
+      }
     }
 
     setActivePreset(null);
@@ -186,6 +246,14 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
     if (filters.priceRange?.min || filters.priceRange?.max) count += 1;
     if (filters.location?.radius) count += 1;
     if (filters.searchQuery) count += 1;
+    if (filters.neighborhoods?.length) count += filters.neighborhoods.length;
+    if (filters.sources?.length) count += filters.sources.length;
+    if (filters.language) count += 1;
+    if (filters.freeOnly) count += 1;
+    if (filters.ageRestriction) count += 1;
+    if (filters.tags?.length) count += filters.tags.length;
+    if (filters.targetAudience?.length) count += filters.targetAudience.length;
+    if (filters.accessibility && Object.values(filters.accessibility).some(v => v)) count += 1;
     return count;
   };
 
@@ -328,27 +396,89 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
             <DollarSign className="w-4 h-4" />
             <span>Prix</span>
           </h4>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-600 mb-1">Min</label>
+          <div className="space-y-2">
+            <label className="flex items-center space-x-2">
               <input
-                type="number"
-                placeholder="0"
-                value={localFilters.priceRange?.min || ''}
-                onChange={(e) => handlePriceRangeChange(e.target.value, localFilters.priceRange?.max?.toString() || '')}
-                className="form-input"
+                type="checkbox"
+                checked={localFilters.freeOnly || false}
+                onChange={(e) => handleFilterChange('freeOnly', e.target.checked)}
+                className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
               />
-            </div>
-            <div>
-              <label className="block text-xs text-light-600 mb-1">Max</label>
-              <input
-                type="number"
-                placeholder="100"
-                value={localFilters.priceRange?.max || ''}
-                onChange={(e) => handlePriceRangeChange(localFilters.priceRange?.min?.toString() || '', e.target.value)}
-                className="form-input"
-              />
-            </div>
+              <span className="text-sm text-gray-700">Gratuit uniquement</span>
+            </label>
+            {!localFilters.freeOnly && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Min</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={localFilters.priceRange?.min || ''}
+                    onChange={(e) => handlePriceRangeChange(e.target.value, localFilters.priceRange?.max?.toString() || '')}
+                    className="form-input"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Max</label>
+                  <input
+                    type="number"
+                    placeholder="100"
+                    value={localFilters.priceRange?.max || ''}
+                    onChange={(e) => handlePriceRangeChange(localFilters.priceRange?.min?.toString() || '', e.target.value)}
+                    className="form-input"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tri */}
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+            <ArrowUpDown className="w-4 h-4" />
+            <span>Trier par</span>
+          </h4>
+          <select
+            value={localFilters.sortBy || 'date'}
+            onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+            className="w-full form-input"
+          >
+            {SORT_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              return (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        {/* Langue */}
+        <div>
+          <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+            <Globe className="w-4 h-4" />
+            <span>Langue</span>
+          </h4>
+          <div className="space-y-2">
+            {[
+              { value: 'FR', label: 'Français' },
+              { value: 'EN', label: 'Anglais' },
+              { value: 'BOTH', label: 'Les deux' },
+            ].map((lang) => (
+              <label key={lang.value} className="flex items-center space-x-2">
+                <input
+                  type="radio"
+                  name="language"
+                  value={lang.value}
+                  checked={localFilters.language === lang.value}
+                  onChange={(e) => handleFilterChange('language', e.target.value as 'FR' | 'EN' | 'BOTH')}
+                  className="border-gray-300 text-sky-600 focus:ring-sky-500"
+                />
+                <span className="text-sm text-gray-700">{lang.label}</span>
+              </label>
+            ))}
           </div>
         </div>
 
@@ -386,9 +516,91 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
           </div>
         </div>
 
-        {/* Filtres étendus */}
-        {isExpanded && (
+        {/* Bouton pour afficher/masquer les filtres avancés */}
+        <button
+          type="button"
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="w-full py-2 text-sm font-medium text-sky-600 hover:text-sky-700 border-t border-gray-200 flex items-center justify-center gap-2"
+        >
+          <Filter className="w-4 h-4" />
+          {showAdvanced ? 'Masquer les filtres avancés' : 'Afficher les filtres avancés'}
+        </button>
+
+        {/* Filtres avancés */}
+        {showAdvanced && (
           <div className="space-y-4 pt-4 border-t border-gray-200">
+            {/* Quartiers */}
+            {neighborhoods.length > 0 && (
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+                  <MapPin className="w-4 h-4" />
+                  <span>Quartiers</span>
+                </h4>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {neighborhoods.map((neighborhood) => (
+                    <label key={neighborhood} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={localFilters.neighborhoods?.includes(neighborhood) || false}
+                        onChange={(e) => {
+                          const current = localFilters.neighborhoods || [];
+                          const newNeighborhoods = e.target.checked
+                            ? [...current, neighborhood]
+                            : current.filter(n => n !== neighborhood);
+                          handleFilterChange('neighborhoods', newNeighborhoods);
+                        }}
+                        className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                      />
+                      <span className="text-sm text-gray-700">{neighborhood}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Sources */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+                <Tag className="w-4 h-4" />
+                <span>Sources</span>
+              </h4>
+              <div className="space-y-1">
+                {EVENT_SOURCES.map((source) => (
+                  <label key={source.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={localFilters.sources?.includes(source.id) || false}
+                      onChange={(e) => {
+                        const current = localFilters.sources || [];
+                        const newSources = e.target.checked
+                          ? [...current, source.id]
+                          : current.filter(s => s !== source.id);
+                        handleFilterChange('sources', newSources);
+                      }}
+                      className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
+                    />
+                    <span className="text-sm text-gray-700">{source.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Restriction d'âge */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3">Restriction d'âge</h4>
+              <select
+                value={localFilters.ageRestriction || 'Tous'}
+                onChange={(e) => handleFilterChange('ageRestriction', e.target.value === 'Tous' ? undefined : e.target.value)}
+                className="w-full form-input"
+              >
+                {AGE_RESTRICTIONS.map((age) => (
+                  <option key={age} value={age}>
+                    {age}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Public cible */}
             <div>
               <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
@@ -408,7 +620,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
                           : current.filter(a => a !== audience);
                         handleFilterChange('targetAudience', newAudience);
                       }}
-                      className="rounded border-gray-300 text-pulse-primary focus:ring-pulse-primary"
+                      className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                     />
                     <span className="text-sm text-gray-700">{audience}</span>
                   </label>
@@ -440,7 +652,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect }
                           [item.key]: e.target.checked,
                         });
                       }}
-                      className="rounded border-gray-300 text-pulse-primary focus:ring-pulse-primary"
+                      className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
                     />
                     <span className="text-sm text-gray-700">{item.label}</span>
                   </label>

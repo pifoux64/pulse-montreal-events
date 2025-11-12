@@ -92,6 +92,13 @@ export interface EventFilter {
   targetAudience?: string[];
   customFilters?: Record<string, any>;
   searchQuery?: string;
+  // Nouvelles options de filtrage
+  neighborhoods?: string[]; // Filtre par quartiers
+  sources?: string[]; // Filtre par sources (ticketmaster, eventbrite, etc.)
+  language?: 'FR' | 'EN' | 'BOTH'; // Filtre par langue
+  freeOnly?: boolean; // Événements gratuits uniquement
+  ageRestriction?: string; // Filtre par âge minimum (ex: "18+", "21+")
+  sortBy?: 'date' | 'price' | 'popularity' | 'distance'; // Option de tri
 }
 
 export interface FavoriteEvent {
