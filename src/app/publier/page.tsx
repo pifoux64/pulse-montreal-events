@@ -1,10 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { EventFormData, EventCategory } from '@/types';
 import Navigation from '@/components/Navigation';
 import EventForm from '@/components/EventForm';
+import ModernLoader from '@/components/ModernLoader';
 import { Plus, CheckCircle, AlertCircle } from 'lucide-react';
+import { EventCategory as PrismaEventCategory, EventLanguage } from '@prisma/client';
 
 // Données de test pour les catégories
 const mockCategories: EventCategory[] = [
@@ -71,40 +75,106 @@ const mockCategories: EventCategory[] = [
   }
 ];
 
+// Mapping des catégories du frontend vers Prisma
+const mapCategoryToPrisma = (category: string): PrismaEventCategory => {
+  const mapping: Record<string, PrismaEventCategory> = {
+    'Musique': PrismaEventCategory.MUSIC,
+    'Art & Culture': PrismaEventCategory.ARTS_THEATRE,
+    'Sport': PrismaEventCategory.SPORT,
+    'Famille': PrismaEventCategory.FAMILY,
+    'Gastronomie': PrismaEventCategory.FOOD_DRINK,
+  };
+  return mapping[category] || PrismaEventCategory.MISCELLANEOUS;
+};
+
 export default function PublierPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/publier');
+    } else if (status === 'authenticated') {
+      // Vérifier si l'utilisateur est un organisateur
+      if (session.user.role !== 'ORGANIZER' && session.user.role !== 'ADMIN') {
+        router.push('/organisateur/mon-profil');
+      } else {
+        setIsLoading(false);
+      }
+    }
+  }, [status, session, router]);
 
   const handleSubmit = async (data: EventFormData) => {
     setIsSubmitting(true);
     setSubmitStatus('idle');
+    setSubmitMessage('');
     
     try {
-      // Simulation d'une soumission API
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      console.log('Données de l\'événement:', data);
-      
-      // TODO: Implémenter l'appel API réel vers Supabase
-      // const response = await fetch('/api/events', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(data)
-      // });
+      // Transformer les données du formulaire au format API
+      const apiData = {
+        title: data.title,
+        description: data.description,
+        startAt: new Date(data.startDate).toISOString(),
+        endAt: data.endDate ? new Date(data.endDate).toISOString() : undefined,
+        venue: {
+          name: data.location.name,
+          address: data.location.address,
+          city: data.location.city,
+          postalCode: data.location.postalCode,
+          lat: data.location.coordinates.lat,
+          lon: data.location.coordinates.lng,
+          neighborhood: undefined, // Sera calculé automatiquement
+        },
+        url: data.ticketUrl || undefined,
+        priceMin: data.price.isFree ? 0 : Math.round(data.price.amount * 100), // Convertir en cents
+        priceMax: data.price.isFree ? 0 : Math.round(data.price.amount * 100),
+        currency: data.price.currency || 'CAD',
+        language: data.language === 'fr' ? EventLanguage.FR : EventLanguage.EN,
+        imageUrl: data.imageUrl || undefined,
+        tags: data.tags || [],
+        category: mapCategoryToPrisma(data.category),
+        subcategory: data.subCategory || undefined,
+        accessibility: [
+          ...(data.accessibility.wheelchairAccessible ? ['wheelchair'] : []),
+          ...(data.accessibility.hearingAssistance ? ['hearing_aid'] : []),
+          ...(data.accessibility.visualAssistance ? ['visual_aid'] : []),
+          ...(data.accessibility.quietSpace ? ['quiet_space'] : []),
+        ],
+        ageRestriction: undefined, // À implémenter si nécessaire
+      };
+
+      const response = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la création de l\'événement');
+      }
+
+      const createdEvent = await response.json();
       
       setSubmitStatus('success');
       setSubmitMessage('Votre événement a été publié avec succès ! Il sera visible dans quelques minutes.');
       
-      // Redirection après 3 secondes
+      // Redirection après 3 secondes vers la page de l'événement
       setTimeout(() => {
-        window.location.href = '/';
+        router.push(`/evenement/${createdEvent.id}`);
       }, 3000);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erreur lors de la publication:', error);
       setSubmitStatus('error');
-      setSubmitMessage('Une erreur est survenue lors de la publication. Veuillez réessayer.');
+      setSubmitMessage(
+        error.message || 
+        'Une erreur est survenue lors de la publication. Veuillez vérifier que vous êtes connecté en tant qu\'organisateur vérifié.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -116,38 +186,46 @@ export default function PublierPage() {
     }
   };
 
+  if (isLoading || status === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900 flex items-center justify-center">
+        <ModernLoader />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900">
       <Navigation />
       
       <main className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* En-tête de la page */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-r from-sky-600 to-emerald-600 rounded-full flex items-center justify-center">
               <Plus className="w-6 h-6 text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-white">
               Publier un événement
             </h1>
           </div>
-          <p className="text-gray-600 text-lg">
+          <p className="text-slate-300 text-lg">
             Partagez votre événement avec la communauté montréalaise. Remplissez le formulaire ci-dessous pour le publier.
           </p>
         </div>
 
         {/* Message de statut */}
         {submitStatus !== 'idle' && (
-          <div className={`mb-6 p-4 rounded-lg border ${
+          <div className={`mb-6 p-4 rounded-xl border backdrop-blur-xl ${
             submitStatus === 'success' 
-              ? 'bg-green-50 border-green-200 text-green-800' 
-              : 'bg-red-50 border-red-200 text-red-800'
+              ? 'bg-green-500/20 border-green-400/50 text-green-200' 
+              : 'bg-red-500/20 border-red-400/50 text-red-200'
           }`}>
             <div className="flex items-center space-x-2">
               {submitStatus === 'success' ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
+                <CheckCircle className="w-5 h-5 text-green-400" />
               ) : (
-                <AlertCircle className="w-5 h-5 text-red-600" />
+                <AlertCircle className="w-5 h-5 text-red-400" />
               )}
               <span className="font-medium">{submitMessage}</span>
             </div>
@@ -155,73 +233,75 @@ export default function PublierPage() {
         )}
 
         {/* Guide de publication */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
-          <h2 className="text-lg font-semibold text-blue-900 mb-3">
+        <div className="bg-slate-800/70 backdrop-blur-xl border border-white/10 rounded-xl p-6 mb-8">
+          <h2 className="text-lg font-semibold text-white mb-3">
             💡 Conseils pour une publication réussie
           </h2>
-          <ul className="space-y-2 text-blue-800">
+          <ul className="space-y-2 text-slate-300">
             <li className="flex items-start space-x-2">
-              <span className="text-blue-600">•</span>
+              <span className="text-sky-400">•</span>
               <span>Rédigez un titre clair et accrocheur</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-blue-600">•</span>
+              <span className="text-sky-400">•</span>
               <span>Ajoutez une description détaillée avec les informations pratiques</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-blue-600">•</span>
+              <span className="text-sky-400">•</span>
               <span>Utilisez des tags pertinents pour améliorer la visibilité</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-blue-600">•</span>
+              <span className="text-sky-400">•</span>
               <span>Précisez les informations d'accessibilité si applicable</span>
             </li>
             <li className="flex items-start space-x-2">
-              <span className="text-blue-600">•</span>
+              <span className="text-sky-400">•</span>
               <span>Ajoutez des filtres personnalisés pour aider les utilisateurs à trouver votre événement</span>
             </li>
           </ul>
         </div>
 
         {/* Formulaire */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10">
           <EventForm
             categories={mockCategories}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
+            isEditing={false}
           />
         </div>
 
         {/* Informations supplémentaires */}
-        <div className="mt-8 bg-gray-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">
+        <div className="mt-8 bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+          <h3 className="text-lg font-semibold text-white mb-3">
             Questions fréquentes
           </h3>
           <div className="space-y-4">
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">
+              <h4 className="font-medium text-white mb-2">
                 Combien de temps faut-il pour qu'un événement soit visible ?
               </h4>
-              <p className="text-gray-600">
-                Les événements sont généralement visibles dans les 5 minutes suivant leur publication. 
-                Notre équipe vérifie le contenu pour assurer la qualité.
+              <p className="text-slate-300">
+                Les événements sont généralement visibles immédiatement après leur publication. 
+                Les événements créés par des organisateurs vérifiés sont automatiquement approuvés.
               </p>
             </div>
             
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">
+              <h4 className="font-medium text-white mb-2">
                 Puis-je modifier un événement après publication ?
               </h4>
-              <p className="text-gray-600">
-                Oui, vous pouvez modifier vos événements à tout moment depuis votre tableau de bord organisateur.
+              <p className="text-slate-300">
+                Oui, vous pouvez modifier vos événements à tout moment depuis votre tableau de bord organisateur 
+                (bientôt disponible).
               </p>
             </div>
             
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">
+              <h4 className="font-medium text-white mb-2">
                 Comment ajouter des filtres personnalisés ?
               </h4>
-              <p className="text-gray-600">
+              <p className="text-slate-300">
                 Utilisez la section "Filtres personnalisés" pour créer des critères spécifiques à votre événement, 
                 comme "tenue blanche obligatoire" ou "repas inclus".
               </p>
