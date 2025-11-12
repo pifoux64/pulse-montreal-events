@@ -73,13 +73,13 @@ export abstract class BaseConnector {
   protected source: EventSource;
   protected apiKey?: string;
   protected baseUrl: string;
-  protected rateLimit: number; // requêtes par seconde
+  protected rateLimitPerSecond: number; // requêtes par seconde
   
   constructor(source: EventSource, apiKey?: string, baseUrl: string = '', rateLimit: number = 1) {
     this.source = source;
     this.apiKey = apiKey;
     this.baseUrl = baseUrl;
-    this.rateLimit = rateLimit;
+    this.rateLimitPerSecond = rateLimit;
   }
 
   /**
@@ -109,7 +109,7 @@ export abstract class BaseConnector {
    * Applique un délai pour respecter les limites de taux
    */
   protected async rateLimit(): Promise<void> {
-    const delay = 1000 / this.rateLimit;
+    const delay = 1000 / this.rateLimitPerSecond;
     await new Promise(resolve => setTimeout(resolve, delay));
   }
 

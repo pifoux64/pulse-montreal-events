@@ -15,7 +15,7 @@ interface AppWrapperProps {
 export default function AppWrapper({ children }: AppWrapperProps) {
   return (
     <SessionProvider>
-      <NextIntlClientProvider locale="fr" messages={frMessages}>
+      <NextIntlClientProvider locale="fr" messages={frMessages} timeZone="America/Montreal">
         <Navigation />
         <main className="min-h-screen flex flex-col">
           {children}
