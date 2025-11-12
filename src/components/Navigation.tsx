@@ -155,6 +155,16 @@ export default function Navigation() {
                         <Heart className="w-4 h-4" />
                         Mes favoris
                       </Link>
+                      {(session.user.role === 'ORGANIZER' || session.user.organizer) && (
+                        <Link
+                          href="/organisateur/mon-profil"
+                          onClick={() => setIsUserMenuOpen(false)}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                          <User className="w-4 h-4" />
+                          Mon profil organisateur
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           signOut({ callbackUrl: '/' });
