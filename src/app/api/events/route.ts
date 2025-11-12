@@ -57,6 +57,7 @@ const EventFiltersSchema = z.object({
   distanceKm: z.number().min(0).max(100).optional(),
   lat: z.number().optional(),
   lon: z.number().optional(),
+  organizerId: z.string().uuid().optional(),
   sort: z.enum(['proximity', 'time', 'popularity']).default('time'),
   page: z.number().int().min(1).default(1),
   pageSize: z.number().int().min(1).max(100).default(20),
@@ -82,6 +83,7 @@ export async function GET(request: NextRequest) {
       distanceKm: params.distanceKm ? parseFloat(params.distanceKm) : undefined,
       lat: params.lat ? parseFloat(params.lat) : undefined,
       lon: params.lon ? parseFloat(params.lon) : undefined,
+      organizerId: params.organizerId || undefined,
       page: params.page ? parseInt(params.page) : 1,
       pageSize: params.pageSize ? parseInt(params.pageSize) : 20,
     });
