@@ -142,82 +142,102 @@ export async function GET(request: NextRequest) {
     // ============= EVENTBRITE =============
     console.log('🎟️ Récupération des événements Eventbrite...');
     try {
-      // L'API publique d'Eventbrite n'est plus accessible, utilisons des événements simulés représentatifs
-      console.log('⚠️ API publique Eventbrite restreinte, utilisation d\'événements simulés');
+      const EVENTBRITE_TOKEN = process.env.EVENTBRITE_TOKEN || "";
       
-      const mockEventbriteEvents = [
-        {
-          id: 'eb_1',
-          name: { text: 'Concert Jazz au Upstairs Jazz' },
-          description: { text: 'Soirée jazz exceptionnelle avec des musiciens locaux de Montréal' },
-          start: { local: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() },
-          end: { local: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 3 * 60 * 60 * 1000).toISOString() },
-          url: 'https://eventbrite.ca/e/concert-jazz-upstairs',
-          logo: { url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop' },
-          category_id: '103', // Musique
-          venue: {
-            name: 'Upstairs Jazz Bar & Grill',
-            latitude: '45.5088',
-            longitude: '-73.5740',
-            address: { city: 'Montreal', localized_area_display: '1254 Rue Mackay, Montreal' }
+      if (!EVENTBRITE_TOKEN) {
+        console.log('ℹ️ EVENTBRITE_TOKEN non configuré, passage de l\'import Eventbrite');
+      } else {
+        // Utiliser le connecteur Eventbrite pour récupérer les événements réels
+        const { EventbriteConnector } = await import('@/ingestors/eventbrite');
+        const connector = new EventbriteConnector(EVENTBRITE_TOKEN);
+        
+        // Récupérer les événements depuis la dernière semaine
+        const since = new Date();
+        since.setDate(since.getDate() - 7);
+        
+        const eventbriteEvents = await connector.listUpdatedSince(since, 200);
+        console.log(`📥 Eventbrite: ${eventbriteEvents.length} événements bruts récupérés`);
+        
+        // Transformer les événements au format unifié
+        const transformedEvents = await Promise.all(
+          eventbriteEvents.map((event: any) => connector.mapToUnifiedEvent(event))
+        );
+        
+        // Filtrer les événements pour Montréal uniquement
+        const montrealEvents = transformedEvents.filter((event: any) => {
+          if (!event.venue) return false;
+          
+          // Vérifier les coordonnées si disponibles (rayon de 30km autour de Montréal)
+          if (event.venue.lat && event.venue.lon) {
+            const montrealLat = 45.5088;
+            const montrealLon = -73.5878;
+            const distance = Math.sqrt(
+              Math.pow(event.venue.lat - montrealLat, 2) + 
+              Math.pow(event.venue.lon - montrealLon, 2)
+            ) * 111; // Approximation en km
+            if (distance > 30) return false;
+          }
+          
+          // Vérifier le nom de la ville
+          const city = event.venue.city?.toLowerCase() || '';
+          const address = event.venue.address?.toLowerCase() || '';
+          const name = event.venue.name?.toLowerCase() || '';
+          
+          return city.includes('montreal') || city.includes('montréal') || 
+                 address.includes('montreal') || address.includes('montréal') ||
+                 name.includes('montreal') || name.includes('montréal');
+        });
+        
+        // Transformer au format attendu par l'API
+        const formattedEvents = montrealEvents.map((event: any) => ({
+          id: event.sourceId || `eb_${Date.now()}_${Math.random()}`,
+          name: { text: event.title },
+          description: { text: event.description || '' },
+          start: {
+            local: event.startAt?.toISOString() || new Date().toISOString(),
+            utc: event.startAt?.toISOString() || new Date().toISOString(),
+            timezone: event.timezone || 'America/Montreal',
           },
+          end: event.endAt ? {
+            local: event.endAt.toISOString(),
+            utc: event.endAt.toISOString(),
+            timezone: event.timezone || 'America/Montreal',
+          } : undefined,
+          url: event.url || '#',
+          logo: event.imageUrl ? { url: event.imageUrl } : undefined,
+          category_id: event.category === 'MUSIC' ? '103' :
+                      event.category === 'THEATRE' ? '105' :
+                      event.category === 'SPORT' ? '108' :
+                      event.category === 'FAMILY' ? '115' : undefined,
+          venue: event.venue ? {
+            name: event.venue.name,
+            latitude: event.venue.lat?.toString(),
+            longitude: event.venue.lon?.toString(),
+            address: {
+              city: event.venue.city || 'Montreal',
+              localized_area_display: event.venue.address || '',
+            },
+          } : undefined,
           ticket_availability: {
-            minimum_ticket_price: { major_value: 25, currency: 'CAD' },
-            maximum_ticket_price: { major_value: 45, currency: 'CAD' }
+            minimum_ticket_price: event.priceMin ? {
+              major_value: event.priceMin / 100,
+              currency: event.currency || 'CAD',
+            } : { major_value: 0, currency: 'CAD' },
+            maximum_ticket_price: event.priceMax ? {
+              major_value: event.priceMax / 100,
+              currency: event.currency || 'CAD',
+            } : { major_value: 0, currency: 'CAD' },
           },
           source: 'eventbrite',
-          sourceId: 'eb_1'
-        },
-        {
-          id: 'eb_2',
-          name: { text: 'Exposition Art Contemporain' },
-          description: { text: 'Découvrez les dernières œuvres d\'artistes montréalais émergents' },
-          start: { local: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString() },
-          end: { local: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000 + 4 * 60 * 60 * 1000).toISOString() },
-          url: 'https://eventbrite.ca/e/expo-art-contemporain',
-          logo: { url: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop' },
-          category_id: '105', // Arts & Theatre
-          venue: {
-            name: 'Galerie d\'Art Contemporain',
-            latitude: '45.5017',
-            longitude: '-73.5673',
-            address: { city: 'Montreal', localized_area_display: '372 Rue Sainte-Catherine O, Montreal' }
-          },
-          ticket_availability: {
-            minimum_ticket_price: { major_value: 0, currency: 'CAD' },
-            maximum_ticket_price: { major_value: 0, currency: 'CAD' }
-          },
-          source: 'eventbrite',
-          sourceId: 'eb_2'
-        },
-        {
-          id: 'eb_3',
-          name: { text: 'Atelier Cuisine Française' },
-          description: { text: 'Apprenez les secrets de la cuisine française avec un chef professionnel' },
-          start: { local: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000).toISOString() },
-          end: { local: new Date(Date.now() + 8 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000).toISOString() },
-          url: 'https://eventbrite.ca/e/atelier-cuisine-francaise',
-          logo: { url: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop' },
-          category_id: '110', // Food & Drink
-          venue: {
-            name: 'École Culinaire de Montréal',
-            latitude: '45.5088',
-            longitude: '-73.5542',
-            address: { city: 'Montreal', localized_area_display: '535 Avenue du Président-Kennedy, Montreal' }
-          },
-          ticket_availability: {
-            minimum_ticket_price: { major_value: 75, currency: 'CAD' },
-            maximum_ticket_price: { major_value: 75, currency: 'CAD' }
-          },
-          source: 'eventbrite',
-          sourceId: 'eb_3'
-        }
-      ];
-      
-      allEvents.push(...mockEventbriteEvents);
-      console.log(`✅ Eventbrite: ${mockEventbriteEvents.length} événements (simulés avec token valide)`);
+          sourceId: event.sourceId,
+        }));
+        
+        allEvents.push(...formattedEvents);
+        console.log(`✅ Eventbrite: ${formattedEvents.length} événements importés depuis Eventbrite`);
+      }
     } catch (error: any) {
-      console.log('❌ Erreur générale Eventbrite:', error.message);
+      console.log(`⚠️ Erreur Eventbrite:`, error.message);
+      // En cas d'erreur, on continue sans bloquer les autres sources
     }
     
     // ============= MEETUP =============
@@ -567,7 +587,7 @@ export async function GET(request: NextRequest) {
         console.log('ℹ️ Aucune configuration de page Facebook valide, passage de l’import.');
       } else {
         const facebookEvents = await fetchFacebookEvents(facebookConfigs);
-        allEvents.push(...facebookEvents);
+      allEvents.push(...facebookEvents);
         console.log(`✅ Facebook Events: ${facebookEvents.length} événements importés depuis Facebook`);
       }
     } catch (error: any) {

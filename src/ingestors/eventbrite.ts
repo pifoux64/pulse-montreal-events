@@ -132,10 +132,11 @@ export class EventbriteConnector extends BaseConnector {
 
         const params = new URLSearchParams({
           'location.address': 'Montreal, QC, Canada',
-          'location.within': '50km',
+          'location.within': '25km', // Réduire le rayon pour mieux cibler Montréal
           'start_date.range_start': since.toISOString(),
+          'start_date.range_end': new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 jours dans le futur
           'status': 'live',
-          'order_by': 'modified',
+          'order_by': 'start_asc', // Trier par date de début
           'expand': 'venue,category,subcategory,format,organizer,logo,ticket_availability',
           'page': page.toString(),
           'token': this.apiKey!,
