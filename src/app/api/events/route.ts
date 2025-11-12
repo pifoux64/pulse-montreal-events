@@ -143,6 +143,20 @@ export async function GET(request: NextRequest) {
       ];
     }
 
+    // Filtre géographique par distance (Haversine)
+    // Si lat, lon et distanceKm sont fournis, filtrer par cercle
+    let distanceFilter: any = null;
+    if (filters.lat && filters.lon && filters.distanceKm) {
+      // Utiliser une requête SQL brute avec la formule Haversine
+      // Pour PostgreSQL avec PostGIS, on peut utiliser ST_DWithin
+      // Sinon, on filtre après la requête
+      distanceFilter = {
+        lat: filters.lat,
+        lon: filters.lon,
+        distanceKm: filters.distanceKm,
+      };
+    }
+
     // Tri
     let orderBy: any = [{ startAt: 'asc' }];
     if (filters.sort === 'popularity') {
@@ -186,10 +200,25 @@ export async function GET(request: NextRequest) {
       prisma.event.count({ where }),
     ]);
 
+    // Appliquer le filtre de distance après la requête (si nécessaire)
+    let filteredEvents = events;
+    if (distanceFilter) {
+      filteredEvents = events.filter(event => {
+        if (!event.venue) return false;
+        const distance = calculateDistance(
+          distanceFilter.lat,
+          distanceFilter.lon,
+          event.venue.lat,
+          event.venue.lon
+        );
+        return distance <= distanceFilter.distanceKm;
+      });
+    }
+
     // Si recherche par proximité, trier par distance
-    let sortedEvents = events;
+    let sortedEvents = filteredEvents;
     if (filters.sort === 'proximity' && filters.lat && filters.lon) {
-      sortedEvents = events
+      sortedEvents = filteredEvents
         .map(event => ({
           ...event,
           distance: event.venue ? calculateDistance(
@@ -200,14 +229,28 @@ export async function GET(request: NextRequest) {
           ) : Infinity,
         }))
         .sort((a, b) => a.distance - b.distance);
+    } else if (distanceFilter) {
+      // Ajouter la distance même si on ne trie pas par proximité
+      sortedEvents = filteredEvents.map(event => ({
+        ...event,
+        distance: event.venue ? calculateDistance(
+          distanceFilter.lat,
+          distanceFilter.lon,
+          event.venue.lat,
+          event.venue.lon
+        ) : Infinity,
+      }));
     }
+
+    // Recalculer le total si on a filtré par distance
+    const finalTotal = distanceFilter ? sortedEvents.length : total;
 
     return NextResponse.json({
       items: sortedEvents,
-      total,
+      total: finalTotal,
       page: filters.page,
       pageSize: filters.pageSize,
-      totalPages: Math.ceil(total / filters.pageSize),
+      totalPages: Math.ceil(finalTotal / filters.pageSize),
     });
 
   } catch (error) {

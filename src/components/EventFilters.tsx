@@ -221,7 +221,11 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
 
   const handleRadiusChange = (radius: number) => {
     if (localFilters.location) {
-      handleFilterChange('location', { ...localFilters.location, radius });
+      // Mettre à jour immédiatement pour un feedback en temps réel
+      const newLocation = { ...localFilters.location, radius };
+      const newFilters = { ...localFilters, location: newLocation };
+      setLocalFilters(newFilters);
+      onFiltersChange(newFilters);
     }
   };
 
@@ -499,18 +503,62 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
             
             {localFilters.location && (
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Rayon (km)</label>
-                <select
-                  value={localFilters.location.radius || 5}
-                  onChange={(e) => handleRadiusChange(parseInt(e.target.value))}
-                  className="form-input"
-                >
-                  <option value={1}>1 km</option>
-                  <option value={5}>5 km</option>
-                  <option value={10}>10 km</option>
-                  <option value={25}>25 km</option>
-                  <option value={50}>50 km</option>
-                </select>
+                <label className="block text-xs text-gray-600 mb-2">
+                  Rayon: <span className="font-semibold text-sky-600">{localFilters.location.radius || 5} km</span>
+                </label>
+                <div className="space-y-2">
+                  <input
+                    type="range"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={localFilters.location.radius || 5}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      // Mapper aux valeurs autorisées: 1, 3, 5, 10
+                      let mappedValue = 5;
+                      if (value <= 2) mappedValue = 1;
+                      else if (value <= 4) mappedValue = 3;
+                      else if (value <= 7) mappedValue = 5;
+                      else mappedValue = 10;
+                      handleRadiusChange(mappedValue);
+                    }}
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-sky-600"
+                    style={{
+                      background: `linear-gradient(to right, rgb(2 132 199) 0%, rgb(2 132 199) ${((localFilters.location.radius || 5) / 10) * 100}%, rgb(226 232 240) ${((localFilters.location.radius || 5) / 10) * 100}%, rgb(226 232 240) 100%)`
+                    }}
+                  />
+                  <div className="flex justify-between text-xs text-gray-500">
+                    <button
+                      type="button"
+                      onClick={() => handleRadiusChange(1)}
+                      className={`px-2 py-1 rounded ${localFilters.location.radius === 1 ? 'bg-sky-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
+                    >
+                      1 km
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRadiusChange(3)}
+                      className={`px-2 py-1 rounded ${localFilters.location.radius === 3 ? 'bg-sky-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
+                    >
+                      3 km
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRadiusChange(5)}
+                      className={`px-2 py-1 rounded ${localFilters.location.radius === 5 ? 'bg-sky-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
+                    >
+                      5 km
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRadiusChange(10)}
+                      className={`px-2 py-1 rounded ${localFilters.location.radius === 10 ? 'bg-sky-600 text-white' : 'bg-slate-100 hover:bg-slate-200'}`}
+                    >
+                      10 km
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </div>
