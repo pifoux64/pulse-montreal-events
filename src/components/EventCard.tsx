@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User } from 'lucide-react';
+import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User, LogIn } from 'lucide-react';
 import { Event } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { generateMusicTags, getGenreEmoji, getGenreColor } from '@/lib/musicTags';
+import { useSession } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 interface EventCardProps {
@@ -23,8 +25,12 @@ const EventCard = ({
   isFavorite = false,
   showImage = true 
 }: EventCardProps) => {
+  const { data: session, status } = useSession();
+  const pathname = usePathname();
+  const isAuthenticated = status === 'authenticated';
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   // Générer des tags enrichis avec détection musicale
   const enrichedTags = generateMusicTags({
@@ -125,19 +131,61 @@ const EventCard = ({
           </div>
           
           {/* Favori avec effet moderne */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onFavoriteToggle(event.id);
-            }}
-            className={`absolute top-4 right-4 p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 group/heart ${
-              isFavorite 
-                ? 'text-red-500 hover:scale-110' 
-                : 'text-gray-600 hover:text-red-500 hover:scale-110'
-            } ${isHovered ? 'scale-105' : ''}`}
-          >
-            <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite ? 'fill-current scale-110' : 'group-hover/heart:scale-110'}`} />
-          </button>
+          <div className="absolute top-4 right-4">
+            {!isAuthenticated && !isFavorite && (
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowLoginPrompt(true);
+                    setTimeout(() => setShowLoginPrompt(false), 3000);
+                  }}
+                  className="p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 text-gray-600 hover:text-red-500 hover:scale-110"
+                >
+                  <Heart className="w-5 h-5 transition-all duration-300" />
+                </button>
+                {showLoginPrompt && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-slate-900/95 backdrop-blur-xl rounded-xl border border-white/15 shadow-2xl p-3 z-50">
+                    <p className="text-xs text-slate-200 mb-2">Connectez-vous pour sauvegarder vos favoris</p>
+                    <Link
+                      href={`/auth/signin?callbackUrl=${encodeURIComponent(pathname || '/')}`}
+                      className="flex items-center gap-2 text-xs text-sky-400 hover:text-sky-300 font-medium"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <LogIn className="w-3 h-3" />
+                      Se connecter
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+            {isAuthenticated && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFavoriteToggle(event.id);
+                }}
+                className={`p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 group/heart ${
+                  isFavorite 
+                    ? 'text-red-500 hover:scale-110' 
+                    : 'text-gray-600 hover:text-red-500 hover:scale-110'
+                } ${isHovered ? 'scale-105' : ''}`}
+              >
+                <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite ? 'fill-current scale-110' : 'group-hover/heart:scale-110'}`} />
+              </button>
+            )}
+            {!isAuthenticated && isFavorite && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFavoriteToggle(event.id);
+                }}
+                className="p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 text-red-500 hover:scale-110"
+              >
+                <Heart className="w-5 h-5 transition-all duration-300 fill-current" />
+              </button>
+            )}
+          </div>
         </div>
       )}
 

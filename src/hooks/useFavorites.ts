@@ -177,6 +177,41 @@ export const useFavorites = (allEvents: Event[] = []): FavoritesHook => {
     retry: 1,
   });
 
+  // Migration automatique des favoris localStorage vers API lors de la connexion
+  useEffect(() => {
+    if (isAuthenticated && apiFavorites.length === 0 && typeof window !== 'undefined') {
+      let migrationDone = false;
+      try {
+        const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+        if (storedFavorites && !migrationDone) {
+          const parsedFavorites = JSON.parse(storedFavorites);
+          if (Array.isArray(parsedFavorites) && parsedFavorites.length > 0) {
+            migrationDone = true;
+            // Migrer les favoris vers l'API
+            console.log(`🔄 Migration de ${parsedFavorites.length} favoris depuis localStorage vers l'API`);
+            Promise.all(
+              parsedFavorites.map((eventId: string) => 
+                addFavoriteAPI(eventId).catch(err => {
+                  console.warn(`Impossible de migrer le favori ${eventId}:`, err);
+                })
+              )
+            ).then(() => {
+              // Vider localStorage après migration réussie
+              localStorage.removeItem(FAVORITES_STORAGE_KEY);
+              // Invalider le cache pour recharger les favoris
+              queryClient.invalidateQueries({ queryKey: ['favorites'] });
+              queryClient.invalidateQueries({ queryKey: ['favoriteEvents'] });
+              console.log('✅ Migration des favoris terminée');
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de la migration des favoris:', error);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, apiFavorites.length]);
+
   // Mutation pour ajouter un favori
   const addMutation = useMutation({
     mutationFn: addFavoriteAPI,

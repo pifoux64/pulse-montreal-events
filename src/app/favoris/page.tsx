@@ -11,6 +11,7 @@ import EventModal from '@/components/EventModal';
 import ModernLoader from '@/components/ModernLoader';
 import { Heart, Filter, Trash2, Share2, Calendar, MapPin, Sparkles } from 'lucide-react';
 import { usePersistentFilters } from '@/hooks/usePersistentFilters';
+import Link from 'next/link';
 
 // Données de test pour le développement
 const mockCategories: EventCategory[] = [
@@ -631,17 +632,29 @@ function FavorisPageContent() {
                 </h3>
                 <p className="text-gray-600 mb-4">
                   {favoriteEvents.length === 0 
-                    ? 'Vous n\'avez pas encore d\'événements favoris. Parcourez les événements et ajoutez-les à vos favoris !'
+                    ? !isAuthenticated
+                      ? 'Connectez-vous pour sauvegarder vos favoris et les retrouver sur tous vos appareils !'
+                      : 'Vous n\'avez pas encore d\'événements favoris. Parcourez les événements et ajoutez-les à vos favoris !'
                     : 'Aucun événement ne correspond à vos filtres actuels.'
                   }
                 </p>
                 {favoriteEvents.length === 0 && (
-                  <a
-                    href="/"
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                  >
-                    Découvrir des événements
-                  </a>
+                  <div className="flex items-center justify-center gap-4">
+                    {!isAuthenticated && (
+                      <Link
+                        href="/auth/signin?callbackUrl=/favoris"
+                        className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-sky-600 to-emerald-600 text-white rounded-lg hover:from-sky-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        Se connecter
+                      </Link>
+                    )}
+                    <a
+                      href="/"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                    >
+                      Découvrir des événements
+                    </a>
+                  </div>
                 )}
               </div>
             )}

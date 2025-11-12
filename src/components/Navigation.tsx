@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
 import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useFavorites } from '@/hooks/useFavorites';
 
 export default function Navigation() {
   const t = useTranslations('navigation');
@@ -13,6 +14,10 @@ export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  
+  // Récupérer le nombre de favoris pour afficher un badge
+  const { favorites } = useFavorites([]);
+  const favoritesCount = favorites.length;
 
   // Fermer le menu utilisateur en cliquant en dehors
   useEffect(() => {
@@ -68,6 +73,7 @@ export default function Navigation() {
             <div className="flex items-center space-x-2">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
+                const isFavorites = item.href === '/favoris';
                 return (
                   <Link
                     key={item.href}
@@ -77,7 +83,14 @@ export default function Navigation() {
                     {/* Background gradient on hover */}
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     
-                    <Icon className="w-5 h-5 relative z-10" />
+                    <div className="relative z-10">
+                      <Icon className="w-5 h-5" />
+                      {isFavorites && favoritesCount > 0 && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                          {favoritesCount > 99 ? '99+' : favoritesCount}
+                        </span>
+                      )}
+                    </div>
                     <span className="relative z-10">{item.name}</span>
                   </Link>
                 );
@@ -235,14 +248,22 @@ export default function Navigation() {
               <div className="grid grid-cols-2 gap-3">
                 {navigationItems.map((item) => {
                   const Icon = item.icon;
+                  const isFavorites = item.href === '/favoris';
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center space-x-3 group text-slate-100"
+                      className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center space-x-3 group text-slate-100 relative"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      <Icon className="w-6 h-6 text-slate-200 group-hover:text-sky-300 group-hover:scale-105 transition-transform duration-300" />
+                      <div className="relative">
+                        <Icon className="w-6 h-6 text-slate-200 group-hover:text-sky-300 group-hover:scale-105 transition-transform duration-300" />
+                        {isFavorites && favoritesCount > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                            {favoritesCount > 99 ? '99+' : favoritesCount}
+                          </span>
+                        )}
+                      </div>
                       <span className="font-semibold text-slate-100">{item.name}</span>
                     </Link>
                   );
