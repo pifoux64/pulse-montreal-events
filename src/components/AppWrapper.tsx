@@ -3,6 +3,7 @@
 import { NextIntlClientProvider } from 'next-intl';
 import { SessionProvider } from 'next-auth/react';
 import Navigation from './Navigation';
+import Footer from './Footer';
 import CookieConsent from './CookieConsent';
 import PWAInstallPrompt from './PWAInstallPrompt';
 import frMessages from '../../messages/fr.json';
@@ -16,9 +17,10 @@ export default function AppWrapper({ children }: AppWrapperProps) {
     <SessionProvider>
       <NextIntlClientProvider locale="fr" messages={frMessages}>
         <Navigation />
-        <main className="min-h-screen">
+        <main className="min-h-screen flex flex-col">
           {children}
         </main>
+        <Footer />
         <CookieConsent />
         <PWAInstallPrompt />
       </NextIntlClientProvider>

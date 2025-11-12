@@ -225,11 +225,11 @@ export default function CookieConsent() {
           
           <p className="text-xs text-gray-500 dark:text-gray-400 text-center">
             En continuant à utiliser ce site, vous acceptez notre{' '}
-            <a href="/privacy" className="text-blue-600 dark:text-blue-400 hover:underline">
+            <a href="/politique-confidentialite" className="text-blue-600 dark:text-blue-400 hover:underline">
               politique de confidentialité
             </a>{' '}
             et nos{' '}
-            <a href="/terms" className="text-blue-600 dark:text-blue-400 hover:underline">
+            <a href="/cgu" className="text-blue-600 dark:text-blue-400 hover:underline">
               conditions d'utilisation
             </a>
             .

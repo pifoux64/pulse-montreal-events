@@ -173,7 +173,7 @@ export const useFavorites = (allEvents: Event[] = []): FavoritesHook => {
     queryKey: ['favorites'],
     queryFn: fetchFavorites,
     enabled: isAuthenticated,
-    staleTime: 30 * 1000, // 30 secondes
+    staleTime: 2 * 60 * 1000, // 2 minutes - cohérent avec la config globale
     retry: 1,
   });
 

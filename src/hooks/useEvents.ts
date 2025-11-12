@@ -119,7 +119,7 @@ export const useEvents = () => {
       const data: ApiResponse = await response.json();
       return data.items?.map(transformApiEvent) || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes - cohérent avec la config globale
     gcTime: 10 * 60 * 1000, // 10 minutes en cache
   });
 };

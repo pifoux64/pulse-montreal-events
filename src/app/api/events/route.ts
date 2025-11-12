@@ -352,13 +352,21 @@ export async function GET(request: NextRequest) {
     // Recalculer le total si on a filtré par distance
     const finalTotal = distanceFilter ? sortedEvents.length : total;
 
-    return NextResponse.json({
+    // Headers de cache pour améliorer les performances
+    const response = NextResponse.json({
       items: sortedEvents,
       total: finalTotal,
       page: filters.page,
       pageSize: filters.pageSize,
       totalPages: Math.ceil(finalTotal / filters.pageSize),
     });
+
+    // Headers de cache pour améliorer les performances
+    // Cache public pendant 2 minutes, stale-while-revalidate pour 10 minutes
+    response.headers.set('Cache-Control', 'public, s-maxage=120, stale-while-revalidate=600');
+    response.headers.set('X-Cache-Status', 'MISS'); // Sera mis à jour par le CDN si en cache
+
+    return response;
 
   } catch (error) {
     console.error('Erreur lors de la récupération des événements:', error);
