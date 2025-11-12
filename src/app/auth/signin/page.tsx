@@ -43,12 +43,24 @@ function SignInContent() {
       });
 
       if (result?.error) {
-        setError('Erreur lors de l\'envoi de l\'email. Vérifiez votre adresse.');
+        // Messages d'erreur plus spécifiques
+        const errorMessage = result.error === 'EmailSigninError'
+          ? 'Erreur lors de l\'envoi de l\'email. Vérifiez que le serveur email est configuré.'
+          : result.error === 'Configuration'
+          ? 'Erreur de configuration. Contactez l\'administrateur.'
+          : 'Erreur lors de l\'envoi de l\'email. Vérifiez votre adresse.';
+        setError(errorMessage);
       } else {
         setIsEmailSent(true);
       }
-    } catch (err) {
-      setError('Une erreur est survenue. Veuillez réessayer.');
+    } catch (err: any) {
+      console.error('Erreur de connexion:', err);
+      const errorMessage = err?.message?.includes('EMAIL_SERVER')
+        ? 'Le serveur email n\'est pas configuré. Contactez l\'administrateur.'
+        : err?.message?.includes('ECONNREFUSED')
+        ? 'Impossible de se connecter au serveur email.'
+        : 'Une erreur est survenue. Veuillez réessayer.';
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -57,7 +69,22 @@ function SignInContent() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
-    await signIn('google', { callbackUrl });
+    try {
+      const result = await signIn('google', { callbackUrl, redirect: false });
+      if (result?.error) {
+        const errorMessage = result.error === 'OAuthSignin'
+          ? 'Erreur lors de la connexion Google. Vérifiez que Google OAuth est configuré.'
+          : result.error === 'OAuthCallback'
+          ? 'Erreur lors du callback Google.'
+          : 'Erreur lors de la connexion Google.';
+        setError(errorMessage);
+        setIsLoading(false);
+      }
+    } catch (err: any) {
+      console.error('Erreur Google OAuth:', err);
+      setError('Erreur lors de la connexion Google. Vérifiez la configuration.');
+      setIsLoading(false);
+    }
   };
 
   if (isEmailSent) {

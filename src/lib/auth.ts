@@ -10,16 +10,27 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from './prisma';
 import { UserRole } from '@prisma/client';
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [
-    // Google OAuth
+// Construire la liste des providers de manière conditionnelle
+const providers = [];
+
+// Ajouter Google OAuth si configuré
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  providers.push(
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    
-    // Magic Link Email
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    })
+  );
+}
+
+// Ajouter Email provider si configuré
+if (
+  process.env.EMAIL_SERVER_HOST &&
+  process.env.EMAIL_SERVER_PORT &&
+  process.env.EMAIL_SERVER_USER &&
+  process.env.EMAIL_SERVER_PASSWORD
+) {
+  providers.push(
     EmailProvider({
       server: {
         host: process.env.EMAIL_SERVER_HOST,
@@ -30,8 +41,26 @@ export const authOptions: NextAuthOptions = {
         },
       },
       from: process.env.EMAIL_FROM || 'noreply@pulse-montreal.com',
-    }),
-  ],
+    })
+  );
+}
+
+// Si aucun provider n'est configuré, afficher un avertissement
+if (providers.length === 0) {
+  console.warn('⚠️ Aucun provider NextAuth configuré.');
+  console.warn('   Pour activer la connexion par email, configurez:');
+  console.warn('   - EMAIL_SERVER_HOST');
+  console.warn('   - EMAIL_SERVER_PORT');
+  console.warn('   - EMAIL_SERVER_USER');
+  console.warn('   - EMAIL_SERVER_PASSWORD');
+  console.warn('   Pour activer Google OAuth, configurez:');
+  console.warn('   - GOOGLE_CLIENT_ID');
+  console.warn('   - GOOGLE_CLIENT_SECRET');
+}
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers: providers.length > 0 ? providers : [],
   
   callbacks: {
     async session({ session, user }) {
