@@ -2,8 +2,8 @@
 
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Event, EventCategory } from '@/types';
-import { useEvents } from '@/hooks/useEvents';
-import { useFavorites } from '@/hooks/useFavorites';
+import { useFavoriteEvents, useFavorites } from '@/hooks/useFavorites';
+import { useSession } from 'next-auth/react';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
@@ -164,9 +164,17 @@ const mockFavoriteEvents: Event[] = [
 ];
 
 function FavorisPageContent() {
-  // Charger tous les événements et les favoris
-  const { data: allEvents = [], isLoading: loading, error } = useEvents();
-  const { favoriteEvents, isFavorite, toggleFavorite, clearAllFavorites } = useFavorites(allEvents);
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
+  
+  // Charger les favoris depuis l'API si connecté, sinon depuis localStorage
+  const { data: apiFavoriteEvents = [], isLoading: loadingApi, error: apiError } = useFavoriteEvents();
+  const { favoriteEvents: localFavoriteEvents, isFavorite, toggleFavorite, clearAllFavorites } = useFavorites([]);
+  
+  // Utiliser les favoris de l'API si connecté, sinon localStorage
+  const favoriteEvents = isAuthenticated ? apiFavoriteEvents : localFavoriteEvents;
+  const loading = isAuthenticated ? loadingApi : false;
+  const error = isAuthenticated ? apiError : null;
   
   const { filters, setFilters } = usePersistentFilters();
   const [showFilters, setShowFilters] = useState(true);
