@@ -735,8 +735,9 @@ export async function GET(request: NextRequest) {
               lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5673,
               source: 'quartier_spectacles',
               external_id: event.id,
-              priceMin: event.priceRanges?.[0]?.min || 0,
-              priceMax: event.priceRanges?.[0]?.max || null,
+              // Ticketmaster retourne les prix en dollars, on doit les convertir en cents
+              priceMin: event.priceRanges?.[0]?.min !== undefined ? Math.round(event.priceRanges[0].min * 100) : null,
+              priceMax: event.priceRanges?.[0]?.max !== undefined ? Math.round(event.priceRanges[0].max * 100) : null,
               currency: event.priceRanges?.[0]?.currency || 'CAD',
               status: 'published',
               organizerId: 'quartier_spectacles',
@@ -784,8 +785,9 @@ export async function GET(request: NextRequest) {
               lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5673,
               source: 'tourisme_montreal',
               external_id: event.id,
-              priceMin: event.priceRanges?.[0]?.min || 0,
-              priceMax: event.priceRanges?.[0]?.max || null,
+              // Ticketmaster retourne les prix en dollars, on doit les convertir en cents
+              priceMin: event.priceRanges?.[0]?.min !== undefined ? Math.round(event.priceRanges[0].min * 100) : null,
+              priceMax: event.priceRanges?.[0]?.max !== undefined ? Math.round(event.priceRanges[0].max * 100) : null,
               currency: event.priceRanges?.[0]?.currency || 'CAD',
               status: 'published',
               organizerId: 'tourisme_montreal',
@@ -839,8 +841,9 @@ export async function GET(request: NextRequest) {
               lon: event._embedded?.venues?.[0]?.location?.longitude ? parseFloat(event._embedded.venues[0].location.longitude) : -73.5542,
               source: 'facebook_events',
               external_id: event.id,
-              priceMin: event.priceRanges?.[0]?.min || 0,
-              priceMax: event.priceRanges?.[0]?.max || null,
+              // Ticketmaster retourne les prix en dollars, on doit les convertir en cents
+              priceMin: event.priceRanges?.[0]?.min !== undefined ? Math.round(event.priceRanges[0].min * 100) : null,
+              priceMax: event.priceRanges?.[0]?.max !== undefined ? Math.round(event.priceRanges[0].max * 100) : null,
               currency: event.priceRanges?.[0]?.currency || 'CAD',
               status: 'published',
               organizerId: 'facebook_events',
@@ -882,8 +885,13 @@ export async function GET(request: NextRequest) {
           lon: event.venue?.longitude ? parseFloat(event.venue.longitude) : -73.5542,
           source: 'eventbrite',
           external_id: event.id,
-          priceMin: event.ticket_availability?.minimum_ticket_price?.major_value || 0,
-          priceMax: event.ticket_availability?.maximum_ticket_price?.major_value || null,
+          // Eventbrite retourne les prix en dollars, on doit les convertir en cents
+          priceMin: event.ticket_availability?.minimum_ticket_price?.major_value !== undefined 
+            ? Math.round(event.ticket_availability.minimum_ticket_price.major_value * 100)
+            : null,
+          priceMax: event.ticket_availability?.maximum_ticket_price?.major_value !== undefined
+            ? Math.round(event.ticket_availability.maximum_ticket_price.major_value * 100)
+            : null,
           currency: event.ticket_availability?.minimum_ticket_price?.currency || 'CAD'
         };
       } else {
@@ -948,8 +956,8 @@ export async function GET(request: NextRequest) {
           source: event.source || 'ticketmaster',
           external_id: event.id,
           status: 'published',
-          priceMin: event.priceRanges?.[0]?.min || 0,
-          priceMax: event.priceRanges?.[0]?.max || 0,
+          priceMin: event.priceRanges?.[0]?.min !== undefined ? event.priceRanges[0].min : null,
+          priceMax: event.priceRanges?.[0]?.max !== undefined ? event.priceRanges[0].max : null,
           currency: event.priceRanges?.[0]?.currency || 'CAD',
           organizerId: 'ticketmaster',
           accessibility: [],

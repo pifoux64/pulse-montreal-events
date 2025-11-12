@@ -64,9 +64,11 @@ const transformApiEvent = (event: ApiEvent): Event => ({
   subCategory: event.tags && event.tags.length > 0 ? event.tags[0] : '',
   tags: event.tags || [],
   price: { 
-    amount: event.priceMin || 0, 
+    amount: event.priceMin !== null && event.priceMin !== undefined ? event.priceMin : 0, 
     currency: event.currency || 'CAD', 
-    isFree: !event.priceMin || event.priceMin === 0 
+    // Un événement est gratuit seulement si priceMin est explicitement 0
+    // Si priceMin est null/undefined, on ne sait pas, donc on considère comme payant par défaut
+    isFree: event.priceMin === 0 && (event.priceMax === null || event.priceMax === 0 || event.priceMax === undefined)
   },
   imageUrl: event.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
   ticketUrl: event.url || '#',

@@ -227,9 +227,11 @@ export function formatEventDate(date: string | Date, locale = 'fr-CA'): string {
 
 /**
  * Vérifie si un événement est gratuit
+ * Un événement est gratuit seulement si priceMin est explicitement 0
+ * Si priceMin est null/undefined, on ne sait pas, donc on considère comme payant par défaut
  */
 export function isFreeEvent(event: any): boolean {
-  return !event.priceMin || event.priceMin === 0;
+  return event.priceMin === 0 && (event.priceMax === null || event.priceMax === 0 || event.priceMax === undefined);
 }
 
 /**

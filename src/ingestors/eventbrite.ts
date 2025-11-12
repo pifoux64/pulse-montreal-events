@@ -285,8 +285,10 @@ export class EventbriteConnector extends BaseConnector {
         event.priceMax = Math.round(ticketing.maximum_ticket_price.value * 100);
       }
       
-      // Si pas de prix minimum, c'est gratuit
-      if (!event.priceMin && !event.priceMax) {
+      // Ne pas mettre 0 par défaut si le prix n'est pas disponible
+      // On laisse undefined pour indiquer que le prix n'est pas connu
+      // Seulement si l'API indique explicitement "is_free" ou "free", on met 0
+      if (rawEvent.is_free === true || rawEvent.ticket_availability?.is_free === true) {
         event.priceMin = 0;
         event.priceMax = 0;
       }
