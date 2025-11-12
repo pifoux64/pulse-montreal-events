@@ -1,24 +1,44 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="appleHeartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+    <!-- Gradient principal sky -> emerald -> cyan -->
+    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
       <stop offset="50%" style="stop-color:#10b981;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:1" />
     </linearGradient>
+    <!-- Gradient pour le reflet lumineux -->
+    <linearGradient id="highlightGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.4" />
+      <stop offset="30%" style="stop-color:#ffffff;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </linearGradient>
+    <!-- Ombre douce -->
+    <filter id="shadow">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="0" dy="3" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
-  <!-- Fond arrondi pour iOS -->
-  <rect width="180" height="180" rx="40" fill="url(#appleHeartGradient)"/>
-  <!-- Cœur centré -->
+  
+  <!-- Fond arrondi pour iOS avec gradient -->
+  <rect width="180" height="180" rx="40" fill="url(#heartGradient)" />
+  
+  <!-- Cœur principal centré -->
   <path 
-    d="M90 155C90 155 36.5 112.5 36.5 56.25C36.5 40.5 42.75 29.25 58.5 29.25C64.35 29.25 69.75 31.5 74.25 35.1C78.75 31.5 84.15 29.25 90 29.25C105.75 29.25 112 40.5 112 56.25C112 112.5 77 155 90 155Z" 
+    d="M90 155C90 155 36.5625 112.5 36.5625 70.3125C36.5625 50.625 53.4375 36.5625 73.125 36.5625C80.4375 36.5625 87.1875 39.375 92.8125 43.875C98.4375 39.375 105.188 36.5625 112.5 36.5625C132.188 36.5625 149.063 50.625 149.063 70.3125C149.063 112.5 95.625 155 90 155Z" 
     fill="white"
-    fill-opacity="0.95"
+    filter="url(#shadow)"
   />
-  <!-- Reflet subtil -->
+  
+  <!-- Reflet lumineux pour l'effet 3D -->
   <path 
-    d="M90 145C90 145 45 105 45 54C45 42 50 36 56.25 36C60.75 36 64.8 38 68.4 40.5C72 38 76.05 36 80.55 36C86.8 36 92 42 92 54C92 105 90.9 145 90 145Z" 
-    fill="white"
-    fill-opacity="0.3"
+    d="M90 143.75C90 143.75 45 104.062 45 67.5C45 53.4375 56.25 42.1875 70.3125 42.1875C75.9375 42.1875 81.1875 45 85.5 48.375C90 45 95.25 42.1875 100.875 42.1875C114.938 42.1875 126.188 53.4375 126.188 67.5C126.188 104.062 90.75 143.75 90 143.75Z" 
+    fill="url(#highlightGradient)"
   />
 </svg>
-
