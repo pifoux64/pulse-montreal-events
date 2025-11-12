@@ -112,6 +112,9 @@ export async function POST(request: NextRequest) {
     // Vérifier que l'événement existe
     const event = await prisma.event.findUnique({
       where: { id: data.eventId },
+      include: {
+        organizer: true,
+      },
     });
 
     if (!event) {
@@ -119,6 +122,40 @@ export async function POST(request: NextRequest) {
         { error: 'Événement non trouvé' },
         { status: 404 }
       );
+    }
+
+    // Vérifier les limitations du plan (si l'organisateur essaie de créer une promotion)
+    // Note: Pour l'instant, seuls les admins peuvent créer des promotions
+    // Mais on peut vérifier le plan pour limiter les promotions "test" pour BASIC
+    if (event.organizerId) {
+      const subscription = await prisma.subscription.findFirst({
+        where: {
+          organizerId: event.organizerId,
+          active: true,
+        },
+      });
+
+      // Si BASIC, limiter les promotions test (seulement en DRAFT)
+      if (subscription?.plan === 'BASIC' && data.status === 'ACTIVE') {
+        // Compter les promotions actives existantes
+        const activePromotions = await prisma.promotion.count({
+          where: {
+            event: {
+              organizerId: event.organizerId,
+            },
+            status: 'ACTIVE',
+            endsAt: { gte: new Date() },
+          },
+        });
+
+        // Limiter à 1 promotion active pour BASIC (promotions test illimitées en DRAFT)
+        if (activePromotions >= 1) {
+          return NextResponse.json(
+            { error: 'Le plan BASIC permet seulement 1 promotion active. Les promotions en brouillon sont illimitées.' },
+            { status: 403 }
+          );
+        }
+      }
     }
 
     // Créer la promotion

@@ -19,7 +19,10 @@ import {
   BarChart3,
   ArrowLeft,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Crown,
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import Link from 'next/link';
 import { format, subDays } from 'date-fns';
@@ -49,11 +52,18 @@ interface Stats {
   favoritesLast30Days: number;
 }
 
+interface Subscription {
+  plan: 'BASIC' | 'PRO';
+  billingMonthly: number;
+  active: boolean;
+}
+
 export default function OrganisateurDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showImportICS, setShowImportICS] = useState(false);
@@ -108,6 +118,16 @@ export default function OrganisateurDashboard() {
           favoritesLast30Days: 0,
         };
         setStats(basicStats);
+      }
+
+      // Charger l'abonnement
+      const subscriptionResponse = await fetch(`/api/organizers/${organizer.id}/subscription`);
+      if (subscriptionResponse.ok) {
+        const subscriptionData = await subscriptionResponse.json();
+        setSubscription(subscriptionData);
+      } else {
+        // Par défaut BASIC
+        setSubscription({ plan: 'BASIC', billingMonthly: 0, active: true });
       }
     } catch (err: any) {
       setError(err.message || 'Erreur lors du chargement');
@@ -220,9 +240,27 @@ export default function OrganisateurDashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold text-white mb-2">
-                Tableau de bord
-              </h1>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-bold text-white">
+                  Tableau de bord
+                </h1>
+                {subscription && (
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2 ${
+                    subscription.plan === 'PRO'
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                      : 'bg-slate-700 text-slate-300'
+                  }`}>
+                    {subscription.plan === 'PRO' ? (
+                      <>
+                        <Crown className="w-4 h-4" />
+                        PRO
+                      </>
+                    ) : (
+                      'BASIC'
+                    )}
+                  </span>
+                )}
+              </div>
               <p className="text-slate-300">
                 Gérez vos événements et consultez vos statistiques
               </p>
@@ -242,31 +280,41 @@ export default function OrganisateurDashboard() {
         {/* Statistiques 30 jours */}
         {stats && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+            <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10 relative">
+              {subscription?.plan === 'BASIC' && (
+                <div className="absolute top-2 right-2">
+                  <Lock className="w-4 h-4 text-slate-500" title="Fonctionnalité PRO" />
+                </div>
+              )}
               <div className="flex items-center justify-between mb-4">
                 <Eye className="w-8 h-8 text-sky-400" />
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="text-3xl font-bold text-white mb-1">
-                {stats.viewsLast30Days}
+                {subscription?.plan === 'PRO' ? stats.viewsLast30Days : '—'}
               </div>
               <div className="text-sm text-slate-400">Vues (30 jours)</div>
               <div className="text-xs text-slate-500 mt-2">
-                Total: {stats.totalViews}
+                {subscription?.plan === 'PRO' ? `Total: ${stats.totalViews}` : 'Upgradez vers PRO pour voir les détails'}
               </div>
             </div>
 
-            <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10">
+            <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10 relative">
+              {subscription?.plan === 'BASIC' && (
+                <div className="absolute top-2 right-2">
+                  <Lock className="w-4 h-4 text-slate-500" title="Fonctionnalité PRO" />
+                </div>
+              )}
               <div className="flex items-center justify-between mb-4">
                 <MousePointerClick className="w-8 h-8 text-emerald-400" />
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="text-3xl font-bold text-white mb-1">
-                {stats.clicksLast30Days}
+                {subscription?.plan === 'PRO' ? stats.clicksLast30Days : '—'}
               </div>
               <div className="text-sm text-slate-400">Clics (30 jours)</div>
               <div className="text-xs text-slate-500 mt-2">
-                Total: {stats.totalClicks}
+                {subscription?.plan === 'PRO' ? `Total: ${stats.totalClicks}` : 'Upgradez vers PRO pour voir les détails'}
               </div>
             </div>
 
@@ -300,7 +348,15 @@ export default function OrganisateurDashboard() {
         )}
 
         {/* Import ICS */}
-        <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 mb-8 border border-white/10">
+        <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 mb-8 border border-white/10 relative">
+          {subscription?.plan === 'BASIC' && (
+            <div className="absolute top-4 right-4">
+              <div className="flex items-center gap-2 px-3 py-1 bg-amber-500/20 border border-amber-400/50 rounded-lg">
+                <Lock className="w-4 h-4 text-amber-400" />
+                <span className="text-xs text-amber-400 font-medium">PRO</span>
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Upload className="w-5 h-5" />
@@ -309,10 +365,20 @@ export default function OrganisateurDashboard() {
             <button
               onClick={() => setShowImportICS(!showImportICS)}
               className="text-sky-400 hover:text-sky-300 text-sm"
+              disabled={subscription?.plan === 'BASIC'}
             >
               {showImportICS ? 'Masquer' : 'Afficher'}
             </button>
           </div>
+          
+          {subscription?.plan === 'BASIC' && (
+            <div className="mb-4 p-4 bg-amber-500/10 border border-amber-400/30 rounded-lg">
+              <p className="text-sm text-amber-300">
+                <Crown className="w-4 h-4 inline mr-2" />
+                L'import ICS est disponible avec le plan PRO. Upgradez pour importer vos événements en masse.
+              </p>
+            </div>
+          )}
           
           {showImportICS && (
             <div className="space-y-4">
