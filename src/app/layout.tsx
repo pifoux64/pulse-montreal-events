@@ -95,6 +95,15 @@ export default function RootLayout({
 
   return (
     <html lang="fr" className={poppins.variable} suppressHydrationWarning>
+      <head>
+        {/* Sentry Script */}
+        {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_SENTRY_DSN && (
+          <script
+            src="https://js.sentry-cdn.com/your-sentry-key.min.js"
+            crossOrigin="anonymous"
+          />
+        )}
+      </head>
       <body className="font-poppins antialiased" suppressHydrationWarning>
         {process.env.NODE_ENV === 'development' && <DevErrorSuppressor />}
         <ExtensionCleaner />
