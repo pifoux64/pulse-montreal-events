@@ -1,0 +1,20 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="heartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0ea5e9;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Cœur principal avec gradient -->
+  <path 
+    d="M16 27.5C16 27.5 6.5 20 6.5 12.5C6.5 9 9.5 6.5 13 6.5C14.3 6.5 15.5 7 16.5 7.8C17.5 7 18.7 6.5 20 6.5C23.5 6.5 26.5 9 26.5 12.5C26.5 20 17 27.5 16 27.5Z" 
+    fill="url(#heartGradient)"
+  />
+  <!-- Reflet subtil pour la profondeur -->
+  <path 
+    d="M16 25.5C16 25.5 8 18.5 8 12C8 9.5 10 7.5 12.5 7.5C13.5 7.5 14.4 8 15.2 8.6C16 8 16.9 7.5 17.9 7.5C20.4 7.5 22.4 9.5 22.4 12C22.4 18.5 16.2 25.5 16 25.5Z" 
+    fill="white"
+    fill-opacity="0.15"
+  />
+</svg>
