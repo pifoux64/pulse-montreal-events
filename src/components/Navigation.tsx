@@ -2,13 +2,34 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
-import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { useSession, signOut } from 'next-auth/react';
+import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export default function Navigation() {
   const t = useTranslations('navigation');
+  const { data: session, status } = useSession();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fermer le menu utilisateur en cliquant en dehors
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   const navigationItems = [
     { name: t('map'), href: '/carte', icon: Map },
@@ -94,11 +115,68 @@ export default function Navigation() {
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
 
-            {/* Profil utilisateur avec avatar moderne */}
-            <button className="p-3 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md">
-              <User className="w-5 h-5" />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </button>
+            {/* Profil utilisateur avec menu déroulant */}
+            {status === 'loading' ? (
+              <div className="p-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-md">
+                <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : session?.user ? (
+              <div className="relative" ref={userMenuRef}>
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="p-3 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md flex items-center gap-2"
+                >
+                  {session.user.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name || 'User'}
+                      width={20}
+                      height={20}
+                      className="rounded-full"
+                    />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
+                  <span className="hidden md:block text-sm font-medium">{session.user.name || session.user.email}</span>
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </button>
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/15 shadow-2xl overflow-hidden z-50">
+                    <div className="p-2">
+                      <div className="px-3 py-2 text-sm text-slate-300 border-b border-white/10">
+                        <div className="font-medium text-white">{session.user.name || 'Utilisateur'}</div>
+                        <div className="text-xs text-slate-400">{session.user.email}</div>
+                      </div>
+                      <Link
+                        href="/favoris"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
+                      >
+                        <Heart className="w-4 h-4" />
+                        Mes favoris
+                      </Link>
+                      <button
+                        onClick={() => {
+                          signOut({ callbackUrl: '/' });
+                          setIsUserMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Déconnexion
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/auth/signin"
+                className="px-4 py-2 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                Connexion
+              </Link>
+            )}
           </div>
 
           {/* Bouton menu mobile moderne */}
