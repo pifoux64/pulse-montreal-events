@@ -11,6 +11,74 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { EventCategory, EventLanguage, EventStatus, UserRole } from '@prisma/client';
 
+/**
+ * Génère des tags automatiques basés sur le contenu de l'événement
+ */
+function generateAutoTags(eventData: z.infer<typeof CreateEventSchema>): string[] {
+  const tags: string[] = [];
+  const text = `${eventData.title} ${eventData.description || ''}`.toLowerCase();
+
+  // Tag gratuit si priceMin est 0
+  if (eventData.priceMin === 0) {
+    tags.push('gratuit');
+  }
+
+  // Détection "gratuit" dans le texte
+  const freePatterns = [
+    /\bgratuit\b/i,
+    /\bfree\b/i,
+    /\bentrée gratuite\b/i,
+    /\bentrée libre\b/i,
+    /\bsans frais\b/i,
+  ];
+  if (freePatterns.some(pattern => pattern.test(text)) && !tags.includes('gratuit')) {
+    tags.push('gratuit');
+  }
+
+  // Détection 18+
+  const agePatterns = [
+    /\b18\+\b/i,
+    /\b21\+\b/i,
+    /\b16\+\b/i,
+    /\badult only\b/i,
+    /\badultes uniquement\b/i,
+  ];
+  agePatterns.forEach(pattern => {
+    if (pattern.test(text)) {
+      const match = text.match(pattern);
+      if (match) {
+        const ageTag = match[0].replace(/\s+/g, '').toLowerCase();
+        if (!tags.includes(ageTag)) {
+          tags.push(ageTag);
+        }
+      }
+    }
+  });
+
+  // Détection plein air
+  const outdoorPatterns = [
+    /\bplein air\b/i,
+    /\boutdoor\b/i,
+    /\bextérieur\b/i,
+    /\bparc\b/i,
+  ];
+  if (outdoorPatterns.some(pattern => pattern.test(text))) {
+    tags.push('plein-air');
+  }
+
+  // Détection accessibilité
+  if (eventData.accessibility && eventData.accessibility.length > 0) {
+    tags.push('accessible');
+  }
+  if (text.includes('accessible') || text.includes('wheelchair') || text.includes('fauteuil roulant')) {
+    if (!tags.includes('accessible')) {
+      tags.push('accessible');
+    }
+  }
+
+  return tags;
+}
+
 // Schéma de validation pour la création d'événement
 const CreateEventSchema = z.object({
   title: z.string().min(1).max(255),
@@ -309,6 +377,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Générer les tags automatiques basés sur le contenu
+    const autoTags = generateAutoTags(eventData);
+    const allTags = [...new Set([...autoTags, ...(eventData.tags || [])])];
+
     // Créer l'événement
     const event = await prisma.event.create({
       data: {
@@ -323,7 +395,7 @@ export async function POST(request: NextRequest) {
         currency: eventData.currency,
         language: eventData.language,
         imageUrl: eventData.imageUrl,
-        tags: eventData.tags,
+        tags: allTags,
         category: eventData.category,
         subcategory: eventData.subcategory,
         accessibility: eventData.accessibility,

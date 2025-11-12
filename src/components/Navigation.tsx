@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useSession, signOut } from 'next-auth/react';
-import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut } from 'lucide-react';
+import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
 
@@ -168,16 +168,26 @@ export default function Navigation() {
                         <Heart className="w-4 h-4" />
                         Mes favoris
                       </Link>
-                      {(session.user.role === 'ORGANIZER' || session.user.organizer) && (
-                        <Link
-                          href="/organisateur/mon-profil"
-                          onClick={() => setIsUserMenuOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
-                        >
-                          <User className="w-4 h-4" />
-                          Mon profil organisateur
-                        </Link>
-                      )}
+                {(session.user.role === 'ORGANIZER' || session.user.organizer) && (
+                  <>
+                    <Link
+                      href="/organisateur/dashboard"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <BarChart3 className="w-4 h-4" />
+                      Tableau de bord
+                    </Link>
+                    <Link
+                      href="/organisateur/mon-profil"
+                      onClick={() => setIsUserMenuOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Mon profil organisateur
+                    </Link>
+                  </>
+                )}
                       <button
                         onClick={() => {
                           signOut({ callbackUrl: '/' });

@@ -243,22 +243,89 @@ const EventCard = ({
           )}
         </div>
 
-        {/* Tags secondaires (max 3) */}
-        {enrichedTags && enrichedTags.length > 1 && (
-          <div className="flex flex-wrap gap-1 mb-4">
-            {enrichedTags.slice(1, 4).map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
-            {enrichedTags.length > 4 && (
-              <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs rounded-full">
-                +{enrichedTags.length - 4}
-              </span>
-            )}
+        {/* Tags spéciaux et secondaires */}
+        {(event.tags.length > 0 || enrichedTags.length > 1) && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {/* Tags spéciaux prioritaires */}
+            {event.tags.map((tag) => {
+              const tagLower = tag.toLowerCase();
+              // Tags spéciaux avec styles distincts
+              if (tagLower === 'gratuit' || tagLower === 'free') {
+                return (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-semibold rounded-full shadow-sm"
+                  >
+                    🎁 {tag}
+                  </span>
+                );
+              }
+              if (tagLower.includes('18+') || tagLower.includes('21+')) {
+                return (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-1 bg-red-500/20 border border-red-400/50 text-red-600 text-xs font-semibold rounded-full"
+                  >
+                    {tag}
+                  </span>
+                );
+              }
+              if (tagLower === 'plein-air' || tagLower === 'outdoor') {
+                return (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-1 bg-blue-500/20 border border-blue-400/50 text-blue-600 text-xs font-semibold rounded-full"
+                  >
+                    🌳 {tag}
+                  </span>
+                );
+              }
+              if (tagLower === 'accessible' || tagLower.includes('wheelchair')) {
+                return (
+                  <span
+                    key={tag}
+                    className="px-2.5 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-600 text-xs font-semibold rounded-full"
+                  >
+                    ♿ {tag}
+                  </span>
+                );
+              }
+              // Tags musicaux (genres)
+              if (enrichedTags.includes(tag)) {
+                return (
+                  <span
+                    key={tag}
+                    className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full"
+                  >
+                    {tag}
+                  </span>
+                );
+              }
+              // Tags génériques
+              return (
+                <span
+                  key={tag}
+                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                >
+                  {tag}
+                </span>
+              );
+            })}
+            
+            {/* Tags musicaux supplémentaires */}
+            {enrichedTags.length > 1 && enrichedTags.slice(1, 4).map((tag, index) => {
+              if (!event.tags.includes(tag)) {
+                return (
+                  <span
+                    key={`enriched-${index}`}
+                    className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full"
+                  >
+                    {tag}
+                  </span>
+                );
+              }
+              return null;
+            })}
           </div>
         )}
 

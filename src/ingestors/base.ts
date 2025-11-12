@@ -238,40 +238,87 @@ export abstract class BaseConnector {
 
   /**
    * Extrait des tags automatiques basés sur le contenu
+   * Règles améliorées pour détecter gratuit, 18+, plein air, accessibilité
    */
   protected extractTags(title: string, description: string): string[] {
     const text = `${title} ${description}`.toLowerCase();
     const tags: string[] = [];
 
-    // Tags de prix
-    if (text.includes('gratuit') || text.includes('free') || text.includes('$0')) {
+    // Tags de prix - Détection améliorée
+    const freePatterns = [
+      /\bgratuit\b/i,
+      /\bfree\b/i,
+      /\bentrée gratuite\b/i,
+      /\bentrée libre\b/i,
+      /\bno charge\b/i,
+      /\bsans frais\b/i,
+      /\$0\b/i,
+      /\b0\$\b/i,
+    ];
+    if (freePatterns.some(pattern => pattern.test(text))) {
       tags.push('gratuit');
     }
-    if (text.includes('donation')) {
+    if (text.includes('donation') || text.includes('contribution volontaire')) {
       tags.push('donation');
     }
 
-    // Tags d'accessibilité
-    if (text.includes('accessible') || text.includes('wheelchair')) {
+    // Tags d'accessibilité - Détection améliorée
+    if (text.includes('accessible') || text.includes('wheelchair') || text.includes('fauteuil roulant')) {
       tags.push('accessible');
     }
-    if (text.includes('sign language') || text.includes('langue des signes')) {
+    if (text.includes('sign language') || text.includes('langue des signes') || text.includes('lsq') || text.includes('asl')) {
       tags.push('langue-des-signes');
     }
-
-    // Tags d'âge
-    if (text.includes('18+') || text.includes('adult only')) {
-      tags.push('18+');
+    if (text.includes('audio description') || text.includes('description audio')) {
+      tags.push('description-audio');
     }
-    if (text.includes('kids') || text.includes('enfants') || text.includes('famille')) {
+    if (text.includes('braille')) {
+      tags.push('braille');
+    }
+
+    // Tags d'âge - Détection améliorée
+    const agePatterns = [
+      /\b18\+\b/i,
+      /\b21\+\b/i,
+      /\b16\+\b/i,
+      /\b13\+\b/i,
+      /\badult only\b/i,
+      /\badultes uniquement\b/i,
+      /\binterdit aux mineurs\b/i,
+    ];
+    agePatterns.forEach(pattern => {
+      if (pattern.test(text)) {
+        const match = text.match(pattern);
+        if (match) {
+          const ageTag = match[0].replace(/\s+/g, '').toLowerCase();
+          if (!tags.includes(ageTag)) {
+            tags.push(ageTag);
+          }
+        }
+      }
+    });
+    
+    if (text.includes('kids') || text.includes('enfants') || text.includes('famille') || text.includes('family-friendly')) {
       tags.push('famille');
     }
 
-    // Tags de lieu
-    if (text.includes('outdoor') || text.includes('plein air') || text.includes('extérieur')) {
+    // Tags de lieu - Détection améliorée
+    const outdoorPatterns = [
+      /\bplein air\b/i,
+      /\boutdoor\b/i,
+      /\bextérieur\b/i,
+      /\boutside\b/i,
+      /\bparc\b/i,
+      /\bpark\b/i,
+      /\brue\b/i,
+      /\bstreet\b/i,
+      /\bterrasse\b/i,
+      /\bterrace\b/i,
+    ];
+    if (outdoorPatterns.some(pattern => pattern.test(text))) {
       tags.push('plein-air');
     }
-    if (text.includes('indoor') || text.includes('intérieur')) {
+    if (text.includes('indoor') || text.includes('intérieur') || text.includes('salle') || text.includes('hall')) {
       tags.push('intérieur');
     }
 
