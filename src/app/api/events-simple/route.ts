@@ -10,7 +10,10 @@ const TICKETMASTER_EXCLUDED_IMAGE_PATTERNS = [
   /LOGO/i,
   /TABLET/i,
   /RETINA_PORTRAIT/i,
-  /_SQUARE_/i
+  /_SQUARE_/i,
+  /PORTRAIT/i,
+  /HEADSHOT/i,
+  /PROFILE/i,
 ];
 
 const sortImagesByQuality = (images: any[] = []) =>
@@ -27,6 +30,11 @@ const pickPreferredImage = (images: any[] = []) => {
     )
   );
 
+  if (sanitized.length === 0) {
+    // Si toutes les images sont filtrées, prendre la première disponible
+    return images[0]?.url;
+  }
+
   for (const ratio of TICKETMASTER_PREFERRED_RATIOS) {
     const match = sanitized.find((image) => image?.ratio?.toLowerCase() === ratio.toLowerCase());
     if (match?.url) return match.url;
@@ -35,15 +43,20 @@ const pickPreferredImage = (images: any[] = []) => {
   return sanitized[0]?.url;
 };
 
+/**
+ * Sélectionne l'image de l'événement Ticketmaster
+ * NE PAS utiliser les images d'attraction/artiste comme fallback
+ * pour éviter d'afficher l'image de l'artiste au lieu de l'événement
+ */
 const selectTicketmasterImage = (event: any) => {
+  // Prioriser uniquement les images de l'événement lui-même
   const primary = pickPreferredImage(event?.images);
   if (primary) return primary;
 
-  const attractionImages =
-    event?._embedded?.attractions?.flatMap((attraction: any) => attraction?.images || []) || [];
-  const attractionImage = pickPreferredImage(attractionImages);
-  if (attractionImage) return attractionImage;
+  // Ne PAS utiliser les images d'attraction/artiste comme fallback
+  // car elles ne représentent pas l'événement (ex: image de l'artiste au lieu de l'affiche)
 
+  // Utiliser l'image du lieu uniquement en dernier recours
   const venueImages =
     event?._embedded?.venues?.flatMap((venue: any) => venue?.images || []) || [];
   const venueImage = pickPreferredImage(venueImages);

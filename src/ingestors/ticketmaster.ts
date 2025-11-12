@@ -3,7 +3,19 @@ import { EventLanguage, EventSource, EventStatus } from '@prisma/client';
 
 const TICKETMASTER_BASE_URL = 'https://app.ticketmaster.com/discovery/v2';
 const PREFERRED_IMAGE_RATIOS = ['16_9', '3_2', '4_3', 'square'];
-const EXCLUDED_IMAGE_PATTERNS = [/ATTRACTION/i, /ARTIST/i, /PERFORMER/i, /LOGO/i, /TABLET/i, /RETINA/i];
+// Patterns à exclure : images d'attraction, artiste, performer, logo, portrait, etc.
+const EXCLUDED_IMAGE_PATTERNS = [
+  /ATTRACTION/i,
+  /ARTIST/i,
+  /PERFORMER/i,
+  /LOGO/i,
+  /TABLET/i,
+  /RETINA/i,
+  /PORTRAIT/i,
+  /_SQUARE_/i,
+  /HEADSHOT/i,
+  /PROFILE/i,
+];
 
 const toIsoUtc = (date: Date) => {
   const iso = date.toISOString();
@@ -12,19 +24,39 @@ const toIsoUtc = (date: Date) => {
 
 const toCents = (value?: number) => (typeof value === 'number' && Number.isFinite(value) ? Math.round(value * 100) : undefined);
 
+/**
+ * Sélectionne la meilleure image pour un événement Ticketmaster
+ * Priorise les images de l'événement lui-même, exclut les images d'attraction/artiste
+ */
 const pickTicketmasterImage = (event: any): string | undefined => {
-  const candidates: any[] = event?.images || [];
-  const filtered = candidates.filter((image) => {
+  if (!event?.images || !Array.isArray(event.images) || event.images.length === 0) {
+    return undefined;
+  }
+
+  // Filtrer les images en excluant les patterns indésirables
+  const filtered = event.images.filter((image: any) => {
     if (!image?.url) return false;
-    return !EXCLUDED_IMAGE_PATTERNS.some((pattern) => pattern.test(image.url));
+    const url = image.url.toLowerCase();
+    // Exclure les images d'attraction, artiste, logo, portrait, etc.
+    return !EXCLUDED_IMAGE_PATTERNS.some((pattern) => pattern.test(url));
   });
 
+  if (filtered.length === 0) {
+    // Si toutes les images sont filtrées, prendre la première disponible
+    return event.images[0]?.url;
+  }
+
+  // Trier par qualité (largeur) en ordre décroissant
+  const sorted = [...filtered].sort((a: any, b: any) => (b?.width || 0) - (a?.width || 0));
+
+  // Chercher par ratio préféré
   for (const ratio of PREFERRED_IMAGE_RATIOS) {
-    const match = filtered.find((image) => image?.ratio?.toLowerCase() === ratio);
+    const match = sorted.find((image: any) => image?.ratio?.toLowerCase() === ratio);
     if (match?.url) return match.url;
   }
 
-  return filtered[0]?.url || candidates[0]?.url;
+  // Retourner la meilleure image disponible (la plus large)
+  return sorted[0]?.url;
 };
 
 export class TicketmasterConnector extends BaseConnector {
