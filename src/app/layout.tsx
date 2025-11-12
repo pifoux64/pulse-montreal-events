@@ -112,7 +112,6 @@ export default function RootLayout({
             <ClientLayout>
               {children}
             </ClientLayout>
-            <CookieBanner />
           </QueryProvider>
         </ErrorBoundary>
       </body>
