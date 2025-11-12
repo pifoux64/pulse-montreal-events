@@ -16,6 +16,16 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/features" className="hover:text-sky-400 transition-colors">
+                  Fonctionnalités
+                </Link>
+              </li>
+              <li>
+                <Link href="/pricing" className="hover:text-sky-400 transition-colors">
+                  Tarifs
+                </Link>
+              </li>
+              <li>
                 <Link href="/carte" className="hover:text-sky-400 transition-colors">
                   Carte
                 </Link>
