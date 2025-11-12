@@ -956,8 +956,9 @@ export async function GET(request: NextRequest) {
           source: event.source || 'ticketmaster',
           external_id: event.id,
           status: 'published',
-          priceMin: event.priceRanges?.[0]?.min !== undefined ? event.priceRanges[0].min : null,
-          priceMax: event.priceRanges?.[0]?.max !== undefined ? event.priceRanges[0].max : null,
+          // Ticketmaster retourne les prix en dollars, on doit les convertir en cents
+          priceMin: event.priceRanges?.[0]?.min !== undefined ? Math.round(event.priceRanges[0].min * 100) : null,
+          priceMax: event.priceRanges?.[0]?.max !== undefined ? Math.round(event.priceRanges[0].max * 100) : null,
           currency: event.priceRanges?.[0]?.currency || 'CAD',
           organizerId: 'ticketmaster',
           accessibility: [],
