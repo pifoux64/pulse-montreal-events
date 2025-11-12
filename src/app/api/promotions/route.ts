@@ -1,15 +1,15 @@
 /**
- * API Routes pour les promotions - Pulse Montreal
- * GET /api/promotions - Liste des promotions actives
- * POST /api/promotions - Créer une promotion (organisateurs/admin)
+ * API Routes pour les promotions
+ * GET /api/promotions - Liste des promotions
+ * POST /api/promotions - Créer une promotion (admin uniquement)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions, requireRole } from '@/lib/auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { PromotionKind, UserRole } from '@prisma/client';
+import { PromotionKind, PromotionStatus, UserRole } from '@prisma/client';
 
 const CreatePromotionSchema = z.object({
   eventId: z.string().uuid(),
@@ -17,23 +17,37 @@ const CreatePromotionSchema = z.object({
   startsAt: z.string().datetime(),
   endsAt: z.string().datetime(),
   priceCents: z.number().int().min(0),
+  status: z.nativeEnum(PromotionStatus).default(PromotionStatus.DRAFT),
 });
 
 /**
- * GET /api/promotions - Récupère les promotions actives
+ * GET /api/promotions - Liste des promotions
  */
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
-    const kind = searchParams.get('kind') as PromotionKind | null;
-    
-    const where: any = {
-      startsAt: { lte: new Date() },
-      endsAt: { gte: new Date() },
-    };
+    const status = searchParams.get('status');
+    const kind = searchParams.get('kind');
+    const eventId = searchParams.get('eventId');
 
+    const where: any = {};
+    if (status) {
+      where.status = status as PromotionStatus;
+    }
     if (kind) {
-      where.kind = kind;
+      where.kind = kind as PromotionKind;
+    }
+    if (eventId) {
+      where.eventId = eventId;
+    }
+
+    // Si non-admin, ne montrer que les promotions actives
+    if (!session?.user || session.user.role !== UserRole.ADMIN) {
+      where.status = PromotionStatus.ACTIVE;
+      const now = new Date();
+      where.startsAt = { lte: now };
+      where.endsAt = { gte: now };
     }
 
     const promotions = await prisma.promotion.findMany({
@@ -51,21 +65,16 @@ export async function GET(request: NextRequest) {
                 },
               },
             },
-            _count: {
-              select: {
-                favorites: true,
-              },
-            },
           },
         },
       },
       orderBy: [
-        { kind: 'asc' }, // FEATURED en premier
+        { status: 'asc' },
         { startsAt: 'desc' },
       ],
     });
 
-    return NextResponse.json(promotions);
+    return NextResponse.json({ items: promotions, total: promotions.length });
 
   } catch (error) {
     console.error('Erreur lors de la récupération des promotions:', error);
@@ -77,12 +86,12 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST /api/promotions - Créer une nouvelle promotion
+ * POST /api/promotions - Créer une promotion (admin uniquement)
  */
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Authentification requise' },
@@ -90,19 +99,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (session.user.role !== UserRole.ADMIN) {
+      return NextResponse.json(
+        { error: 'Accès réservé aux administrateurs' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
-    const promotionData = CreatePromotionSchema.parse(body);
+    const data = CreatePromotionSchema.parse(body);
 
     // Vérifier que l'événement existe
     const event = await prisma.event.findUnique({
-      where: { id: promotionData.eventId },
-      include: {
-        organizer: {
-          include: {
-            user: true,
-          },
-        },
-      },
+      where: { id: data.eventId },
     });
 
     if (!event) {
@@ -112,50 +121,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier les permissions
-    const isOwner = event.organizer?.user.id === session.user.id;
-    const isAdmin = session.user.role === UserRole.ADMIN;
-    
-    if (!isOwner && !isAdmin) {
-      return NextResponse.json(
-        { error: 'Permission refusée' },
-        { status: 403 }
-      );
-    }
-
-    // Vérifier les collisions de dates pour le même type de promotion
-    const existingPromotion = await prisma.promotion.findFirst({
-      where: {
-        eventId: promotionData.eventId,
-        kind: promotionData.kind,
-        OR: [
-          {
-            startsAt: {
-              lte: new Date(promotionData.endsAt),
-            },
-            endsAt: {
-              gte: new Date(promotionData.startsAt),
-            },
-          },
-        ],
-      },
-    });
-
-    if (existingPromotion) {
-      return NextResponse.json(
-        { error: 'Une promotion du même type existe déjà pour cette période' },
-        { status: 409 }
-      );
-    }
-
     // Créer la promotion
     const promotion = await prisma.promotion.create({
       data: {
-        eventId: promotionData.eventId,
-        kind: promotionData.kind,
-        startsAt: new Date(promotionData.startsAt),
-        endsAt: new Date(promotionData.endsAt),
-        priceCents: promotionData.priceCents,
+        eventId: data.eventId,
+        kind: data.kind,
+        status: data.status,
+        startsAt: new Date(data.startsAt),
+        endsAt: new Date(data.endsAt),
+        priceCents: data.priceCents,
       },
       include: {
         event: {
@@ -179,7 +153,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Erreur lors de la création de la promotion:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Données invalides', details: error.errors },

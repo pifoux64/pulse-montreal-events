@@ -26,6 +26,13 @@ interface ApiEvent {
   source: string;
   lat?: number;
   lon?: number;
+  promotions?: Array<{
+    id: string;
+    kind: string;
+    status: string;
+    startsAt: string;
+    endsAt: string;
+  }>;
 }
 
 interface ApiResponse {
@@ -89,6 +96,13 @@ const transformApiEvent = (event: ApiEvent): Event => ({
   language: 'fr' as const,
   minAttendees: Math.floor(Math.random() * 100),
   maxAttendees: Math.floor(Math.random() * 2000) + 1000,
+  promotions: event.promotions?.map(p => ({
+    id: p.id,
+    kind: p.kind,
+    status: p.status,
+    startsAt: p.startsAt,
+    endsAt: p.endsAt,
+  })),
   createdAt: new Date(),
   updatedAt: new Date(),
 });

@@ -47,6 +47,13 @@ export interface Event {
   isVerified: boolean;
   rating: number;
   reviewCount: number;
+  promotions?: Array<{
+    id: string;
+    kind: string;
+    status: string;
+    startsAt: string;
+    endsAt: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }

@@ -54,10 +54,15 @@ enum EventCategory {
 }
 
 enum PromotionKind {
-  FEATURED
   HOMEPAGE
-  MAP_TOP
   LIST_TOP
+  MAP_TOP
+}
+
+enum PromotionStatus {
+  DRAFT
+  ACTIVE
+  EXPIRED
 }
 
 enum SubscriptionPlan {
@@ -103,7 +108,7 @@ model Organizer {
   userId      String  @unique @map("user_id") @db.Uuid
   displayName String  @map("display_name")
   website     String?
-  socials     Json?   // JSON pour réseaux sociaux
+  socials     Json? // JSON pour réseaux sociaux
   verified    Boolean @default(false)
 
   // Relations
@@ -137,39 +142,40 @@ model Venue {
 }
 
 model Event {
-  id            String        @id @default(uuid()) @db.Uuid
-  source        EventSource   @default(INTERNAL)
-  sourceId      String?       @map("source_id")
-  title         String
-  description   String        @db.Text
-  startAt       DateTime      @map("start_at")
-  endAt         DateTime?     @map("end_at")
-  timezone      String        @default("America/Montreal")
-  status        EventStatus   @default(SCHEDULED)
-  organizerId   String?       @map("organizer_id") @db.Uuid
-  venueId       String?       @map("venue_id") @db.Uuid
-  url           String?
-  priceMin      Int?          @map("price_min") // en cents
-  priceMax      Int?          @map("price_max") // en cents
-  currency      String        @default("CAD")
-  language      EventLanguage @default(FR)
-  imageUrl      String?       @map("image_url")
-  tags          String[]      @default([])
-  category      EventCategory
-  subcategory   String?
-  accessibility String[]      @default([]) // ["wheelchair", "hearing_aid", etc.]
-  ageRestriction String?      @map("age_restriction")
-  createdAt     DateTime      @default(now()) @map("created_at")
-  updatedAt     DateTime      @updatedAt @map("updated_at")
+  id             String        @id @default(uuid()) @db.Uuid
+  source         EventSource   @default(INTERNAL)
+  sourceId       String?       @map("source_id")
+  title          String
+  description    String        @db.Text
+  startAt        DateTime      @map("start_at")
+  endAt          DateTime?     @map("end_at")
+  timezone       String        @default("America/Montreal")
+  status         EventStatus   @default(SCHEDULED)
+  organizerId    String?       @map("organizer_id") @db.Uuid
+  venueId        String?       @map("venue_id") @db.Uuid
+  url            String?
+  priceMin       Int?          @map("price_min") // en cents
+  priceMax       Int?          @map("price_max") // en cents
+  currency       String        @default("CAD")
+  language       EventLanguage @default(FR)
+  imageUrl       String?       @map("image_url")
+  tags           String[]      @default([])
+  category       EventCategory
+  subcategory    String?
+  accessibility  String[]      @default([]) // ["wheelchair", "hearing_aid", etc.]
+  ageRestriction String?       @map("age_restriction")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  organizer    Organizer?     @relation(fields: [organizerId], references: [id], onDelete: SetNull)
-  venue        Venue?         @relation(fields: [venueId], references: [id], onDelete: SetNull)
-  features     EventFeature[]
-  favorites    Favorite[]
-  promotions   Promotion[]
+  organizer     Organizer?     @relation(fields: [organizerId], references: [id], onDelete: SetNull)
+  venue         Venue?         @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  features      EventFeature[]
+  favorites     Favorite[]
+  promotions    Promotion[]
   notifications Notification[]
 
+  @@unique([sourceId, source], name: "unique_source_event")
   // Index pour performance
   @@index([title], name: "idx_event_title")
   @@index([startAt], name: "idx_event_start_at")
@@ -178,7 +184,6 @@ model Event {
   @@index([status], name: "idx_event_status")
   @@index([organizerId], name: "idx_event_organizer")
   @@index([venueId], name: "idx_event_venue")
-  @@unique([sourceId, source], name: "unique_source_event")
   @@map("events")
 }
 
@@ -209,17 +214,21 @@ model Favorite {
 }
 
 model Promotion {
-  id         String        @id @default(uuid()) @db.Uuid
-  eventId    String        @map("event_id") @db.Uuid
+  id         String          @id @default(uuid()) @db.Uuid
+  eventId    String          @map("event_id") @db.Uuid
   kind       PromotionKind
-  startsAt   DateTime      @map("starts_at")
-  endsAt     DateTime      @map("ends_at")
-  priceCents Int           @map("price_cents") // prix en cents
-  createdAt  DateTime      @default(now()) @map("created_at")
+  status     PromotionStatus @default(DRAFT)
+  startsAt   DateTime        @map("starts_at")
+  endsAt     DateTime        @map("ends_at")
+  priceCents Int             @map("price_cents") // prix en cents
+  createdAt  DateTime        @default(now()) @map("created_at")
+  updatedAt  DateTime        @updatedAt @map("updated_at")
 
   // Relations
   event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
+  @@index([eventId], name: "idx_promotion_event")
+  @@index([status, kind, startsAt, endsAt], name: "idx_promotion_active")
   @@map("promotions")
 }
 
@@ -238,14 +247,14 @@ model Subscription {
 }
 
 model AdPlacement {
-  id          String            @id @default(uuid()) @db.Uuid
-  sponsorName String            @map("sponsor_name")
+  id          String          @id @default(uuid()) @db.Uuid
+  sponsorName String          @map("sponsor_name")
   area        AdPlacementArea
-  startsAt    DateTime          @map("starts_at")
-  endsAt      DateTime          @map("ends_at")
-  priceCents  Int               @map("price_cents")
-  targetJson  Json              @map("target_json") // ciblage par quartier, catégorie, etc.
-  createdAt   DateTime          @default(now()) @map("created_at")
+  startsAt    DateTime        @map("starts_at")
+  endsAt      DateTime        @map("ends_at")
+  priceCents  Int             @map("price_cents")
+  targetJson  Json            @map("target_json") // ciblage par quartier, catégorie, etc.
+  createdAt   DateTime        @default(now()) @map("created_at")
 
   @@map("ad_placements")
 }
@@ -255,7 +264,7 @@ model ImportJob {
   source    EventSource
   status    ImportJobStatus @default(PENDING)
   runAt     DateTime        @map("run_at")
-  stats     Json?           // statistiques d'import
+  stats     Json? // statistiques d'import
   errorText String?         @map("error_text") @db.Text
 
   @@map("import_jobs")
@@ -264,19 +273,19 @@ model ImportJob {
 // Modèles pour les utilisateurs
 
 model UserPreferences {
-  id                    String   @id @default(uuid()) @db.Uuid
-  userId                String   @unique @map("user_id") @db.Uuid
-  favoriteCategories    String[] @default([]) @map("favorite_categories")
-  favoriteSubcategories String[] @default([]) @map("favorite_subcategories")
-  favoriteNeighborhoods String[] @default([]) @map("favorite_neighborhoods")
-  notificationsEmail    Boolean  @default(true) @map("notifications_email")
-  notificationsPush     Boolean  @default(true) @map("notifications_push")
-  notificationsFavorites Boolean @default(true) @map("notifications_favorites")
-  language              String   @default("fr") @db.VarChar(2)
-  timezone              String   @default("America/Montreal")
-  defaultRadius         Int      @default(10) @map("default_radius") // en km
-  createdAt             DateTime @default(now()) @map("created_at")
-  updatedAt             DateTime @updatedAt @map("updated_at")
+  id                     String   @id @default(uuid()) @db.Uuid
+  userId                 String   @unique @map("user_id") @db.Uuid
+  favoriteCategories     String[] @default([]) @map("favorite_categories")
+  favoriteSubcategories  String[] @default([]) @map("favorite_subcategories")
+  favoriteNeighborhoods  String[] @default([]) @map("favorite_neighborhoods")
+  notificationsEmail     Boolean  @default(true) @map("notifications_email")
+  notificationsPush      Boolean  @default(true) @map("notifications_push")
+  notificationsFavorites Boolean  @default(true) @map("notifications_favorites")
+  language               String   @default("fr") @db.VarChar(2)
+  timezone               String   @default("America/Montreal")
+  defaultRadius          Int      @default(10) @map("default_radius") // en km
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -285,13 +294,13 @@ model UserPreferences {
 }
 
 model Notification {
-  id      String  @id @default(uuid()) @db.Uuid
-  userId  String  @map("user_id") @db.Uuid
-  eventId String? @map("event_id") @db.Uuid
-  type    String  // 'favorite', 'reminder', 'new_event', 'custom'
-  title   String
-  message String  @db.Text
-  isRead  Boolean @default(false) @map("is_read")
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  eventId   String?  @map("event_id") @db.Uuid
+  type      String // 'favorite', 'reminder', 'new_event', 'custom'
+  title     String
+  message   String   @db.Text
+  isRead    Boolean  @default(false) @map("is_read")
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
@@ -304,10 +313,10 @@ model Notification {
 // Modèles pour les métadonnées
 
 model Category {
-  id            String @id @default(uuid()) @db.Uuid
+  id            String  @id @default(uuid()) @db.Uuid
   name          String
-  nameEn        String @map("name_en")
-  slug          String @unique
+  nameEn        String  @map("name_en")
+  slug          String  @unique
   icon          String
   color         String
   description   String?
@@ -321,14 +330,14 @@ model Category {
 }
 
 model Subcategory {
-  id           String @id @default(uuid()) @db.Uuid
-  categoryId   String @map("category_id") @db.Uuid
-  name         String
-  nameEn       String @map("name_en")
-  slug         String
-  description  String?
+  id            String  @id @default(uuid()) @db.Uuid
+  categoryId    String  @map("category_id") @db.Uuid
+  name          String
+  nameEn        String  @map("name_en")
+  slug          String
+  description   String?
   descriptionEn String? @map("description_en")
-  sortOrder    Int     @default(0) @map("sort_order")
+  sortOrder     Int     @default(0) @map("sort_order")
 
   // Relations
   category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
@@ -345,7 +354,7 @@ model Neighborhood {
   city      String @default("Montréal")
   province  String @default("QC")
   country   String @default("CA")
-  bounds    Json?  // GeoJSON polygon pour les limites
+  bounds    Json? // GeoJSON polygon pour les limites
   centerLat Float? @map("center_lat")
   centerLon Float? @map("center_lon")
 
@@ -357,7 +366,7 @@ model Neighborhood {
 model SearchQuery {
   id        String   @id @default(uuid()) @db.Uuid
   query     String
-  filters   Json?    // filtres appliqués
+  filters   Json? // filtres appliqués
   results   Int      @default(0) // nombre de résultats
   userId    String?  @map("user_id") @db.Uuid
   sessionId String?  @map("session_id")

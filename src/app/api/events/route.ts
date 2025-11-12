@@ -9,7 +9,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions, requireRole, requireVerifiedOrganizer } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
-import { EventCategory, EventLanguage, EventStatus, UserRole } from '@prisma/client';
+import { EventCategory, EventLanguage, EventStatus, UserRole, PromotionStatus } from '@prisma/client';
 
 /**
  * Génère des tags automatiques basés sur le contenu de l'événement
@@ -236,6 +236,8 @@ export async function GET(request: NextRequest) {
     // Pagination
     const skip = (filters.page - 1) * filters.pageSize;
 
+    const now = new Date();
+
     // Exécuter la requête
     const [events, total] = await Promise.all([
       prisma.event.findMany({
@@ -256,8 +258,12 @@ export async function GET(request: NextRequest) {
           },
           promotions: {
             where: {
-              startsAt: { lte: new Date() },
-              endsAt: { gte: new Date() },
+              status: PromotionStatus.ACTIVE,
+              startsAt: { lte: now },
+              endsAt: { gte: now },
+            },
+            orderBy: {
+              kind: 'asc', // Priorité: HOMEPAGE > LIST_TOP > MAP_TOP
             },
           },
           _count: {
@@ -285,10 +291,34 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // Trier par promotions actives en priorité
+    // Les événements avec promotions actives apparaissent en premier
+    const sortedByPromotions = [...filteredEvents].sort((a, b) => {
+      const aHasPromotion = a.promotions && a.promotions.length > 0;
+      const bHasPromotion = b.promotions && b.promotions.length > 0;
+      
+      if (aHasPromotion && !bHasPromotion) return -1;
+      if (!aHasPromotion && bHasPromotion) return 1;
+      
+      // Si les deux ont des promotions, trier par type de promotion
+      if (aHasPromotion && bHasPromotion) {
+        const aKind = a.promotions[0]?.kind || '';
+        const bKind = b.promotions[0]?.kind || '';
+        const kindOrder: Record<string, number> = {
+          'HOMEPAGE': 0,
+          'LIST_TOP': 1,
+          'MAP_TOP': 2,
+        };
+        return (kindOrder[aKind] || 999) - (kindOrder[bKind] || 999);
+      }
+      
+      return 0;
+    });
+
     // Si recherche par proximité, trier par distance
-    let sortedEvents = filteredEvents;
+    let sortedEvents = sortedByPromotions;
     if (filters.sort === 'proximity' && filters.lat && filters.lon) {
-      sortedEvents = filteredEvents
+      sortedEvents = sortedByPromotions
         .map(event => ({
           ...event,
           distance: event.venue ? calculateDistance(
@@ -298,10 +328,17 @@ export async function GET(request: NextRequest) {
             event.venue.lon
           ) : Infinity,
         }))
-        .sort((a, b) => a.distance - b.distance);
+        .sort((a, b) => {
+          // Garder la priorité des promotions même avec le tri par distance
+          const aHasPromotion = a.promotions && a.promotions.length > 0;
+          const bHasPromotion = b.promotions && b.promotions.length > 0;
+          if (aHasPromotion && !bHasPromotion) return -1;
+          if (!aHasPromotion && bHasPromotion) return 1;
+          return a.distance - b.distance;
+        });
     } else if (distanceFilter) {
       // Ajouter la distance même si on ne trie pas par proximité
-      sortedEvents = filteredEvents.map(event => ({
+      sortedEvents = sortedByPromotions.map(event => ({
         ...event,
         distance: event.venue ? calculateDistance(
           distanceFilter.lat,

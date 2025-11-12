@@ -120,7 +120,7 @@ const EventCard = ({
           <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
           
           {/* Prix avec glassmorphism */}
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
             <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
               event.price.isFree 
                 ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' 
@@ -128,6 +128,12 @@ const EventCard = ({
             } ${isHovered ? 'scale-105' : ''}`}>
               {formatPrice(event.price)}
             </span>
+            {/* Badge promotion */}
+            {event.promotions && event.promotions.length > 0 && (
+              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white shadow-lg backdrop-blur-md border border-white/30 animate-pulse">
+                ⭐ Promu
+              </span>
+            )}
           </div>
           
           {/* Favori avec effet moderne */}
