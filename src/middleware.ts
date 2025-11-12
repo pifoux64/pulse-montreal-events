@@ -55,8 +55,7 @@ export async function middleware(request: NextRequest) {
       
       return response;
     }
-  } else if (isSensitive && !postRateLimit) {
-    // Si rate limiting n'est pas configuré, continuer quand même
+    // Si isSensitive mais postRateLimit n'est pas configuré, continuer quand même
     // (utile en développement)
   }
   
