@@ -145,6 +145,12 @@ export class EventbriteConnector extends BaseConnector {
         const response = await fetch(`${this.baseUrl}/events/search?${params}`);
         
         if (!response.ok) {
+          // Pour les erreurs 404 ou 401, c'est probablement un problème de configuration (API key invalide)
+          if (response.status === 404 || response.status === 401) {
+            console.warn(`⚠️ Eventbrite API: ${response.status} - Vérifiez votre EVENTBRITE_TOKEN dans .env.local`);
+            hasMore = false;
+            return events.slice(0, limit);
+          }
           throw new Error(`Eventbrite API error: ${response.status} ${response.statusText}`);
         }
 
@@ -159,8 +165,11 @@ export class EventbriteConnector extends BaseConnector {
 
         console.log(`Eventbrite: Page ${page - 1}, ${data.events?.length || 0} événements récupérés`);
 
-      } catch (error) {
-        console.error(`Erreur lors de la récupération des événements Eventbrite (page ${page}):`, error);
+      } catch (error: any) {
+        // Ne pas logger les erreurs 404/401 déjà gérées
+        if (!error?.message?.includes('404') && !error?.message?.includes('401')) {
+          console.error(`Erreur lors de la récupération des événements Eventbrite (page ${page}):`, error);
+        }
         hasMore = false;
       }
     }

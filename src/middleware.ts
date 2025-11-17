@@ -7,7 +7,8 @@ import type { NextRequest } from 'next/server';
 import { postRateLimit, getClientIP } from '@/lib/rateLimit';
 
 export async function middleware(request: NextRequest) {
-  const { pathname, method } = request;
+  const { pathname } = request.nextUrl;
+  const { method } = request;
   
   // Appliquer le rate limiting uniquement sur les requêtes POST sensibles
   if (method === 'POST') {

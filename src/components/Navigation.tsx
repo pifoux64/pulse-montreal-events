@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -11,6 +12,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 export default function Navigation() {
   const t = useTranslations('navigation');
   const { data: session, status } = useSession();
+  const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -18,6 +20,7 @@ export default function Navigation() {
   // Récupérer le nombre de favoris pour afficher un badge
   const { favorites } = useFavorites([]);
   const favoritesCount = favorites.length;
+  const notificationsCount = 0;
 
   // Fermer le menu utilisateur en cliquant en dehors
   useEffect(() => {
@@ -122,9 +125,16 @@ export default function Navigation() {
             </div>
 
             {/* Notifications avec animation */}
-            <button className="p-3 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md">
+            <button
+              onClick={() => router.push('/notifications')}
+              className="p-3 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md"
+            >
               <Bell className="w-5 h-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full text-xs text-white flex items-center justify-center font-bold shadow-sm">3</div>
+              {notificationsCount > 0 && (
+                <div className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full text-xs text-white flex items-center justify-center font-bold shadow-sm">
+                  {notificationsCount > 9 ? '9+' : notificationsCount}
+                </div>
+              )}
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </button>
 
@@ -137,20 +147,19 @@ export default function Navigation() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="p-3 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md flex items-center gap-2"
+                  className="p-2 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md"
                 >
                   {session.user.image ? (
                     <Image
                       src={session.user.image}
                       alt={session.user.name || 'User'}
-                      width={20}
-                      height={20}
+                      width={32}
+                      height={32}
                       className="rounded-full"
                     />
                   ) : (
-                    <User className="w-5 h-5" />
+                    <User className="w-6 h-6" />
                   )}
-                  <span className="hidden md:block text-sm font-medium">{session.user.name || session.user.email}</span>
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </button>
                 {isUserMenuOpen && (

@@ -18,10 +18,6 @@ const eventFormSchema = z.object({
     address: z.string().min(1, 'L\'adresse est requise'),
     city: z.string().min(1, 'La ville est requise'),
     postalCode: z.string().min(1, 'Le code postal est requis'),
-    coordinates: z.object({
-      lat: z.number().min(-90).max(90),
-      lng: z.number().min(-180).max(180),
-    }),
   }),
   category: z.string().min(1, 'La catégorie est requise'),
   subCategory: z.string().optional(),
@@ -92,7 +88,6 @@ const EventForm = ({
         address: '',
         city: 'Montréal',
         postalCode: '',
-        coordinates: { lat: 45.5017, lng: -73.5673 },
       },
       category: initialData?.category || '',
       subCategory: initialData?.subCategory || '',
@@ -415,42 +410,6 @@ const EventForm = ({
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Coordonnées GPS
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              <Controller
-                name="location.coordinates.lat"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="number"
-                    step="any"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Latitude"
-                  />
-                )}
-              />
-              <Controller
-                name="location.coordinates.lng"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    {...field}
-                    type="number"
-                    step="any"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Longitude"
-                  />
-                )}
-              />
-            </div>
-            <p className="mt-1 text-xs text-gray-500">
-              Laissez vide pour la détection automatique
-            </p>
-          </div>
         </div>
       </div>
 
@@ -785,17 +744,17 @@ const EventForm = ({
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+          disabled={isSubmitting}
+          className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Annuler
         </button>
         
         <button
           type="submit"
-          disabled={!isValid || isSubmitting}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
         >
-          {isSubmitting ? 'Enregistrement...' : (isEditing ? 'Mettre à jour' : 'Publier l\'événement')}
+          Publier l'événement
         </button>
       </div>
     </form>

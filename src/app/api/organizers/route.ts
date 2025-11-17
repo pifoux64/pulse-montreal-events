@@ -10,6 +10,8 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+const autoVerifyOrganizers = process.env.AUTO_VERIFY_ORGANIZERS !== 'false';
+
 const CreateOrganizerSchema = z.object({
   displayName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
   website: z.string().url('URL invalide').optional().or(z.literal('')),
@@ -80,7 +82,17 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / pageSize),
     });
 
-  } catch (error) {
+  } catch (error: any) {
+    // Si la table n'existe pas encore, retourner une liste vide
+    if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+      return NextResponse.json({
+        items: [],
+        total: 0,
+        page: 1,
+        pageSize: 20,
+        totalPages: 0,
+      });
+    }
     console.error('Erreur lors de la récupération des organisateurs:', error);
     return NextResponse.json(
       { error: 'Erreur serveur lors de la récupération des organisateurs' },
@@ -104,9 +116,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si l'utilisateur a déjà un profil organisateur
-    const existingOrganizer = await prisma.organizer.findUnique({
-      where: { userId: session.user.id },
-    });
+    let existingOrganizer;
+    try {
+      existingOrganizer = await prisma.organizer.findUnique({
+        where: { userId: session.user.id },
+      });
+    } catch (dbError: any) {
+      // Si la table n'existe pas encore, on peut continuer
+      if (dbError?.code === 'P2021' || dbError?.message?.includes('does not exist')) {
+        existingOrganizer = null;
+      } else {
+        throw dbError;
+      }
+    }
 
     if (existingOrganizer) {
       return NextResponse.json(
@@ -125,7 +147,7 @@ export async function POST(request: NextRequest) {
         displayName: data.displayName,
         website: data.website || null,
         socials: data.socials || null,
-        verified: false, // Par défaut non vérifié
+        verified: autoVerifyOrganizers,
       },
       include: {
         user: {
@@ -146,13 +168,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(organizer, { status: 201 });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors de la création de l\'organisateur:', error);
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Données invalides', details: error.errors },
         { status: 400 }
+      );
+    }
+
+    // Si la table n'existe pas encore
+    if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+      return NextResponse.json(
+        { error: 'La fonctionnalité organisateur n\'est pas encore disponible. La table doit être créée dans la base de données.' },
+        { status: 503 }
       );
     }
 

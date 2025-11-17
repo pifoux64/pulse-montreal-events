@@ -46,6 +46,16 @@ export default function MonProfilOrganisateurPage() {
     linkedin: '',
   });
 
+const normalizeUrl = (value: string) => {
+  if (!value) return '';
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+};
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/organisateur/mon-profil');
@@ -96,15 +106,17 @@ export default function MonProfilOrganisateurPage() {
     setSuccess(null);
 
     try {
-      const socialsData: any = {};
-      if (socials.facebook) socialsData.facebook = socials.facebook;
-      if (socials.instagram) socialsData.instagram = socials.instagram;
-      if (socials.twitter) socialsData.twitter = socials.twitter;
-      if (socials.linkedin) socialsData.linkedin = socials.linkedin;
+      const socialsData: Record<string, string> = {};
+      if (socials.facebook) socialsData.facebook = normalizeUrl(socials.facebook);
+      if (socials.instagram) socialsData.instagram = normalizeUrl(socials.instagram);
+      if (socials.twitter) socialsData.twitter = normalizeUrl(socials.twitter);
+      if (socials.linkedin) socialsData.linkedin = normalizeUrl(socials.linkedin);
+
+      const normalizedWebsite = website ? normalizeUrl(website) : null;
 
       const payload = {
         displayName,
-        website: website || null,
+        website: normalizedWebsite,
         socials: Object.keys(socialsData).length > 0 ? socialsData : null,
       };
 
@@ -220,7 +232,7 @@ export default function MonProfilOrganisateurPage() {
               <Globe className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 id="website"
-                type="url"
+                type="text"
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://votre-site.com"
@@ -238,7 +250,7 @@ export default function MonProfilOrganisateurPage() {
               <div className="relative">
                 <Facebook className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400" />
                 <input
-                  type="url"
+                  type="text"
                   value={socials.facebook}
                   onChange={(e) => setSocials({ ...socials, facebook: e.target.value })}
                   placeholder="https://facebook.com/votre-page"
@@ -248,7 +260,7 @@ export default function MonProfilOrganisateurPage() {
               <div className="relative">
                 <Instagram className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-pink-400" />
                 <input
-                  type="url"
+                  type="text"
                   value={socials.instagram}
                   onChange={(e) => setSocials({ ...socials, instagram: e.target.value })}
                   placeholder="https://instagram.com/votre-compte"
@@ -258,7 +270,7 @@ export default function MonProfilOrganisateurPage() {
               <div className="relative">
                 <Twitter className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-sky-400" />
                 <input
-                  type="url"
+                  type="text"
                   value={socials.twitter}
                   onChange={(e) => setSocials({ ...socials, twitter: e.target.value })}
                   placeholder="https://twitter.com/votre-compte"
@@ -268,7 +280,7 @@ export default function MonProfilOrganisateurPage() {
               <div className="relative">
                 <Linkedin className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-500" />
                 <input
-                  type="url"
+                  type="text"
                   value={socials.linkedin}
                   onChange={(e) => setSocials({ ...socials, linkedin: e.target.value })}
                   placeholder="https://linkedin.com/company/votre-entreprise"

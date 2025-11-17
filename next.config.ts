@@ -5,12 +5,31 @@ const nextConfig: NextConfig = {
   
   // Images optimisées
   images: {
-    domains: [
-      'picsum.photos',
-      'images.unsplash.com',
-      'cdn.eventbrite.com',
-      'img.evbuc.com',
-      'secure.meetupstatic.com'
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.eventbrite.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'img.evbuc.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'secure.meetupstatic.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
   },

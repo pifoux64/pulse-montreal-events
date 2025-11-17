@@ -9,6 +9,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions, requireRole, requireVerifiedOrganizer } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { geocodeAddress, getDefaultCoordinates } from '@/lib/geocode';
 import { EventCategory, EventLanguage, EventStatus, UserRole, PromotionStatus } from '@prisma/client';
 
 /**
@@ -91,8 +92,8 @@ const CreateEventSchema = z.object({
     address: z.string(),
     city: z.string(),
     postalCode: z.string(),
-    lat: z.number(),
-    lon: z.number(),
+    lat: z.number().optional(),
+    lon: z.number().optional(),
     neighborhood: z.string().optional(),
     phone: z.string().optional(),
     website: z.string().url().optional(),
@@ -404,8 +405,32 @@ export async function POST(request: NextRequest) {
     // Créer ou récupérer le venue
     let venueId = eventData.venueId;
     if (!venueId && eventData.venue) {
+      const venueInput = { ...eventData.venue };
+      let lat = venueInput.lat;
+      let lon = venueInput.lon;
+
+      if (
+        lat === undefined ||
+        lon === undefined ||
+        Number.isNaN(lat) ||
+        Number.isNaN(lon)
+      ) {
+        const coords =
+          (await geocodeAddress({
+            address: venueInput.address,
+            city: venueInput.city,
+            postalCode: venueInput.postalCode,
+          })) || getDefaultCoordinates();
+        lat = coords.lat;
+        lon = coords.lon;
+      }
+
       const venue = await prisma.venue.create({
-        data: eventData.venue,
+        data: {
+          ...venueInput,
+          lat,
+          lon,
+        },
       });
       venueId = venue.id;
     }

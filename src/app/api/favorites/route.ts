@@ -33,46 +33,61 @@ export async function GET(request: NextRequest) {
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
     const skip = (page - 1) * pageSize;
 
-    const [favorites, total] = await Promise.all([
-      prisma.favorite.findMany({
-        where: { userId: session.user.id },
-        include: {
-          event: {
-            include: {
-              venue: true,
-              organizer: {
-                include: {
-                  user: {
-                    select: {
-                      name: true,
+    try {
+      const [favorites, total] = await Promise.all([
+        prisma.favorite.findMany({
+          where: { userId: session.user.id },
+          include: {
+            event: {
+              include: {
+                venue: true,
+                organizer: {
+                  include: {
+                    user: {
+                      select: {
+                        name: true,
+                      },
                     },
                   },
                 },
-              },
-              _count: {
-                select: {
-                  favorites: true,
+                _count: {
+                  select: {
+                    favorites: true,
+                  },
                 },
               },
             },
           },
-        },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize,
-      }),
-      prisma.favorite.count({
-        where: { userId: session.user.id },
-      }),
-    ]);
+          orderBy: { id: 'desc' }, // Utiliser id comme fallback si createdAt n'existe pas encore
+          skip,
+          take: pageSize,
+        }),
+        prisma.favorite.count({
+          where: { userId: session.user.id },
+        }),
+      ]);
 
-    return NextResponse.json({
-      items: favorites.map(fav => fav.event),
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    });
+      return NextResponse.json({
+        items: favorites.map(fav => fav.event),
+        total,
+        page,
+        pageSize,
+        totalPages: Math.ceil(total / pageSize),
+      });
+    } catch (dbError: any) {
+      // Si la table n'existe pas encore, retourner une liste vide
+      if (dbError?.code === 'P2021' || dbError?.message?.includes('does not exist')) {
+        console.warn('Table favorites n\'existe pas encore, retour d\'une liste vide');
+        return NextResponse.json({
+          items: [],
+          total: 0,
+          page,
+          pageSize,
+          totalPages: 0,
+        });
+      }
+      throw dbError;
+    }
 
   } catch (error) {
     console.error('Erreur lors de la récupération des favoris:', error);

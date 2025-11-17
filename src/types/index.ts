@@ -21,7 +21,7 @@ export interface Event {
     address: string;
     city: string;
     postalCode: string;
-    coordinates: {
+    coordinates?: {
       lat: number;
       lng: number;
     };
@@ -174,7 +174,7 @@ export interface EventFormData {
     address: string;
     city: string;
     postalCode: string;
-    coordinates: {
+    coordinates?: {
       lat: number;
       lng: number;
     };

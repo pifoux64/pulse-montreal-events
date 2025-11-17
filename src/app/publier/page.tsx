@@ -23,6 +23,22 @@ const mockCategories: EventCategory[] = [
       { id: '1-2', name: 'Jazz', nameEn: 'Jazz', categoryId: '1' },
       { id: '1-3', name: 'Rock', nameEn: 'Rock', categoryId: '1' },
       { id: '1-4', name: 'Électronique', nameEn: 'Electronic', categoryId: '1' },
+      { id: '1-5', name: 'Pop', nameEn: 'Pop', categoryId: '1' },
+      { id: '1-6', name: 'Hip-hop', nameEn: 'Hip-hop', categoryId: '1' },
+      { id: '1-7', name: 'Rap', nameEn: 'Rap', categoryId: '1' },
+      { id: '1-8', name: 'Classique', nameEn: 'Classical', categoryId: '1' },
+      { id: '1-9', name: 'Indie', nameEn: 'Indie', categoryId: '1' },
+      { id: '1-10', name: 'Folk', nameEn: 'Folk', categoryId: '1' },
+      { id: '1-11', name: 'Blues', nameEn: 'Blues', categoryId: '1' },
+      { id: '1-12', name: 'Metal', nameEn: 'Metal', categoryId: '1' },
+      { id: '1-13', name: 'R&B / Soul', nameEn: 'R&B / Soul', categoryId: '1' },
+      { id: '1-14', name: 'Country', nameEn: 'Country', categoryId: '1' },
+      { id: '1-15', name: 'Latino', nameEn: 'Latin', categoryId: '1' },
+      { id: '1-16', name: 'Musique du monde', nameEn: 'World Music', categoryId: '1' },
+      { id: '1-17', name: 'Ambient / Chill', nameEn: 'Ambient / Chill', categoryId: '1' },
+      { id: '1-18', name: 'House & Techno', nameEn: 'House & Techno', categoryId: '1' },
+      { id: '1-19', name: 'Chorale / Vocal', nameEn: 'Choir / Vocal', categoryId: '1' },
+      { id: '1-20', name: 'Expérimental', nameEn: 'Experimental', categoryId: '1' },
     ]
   },
   {
@@ -88,25 +104,41 @@ const mapCategoryToPrisma = (category: string): PrismaEventCategory => {
 };
 
 export default function PublierPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [submitMessage, setSubmitMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [needsOrganizerProfile, setNeedsOrganizerProfile] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/publier');
-    } else if (status === 'authenticated') {
-      // Vérifier si l'utilisateur est un organisateur
-      if (session.user.role !== 'ORGANIZER' && session.user.role !== 'ADMIN') {
-        router.push('/organisateur/mon-profil');
-      } else {
-        setIsLoading(false);
-      }
+      return;
     }
-  }, [status, session, router]);
+
+    if (status === 'authenticated') {
+      const checkOrganizer = async () => {
+        try {
+          const res = await fetch('/api/organizers/me', { cache: 'no-store' });
+          if (res.ok) {
+            setNeedsOrganizerProfile(false);
+          } else if (res.status === 404) {
+            setNeedsOrganizerProfile(true);
+          } else {
+            setNeedsOrganizerProfile(true);
+          }
+        } catch {
+          setNeedsOrganizerProfile(true);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      checkOrganizer();
+    }
+  }, [status, router]);
 
   const handleSubmit = async (data: EventFormData) => {
     setIsSubmitting(true);
@@ -125,8 +157,6 @@ export default function PublierPage() {
           address: data.location.address,
           city: data.location.city,
           postalCode: data.location.postalCode,
-          lat: data.location.coordinates.lat,
-          lon: data.location.coordinates.lng,
           neighborhood: undefined, // Sera calculé automatiquement
         },
         url: data.ticketUrl || undefined,
@@ -190,6 +220,42 @@ export default function PublierPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900 flex items-center justify-center">
         <ModernLoader />
+      </div>
+    );
+  }
+
+  if (needsOrganizerProfile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900">
+        <Navigation />
+        <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+          <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-8 text-center space-y-6">
+            <h1 className="text-3xl font-semibold text-white">
+              Créez votre profil organisateur
+            </h1>
+            <p className="text-slate-300">
+              Vous devez disposer d&apos;un compte organisateur pour publier un événement.
+              Cela nous permet de vérifier vos informations et de garantir la qualité des contenus.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                onClick={() => router.push('/organisateur/mon-profil')}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 text-white font-semibold shadow-lg hover:scale-105 transition-transform"
+              >
+                Créer mon profil
+              </button>
+              <button
+                onClick={() => router.push('/')}
+                className="px-6 py-3 rounded-xl border border-white/20 text-slate-200 hover:bg-white/10 transition"
+              >
+                Retour à l&apos;accueil
+              </button>
+            </div>
+            <p className="text-sm text-slate-400">
+              Astuce : dès que votre profil sera validé, vous pourrez publier autant d&apos;événements que nécessaire.
+            </p>
+          </div>
+        </main>
       </div>
     );
   }

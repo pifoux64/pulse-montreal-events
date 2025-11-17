@@ -64,24 +64,24 @@ export const authOptions: NextAuthOptions = {
   
   callbacks: {
     async session({ session, user }) {
-      // Récupérer les infos utilisateur depuis la DB
-      const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        include: {
-          organizer: {
-            select: {
-              id: true,
-              displayName: true,
-              verified: true,
-            },
-          },
-        },
-      });
+      try {
+        // Récupérer les infos utilisateur depuis la DB
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+        });
 
-      if (dbUser) {
-        session.user.id = dbUser.id;
-        session.user.role = dbUser.role;
-        session.user.organizer = dbUser.organizer;
+        if (dbUser) {
+          session.user.id = dbUser.id;
+          session.user.role = dbUser.role;
+          // organizer sera null si la table n'existe pas encore
+          session.user.organizer = null;
+        }
+      } catch (error) {
+        // Si les tables n'existent pas encore, on continue avec les infos de base
+        console.warn('Erreur lors de la récupération des infos utilisateur:', error);
+        session.user.id = user.id;
+        session.user.role = user.role;
+        session.user.organizer = null;
       }
 
       return session;
@@ -97,15 +97,20 @@ export const authOptions: NextAuthOptions = {
   
   events: {
     createUser: async ({ user }) => {
-      // Créer les préférences par défaut pour le nouvel utilisateur
-      await prisma.userPreferences.create({
-        data: {
-          userId: user.id,
-          language: 'fr',
-          timezone: 'America/Montreal',
-          defaultRadius: 10,
-        },
-      });
+      try {
+        // Créer les préférences par défaut pour le nouvel utilisateur
+        await prisma.userPreferences.create({
+          data: {
+            userId: user.id,
+            language: 'fr',
+            timezone: 'America/Montreal',
+            defaultRadius: 10,
+          },
+        });
+      } catch (error) {
+        // Si la table n'existe pas encore, on ignore l'erreur
+        console.warn('Impossible de créer les préférences utilisateur (table peut-être absente):', error);
+      }
     },
   },
   

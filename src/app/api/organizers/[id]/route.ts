@@ -27,11 +27,12 @@ const UpdateOrganizerSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const organizer = await prisma.organizer.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         user: {
           select: {
@@ -87,9 +88,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
@@ -100,7 +102,7 @@ export async function PUT(
     }
 
     const organizer = await prisma.organizer.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!organizer) {
@@ -136,7 +138,7 @@ export async function PUT(
     }
 
     const updatedOrganizer = await prisma.organizer.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         user: {
@@ -173,9 +175,10 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await context.params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
@@ -186,7 +189,7 @@ export async function DELETE(
     }
 
     const organizer = await prisma.organizer.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!organizer) {
@@ -209,7 +212,7 @@ export async function DELETE(
 
     // Supprimer l'organisateur (cascade supprimera aussi les événements associés si configuré)
     await prisma.organizer.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     // Si c'est le propriétaire, remettre le rôle à USER

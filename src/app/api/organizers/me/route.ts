@@ -49,7 +49,14 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(organizer);
 
-  } catch (error) {
+  } catch (error: any) {
+    // Si la table n'existe pas encore, retourner 404
+    if (error?.code === 'P2021' || error?.message?.includes('does not exist')) {
+      return NextResponse.json(
+        { error: 'Aucun profil organisateur trouvé' },
+        { status: 404 }
+      );
+    }
     console.error('Erreur lors de la récupération du profil organisateur:', error);
     return NextResponse.json(
       { error: 'Erreur serveur lors de la récupération du profil organisateur' },
