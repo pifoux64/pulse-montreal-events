@@ -396,7 +396,7 @@ export default function OptimizedCartePage() {
           </div>
 
           {/* Zone principale avec la carte */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative h-full">
             {/* Barre d'outils */}
             <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
               {!showFilters && (
@@ -442,16 +442,18 @@ export default function OptimizedCartePage() {
             </div>
 
             {/* Carte stable sans bugs */}
-            <StableEventMap
-              events={filteredEvents}
-              center={[45.5017, -73.5673]} // Centre fixe de Montréal
-              zoom={12} // Zoom initial fixe
-              onEventClick={handleEventClick}
-              onLocationClick={handleLocationClick}
-              onMapViewChange={handleMapViewChange}
-              userLocation={userLocation}
-              searchRadius={filters.location?.radius}
-            />
+            <div className="absolute inset-0">
+              <StableEventMap
+                events={filteredEvents}
+                center={[45.5017, -73.5673]} // Centre fixe de Montréal
+                zoom={12} // Zoom initial fixe
+                onEventClick={handleEventClick}
+                onLocationClick={handleLocationClick}
+                onMapViewChange={handleMapViewChange}
+                userLocation={userLocation}
+                searchRadius={filters.location?.radius}
+              />
+            </div>
           </div>
 
           {/* Liste des événements (panneau latéral) */}

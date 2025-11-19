@@ -255,11 +255,23 @@ const StableEventMap = ({
 
     const initializeMap = async () => {
       if (!mapRef.current || mapInstanceRef.current) {
+        console.log('⚠️ Carte déjà initialisée ou conteneur manquant');
+        return;
+      }
+
+      // Vérifier que le conteneur a une hauteur
+      if (mapRef.current.offsetHeight === 0) {
+        console.warn('⚠️ Le conteneur de la carte n\'a pas de hauteur, attente...');
+        // Réessayer après un court délai
+        setTimeout(() => initializeMap(), 100);
         return;
       }
 
       try {
-        console.log('🗺️ Initialisation de la carte...');
+        console.log('🗺️ Initialisation de la carte...', {
+          containerHeight: mapRef.current.offsetHeight,
+          containerWidth: mapRef.current.offsetWidth
+        });
         
         // Import MapLibre GL
         const maplibregl = await import('maplibre-gl');
@@ -297,11 +309,16 @@ const StableEventMap = ({
           attributionControl: false
         });
 
+        // Gérer les erreurs de chargement
+        map.on('error', (e) => {
+          console.error('❌ Erreur de la carte:', e);
+        });
+
         // Événements de la carte
         map.on('load', () => {
           if (!isMounted) return;
           
-          console.log('🗺️ Carte chargée');
+          console.log('🗺️ Carte chargée avec succès');
           
           // Ajouter les contrôles
           map.addControl(new maplibregl.default.NavigationControl(), 'top-right');
@@ -330,13 +347,18 @@ const StableEventMap = ({
         
       } catch (error) {
         console.error('❌ Erreur initialisation carte:', error);
+        setIsMapReady(false);
       }
     };
 
-    initializeMap();
+    // Délai pour s'assurer que le DOM est prêt
+    const timer = setTimeout(() => {
+      initializeMap();
+    }, 100);
 
     // Cleanup
     return () => {
+      clearTimeout(timer);
       isMounted = false;
       if (mapInstanceRef.current) {
         clearAllMarkers();
@@ -390,17 +412,17 @@ const StableEventMap = ({
   }, [center, zoom, isMapReady]);
 
   return (
-    <div className="h-full w-full rounded-lg overflow-hidden relative bg-gray-100">
+    <div className="h-full w-full rounded-lg overflow-hidden relative bg-gray-100" style={{ minHeight: '100%' }}>
       {/* Conteneur de la carte */}
       <div 
         ref={mapRef} 
         className="h-full w-full"
-        style={{ minHeight: '400px' }}
+        style={{ minHeight: '100%', height: '100%' }}
       />
       
       {/* Indicateur de chargement */}
       {!isMapReady && (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-20">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
             <p className="text-gray-600">Chargement de la carte...</p>
@@ -409,7 +431,7 @@ const StableEventMap = ({
       )}
 
       {/* Debug info */}
-      <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+      <div className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded z-10">
         {events.length} événements • {markersRef.current.length} marqueurs
       </div>
     </div>
