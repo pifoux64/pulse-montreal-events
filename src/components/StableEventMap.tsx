@@ -1,7 +1,33 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import type { StyleSpecification } from 'maplibre-gl';
 import { Event, MapViewState } from '@/types';
+
+const FALLBACK_MAP_STYLE: StyleSpecification = {
+  version: 8,
+  name: 'OpenStreetMap Light',
+  sources: {
+    openstreetmap: {
+      type: 'raster',
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+      tileSize: 256,
+      attribution: '© OpenStreetMap contributors'
+    }
+  },
+  layers: [
+    {
+      id: 'osm-tiles',
+      type: 'raster',
+      source: 'openstreetmap',
+      minzoom: 0,
+      maxzoom: 19
+    }
+  ]
+};
+
+const MAP_STYLE: string | StyleSpecification =
+  process.env.NEXT_PUBLIC_MAP_STYLE_URL?.trim() || FALLBACK_MAP_STYLE;
 
 interface StableEventMapProps {
   events: Event[];
@@ -28,6 +54,7 @@ const StableEventMap = ({
   const mapInstanceRef = useRef<any>(null);
   const markersRef = useRef<any[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   // Couleurs fixes pour les catégories
   const CATEGORY_COLORS = {
@@ -275,76 +302,78 @@ const StableEventMap = ({
         
         // Import MapLibre GL
         const maplibregl = await import('maplibre-gl');
+        const maplibreModule = (maplibregl as any).default ?? maplibregl;
+        const MapLibreGL = maplibreModule.Map ?? maplibreModule;
         
-        if (!isMounted) return;
+        if (!isMounted || !MapLibreGL) return;
 
-        // Créer la carte avec style personnalisé
-        const map = new maplibregl.default.Map({
+        // Créer la carte avec un style distant compatible CORS
+        const map = new MapLibreGL({
           container: mapRef.current,
-          style: {
-            version: 8,
-            name: 'Carto Light',
-            metadata: {},
-            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-            sources: {
-              'openstreetmap': {
-                type: 'raster',
-                tiles: [
-                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-                ],
-                tileSize: 256,
-                attribution: '© OpenStreetMap contributors'
-              }
-            },
-            layers: [
-              {
-                id: 'osm-tiles',
-                type: 'raster',
-                source: 'openstreetmap',
-                minzoom: 0,
-                maxzoom: 19
-              }
-            ]
-          },
+          style: MAP_STYLE,
           center: [center[1], center[0]], // [lng, lat]
           zoom: zoom,
           attributionControl: true
         });
 
         // Forcer un fond clair pour éviter le fond noir
+        // Appliquer le style directement sur le conteneur de la carte
         if (mapRef.current) {
           const mapContainer = mapRef.current;
           mapContainer.style.backgroundColor = '#f5f5f5';
+          
+          // Attendre que la carte soit créée et forcer le style sur l'élément canvas
+          setTimeout(() => {
+            const canvas = mapContainer.querySelector('canvas');
+            if (canvas) {
+              canvas.style.backgroundColor = '#f5f5f5';
+            }
+            // Forcer aussi sur l'élément .maplibregl-map
+            const mapElement = mapContainer.querySelector('.maplibregl-map');
+            if (mapElement) {
+              (mapElement as HTMLElement).style.backgroundColor = '#f5f5f5';
+            }
+          }, 100);
         }
 
         // Gérer les erreurs de chargement
-        map.on('error', (e) => {
+        map.on('error', (e: any) => {
           console.error('❌ Erreur de la carte:', e);
+          if (!isMounted) return;
+          setMapError('Impossible de charger la carte. Vérifiez votre connexion puis réessayez.');
+          setIsMapReady(false);
         });
 
-        // Gérer les erreurs de chargement des tuiles
-        map.on('sourcedata', (e) => {
-          if (e.isSourceLoaded && e.sourceId === 'openstreetmap') {
-            console.log('✅ Source de tuiles chargée');
-          }
-        });
-
-        map.on('data', (e) => {
-          if (e.dataType === 'source' && e.isSourceLoaded) {
-            console.log('✅ Données de la carte chargées');
-          }
+        map.on('styledata', (event) => {
+          console.log('✅ Style de carte chargé', { sourceCacheIds: event?.style?.sourceCaches ? Object.keys(event.style.sourceCaches) : [] });
         });
 
         // Événements de la carte
         map.on('load', () => {
           if (!isMounted) return;
           
-          console.log('🗺️ Carte chargée avec succès');
+          console.log('🗺️ Carte chargée avec succès (style:', typeof MAP_STYLE === 'string' ? MAP_STYLE : 'inline OSM', ')');
+          
+          // Forcer le fond clair après le chargement
+          if (mapRef.current) {
+            const mapContainer = mapRef.current;
+            const canvas = mapContainer.querySelector('canvas');
+            const mapElement = mapContainer.querySelector('.maplibregl-map');
+            
+            if (canvas) {
+              canvas.style.backgroundColor = '#f5f5f5';
+            }
+            if (mapElement) {
+              (mapElement as HTMLElement).style.backgroundColor = '#f5f5f5';
+            }
+            mapContainer.style.backgroundColor = '#f5f5f5';
+          }
           
           // Ajouter les contrôles
           map.addControl(new maplibregl.default.NavigationControl(), 'top-right');
           map.addControl(new maplibregl.default.ScaleControl(), 'bottom-left');
 
+          setMapError(null);
           setIsMapReady(true);
         });
 
@@ -386,6 +415,7 @@ const StableEventMap = ({
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
         setIsMapReady(false);
+        setMapError(null);
       }
     };
   }, []); // Seulement à l'initialisation
@@ -441,12 +471,22 @@ const StableEventMap = ({
         style={{ minHeight: '100%', height: '100%', backgroundColor: '#f5f5f5' }}
       />
       
-      {/* Indicateur de chargement */}
-      {!isMapReady && (
-        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-20">
-          <div className="text-center">
-            <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-            <p className="text-gray-600">Chargement de la carte...</p>
+      {/* Indicateur de chargement / erreurs */}
+      {(!isMapReady || mapError) && (
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center z-20 px-4 text-center">
+          <div>
+            {!mapError && (
+              <>
+                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                <p className="text-gray-600">Chargement de la carte...</p>
+              </>
+            )}
+            {mapError && (
+              <>
+                <p className="text-red-600 font-semibold mb-2">Erreur de chargement</p>
+                <p className="text-gray-600 text-sm">{mapError}</p>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -65,10 +65,11 @@ const nextConfig: NextConfig = {
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.sentry-cdn.com",
+              "worker-src 'self' blob:",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://*.sentry.io https://*.ingest.sentry.io https://o4507004691537920.ingest.us.sentry.io",
+              "connect-src 'self' https://*.sentry.io https://*.ingest.sentry.io https://o4507004691537920.ingest.us.sentry.io https://demotiles.maplibre.org https://tile.openstreetmap.org",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
