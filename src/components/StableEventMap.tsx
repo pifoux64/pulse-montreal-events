@@ -278,40 +278,61 @@ const StableEventMap = ({
         
         if (!isMounted) return;
 
-        // Créer la carte
+        // Créer la carte avec style personnalisé
         const map = new maplibregl.default.Map({
           container: mapRef.current,
           style: {
             version: 8,
+            name: 'Carto Light',
+            metadata: {},
+            glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
             sources: {
-              'carto-light': {
+              'openstreetmap': {
                 type: 'raster',
                 tiles: [
-                  'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                  'https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                  'https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                  'https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+                  'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
                 ],
                 tileSize: 256,
-                attribution: '© CARTO © OpenStreetMap contributors'
+                attribution: '© OpenStreetMap contributors'
               }
             },
             layers: [
               {
-                id: 'carto-tiles',
+                id: 'osm-tiles',
                 type: 'raster',
-                source: 'carto-light'
+                source: 'openstreetmap',
+                minzoom: 0,
+                maxzoom: 19
               }
             ]
           },
           center: [center[1], center[0]], // [lng, lat]
           zoom: zoom,
-          attributionControl: false
+          attributionControl: true
         });
+
+        // Forcer un fond clair pour éviter le fond noir
+        if (mapRef.current) {
+          const mapContainer = mapRef.current;
+          mapContainer.style.backgroundColor = '#f5f5f5';
+        }
 
         // Gérer les erreurs de chargement
         map.on('error', (e) => {
           console.error('❌ Erreur de la carte:', e);
+        });
+
+        // Gérer les erreurs de chargement des tuiles
+        map.on('sourcedata', (e) => {
+          if (e.isSourceLoaded && e.sourceId === 'openstreetmap') {
+            console.log('✅ Source de tuiles chargée');
+          }
+        });
+
+        map.on('data', (e) => {
+          if (e.dataType === 'source' && e.isSourceLoaded) {
+            console.log('✅ Données de la carte chargées');
+          }
         });
 
         // Événements de la carte
@@ -417,7 +438,7 @@ const StableEventMap = ({
       <div 
         ref={mapRef} 
         className="h-full w-full"
-        style={{ minHeight: '100%', height: '100%' }}
+        style={{ minHeight: '100%', height: '100%', backgroundColor: '#f5f5f5' }}
       />
       
       {/* Indicateur de chargement */}
