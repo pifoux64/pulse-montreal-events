@@ -81,6 +81,14 @@ export const metadata: Metadata = {
     yandex: 'your-yandex-verification-code',
     yahoo: 'your-yahoo-verification-code',
   },
+  icons: {
+    icon: [
+      { url: '/Pulse_Logo_only_heart.png', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/Pulse_Logo_only_heart.png', sizes: '180x180', type: 'image/png' },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -99,10 +107,21 @@ export default function RootLayout({
   return (
     <html lang="fr" className={poppins.variable} suppressHydrationWarning>
       <head>
+        {/* Favicon */}
+        <link rel="icon" href="/Pulse_Logo_only_heart.png" type="image/png" />
         {/* Meta tags iOS pour PWA */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Pulse MTL" />
+        <link rel="apple-touch-icon" href="/Pulse_Logo_only_heart.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/Pulse_Logo_only_heart.png" />
+        <link rel="apple-touch-icon" sizes="96x96" href="/Pulse_Logo_only_heart.png" />
+        <link rel="apple-touch-icon" sizes="128x128" href="/Pulse_Logo_only_heart.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/Pulse_Logo_only_heart.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/Pulse_Logo_only_heart.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/Pulse_Logo_only_heart.png" />
+        <link rel="apple-touch-icon" sizes="384x384" href="/Pulse_Logo_only_heart.png" />
+        <link rel="apple-touch-icon" sizes="512x512" href="/Pulse_Logo_only_heart.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Meta tags Android pour PWA */}
         <meta name="theme-color" content="#1abc9c" />
