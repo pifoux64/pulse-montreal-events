@@ -7,16 +7,29 @@ import Navigation from '@/components/Navigation';
 import { AlertCircle, ArrowLeft } from 'lucide-react';
 
 const errorMessages: Record<string, string> = {
-  Configuration: 'Il y a un problème avec la configuration du serveur.',
+  Configuration: 'Il y a un problème avec la configuration du serveur. Vérifiez que les variables d\'environnement sont correctement configurées.',
   AccessDenied: 'Vous n\'avez pas l\'autorisation d\'accéder à cette page.',
   Verification: 'Le lien de vérification a expiré ou a déjà été utilisé.',
-  Default: 'Une erreur inattendue est survenue.',
+  OAuthSignin: 'Erreur lors de la connexion OAuth. Vérifiez que Google OAuth est correctement configuré.',
+  OAuthCallback: 'Erreur lors du callback OAuth. Vérifiez les URLs de redirection dans Google Cloud Console.',
+  OAuthCreateAccount: 'Impossible de créer le compte. Vérifiez la configuration de la base de données.',
+  EmailCreateAccount: 'Impossible de créer le compte avec cet email.',
+  Callback: 'Erreur lors du callback d\'authentification.',
+  OAuthAccountNotLinked: 'Un compte existe déjà avec cette adresse email. Connectez-vous avec votre méthode habituelle.',
+  EmailSignin: 'Erreur lors de l\'envoi de l\'email de connexion.',
+  CredentialsSignin: 'Les identifiants fournis sont incorrects.',
+  SessionRequired: 'Vous devez être connecté pour accéder à cette page.',
+  Default: 'Une erreur inattendue est survenue. Si le problème persiste, vérifiez la configuration OAuth.',
 };
 
 function AuthErrorContent() {
   const searchParams = useSearchParams();
   const error = searchParams.get('error') || 'Default';
   const message = errorMessages[error] || errorMessages.Default;
+  
+  // Afficher des informations de débogage si l'erreur est undefined
+  const isUndefinedError = error === 'undefined' || error === 'Default';
+  const showDebugInfo = isUndefinedError && typeof window !== 'undefined';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900">
@@ -29,6 +42,18 @@ function AuthErrorContent() {
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Erreur d'authentification</h1>
             <p className="text-slate-300 mb-6">{message}</p>
+            
+            {showDebugInfo && (
+              <div className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-left">
+                <p className="text-sm text-yellow-400 font-semibold mb-2">💡 Informations de débogage:</p>
+                <ul className="text-xs text-slate-400 space-y-1 list-disc list-inside">
+                  <li>Vérifiez que GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET sont configurés dans Vercel</li>
+                  <li>Vérifiez que NEXTAUTH_URL correspond à votre domaine (https://pulse-event.ca)</li>
+                  <li>Vérifiez les URLs de redirection dans Google Cloud Console</li>
+                  <li>Consultez le guide: docs/GOOGLE_OAUTH_SETUP.md</li>
+                </ul>
+              </div>
+            )}
             <div className="space-y-3">
               <Link
                 href="/auth/signin"

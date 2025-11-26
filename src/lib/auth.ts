@@ -10,6 +10,9 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from './prisma';
 import { UserRole } from '@prisma/client';
 
+const enforceOrganizerVerification =
+  process.env.ENFORCE_ORGANIZER_VERIFICATION === 'true';
+
 // Construire la liste des providers de manière conditionnelle
 const providers = [];
 
@@ -68,12 +71,36 @@ export const authOptions: NextAuthOptions = {
         // Récupérer les infos utilisateur depuis la DB
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
+          select: {
+            id: true,
+            role: true,
+          },
         });
 
-        if (dbUser) {
-          session.user.id = dbUser.id;
-          session.user.role = dbUser.role;
-          // organizer sera null si la table n'existe pas encore
+        session.user.id = dbUser?.id ?? user.id;
+        session.user.role = dbUser?.role ?? user.role;
+
+        // Récupérer le profil organisateur si la table existe
+        try {
+          const organizer = await prisma.organizer.findUnique({
+            where: { userId: session.user.id },
+            select: {
+              id: true,
+              displayName: true,
+              verified: true,
+            },
+          });
+          session.user.organizer = organizer ?? null;
+        } catch (organizerError: any) {
+          if (
+            organizerError?.code !== 'P2021' &&
+            !organizerError?.message?.includes('does not exist')
+          ) {
+            console.warn(
+              'Erreur lors de la récupération du profil organisateur:',
+              organizerError
+            );
+          }
           session.user.organizer = null;
         }
       } catch (error) {
@@ -143,6 +170,10 @@ export const requireRole = (allowedRoles: UserRole[]) => {
  * Vérifier si l'utilisateur est un organisateur vérifié
  */
 export const requireVerifiedOrganizer = (organizer?: { verified: boolean }) => {
+  if (!enforceOrganizerVerification) {
+    return;
+  }
+
   if (!organizer?.verified) {
     throw new Error('Organisateur non vérifié');
   }
