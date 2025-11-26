@@ -131,7 +131,13 @@ export default function OptimizedCartePage() {
     center: [45.5017, -73.5673], // Centre de Montréal
     zoom: 12
   });
-  const [showFilters, setShowFilters] = useState(true);
+  // Sur mobile, cacher les filtres par défaut pour afficher uniquement la carte
+  const [showFilters, setShowFilters] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024; // lg breakpoint (1024px)
+    }
+    return false; // Par défaut caché sur mobile
+  });
   const [showEventList, setShowEventList] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
