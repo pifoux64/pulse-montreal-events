@@ -54,24 +54,22 @@ export default function Navigation() {
           <div className="flex-shrink-0">
             <Link href="/" className="flex items-center group">
               <div
-                className="relative w-16 h-16 lg:w-20 lg:h-20 group-hover:scale-105 transition-all duration-300 flex flex-col items-center justify-end"
+                className="relative w-16 h-16 lg:w-20 lg:h-20 group-hover:scale-105 transition-all duration-300"
                 style={{
                   animation: 'float-gentle 4s ease-in-out infinite, heartbeat 3.2s ease-in-out infinite'
                 }}
               >
-                {/* Logo sans texte (juste le cœur) */}
-                <div className="relative flex-1 w-full">
-                  <Image
-                    src="/Pulse_Logo_only_heart.png"
-                    alt="Pulse Logo"
-                    fill
-                    sizes="(max-width: 768px) 64px, 80px"
-                    className="object-contain drop-shadow-lg"
-                    priority
-                  />
-                </div>
-                {/* Texte "pulse" en blanc sous le logo */}
-                <span className="text-white text-[0.6rem] lg:text-[0.75rem] font-bold tracking-tight whitespace-nowrap drop-shadow-lg mt-0.5">
+                {/* Logo original avec texte intégré */}
+                <Image
+                  src="/Pulse_Logo.png"
+                  alt="Pulse Logo"
+                  fill
+                  sizes="(max-width: 768px) 64px, 80px"
+                  className="object-contain drop-shadow-lg"
+                  priority
+                />
+                {/* Texte "pulse" en blanc superposé pour meilleure lisibilité - masque le texte gris du logo */}
+                <span className="absolute bottom-[10%] left-1/2 transform -translate-x-1/2 text-white text-[0.5rem] lg:text-[0.65rem] font-bold tracking-[0.05em] whitespace-nowrap drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] pointer-events-none" style={{ fontFamily: 'inherit' }}>
                   pulse
                 </span>
               </div>
