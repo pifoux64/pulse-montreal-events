@@ -93,9 +93,19 @@ export default function RootLayout({
     suppressHydrationWarnings();
   }
 
+  // Version pour forcer les mises à jour PWA sur iOS
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || new Date().toISOString().split('T')[0].replace(/-/g, '');
+
   return (
     <html lang="fr" className={poppins.variable} suppressHydrationWarning>
       <head>
+        {/* Meta tags iOS pour PWA */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Pulse MTL" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        {/* Version pour forcer les mises à jour */}
+        <meta name="version" content={appVersion} />
         {/* Sentry Script */}
         {process.env.NODE_ENV === 'production' && process.env.NEXT_PUBLIC_SENTRY_DSN && (
           <script

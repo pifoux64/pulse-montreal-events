@@ -1,7 +1,11 @@
 import { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
+  // Version basée sur la date/heure pour forcer les mises à jour PWA
+  const version = process.env.NEXT_PUBLIC_APP_VERSION || new Date().toISOString().split('T')[0].replace(/-/g, '');
+  
   return {
+    id: `pulse-montreal-${version}`,
     name: 'Pulse Montreal - Événements & Culture',
     short_name: 'Pulse MTL',
     description: 'Découvrez les meilleurs événements culturels, concerts, festivals et spectacles à Montréal',

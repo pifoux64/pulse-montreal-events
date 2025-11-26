@@ -37,6 +37,26 @@ const nextConfig: NextConfig = {
   // Headers de sécurité
   async headers() {
     return [
+      // Headers pour le manifest PWA (pas de cache pour forcer les mises à jour)
+      {
+        source: '/manifest',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+      // Headers pour les icônes PWA
+      {
+        source: '/icons/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
       {
         source: '/(.*)',
         headers: [
