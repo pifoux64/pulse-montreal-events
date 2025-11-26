@@ -342,13 +342,15 @@ export default function Navigation() {
                     </button>
                   </div>
                 ) : (
-                  <Link
-                    href="/auth/signin"
-                    onClick={() => setIsMenuOpen(false)}
+                  <button
+                    onClick={() => {
+                      setIsMenuOpen(false);
+                      router.push('/auth/signin');
+                    }}
                     className="text-center p-3 rounded-2xl bg-gradient-to-r from-sky-600 to-emerald-600 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     Connexion
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
