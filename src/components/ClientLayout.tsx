@@ -47,6 +47,23 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
         .then((registration) => {
           console.log('Service Worker enregistré:', registration.scope);
           
+          // Écouter les messages du service worker (pour les erreurs de déploiement)
+          navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'FORCE_RELOAD') {
+              console.log('Force reload demandé:', event.data.reason);
+              // Vider le cache du navigateur et recharger
+              if ('caches' in window) {
+                caches.keys().then((cacheNames) => {
+                  return Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+                }).then(() => {
+                  window.location.reload();
+                });
+              } else {
+                window.location.reload();
+              }
+            }
+          });
+          
           // Vérifier les mises à jour périodiquement
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
@@ -61,6 +78,11 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
               });
             }
           });
+
+          // Vérifier les mises à jour toutes les heures
+          setInterval(() => {
+            registration.update();
+          }, 60 * 60 * 1000);
         })
         .catch((error) => {
           console.error('Erreur lors de l\'enregistrement du Service Worker:', error);

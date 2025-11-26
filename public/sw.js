@@ -31,19 +31,54 @@ self.addEventListener('activate', (event) => {
 
 // Stratégie de cache: Network First, puis Cache
 self.addEventListener('fetch', (event) => {
+  // Ignorer les requêtes non-GET
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
+        // Si on reçoit une erreur 404 DEPLOYMENT_NOT_FOUND, vider le cache et recharger
+        if (response.status === 404) {
+          return response.text().then((text) => {
+            if (text.includes('DEPLOYMENT_NOT_FOUND') || text.includes('NOT_FOUND')) {
+              // Vider tous les caches et forcer un rechargement
+              caches.keys().then((cacheNames) => {
+                return Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
+              }).then(() => {
+                // Envoyer un message aux clients pour recharger
+                self.clients.matchAll().then((clients) => {
+                  clients.forEach((client) => {
+                    client.postMessage({ type: 'FORCE_RELOAD', reason: 'DEPLOYMENT_NOT_FOUND' });
+                  });
+                });
+              });
+              // Retourner une réponse d'erreur pour déclencher le rechargement
+              return new Response('Deployment not found. Please reload.', { status: 404 });
+            }
+            return response;
+          });
+        }
+
         // Si la requête réussit, met à jour le cache
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
+        if (response.status === 200) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseToCache);
+          });
+        }
         return response;
       })
       .catch(() => {
         // Si la requête échoue, essaie le cache
-        return caches.match(event.request);
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // Si pas de cache, retourner une erreur
+          return new Response('Network error and no cache available', { status: 503 });
+        });
       })
   );
 });
