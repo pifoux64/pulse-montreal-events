@@ -101,8 +101,17 @@ export default function RootLayout({
     suppressHydrationWarnings();
   }
 
-  // Version pour forcer les mises à jour PWA sur iOS
-  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || new Date().toISOString().split('T')[0].replace(/-/g, '');
+  // Génère automatiquement une version unique à chaque build
+  function getAppVersion(): string {
+    // Sur Vercel, utilise le hash de commit Git
+    if (process.env.VERCEL_GIT_COMMIT_SHA) {
+      return process.env.VERCEL_GIT_COMMIT_SHA.substring(0, 8);
+    }
+    // Sinon, utilise un timestamp (pour dev/local)
+    return Date.now().toString(36);
+  }
+  
+  const appVersion = getAppVersion();
 
   return (
     <html lang="fr" className={poppins.variable} suppressHydrationWarning>

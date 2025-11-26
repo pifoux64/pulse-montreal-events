@@ -1,8 +1,18 @@
 import { MetadataRoute } from 'next'
 
+// Génère automatiquement une version unique à chaque build
+function getAppVersion(): string {
+  // Sur Vercel, utilise le hash de commit Git
+  if (process.env.VERCEL_GIT_COMMIT_SHA) {
+    return process.env.VERCEL_GIT_COMMIT_SHA.substring(0, 8);
+  }
+  // Sinon, utilise un timestamp (pour dev/local)
+  return Date.now().toString(36);
+}
+
 export default function manifest(): MetadataRoute.Manifest {
-  // Version basée sur la date/heure pour forcer les mises à jour PWA
-  const version = process.env.NEXT_PUBLIC_APP_VERSION || new Date().toISOString().split('T')[0].replace(/-/g, '');
+  // Version automatique basée sur le commit Git ou timestamp
+  const version = getAppVersion();
   
   return {
     id: `pulse-montreal-${version}`,

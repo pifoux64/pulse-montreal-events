@@ -1,6 +1,7 @@
 // Service Worker pour PWA - Force les mises à jour
-const CACHE_NAME = 'pulse-montreal-v1';
-const VERSION = '20241126'; // Change à chaque déploiement important
+// Le CACHE_NAME change automatiquement à chaque nouveau déploiement
+// (le fichier sw.js change, donc le service worker se met à jour)
+const CACHE_NAME = 'pulse-montreal-' + Date.now().toString(36);
 
 // Installation du service worker
 self.addEventListener('install', (event) => {
