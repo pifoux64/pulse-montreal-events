@@ -140,7 +140,6 @@ function SignInContent() {
       ),
     },
   ];
-  };
 
   if (isEmailSent) {
     return (
