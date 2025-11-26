@@ -59,7 +59,6 @@ export default function Navigation() {
                   animation: 'float-gentle 4s ease-in-out infinite, heartbeat 3.2s ease-in-out infinite'
                 }}
               >
-                {/* Logo original */}
                 <Image
                   src="/Pulse_Logo.png"
                   alt="Pulse Logo"
@@ -68,21 +67,6 @@ export default function Navigation() {
                   className="object-contain drop-shadow-lg"
                   priority
                 />
-                {/* Masque pour cacher le texte gris du logo */}
-                <div 
-                  className="absolute bottom-0 left-0 right-0 h-[18%] bg-slate-950/70 backdrop-blur-sm"
-                  style={{ mixBlendMode: 'multiply' }}
-                />
-                {/* Texte "pulse" en blanc à la position exacte du texte du logo */}
-                <span 
-                  className="absolute bottom-[2%] left-1/2 transform -translate-x-1/2 text-white text-[0.45rem] lg:text-[0.6rem] font-bold tracking-[0.02em] whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)] pointer-events-none"
-                  style={{ 
-                    fontFamily: 'var(--font-poppins), sans-serif',
-                    letterSpacing: '0.02em'
-                  }}
-                >
-                  pulse
-                </span>
               </div>
             </Link>
           </div>
