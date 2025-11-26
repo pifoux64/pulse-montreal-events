@@ -177,7 +177,7 @@ const StableEventMap = ({
         justify-content: center;
         cursor: pointer;
         transition: filter 0.3s ease;
-        z-index: 100;
+        z-index: 10;
         filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
         pointer-events: auto;
       `;
@@ -234,12 +234,12 @@ const StableEventMap = ({
       
       // Événements hover pour le logo Pulse (SANS SCALE - stable)
       markerElement.addEventListener('mouseenter', () => {
-        markerElement.style.zIndex = '101';
+        markerElement.style.zIndex = '11';
         markerElement.style.filter = `drop-shadow(0 4px 12px rgba(0,0,0,0.4)) drop-shadow(0 0 20px ${color}80) brightness(1.1)`;
       });
       
       markerElement.addEventListener('mouseleave', () => {
-        markerElement.style.zIndex = '100';
+        markerElement.style.zIndex = '10';
         markerElement.style.filter = 'drop-shadow(0 2px 8px rgba(0,0,0,0.3)) brightness(1)';
       });
 

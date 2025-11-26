@@ -380,7 +380,7 @@ export default function OptimizedCartePage() {
       <main className="min-h-screen pt-24">
         <div className="flex h-[calc(100vh-6rem)]">
           {/* Panneau des filtres */}
-          <div className={`${showFilters ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 overflow-hidden flex flex-col`}>
+          <div className={`${showFilters ? 'w-80' : 'w-0'} transition-all duration-300 bg-white border-r border-gray-200 overflow-hidden flex flex-col relative z-50`}>
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Filtres</h2>
               <button
@@ -404,7 +404,7 @@ export default function OptimizedCartePage() {
           {/* Zone principale avec la carte */}
           <div className="flex-1 relative h-full">
             {/* Barre d'outils */}
-            <div className="absolute top-4 left-4 right-4 z-10 flex items-center justify-between">
+            <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between">
               {!showFilters && (
                 <button
                   onClick={() => setShowFilters(true)}
@@ -464,7 +464,7 @@ export default function OptimizedCartePage() {
 
           {/* Liste des événements (panneau latéral) */}
           {showEventList && (
-            <div className="w-96 bg-white border-l border-gray-200 overflow-hidden">
+            <div className="w-96 bg-white border-l border-gray-200 overflow-hidden relative z-50">
               <div className="p-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <div>
