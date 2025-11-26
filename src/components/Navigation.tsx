@@ -52,7 +52,7 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-20 text-slate-100">
           {/* Logo avec animation float ajustée */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center group">
+            <Link href="/" className="flex items-center gap-3 group">
               <div
                 className="relative w-16 h-16 lg:w-20 lg:h-20 group-hover:scale-105 transition-all duration-300"
                 style={{
@@ -68,6 +68,7 @@ export default function Navigation() {
                   priority
                 />
               </div>
+              <span className="text-white text-xl lg:text-2xl font-bold tracking-tight">pulse</span>
             </Link>
           </div>
 
