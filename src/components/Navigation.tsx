@@ -68,7 +68,7 @@ export default function Navigation() {
                   priority
                 />
               </div>
-              <span className="text-white text-xl lg:text-2xl font-bold tracking-tight">pulse</span>
+              <span className="text-white text-xl lg:text-2xl font-bold tracking-tight whitespace-nowrap">pulse</span>
             </Link>
           </div>
 
