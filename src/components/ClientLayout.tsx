@@ -40,6 +40,33 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
     // Nettoyage continu toutes les 500ms
     const interval = setInterval(cleanExtensionAttributes, 500);
 
+    // Enregistrement du Service Worker pour PWA (Android et autres)
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('Service Worker enregistré:', registration.scope);
+          
+          // Vérifier les mises à jour périodiquement
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  // Nouveau service worker disponible, forcer la mise à jour
+                  newWorker.postMessage({ type: 'SKIP_WAITING' });
+                  // Recharger la page pour utiliser le nouveau service worker
+                  window.location.reload();
+                }
+              });
+            }
+          });
+        })
+        .catch((error) => {
+          console.error('Erreur lors de l\'enregistrement du Service Worker:', error);
+        });
+    }
+
     // Marquer comme monté immédiatement
     setMounted(true);
 

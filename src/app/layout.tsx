@@ -104,6 +104,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Pulse MTL" />
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* Meta tags Android pour PWA */}
+        <meta name="theme-color" content="#1abc9c" />
+        <meta name="application-name" content="Pulse MTL" />
         {/* Version pour forcer les mises à jour */}
         <meta name="version" content={appVersion} />
         {/* Sentry Script */}
