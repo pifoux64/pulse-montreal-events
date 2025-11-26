@@ -52,23 +52,29 @@ export default function Navigation() {
         <div className="flex justify-between items-center h-20 text-slate-100">
           {/* Logo avec animation float ajustée */}
           <div className="flex-shrink-0">
-            <Link href="/" className="flex items-center gap-3 group">
+            <Link href="/" className="flex items-center group">
               <div
-                className="relative w-16 h-16 lg:w-20 lg:h-20 group-hover:scale-105 transition-all duration-300"
+                className="relative w-16 h-16 lg:w-20 lg:h-20 group-hover:scale-105 transition-all duration-300 flex flex-col items-center justify-end"
                 style={{
                   animation: 'float-gentle 4s ease-in-out infinite, heartbeat 3.2s ease-in-out infinite'
                 }}
               >
-                <Image
-                  src="/Pulse_Logo.png"
-                  alt="Pulse Logo"
-                  fill
-                  sizes="(max-width: 768px) 64px, 80px"
-                  className="object-contain drop-shadow-lg"
-                  priority
-                />
+                {/* Logo sans texte (juste le cœur) */}
+                <div className="relative flex-1 w-full">
+                  <Image
+                    src="/Pulse_Logo_only_heart.png"
+                    alt="Pulse Logo"
+                    fill
+                    sizes="(max-width: 768px) 64px, 80px"
+                    className="object-contain drop-shadow-lg"
+                    priority
+                  />
+                </div>
+                {/* Texte "pulse" en blanc sous le logo */}
+                <span className="text-white text-[0.6rem] lg:text-[0.75rem] font-bold tracking-tight whitespace-nowrap drop-shadow-lg mt-0.5">
+                  pulse
+                </span>
               </div>
-              <span className="text-white text-xl lg:text-2xl font-bold tracking-tight whitespace-nowrap">pulse</span>
             </Link>
           </div>
 
