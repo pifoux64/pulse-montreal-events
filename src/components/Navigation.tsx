@@ -290,15 +290,66 @@ export default function Navigation() {
               </div>
 
               {/* Actions utilisateur mobile */}
-              <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                <button className="flex items-center space-x-3 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100">
-                  <Bell className="w-5 h-5 text-slate-200" />
-                  <span className="font-medium text-slate-100">Notifications</span>
+              <div className="flex flex-col space-y-3 pt-4 border-t border-white/10">
+                <button
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    router.push('/notifications');
+                  }}
+                  className="flex items-center justify-between p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
+                >
+                  <div className="flex items-center space-x-3">
+                    <Bell className="w-5 h-5 text-slate-200" />
+                    <span className="font-medium text-slate-100">Notifications</span>
+                  </div>
+                  {notificationsCount > 0 && (
+                    <span className="text-xs font-semibold bg-red-500/80 text-white rounded-full px-2 py-0.5">
+                      {notificationsCount > 9 ? '9+' : notificationsCount}
+                    </span>
+                  )}
                 </button>
-                <button className="flex items-center space-x-3 p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100">
-                  <User className="w-5 h-5 text-slate-200" />
-                  <span className="font-medium text-slate-100">Profil</span>
-                </button>
+
+                {status === 'loading' ? (
+                  <div className="flex items-center justify-center p-3 rounded-2xl border border-white/15 bg-white/5">
+                    <div className="w-5 h-5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : session?.user ? (
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        router.push('/favoris');
+                      }}
+                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
+                    >
+                      <User className="w-5 h-5 text-slate-200" />
+                      <div className="text-left">
+                        <span className="font-medium text-slate-100">
+                          {session.user.name || 'Mon compte'}
+                        </span>
+                        <p className="text-xs text-slate-400">{session.user.email}</p>
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        signOut({ callbackUrl: '/' });
+                      }}
+                      className="w-full flex items-center justify-center space-x-2 p-3 rounded-2xl border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-all duration-300 font-semibold"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Déconnexion</span>
+                    </button>
+                  </div>
+                ) : (
+                  <Link
+                    href="/auth/signin"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="text-center p-3 rounded-2xl bg-gradient-to-r from-sky-600 to-emerald-600 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    Connexion
+                  </Link>
+                )}
               </div>
             </div>
           </div>
