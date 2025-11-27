@@ -90,3 +90,44 @@ self.addEventListener('message', (event) => {
   }
 });
 
+// Réception des notifications push
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data?.json() ?? {};
+  } catch (error) {
+    payload = { title: 'Pulse Montréal', body: event.data?.text() };
+  }
+
+  const title = payload.title || 'Pulse Montréal';
+  const options = {
+    body: payload.body || 'Nouvelle notification',
+    data: payload.data || {},
+    icon: '/icons/icon-128x128.png',
+    badge: '/icons/icon-72x72.png',
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.eventId
+    ? `/evenement/${event.notification.data.eventId}`
+    : '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.postMessage({ type: 'NAVIGATE', url: targetUrl });
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl);
+      }
+    })
+  );
+});
+

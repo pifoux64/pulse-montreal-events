@@ -4,9 +4,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Calendar, MapPin, Clock, DollarSign, Users, Tag, ExternalLink, Heart, Share2 } from 'lucide-react';
 import { EventStatus } from '@prisma/client';
+import { getServerSession } from 'next-auth';
 
 import { prisma } from '@/lib/prisma';
 import { buildEventJsonLd, canonicalUrlForPath } from '@/lib/seo';
+import { authOptions } from '@/lib/auth';
+import EventTabsSection from '@/components/EventTabsSection';
+import EventFeedPanel from '@/components/event-feed/EventFeedPanel';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -122,6 +126,10 @@ export default async function EventPage({ params }: { params: { id: string } }) 
       notFound();
     }
 
+    const session = await getServerSession(authOptions);
+    const canPostToFeed =
+      Boolean(session?.user?.id) && event.organizer?.userId === session.user.id;
+
     const eventDate = new Date(event.startAt);
     const eventEndDate = event.endAt ? new Date(event.endAt) : null;
     const isPastEvent = eventDate < new Date();
@@ -207,166 +215,174 @@ export default async function EventPage({ params }: { params: { id: string } }) 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
-              {/* Description */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <h2 className="text-xl font-bold mb-4">Description</h2>
-                <div className="prose prose-gray max-w-none">
-                  <p>{event.description}</p>
-                </div>
-              </div>
-
-              {/* Tags */}
-              {event.tags.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <Tag className="h-5 w-5" />
-                    Tags
-                  </h2>
-                  <div className="flex flex-wrap gap-2">
-                    {event.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Event Details */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <h2 className="text-xl font-bold mb-4">Détails</h2>
-                <div className="space-y-4">
-                  {/* Price */}
-                  <div className="flex items-start gap-3">
-                    <DollarSign className="h-5 w-5 text-green-600 mt-0.5" />
-                    <div>
-                      <div className="font-medium">Prix</div>
-                      <div className="text-sm text-gray-600">
-                        {event.priceMin === 0 ? (
-                          'Gratuit'
-                        ) : event.priceMin != null && event.priceMax != null && event.priceMin === event.priceMax ? (
-                          `${(event.priceMin / 100).toFixed(2)} ${event.currency}`
-                        ) : (
-                          `${event.priceMin != null ? (event.priceMin / 100).toFixed(2) : '?'} - ${event.priceMax != null ? (event.priceMax / 100).toFixed(2) : '?'} ${event.currency}`
-                        )}
-                      </div>
+          <EventTabsSection
+            infoContent={
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Main Content */}
+                <div className="lg:col-span-2 space-y-8">
+                  {/* Description */}
+                  <div className="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 className="text-xl font-bold mb-4">Description</h2>
+                    <div className="prose prose-gray max-w-none">
+                      <p>{event.description}</p>
                     </div>
                   </div>
 
-                  {/* Organizer */}
-                  <div className="flex items-start gap-3">
-                    <Users className="h-5 w-5 text-blue-600 mt-0.5" />
-                    <div>
-                      <div className="font-medium">Organisateur</div>
-                      {event.organizer ? (
-                        <Link
-                          href={`/organisateur/${event.organizer.id}`}
-                          className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                        >
-                          {event.organizer.displayName}
-                          {event.organizer.verified && <span className="text-green-600">✓</span>}
-                        </Link>
-                      ) : (
-                        <span className="text-sm text-gray-600">Organisateur externe</span>
+                  {/* Tags */}
+                  {event.tags.length > 0 && (
+                    <div className="bg-white rounded-2xl p-6 shadow-lg">
+                      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                        <Tag className="h-5 w-5" />
+                        Tags
+                      </h2>
+                      <div className="flex flex-wrap gap-2">
+                        {event.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Sidebar */}
+                <div className="space-y-6">
+                  {/* Event Details */}
+                  <div className="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 className="text-xl font-bold mb-4">Détails</h2>
+                    <div className="space-y-4">
+                      {/* Price */}
+                      <div className="flex items-start gap-3">
+                        <DollarSign className="h-5 w-5 text-green-600 mt-0.5" />
+                        <div>
+                          <div className="font-medium">Prix</div>
+                          <div className="text-sm text-gray-600">
+                            {event.priceMin === 0 ? (
+                              'Gratuit'
+                            ) : event.priceMin != null && event.priceMax != null && event.priceMin === event.priceMax ? (
+                              `${(event.priceMin / 100).toFixed(2)} ${event.currency}`
+                            ) : (
+                              `${event.priceMin != null ? (event.priceMin / 100).toFixed(2) : '?'} - ${event.priceMax != null ? (event.priceMax / 100).toFixed(2) : '?'} ${event.currency}`
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Organizer */}
+                      <div className="flex items-start gap-3">
+                        <Users className="h-5 w-5 text-blue-600 mt-0.5" />
+                        <div>
+                          <div className="font-medium">Organisateur</div>
+                          {event.organizer ? (
+                            <Link
+                              href={`/organisateur/${event.organizer.id}`}
+                              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                            >
+                              {event.organizer.displayName}
+                              {event.organizer.verified && <span className="text-green-600">✓</span>}
+                            </Link>
+                          ) : (
+                            <span className="text-sm text-gray-600">Organisateur externe</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Language */}
+                      <div className="flex items-start gap-3">
+                        <div className="h-5 w-5 text-teal-600 mt-0.5 flex items-center justify-center">
+                          🌐
+                        </div>
+                        <div>
+                          <div className="font-medium">Langue</div>
+                          <div className="text-sm text-gray-600">
+                            {event.language === 'FR'
+                              ? 'Français'
+                              : event.language === 'EN'
+                              ? 'Anglais'
+                              : 'Français et Anglais'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Accessibility */}
+                      {event.accessibility.length > 0 && (
+                        <div className="flex items-start gap-3">
+                          <div className="h-5 w-5 text-orange-600 mt-0.5 flex items-center justify-center">
+                            ♿
+                          </div>
+                          <div>
+                            <div className="font-medium">Accessibilité</div>
+                            <div className="text-sm text-gray-600">
+                              {event.accessibility
+                                .map((a) =>
+                                  a === 'wheelchair'
+                                    ? 'Accès fauteuil roulant'
+                                    : a === 'hearing_assistance'
+                                    ? 'Assistance auditive'
+                                    : a,
+                                )
+                                .join(', ')}
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Language */}
-                  <div className="flex items-start gap-3">
-                    <div className="h-5 w-5 text-teal-600 mt-0.5 flex items-center justify-center">🌐</div>
-                    <div>
-                      <div className="font-medium">Langue</div>
-                      <div className="text-sm text-gray-600">
-                        {event.language === 'FR'
-                          ? 'Français'
-                          : event.language === 'EN'
-                          ? 'Anglais'
-                          : 'Français et Anglais'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Accessibility */}
-                  {event.accessibility.length > 0 && (
-                    <div className="flex items-start gap-3">
-                      <div className="h-5 w-5 text-orange-600 mt-0.5 flex items-center justify-center">♿</div>
+                  {/* Venue */}
+                  <div className="bg-white rounded-2xl p-6 shadow-lg">
+                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Lieu
+                    </h2>
+                    <div className="space-y-3">
                       <div>
-                        <div className="font-medium">Accessibilité</div>
+                        <div className="font-medium">{event.venue?.name ?? 'Lieu à confirmer'}</div>
                         <div className="text-sm text-gray-600">
-                          {event.accessibility
-                            .map((a) =>
-                              a === 'wheelchair'
-                                ? 'Accès fauteuil roulant'
-                                : a === 'hearing_assistance'
-                                ? 'Assistance auditive'
-                                : a,
-                            )
-                            .join(', ')}
+                          {event.venue ? `${event.venue.address}, ${event.venue.city}` : 'À déterminer'}
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              {/* Venue */}
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                  <MapPin className="h-5 w-5" />
-                  Lieu
-                </h2>
-                <div className="space-y-3">
-                  <div>
-                    <div className="font-medium">{event.venue?.name ?? 'Lieu à confirmer'}</div>
-                    <div className="text-sm text-gray-600">
-                      {event.venue ? `${event.venue.address}, ${event.venue.city}` : 'À déterminer'}
-                    </div>
-                  </div>
+                      <div className="aspect-video rounded-lg overflow-hidden bg-gray-200">
+                        <div className="w-full h-full flex items-center justify-center text-gray-500">
+                          Carte interactive
+                        </div>
+                      </div>
 
-                  <div className="aspect-video rounded-lg overflow-hidden bg-gray-200">
-                    {/* Placeholder pour carte - remplacer par vraie carte */}
-                    <div className="w-full h-full flex items-center justify-center text-gray-500">
-                      Carte interactive
+                      {event.venue && (
+                        <a
+                          href={`https://maps.google.com/?q=${event.venue.lat},${event.venue.lon}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          Ouvrir dans Google Maps
+                        </a>
+                      )}
                     </div>
                   </div>
 
-                  {event.venue && (
+                  {/* CTA Button */}
+                  {!isPastEvent && !isCancelled && event.url && (
                     <a
-                      href={`https://maps.google.com/?q=${event.venue.lat},${event.venue.lon}`}
+                      href={event.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
+                      className="block w-full bg-gradient-to-r from-sky-600 to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-center hover:from-sky-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
                     >
-                      <ExternalLink className="h-4 w-4" />
-                      Ouvrir dans Google Maps
+                      Acheter des billets
                     </a>
                   )}
                 </div>
               </div>
-
-              {/* CTA Button */}
-              {!isPastEvent && !isCancelled && event.url && (
-                <a
-                  href={event.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full bg-gradient-to-r from-sky-600 to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-center hover:from-sky-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Acheter des billets
-                </a>
-              )}
-            </div>
-          </div>
+            }
+            feedContent={<EventFeedPanel eventId={event.id} canPost={canPostToFeed} />}
+          />
         </div>
       </div>
     );

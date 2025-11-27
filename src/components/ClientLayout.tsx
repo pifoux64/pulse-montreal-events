@@ -49,18 +49,22 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           
           // Écouter les messages du service worker (pour les erreurs de déploiement)
           navigator.serviceWorker.addEventListener('message', (event) => {
-            if (event.data && event.data.type === 'FORCE_RELOAD') {
+            if (event.data?.type === 'FORCE_RELOAD') {
               console.log('Force reload demandé:', event.data.reason);
-              // Vider le cache du navigateur et recharger
               if ('caches' in window) {
-                caches.keys().then((cacheNames) => {
-                  return Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
-                }).then(() => {
-                  window.location.reload();
-                });
+                caches
+                  .keys()
+                  .then((cacheNames) => Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName))))
+                  .then(() => {
+                    window.location.reload();
+                  });
               } else {
                 window.location.reload();
               }
+            }
+
+            if (event.data?.type === 'NAVIGATE' && event.data.url) {
+              window.location.href = event.data.url;
             }
           });
           

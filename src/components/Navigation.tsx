@@ -8,6 +8,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
+import NotificationBell from './NotificationBell';
 
 export default function Navigation() {
   const t = useTranslations('navigation');
@@ -20,7 +21,6 @@ export default function Navigation() {
   // Récupérer le nombre de favoris pour afficher un badge
   const { favorites } = useFavorites([]);
   const favoritesCount = favorites.length;
-  const notificationsCount = 0;
 
   // Fermer le menu utilisateur en cliquant en dehors
   useEffect(() => {
@@ -124,19 +124,8 @@ export default function Navigation() {
               </div>
             </div>
 
-            {/* Notifications avec animation */}
-            <button
-              onClick={() => router.push('/notifications')}
-              className="p-3 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md"
-            >
-              <Bell className="w-5 h-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
-              {notificationsCount > 0 && (
-                <div className="absolute -top-1 -right-1 min-w-[1rem] h-4 px-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-full text-xs text-white flex items-center justify-center font-bold shadow-sm">
-                  {notificationsCount > 9 ? '9+' : notificationsCount}
-                </div>
-              )}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </button>
+            {/* Notifications */}
+            <NotificationBell />
 
             {/* Profil utilisateur avec menu déroulant */}
             {status === 'loading' ? (
@@ -291,23 +280,13 @@ export default function Navigation() {
 
               {/* Actions utilisateur mobile */}
               <div className="flex flex-col space-y-3 pt-4 border-t border-white/10">
-                <button
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    router.push('/notifications');
-                  }}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
-                >
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white/10 border border-white/15">
                   <div className="flex items-center space-x-3">
                     <Bell className="w-5 h-5 text-slate-200" />
                     <span className="font-medium text-slate-100">Notifications</span>
                   </div>
-                  {notificationsCount > 0 && (
-                    <span className="text-xs font-semibold bg-red-500/80 text-white rounded-full px-2 py-0.5">
-                      {notificationsCount > 9 ? '9+' : notificationsCount}
-                    </span>
-                  )}
-                </button>
+                  <NotificationBell />
+                </div>
 
                 {status === 'loading' ? (
                   <div className="flex items-center justify-center p-3 rounded-2xl border border-white/15 bg-white/5">

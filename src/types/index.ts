@@ -135,11 +135,12 @@ export interface EventSubCategory {
 export interface Notification {
   id: string;
   userId: string;
-  eventId: string;
-  type: 'favorite' | 'reminder' | 'new_event' | 'custom';
+  eventId?: string | null;
+  type: 'EVENT_POST_PUBLISHED' | 'EVENT_REMINDER' | 'SYSTEM' | string;
   title: string;
-  message: string;
-  isRead: boolean;
+  body: string;
+  data?: Record<string, unknown>;
+  readAt?: string | null;
   createdAt: Date;
 }
 
