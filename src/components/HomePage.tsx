@@ -317,7 +317,7 @@ export default function HomePage() {
         <div className="relative max-w-6xl mx-auto text-center">
           {/* Titre principal avec gradient animé */}
           <div className="mb-6">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-100 animate-gradient">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 via-cyan-200 to-purple-200 animate-gradient">
               Trouver quoi faire
             </h1>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
