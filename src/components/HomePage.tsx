@@ -15,17 +15,21 @@
  * - Responsive
  */
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Event, EventFilter, EventCategory } from '@/types';
+import { Event } from '@/types';
 import { MapPin, Calendar, Heart, ExternalLink, Clock } from 'lucide-react';
-import { GENRES } from '@/lib/tagging/taxonomy';
-import EventFilters from '@/components/EventFilters';
-import { usePersistentFilters } from '@/hooks/usePersistentFilters';
+import { 
+  MAIN_CATEGORIES, 
+  GENRES, 
+  CATEGORY_LABELS, 
+  getGenresForCategory, 
+  getStylesForGenre 
+} from '@/lib/tagging/taxonomy';
 
 // Types pour l'API
 interface ApiEvent {
@@ -145,23 +149,67 @@ type Mode = 'today' | 'weekend';
 export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('today');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
-  const { filters, setFilters } = usePersistentFilters();
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const searchQuery = (searchParams.get('search') || '').trim().toLowerCase();
 
-  const displayedGenreLabel = selectedGenre ? selectedGenre.replace(/_/g, ' ') : null;
+  // Réinitialiser genre et style quand on change de catégorie
+  const handleCategorySelect = (category: string) => {
+    if (selectedCategory === category) {
+      setSelectedCategory(null);
+      setSelectedGenre(null);
+      setSelectedStyle(null);
+    } else {
+      setSelectedCategory(category);
+      setSelectedGenre(null);
+      setSelectedStyle(null);
+    }
+  };
 
-  // Récupérer les événements selon le mode et le genre sélectionné
+  // Réinitialiser style quand on change de genre
+  const handleGenreSelect = (genre: string) => {
+    if (selectedGenre === genre) {
+      setSelectedGenre(null);
+      setSelectedStyle(null);
+    } else {
+      setSelectedGenre(genre);
+      setSelectedStyle(null);
+    }
+  };
+
+  const handleStyleSelect = (style: string) => {
+    setSelectedStyle(selectedStyle === style ? null : style);
+  };
+
+  const displayedFilterLabel = selectedStyle 
+    ? selectedStyle.replace(/_/g, ' ')
+    : selectedGenre 
+    ? selectedGenre.replace(/_/g, ' ')
+    : selectedCategory 
+    ? CATEGORY_LABELS[selectedCategory]?.fr || selectedCategory
+    : null;
+
+  // Récupérer les événements selon le mode et les filtres sélectionnés
   const { data: apiData, isLoading, error } = useQuery<ApiResponse>({
-    queryKey: ['events', mode, selectedGenre],
+    queryKey: ['events', mode, selectedCategory, selectedGenre, selectedStyle],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
         params.set('scope', mode);
         params.set('pageSize', '50');
-        if (selectedGenre) {
+        // Priorité : style > genre > category
+        if (selectedStyle) {
+          // Pour l'instant, on filtre par style via le genre parent
+          if (selectedGenre) {
+            params.set('genre', selectedGenre);
+          }
+        } else if (selectedGenre) {
           params.set('genre', selectedGenre);
+        } else if (selectedCategory === 'MUSIC') {
+          // Si on sélectionne juste MUSIC, on ne filtre pas par genre spécifique
+          // mais on pourrait filtrer côté front
         }
         const response = await fetch(`/api/events?${params.toString()}`);
         if (!response.ok) {
@@ -192,6 +240,30 @@ export default function HomePage() {
     .filter((e): e is Event => e !== null)
     // Masquer l'ancien événement de test interne
     .filter((event) => event.title !== 'Concert de Test - Week-end')
+    // Filtre par catégorie (si sélectionnée)
+    .filter((event) => {
+      if (!selectedCategory) return true;
+      // Vérifier si l'événement correspond à la catégorie
+      const eventCategory = event.category?.toUpperCase();
+      if (eventCategory === selectedCategory) return true;
+      // Vérifier aussi dans les tags
+      return event.tags.some(tag => {
+        const tagUpper = tag.toUpperCase();
+        return tagUpper.includes(selectedCategory) || 
+               (selectedCategory === 'MUSIC' && (tagUpper.includes('CONCERT') || tagUpper.includes('MUSIQUE'))) ||
+               (selectedCategory === 'ART_CULTURE' && (tagUpper.includes('EXPO') || tagUpper.includes('ART'))) ||
+               (selectedCategory === 'SPORT' && tagUpper.includes('SPORT')) ||
+               (selectedCategory === 'FAMILY' && (tagUpper.includes('FAMILLE') || tagUpper.includes('ENFANT')));
+      });
+    })
+    // Filtre par style (si sélectionné)
+    .filter((event) => {
+      if (!selectedStyle) return true;
+      return event.tags.some(tag => 
+        tag.toLowerCase().replace(/\s/g, '_') === selectedStyle.toLowerCase() ||
+        tag.toLowerCase().includes(selectedStyle.toLowerCase().replace(/_/g, ' '))
+      );
+    })
     // Filtre de recherche globale (?search=)
     .filter((event) => {
       if (!searchQuery) return true;
@@ -229,332 +301,256 @@ export default function HomePage() {
     });
   };
 
-  // --- Logique de filtrage avancé (inspirée de OptimizedHomePage) ---
-
-  const toRadians = (value: number) => (value * Math.PI) / 180;
-  const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-    const R = 6371;
-    const dLat = toRadians(lat2 - lat1);
-    const dLon = toRadians(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRadians(lat1)) *
-        Math.cos(toRadians(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
-  const displayedEvents = useMemo(() => {
-    let filtered = [...events];
-
-    // Recherche textuelle supplémentaire basée sur filters.searchQuery
-    const textQuery = filters.searchQuery?.trim().toLowerCase() || '';
-    if (textQuery) {
-      filtered = filtered.filter((event) =>
-        event.title.toLowerCase().includes(textQuery) ||
-        event.description.toLowerCase().includes(textQuery) ||
-        event.tags?.some((tag) => tag.toLowerCase().includes(textQuery)) ||
-        event.location?.name?.toLowerCase().includes(textQuery),
-      );
-    }
-
-    // Catégories
-    if (filters.categories && filters.categories.length > 0) {
-      filtered = filtered.filter((event) =>
-        filters.categories!.some(
-          (cat) => event.category.toLowerCase() === cat.toLowerCase(),
-        ),
-      );
-    }
-
-    // Sous-catégories (approximation via tags / subCategory)
-    if (filters.subCategories && filters.subCategories.length > 0) {
-      filtered = filtered.filter((event) => {
-        const sub = (event as any).subCategory;
-        if (sub) {
-          return filters.subCategories!.some(
-            (s) => sub.toLowerCase() === s.toLowerCase(),
-          );
-        }
-        return filters.subCategories!.some(
-          (s) =>
-            event.tags?.some((tag) =>
-              tag.toLowerCase().includes(s.toLowerCase()),
-            ) ||
-            event.description.toLowerCase().includes(s.toLowerCase()) ||
-            event.title.toLowerCase().includes(s.toLowerCase()),
-        );
-      });
-    }
-
-    // Période
-    if (filters.dateRange?.start || filters.dateRange?.end) {
-      const startTime = filters.dateRange?.start?.getTime();
-      const endTime = filters.dateRange?.end?.getTime();
-      filtered = filtered.filter((event) => {
-        const start = event.startDate.getTime();
-        const end = event.endDate ? event.endDate.getTime() : start;
-        if (startTime && end < startTime) return false;
-        if (endTime && start > endTime) return false;
-        return true;
-      });
-    }
-
-    // Prix
-    if (filters.priceRange) {
-      const { min, max } = filters.priceRange;
-      filtered = filtered.filter((event) => {
-        const amount = event.price?.amount ?? 0;
-        if (typeof min === 'number' && amount < min) return false;
-        if (typeof max === 'number' && amount > max) return false;
-        return true;
-      });
-    }
-
-    // Gratuit uniquement
-    if (filters.freeOnly) {
-      filtered = filtered.filter((event) => event.price.isFree);
-    }
-
-    // Localisation
-    if (filters.location?.lat && filters.location?.lng && filters.location?.radius) {
-      const { lat, lng, radius } = filters.location;
-      filtered = filtered.filter((event) => {
-        const coords = event.location?.coordinates;
-        if (!coords) return false;
-        const d = calculateDistanceKm(lat, lng, coords.lat, coords.lng);
-        return d <= radius;
-      });
-    }
-
-    // Quartiers (approximation via nom du lieu)
-    if (filters.neighborhoods && filters.neighborhoods.length > 0) {
-      filtered = filtered.filter((event) => {
-        const place = event.location?.name || '';
-        return filters.neighborhoods!.some((n) =>
-          place.toLowerCase().includes(n.toLowerCase()),
-        );
-      });
-    }
-
-    // Langue
-    if (filters.language && filters.language !== 'BOTH') {
-      const lang = filters.language.toLowerCase();
-      filtered = filtered.filter((event) => {
-        const evLang = (event as any).language?.toLowerCase() || 'fr';
-        return evLang === lang;
-      });
-    }
-
-    // Restriction d'âge (approximation via tags)
-    if (filters.ageRestriction && filters.ageRestriction !== 'Tous') {
-      filtered = filtered.filter((event) =>
-        event.tags.some((tag) =>
-          tag.toLowerCase().includes(filters.ageRestriction!.toLowerCase()),
-        ),
-      );
-    }
-
-    // Tri
-    if (filters.sortBy) {
-      const sorted = [...filtered];
-      switch (filters.sortBy) {
-        case 'price':
-          sorted.sort((a, b) => (a.price.amount || 0) - (b.price.amount || 0));
-          break;
-        case 'popularity':
-          sorted.sort((a, b) => {
-            const aFavs = (a as any)._count?.favorites || 0;
-            const bFavs = (b as any)._count?.favorites || 0;
-            if (aFavs !== bFavs) return bFavs - aFavs;
-            return a.startDate.getTime() - b.startDate.getTime();
-          });
-          break;
-        case 'date':
-        default:
-          sorted.sort(
-            (a, b) => a.startDate.getTime() - b.startDate.getTime(),
-          );
-      }
-      filtered = sorted;
-    }
-
-    return filtered;
-  }, [events, filters]);
-
-  const handleFiltersChange = (newFilters: EventFilter) => {
-    setFilters(newFilters);
-  };
-
-  const handleLocationDetect = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setFilters((prev) => ({
-            ...prev,
-            location: {
-              lat: latitude,
-              lng: longitude,
-              radius: 10,
-            },
-          }));
-        },
-        (error) => {
-          console.error('Erreur de géolocalisation:', error);
-        },
-      );
-    }
-  };
-
-  // Catégories factices pour EventFilters (comme OptimizedHomePage)
-  const mockCategories: EventCategory[] = [
-    {
-      id: '1',
-      name: 'Musique',
-      nameEn: 'Music',
-      icon: '🎵',
-      color: '#ef4444',
-      subCategories: [],
-    },
-    {
-      id: '2',
-      name: 'Art & Culture',
-      nameEn: 'Art & Culture',
-      icon: '🎨',
-      color: '#8b5cf6',
-      subCategories: [],
-    },
-    {
-      id: '3',
-      name: 'Famille',
-      nameEn: 'Family',
-      icon: '👨‍👩‍👧‍👦',
-      color: '#f59e0b',
-      subCategories: [],
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <Navigation />
 
-      {/* Hero Section - SPRINT 1 */}
-      <section className="relative px-4 py-16 md:py-24 overflow-hidden">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Titre principal */}
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">
-            Trouver quoi faire à Montréal
-            <span className="block text-2xl md:text-3xl font-normal text-slate-300 mt-2">
-              aujourd'hui
-            </span>
-          </h1>
+      {/* Hero Section - Design moderne */}
+      <section className="relative px-4 py-20 md:py-32 overflow-hidden">
+        {/* Background animé avec gradients */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-1/2 -left-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+          <div className="absolute -bottom-40 right-1/3 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
 
-          {/* Sous-titre */}
-          <p className="text-lg md:text-xl text-slate-300 mb-8">
-            Concert, soirée, expo ou sortie famille
+        <div className="relative max-w-6xl mx-auto text-center">
+          {/* Titre principal avec gradient animé */}
+          <div className="mb-6">
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-100 animate-gradient">
+              Trouver quoi faire
+            </h1>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
+              à Montréal
+            </h2>
+          </div>
+
+          {/* Sous-titre élégant */}
+          <p className="text-lg md:text-xl text-slate-400 mb-12 font-light max-w-2xl mx-auto">
+            Découvrez les meilleurs événements de la métropole
           </p>
 
-          {/* Boutons CTA - SPRINT 1 */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+          {/* Boutons CTA modernes */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
             <button
               onClick={() => setMode('today')}
-              className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              className={`group relative px-10 py-5 rounded-2xl font-semibold text-lg transition-all duration-500 overflow-hidden ${
                 mode === 'today'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/50 scale-105'
-                  : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl shadow-blue-500/50 scale-105'
+                  : 'bg-white/5 text-white hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20'
               }`}
             >
-              Que faire aujourd'hui ?
+              {mode === 'today' && (
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Que faire aujourd'hui ?
+              </span>
             </button>
             <button
               onClick={() => setMode('weekend')}
-              className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 ${
+              className={`group relative px-10 py-5 rounded-2xl font-semibold text-lg transition-all duration-500 overflow-hidden ${
                 mode === 'weekend'
-                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/50 scale-105'
-                  : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl shadow-blue-500/50 scale-105'
+                  : 'bg-white/5 text-white hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20'
               }`}
             >
-              Que faire ce week-end ?
+              {mode === 'weekend' && (
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              )}
+              <span className="relative z-10 flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Que faire ce week-end ?
+              </span>
             </button>
           </div>
 
-          {/* Filtres genres structurés (basés sur EventTag.genre) */}
-          <div className="mt-6 flex flex-wrap gap-2 justify-center">
-            {GENRES.slice(0, 10).map((genre) => {
-              const isActive = selectedGenre === genre;
-              const label = genre.replace(/_/g, ' ');
-              return (
-                <button
-                  key={genre}
-                  onClick={() => setSelectedGenre(isActive ? null : genre)}
-                  className={`px-3 py-1 text-xs md:text-sm rounded-full border transition-all ${
-                    isActive
-                      ? 'bg-emerald-500 text-white border-emerald-400 shadow'
-                      : 'border-slate-500/60 text-slate-200 hover:border-emerald-300 hover:text-white'
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
+          {/* Filtres hiérarchiques : Catégorie → Genre → Style - Design moderne */}
+          <div className="mt-8 space-y-6">
+            {/* Niveau 1 : Catégories principales */}
+            <div className="flex flex-wrap gap-3 justify-center">
+              {/* Bouton "Tout" */}
+              <button
+                onClick={() => {
+                  setSelectedCategory(null);
+                  setSelectedGenre(null);
+                  setSelectedStyle(null);
+                }}
+                className={`group relative px-6 py-3 text-sm md:text-base rounded-2xl font-semibold transition-all duration-500 flex items-center gap-3 overflow-hidden ${
+                  !selectedCategory
+                    ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-2xl shadow-slate-500/50 scale-110 z-10'
+                    : 'bg-white/5 text-white hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/30 hover:scale-105'
+                }`}
+              >
+                {!selectedCategory && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-slate-500 to-slate-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                )}
+                <span className="relative z-10">🌐</span>
+                <span className="relative z-10">Tout</span>
+                {!selectedCategory && (
+                  <span className="relative z-10 ml-2 text-xs opacity-80">✓</span>
+                )}
+              </button>
+              
+              {MAIN_CATEGORIES.map((category, index) => {
+                const isActive = selectedCategory === category;
+                const label = CATEGORY_LABELS[category];
+                return (
+                  <button
+                    key={category}
+                    onClick={() => handleCategorySelect(category)}
+                    className={`group relative px-6 py-3 text-sm md:text-base rounded-2xl font-semibold transition-all duration-500 flex items-center gap-3 overflow-hidden ${
+                      isActive
+                        ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white shadow-2xl shadow-emerald-500/50 scale-110 z-10'
+                        : 'bg-white/5 text-white hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/30 hover:scale-105'
+                    }`}
+                    style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                  >
+                    {isActive && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    )}
+                    <span className="relative z-10 text-2xl">{label.icon}</span>
+                    <span className="relative z-10">{label.fr}</span>
+                    {isActive && (
+                      <span className="relative z-10 ml-2 text-xs opacity-80">✓</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Niveau 2 : Genres (si catégorie sélectionnée) avec animation */}
+            {selectedCategory && (
+              <div className="animate-fade-in">
+                <div className="mb-3 text-center">
+                  <span className="text-sm text-slate-400 font-medium">
+                    {CATEGORY_LABELS[selectedCategory].fr} • Choisissez un genre
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
+                  {/* Bouton "Tout" pour les genres */}
+                  <button
+                    onClick={() => {
+                      setSelectedGenre(null);
+                      setSelectedStyle(null);
+                    }}
+                    className={`px-4 py-2 text-xs md:text-sm rounded-full border-2 transition-all duration-300 transform hover:scale-110 ${
+                      !selectedGenre
+                        ? 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-transparent shadow-lg shadow-slate-500/50'
+                        : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                    }`}
+                  >
+                    Tout
+                  </button>
+                  
+                  {getGenresForCategory(selectedCategory).slice(0, 15).map((genre, index) => {
+                    const isActive = selectedGenre === genre;
+                    const label = genre.replace(/_/g, ' ');
+                    return (
+                      <button
+                        key={genre}
+                        onClick={() => handleGenreSelect(genre)}
+                        className={`px-4 py-2 text-xs md:text-sm rounded-full border-2 transition-all duration-300 transform hover:scale-110 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white border-transparent shadow-lg shadow-blue-500/50'
+                            : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-blue-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                        }`}
+                        style={{ animationDelay: `${(index + 1) * 50}ms` }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Niveau 3 : Styles (si genre sélectionné, comme Discogs) */}
+            {selectedCategory === 'MUSIC' && selectedGenre && getStylesForGenre(selectedGenre).length > 0 && (
+              <div className="animate-fade-in">
+                <div className="mb-3 text-center">
+                  <span className="text-xs text-slate-500 font-medium">
+                    Styles de {selectedGenre.replace(/_/g, ' ')} • Affinez votre recherche
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
+                  {/* Bouton "Tout" pour les styles */}
+                  <button
+                    onClick={() => setSelectedStyle(null)}
+                    className={`px-3 py-1.5 text-xs rounded-full border transition-all duration-300 transform hover:scale-105 ${
+                      !selectedStyle
+                        ? 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-transparent shadow-md shadow-slate-500/50'
+                        : 'bg-white/5 text-slate-300 border-slate-400/20 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                    }`}
+                  >
+                    Tout
+                  </button>
+                  
+                  {getStylesForGenre(selectedGenre).map((style, index) => {
+                    const isActive = selectedStyle === style;
+                    const label = style.replace(/_/g, ' ');
+                    return (
+                      <button
+                        key={style}
+                        onClick={() => handleStyleSelect(style)}
+                        className={`px-3 py-1.5 text-xs rounded-full border transition-all duration-300 transform hover:scale-105 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white border-transparent shadow-md shadow-purple-500/50'
+                            : 'bg-white/5 text-slate-300 border-slate-400/20 hover:border-purple-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                        }`}
+                        style={{ animationDelay: `${(index + 1) * 30}ms` }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Lien vers la carte - SPRINT 1 */}
-          <a
-            href="/carte"
-            className="inline-flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
-          >
-            <MapPin className="w-5 h-5" />
-            Voir sur la carte
-          </a>
+          {/* Lien vers la carte - Design moderne */}
+          <div className="mt-12">
+            <a
+              href="/carte"
+              className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/30 text-slate-200 hover:text-white transition-all duration-300 hover:scale-105"
+            >
+              <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+              <span className="font-medium">Voir sur la carte</span>
+              <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </a>
+          </div>
         </div>
       </section>
 
-      {/* Panneau de filtres complet */}
-      <section className="px-4 pb-4">
-        <div className="max-w-7xl mx-auto">
-          <EventFilters
-            filters={filters}
-            onFiltersChange={handleFiltersChange}
-            categories={mockCategories}
-            onLocationDetect={handleLocationDetect}
-            neighborhoods={[
-              'Ville-Marie',
-              'Plateau-Mont-Royal',
-              'Rosemont-La Petite-Patrie',
-              'Villeray-Saint-Michel-Parc-Extension',
-              'Mercier-Hochelaga-Maisonneuve',
-              'Côte-des-Neiges-Notre-Dame-de-Grâce',
-              'Le Sud-Ouest',
-              'Ahuntsic-Cartierville',
-              'Outremont',
-              'Verdun',
-            ]}
-          />
-        </div>
-      </section>
-
-      {/* Liste d'événements - SPRINT 1 */}
-      <section className="px-4 pb-16">
-        <div className="max-w-7xl mx-auto">
-          {/* En-tête avec compteur */}
-          <div className="mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+      {/* Liste d'événements - Design moderne */}
+      <section className="px-4 pb-20 relative">
+        {/* Gradient de transition */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-slate-950/0 via-slate-950/50 to-slate-950 pointer-events-none"></div>
+        
+        <div className="max-w-7xl mx-auto relative">
+          {/* En-tête avec compteur moderne */}
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 mb-4">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+              <span className="text-sm text-slate-400 font-medium">
+                {events.length} événement{events.length > 1 ? 's' : ''} disponible{events.length > 1 ? 's' : ''}
+              </span>
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
               {mode === 'today' ? "Aujourd'hui" : 'Ce week-end'}
-              {displayedGenreLabel && (
-                <span className="ml-2 text-lg text-emerald-300">
-                  · {displayedGenreLabel}
+              {displayedFilterLabel && (
+                <span className="ml-3 text-2xl md:text-3xl bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                  · {displayedFilterLabel}
                 </span>
               )}
             </h2>
-            {!isLoading && (
-              <p className="text-slate-400">
-                {displayedEvents.length} événement
-                {displayedEvents.length > 1 ? 's' : ''} trouvé
-                {displayedEvents.length > 1 ? 's' : ''}
+            {displayedFilterLabel && (
+              <p className="text-slate-400 text-sm">
+                Filtres actifs : {selectedCategory && CATEGORY_LABELS[selectedCategory]?.fr}
+                {selectedGenre && ` → ${selectedGenre.replace(/_/g, ' ')}`}
+                {selectedStyle && ` → ${selectedStyle.replace(/_/g, ' ')}`}
               </p>
             )}
           </div>
@@ -586,7 +582,7 @@ export default function HomePage() {
           {/* Liste d'événements */}
           {!isLoading && !error && (
             <>
-              {displayedEvents.length === 0 ? (
+              {events.length === 0 ? (
                 <div className="text-center py-16">
                   <Calendar className="w-16 h-16 text-slate-500 mx-auto mb-4" />
                   <p className="text-slate-400 text-lg">
@@ -595,13 +591,14 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {displayedEvents.map((event) => (
+                  {events.map((event, index) => (
                     <div
                       key={event.id}
-                      className="bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all hover:shadow-xl"
+                      className="group bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/20 hover:scale-[1.02] hover:-translate-y-2"
+                      style={{ animationDelay: `${index * 50}ms` }}
                     >
-                      {/* Image */}
-                      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600">
+                      {/* Image avec overlay moderne */}
+                      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 group-hover:from-blue-500 group-hover:via-purple-500 group-hover:to-pink-500 transition-all duration-500">
                         {event.imageUrl && !event.imageUrl.includes('unsplash.com') ? (
                           <img
                             src={`/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`}

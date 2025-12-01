@@ -1028,4 +1028,19 @@
   animation: pulse-location 2s infinite;
 }
 
+/* Animation de gradient pour les titres */
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 8s ease infinite;
+}
+
 
