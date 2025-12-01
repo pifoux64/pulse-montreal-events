@@ -120,61 +120,30 @@ export class EventbriteConnector extends BaseConnector {
 
   /**
    * Récupère les événements depuis une date donnée
+   * 
+   * ⚠️ LIMITATION IMPORTANTE :
+   * L'API Eventbrite v3 ne permet PAS de rechercher des événements publics par localisation.
+   * Cette API est conçue uniquement pour gérer vos propres événements.
+   * 
+   * Pour rechercher des événements publics, vous devez :
+   * 1. Contacter le support Eventbrite pour obtenir l'accès à l'API de recherche publique
+   * 2. Utiliser une API alternative (Ticketmaster, Meetup, etc.)
+   * 
+   * Voir docs/EVENTBRITE_SETUP.md pour plus d'informations.
    */
   async listUpdatedSince(since: Date, limit: number = 100): Promise<EventbriteEvent[]> {
     const events: EventbriteEvent[] = [];
-    let page = 1;
-    let hasMore = true;
-
-    while (hasMore && events.length < limit) {
-      try {
-        await this.rateLimit();
-
-        const params = new URLSearchParams({
-          'location.address': 'Montreal, QC, Canada',
-          'location.within': '25km', // Réduire le rayon pour mieux cibler Montréal
-          'start_date.range_start': since.toISOString(),
-          'start_date.range_end': new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 jours dans le futur
-          'status': 'live',
-          'order_by': 'start_asc', // Trier par date de début
-          'expand': 'venue,category,subcategory,format,organizer,logo,ticket_availability',
-          'page': page.toString(),
-          'token': this.apiKey!,
-        });
-
-        const response = await fetch(`${this.baseUrl}/events/search?${params}`);
-        
-        if (!response.ok) {
-          // Pour les erreurs 404 ou 401, c'est probablement un problème de configuration (API key invalide)
-          if (response.status === 404 || response.status === 401) {
-            console.warn(`⚠️ Eventbrite API: ${response.status} - Vérifiez votre EVENTBRITE_TOKEN dans .env.local`);
-            hasMore = false;
-            return events.slice(0, limit);
-          }
-          throw new Error(`Eventbrite API error: ${response.status} ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        
-        if (data.events) {
-          events.push(...data.events);
-        }
-
-        hasMore = data.pagination.has_more_items;
-        page++;
-
-        console.log(`Eventbrite: Page ${page - 1}, ${data.events?.length || 0} événements récupérés`);
-
-      } catch (error: any) {
-        // Ne pas logger les erreurs 404/401 déjà gérées
-        if (!error?.message?.includes('404') && !error?.message?.includes('401')) {
-          console.error(`Erreur lors de la récupération des événements Eventbrite (page ${page}):`, error);
-        }
-        hasMore = false;
-      }
-    }
-
-    return events.slice(0, limit);
+    
+    console.warn('⚠️ Eventbrite API v3 ne supporte pas la recherche publique d\'événements par localisation.');
+    console.warn('   Cette API est conçue uniquement pour gérer vos propres événements.');
+    console.warn('   Consultez docs/EVENTBRITE_SETUP.md pour les solutions alternatives.');
+    
+    // Retourner un tableau vide pour l'instant
+    // L'utilisateur devra soit :
+    // 1. Obtenir l'accès à l'API de recherche publique Eventbrite
+    // 2. Utiliser les autres sources (Ticketmaster, Meetup, etc.)
+    
+    return events;
   }
 
   /**

@@ -7,7 +7,6 @@ import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
-import EventModal from '@/components/EventModal';
 import ModernLoader from '@/components/ModernLoader';
 import { MapPin, List, Grid, Filter, Search, Calendar, Users, Star, TrendingUp, Clock, Sparkles, ArrowRight, Play, Zap, Globe, Heart, Award, Music, Palette, Trophy, Users2, Utensils } from 'lucide-react';
 import { usePersistentFilters } from '@/hooks/usePersistentFilters';
@@ -192,8 +191,6 @@ export default function OptimizedHomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFreeOnly, setShowFreeOnly] = useState(false);
 
   // Utilisation du hook React Query pour charger tous les événements
@@ -400,11 +397,6 @@ export default function OptimizedHomePage() {
   const handleFavoriteToggle = (eventId: string) => {
     toggleFavorite(eventId);
     console.log('Toggle favori pour l\'événement:', eventId);
-  };
-
-  const handleEventClick = (event: Event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
   };
 
   const handleFiltersChange = (newFilters: EventFilter) => {
@@ -671,7 +663,6 @@ export default function OptimizedHomePage() {
                     <EventCard
                       event={event}
                       onFavoriteToggle={handleFavoriteToggle}
-                      onEventClick={handleEventClick}
                       isFavorite={isFavorite(event.id)}
                       showImage={true}
                     />
@@ -780,17 +771,6 @@ export default function OptimizedHomePage() {
         </div>
       </section>
 
-      {/* Modal événement */}
-      <EventModal
-        event={selectedEvent}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedEvent(null);
-        }}
-        onFavoriteToggle={handleFavoriteToggle}
-        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
-      />
     </div>
   );
 }

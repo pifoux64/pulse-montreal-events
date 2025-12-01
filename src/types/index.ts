@@ -11,6 +11,8 @@ export interface User {
 
 export interface Event {
   id: string;
+  // Identifiant externe (API source) pour les événements non encore persistés
+  externalId?: string;
   title: string;
   description: string;
   shortDescription?: string;
@@ -47,6 +49,8 @@ export interface Event {
   isVerified: boolean;
   rating: number;
   reviewCount: number;
+  // Source d'origine de l'événement (ticketmaster, quartier_spectacles, etc.)
+  source?: string;
   promotions?: Array<{
     id: string;
     kind: string;

@@ -240,7 +240,7 @@ export async function GET(request: NextRequest) {
       // En cas d'erreur, on continue sans bloquer les autres sources
     }
     
-    // ============= MEETUP =============
+    // ============= MEETUP (SIMULÉ) - DÉSACTIVÉ =============
     console.log('👥 Récupération des événements Meetup...');
     try {
       // Recherche d'événements Meetup à Montréal via leur API GraphQL
@@ -340,13 +340,13 @@ export async function GET(request: NextRequest) {
         }
       ];
       
-      allEvents.push(...mockMeetupEvents);
-      console.log(`✅ Meetup: ${mockMeetupEvents.length} événements (simulés)`);
+      // Désactivé: on n'ajoute plus ces événements simulés
+      console.log(`ℹ️ Meetup simulé ignoré (${mockMeetupEvents.length} événements)`);
     } catch (error: any) {
       console.log(`⚠️ Erreur Meetup:`, error.message);
     }
 
-    // ============= QUARTIER DES SPECTACLES MONTRÉAL =============
+    // ============= QUARTIER DES SPECTACLES MONTRÉAL (SIMULÉ) - DÉSACTIVÉ =============
     console.log('🎭 Récupération des événements du Quartier des Spectacles...');
     try {
       // Événements culturels officiels du Quartier des Spectacles
@@ -442,13 +442,13 @@ export async function GET(request: NextRequest) {
         }
       ];
 
-      allEvents.push(...quartierSpectaclesEvents);
-      console.log(`✅ Quartier des Spectacles: ${quartierSpectaclesEvents.length} événements culturels`);
+      // Désactivé: on n'ajoute plus ces événements simulés
+      console.log(`ℹ️ Quartier des Spectacles simulé ignoré (${quartierSpectaclesEvents.length} événements)`);
     } catch (error: any) {
       console.log(`⚠️ Erreur Quartier des Spectacles:`, error.message);
     }
 
-    // ============= TOURISME MONTRÉAL =============
+    // ============= TOURISME MONTRÉAL (SIMULÉ) - DÉSACTIVÉ =============
     console.log('🏛️ Récupération des événements de Tourisme Montréal...');
     try {
       // Événements touristiques officiels de Tourisme Montréal
@@ -539,8 +539,8 @@ export async function GET(request: NextRequest) {
         }
       ];
 
-      allEvents.push(...tourismeMtlEvents);
-      console.log(`✅ Tourisme Montréal: ${tourismeMtlEvents.length} événements touristiques`);
+      // Désactivé: on n'ajoute plus ces événements simulés
+      console.log(`ℹ️ Tourisme Montréal simulé ignoré (${tourismeMtlEvents.length} événements)`);
     } catch (error: any) {
       console.log(`⚠️ Erreur Tourisme Montréal:`, error.message);
     }

@@ -8,9 +8,9 @@ import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
-import EventModal from '@/components/EventModal';
 import { MapPin, List, Map, Filter, X } from 'lucide-react';
 import { usePersistentFilters } from '@/hooks/usePersistentFilters';
+import { useRouter } from 'next/navigation';
 
 // Fonction de calcul de distance (hors composant pour éviter les re-créations)
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -140,11 +140,10 @@ export default function OptimizedCartePage() {
   });
   const [showEventList, setShowEventList] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [locationEvents, setLocationEvents] = useState<Event[] | null>(null);
   const [locationName, setLocationName] = useState<string>('');
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showFreeOnly, setShowFreeOnly] = useState(false);
+  const router = useRouter();
 
   // Stabiliser les dépendances avec useMemo
   const stableFilters = useMemo(() => JSON.stringify(filters), [filters]);
@@ -354,17 +353,41 @@ export default function OptimizedCartePage() {
     console.log('Toggle favori pour l\'événement:', eventId);
   }, [toggleFavorite]);
 
-  const handleEventClick = useCallback((event: Event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-    setLocationEvents(null); // Fermer le panneau de lieu si ouvert
-    setShowEventList(false); // Fermer la sidebar
-  }, []);
+  const handleEventClick = useCallback(
+    async (event: Event) => {
+      try {
+        // Tenter de résoudre vers un événement Prisma à partir de la source + externalId
+        const source = (event as any).source || 'INTERNAL';
+        const externalId = (event as any).externalId || event.id;
+        const res = await fetch(
+          `/api/events/resolve?source=${encodeURIComponent(source)}&externalId=${encodeURIComponent(
+            externalId,
+          )}`,
+        );
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.id) {
+            router.push(`/evenement/${data.id}`);
+            return;
+          }
+        }
+
+        // Fallback : ouvrir le lien de billetterie si disponible
+        const ticketUrl = (event as any).ticketUrl;
+        if (ticketUrl && ticketUrl !== '#') {
+          window.open(ticketUrl, '_blank');
+        }
+      } catch (error) {
+        console.error('Erreur lors de la navigation vers le détail événement:', error);
+      }
+    },
+    [router],
+  );
 
   const handleLocationClick = useCallback((events: Event[], locationName: string) => {
     setLocationEvents(events);
     setLocationName(locationName);
-    setSelectedEvent(null); // Fermer le popup d'événement si ouvert
     setShowEventList(true); // Afficher le panneau latéral
     console.log(`Lieu sélectionné: ${locationName} avec ${events.length} événements`);
   }, []);
@@ -531,17 +554,6 @@ export default function OptimizedCartePage() {
         </div>
       </main>
 
-      {/* Modal événement */}
-      <EventModal
-        event={selectedEvent}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedEvent(null);
-        }}
-        onFavoriteToggle={handleFavoriteToggle}
-        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
-      />
     </div>
   );
 }

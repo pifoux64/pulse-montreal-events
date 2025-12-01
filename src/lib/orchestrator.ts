@@ -11,12 +11,15 @@ import { QuartierSpectaclesConnector } from '../ingestors/quartier-spectacles';
 import { TourismeMontrealaConnector } from '../ingestors/tourisme-montreal';
 import { TicketmasterConnector } from '../ingestors/ticketmaster';
 import { MeetupConnector } from '../ingestors/meetup';
+import { LaVitrineConnector } from '../ingestors/lavitrine';
+import { AllEventsConnector } from '../ingestors/allevents';
 import {
   findPotentialDuplicates,
   resolveDuplicate,
   DeduplicationEvent,
 } from './deduplication';
 import { logger } from './logger';
+import { enrichEventWithTags } from './tagging/eventTaggingService';
 
 /**
  * Configuration d'un connecteur
@@ -58,7 +61,7 @@ export class IngestionOrchestrator {
       },
       {
         source: EventSource.TOURISME_MONTREAL,
-        enabled: true, // Source officielle publique
+        enabled: false, // Désactivé pour éviter les événements de démo
         batchSize: 30,
       },
       {
@@ -69,8 +72,18 @@ export class IngestionOrchestrator {
       },
       {
         source: EventSource.MEETUP,
-        enabled: true,
+        enabled: false,
         batchSize: 100,
+      },
+      {
+        source: EventSource.LAVITRINE,
+        enabled: false, // Désactivé pour éviter les événements de démo
+        batchSize: 30,
+      },
+      {
+        source: EventSource.ALLEVENTS,
+        enabled: false, // Désactivé pour éviter les événements de démo
+        batchSize: 50,
       },
       // TODO: Ajouter d'autres connecteurs
       // {
@@ -103,6 +116,12 @@ export class IngestionOrchestrator {
             break;
           case EventSource.MEETUP:
             this.connectors.set(config.source, new MeetupConnector(process.env.MEETUP_TOKEN));
+            break;
+          case EventSource.LAVITRINE:
+            this.connectors.set(config.source, new LaVitrineConnector());
+            break;
+          case EventSource.ALLEVENTS:
+            this.connectors.set(config.source, new AllEventsConnector());
             break;
           // Ajouter d'autres connecteurs ici
         }
@@ -376,23 +395,42 @@ export class IngestionOrchestrator {
     // Créer ou récupérer le venue
     let venueId: string | undefined;
     if (unifiedEvent.venue) {
-      const venue = await prisma.venue.upsert({
+      // Chercher un venue existant par nom et coordonnées proches (rayon de 100m)
+      const existingVenue = await prisma.venue.findFirst({
         where: {
-          // Clé composite basée sur coordonnées et nom
-          id: `${unifiedEvent.venue.lat}_${unifiedEvent.venue.lon}_${unifiedEvent.venue.name}`.replace(/[^a-zA-Z0-9]/g, '_'),
-        },
-        create: {
-          id: `${unifiedEvent.venue.lat}_${unifiedEvent.venue.lon}_${unifiedEvent.venue.name}`.replace(/[^a-zA-Z0-9]/g, '_'),
-          ...unifiedEvent.venue,
-        },
-        update: {
-          ...unifiedEvent.venue,
+          name: unifiedEvent.venue.name,
+          lat: {
+            gte: unifiedEvent.venue.lat - 0.001, // ~100m
+            lte: unifiedEvent.venue.lat + 0.001,
+          },
+          lon: {
+            gte: unifiedEvent.venue.lon - 0.001,
+            lte: unifiedEvent.venue.lon + 0.001,
+          },
         },
       });
-      venueId = venue.id;
+
+      if (existingVenue) {
+        venueId = existingVenue.id;
+        // Mettre à jour les informations si nécessaire
+        await prisma.venue.update({
+          where: { id: existingVenue.id },
+          data: {
+            ...unifiedEvent.venue,
+          },
+        });
+      } else {
+        // Créer un nouveau venue avec un UUID valide
+        const newVenue = await prisma.venue.create({
+          data: {
+            ...unifiedEvent.venue,
+          },
+        });
+        venueId = newVenue.id;
+      }
     }
 
-    await prisma.event.create({
+    const created = await prisma.event.create({
       data: {
         source: unifiedEvent.source,
         sourceId: unifiedEvent.sourceId,
@@ -416,13 +454,23 @@ export class IngestionOrchestrator {
         ageRestriction: unifiedEvent.ageRestriction,
       },
     });
+
+    // Enrichissement en tags structurés
+    try {
+      await enrichEventWithTags(created.id);
+    } catch (error) {
+      logger.error(
+        `Erreur lors de l'enrichissement des tags pour l'événement créé ${created.id}:`,
+        error,
+      );
+    }
   }
 
   /**
    * Met à jour un événement existant
    */
   private async updateEvent(eventId: string, unifiedEvent: UnifiedEvent): Promise<void> {
-    await prisma.event.update({
+    const updated = await prisma.event.update({
       where: { id: eventId },
       data: {
         title: unifiedEvent.title,
@@ -445,6 +493,16 @@ export class IngestionOrchestrator {
         updatedAt: new Date(),
       },
     });
+
+    // Recalcul des tags structurés après mise à jour
+    try {
+      await enrichEventWithTags(updated.id);
+    } catch (error) {
+      logger.error(
+        `Erreur lors de l'enrichissement des tags pour l'événement mis à jour ${updated.id}:`,
+        error,
+      );
+    }
   }
 
   /**

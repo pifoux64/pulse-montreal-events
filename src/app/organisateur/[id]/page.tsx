@@ -6,7 +6,6 @@ import { Event, EventFilter } from '@/types';
 import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
-import EventModal from '@/components/EventModal';
 import ModernLoader from '@/components/ModernLoader';
 import { 
   User, 
@@ -65,8 +64,6 @@ export default function OrganisateurPage() {
   const [organizerEvents, setOrganizerEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Système de favoris
@@ -171,11 +168,6 @@ export default function OrganisateurPage() {
   }, [organizer, organizerEvents]);
 
   // Gestionnaires d'événements
-  const handleEventClick = (event: Event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-  };
-
   const handleFavoriteToggle = (eventId: string) => {
     toggleFavorite(eventId);
   };
@@ -447,7 +439,6 @@ export default function OrganisateurPage() {
                     <EventCard
                       event={event}
                       onFavoriteToggle={handleFavoriteToggle}
-                      onEventClick={handleEventClick}
                       isFavorite={isFavorite(event.id)}
                       showImage={viewMode === 'grid'}
                     />
@@ -459,17 +450,6 @@ export default function OrganisateurPage() {
         </div>
       </main>
 
-      {/* Modal événement */}
-      <EventModal
-        event={selectedEvent}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedEvent(null);
-        }}
-        onFavoriteToggle={handleFavoriteToggle}
-        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
-      />
     </div>
   );
 }

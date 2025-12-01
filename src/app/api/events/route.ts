@@ -11,6 +11,7 @@ import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { geocodeAddress, getDefaultCoordinates } from '@/lib/geocode';
 import { EventCategory, EventLanguage, EventStatus, UserRole, PromotionStatus } from '@prisma/client';
+import { enrichEventWithTags } from '@/lib/tagging/eventTaggingService';
 
 /**
  * Génère des tags automatiques basés sur le contenu de l'événement
@@ -113,6 +114,10 @@ const CreateEventSchema = z.object({
 
 // Schéma pour les filtres de recherche
 const EventFiltersSchema = z.object({
+  // SPRINT 1: Paramètre scope pour today/weekend
+  scope: z.enum(['today', 'weekend', 'all']).optional(),
+  tag: z.string().optional(), // SPRINT 1: Filtre par tag unique
+  genre: z.string().optional(), // Sprint tagging: filtre par genre structuré
   q: z.string().optional(),
   category: z.nativeEnum(EventCategory).optional(),
   tags: z.array(z.string()).optional(),
@@ -124,8 +129,10 @@ const EventFiltersSchema = z.object({
   lang: z.nativeEnum(EventLanguage).optional(),
   neighborhood: z.string().optional(),
   distanceKm: z.number().min(0).max(100).optional(),
-  lat: z.number().optional(),
+  lat: z.number().optional(), // SPRINT 1: lat optionnel
+  lng: z.number().optional(), // SPRINT 1: lng optionnel (alias de lon)
   lon: z.number().optional(),
+  radius: z.number().min(0).optional(), // SPRINT 1: radius optionnel (en km)
   organizerId: z.string().uuid().optional(),
   sort: z.enum(['proximity', 'time', 'popularity']).default('time'),
   page: z.number().int().min(1).default(1),
@@ -134,6 +141,7 @@ const EventFiltersSchema = z.object({
 
 /**
  * GET /api/events - Recherche et liste des événements
+ * SPRINT 1: Support scope=today|weekend avec logique temporelle Montréal
  */
 export async function GET(request: NextRequest) {
   try {
@@ -145,35 +153,161 @@ export async function GET(request: NextRequest) {
     // Convertir les paramètres string en types appropriés
     const filters = EventFiltersSchema.parse({
       ...params,
+      scope: params.scope || undefined, // SPRINT 1: today | weekend | all
+      tag: params.tag || undefined, // SPRINT 1: tag unique
+      genre: params.genre || undefined,
       tags: params.tags ? params.tags.split(',') : undefined,
       priceMin: params.priceMin ? parseInt(params.priceMin) : undefined,
       priceMax: params.priceMax ? parseInt(params.priceMax) : undefined,
       free: params.free === 'true',
-      distanceKm: params.distanceKm ? parseFloat(params.distanceKm) : undefined,
+      distanceKm: params.distanceKm ? parseFloat(params.distanceKm) : params.radius ? parseFloat(params.radius) : undefined, // SPRINT 1: support radius
       lat: params.lat ? parseFloat(params.lat) : undefined,
-      lon: params.lon ? parseFloat(params.lon) : undefined,
+      lon: params.lon ? parseFloat(params.lon) : params.lng ? parseFloat(params.lng) : undefined, // SPRINT 1: support lng
       organizerId: params.organizerId || undefined,
       page: params.page ? parseInt(params.page) : 1,
       pageSize: params.pageSize ? parseInt(params.pageSize) : 20,
     });
 
+    // SPRINT 1: Logique temporelle selon scope (timezone Montréal)
+    // Les dates dans la DB sont en UTC, on filtre selon l'heure locale de Montréal
+    const montrealTimezone = 'America/Montreal';
+    const now = new Date();
+    
+    // Fonction helper pour obtenir une date en heure de Montréal
+    const getMontrealDate = (date: Date) => {
+      const formatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: montrealTimezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+      const parts = formatter.formatToParts(date);
+      const year = parseInt(parts.find(p => p.type === 'year')!.value);
+      const month = parseInt(parts.find(p => p.type === 'month')!.value) - 1;
+      const day = parseInt(parts.find(p => p.type === 'day')!.value);
+      const hour = parseInt(parts.find(p => p.type === 'hour')!.value);
+      const minute = parseInt(parts.find(p => p.type === 'minute')!.value);
+      const second = parseInt(parts.find(p => p.type === 'second')!.value);
+      return new Date(year, month, day, hour, minute, second);
+    };
+    
+    const nowMontreal = getMontrealDate(now);
+    
+    // Aujourd'hui : début et fin de journée (timezone Montréal)
+    const todayStart = new Date(nowMontreal);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(nowMontreal);
+    todayEnd.setHours(23, 59, 59, 999);
+    
+    // Calculer le week-end (vendredi 00:00 à dimanche 23:59)
+    const dayOfWeek = nowMontreal.getDay(); // 0 = dimanche, 5 = vendredi, 6 = samedi
+    let weekendStart: Date;
+    let weekendEnd: Date;
+    
+    if (dayOfWeek === 0) {
+      // Dimanche : week-end actuel (vendredi passé à dimanche actuel)
+      weekendStart = new Date(nowMontreal);
+      weekendStart.setDate(nowMontreal.getDate() - 2); // Vendredi
+      weekendStart.setHours(0, 0, 0, 0);
+      weekendEnd = new Date(nowMontreal);
+      weekendEnd.setHours(23, 59, 59, 999);
+    } else if (dayOfWeek >= 5) {
+      // Vendredi ou samedi : week-end actuel
+      weekendStart = new Date(nowMontreal);
+      if (dayOfWeek === 6) {
+        weekendStart.setDate(nowMontreal.getDate() - 1); // Vendredi
+      }
+      weekendStart.setHours(0, 0, 0, 0);
+      weekendEnd = new Date(weekendStart);
+      weekendEnd.setDate(weekendStart.getDate() + 2); // Dimanche
+      weekendEnd.setHours(23, 59, 59, 999);
+    } else {
+      // Lundi à jeudi : week-end prochain
+      const daysUntilFriday = 5 - dayOfWeek;
+      weekendStart = new Date(nowMontreal);
+      weekendStart.setDate(nowMontreal.getDate() + daysUntilFriday);
+      weekendStart.setHours(0, 0, 0, 0);
+      weekendEnd = new Date(weekendStart);
+      weekendEnd.setDate(weekendStart.getDate() + 2); // Dimanche
+      weekendEnd.setHours(23, 59, 59, 999);
+    }
+    
+    // Les dates JavaScript sont toujours stockées en UTC
+    // getMontrealDate crée des dates avec les composants locaux mais elles sont interprétées en UTC
+    // Pour la requête DB, on utilise directement les dates car Prisma/PostgreSQL gère les timezones
+    // On doit juste s'assurer que les dates représentent bien l'heure locale de Montréal
+    
+    // Méthode simple : utiliser les dates telles quelles car elles sont déjà en UTC
+    // La DB compare les dates UTC stockées avec les dates UTC passées
+    const todayStartUTC = todayStart;
+    const todayEndUTC = todayEnd;
+    const weekendStartUTC = weekendStart;
+    const weekendEndUTC = weekendEnd;
+    
+    // Log pour déboguer
+    if (filters.scope === 'weekend') {
+      console.log('🔍 Debug weekend:', {
+        jourActuel: nowMontreal.toLocaleDateString('fr-CA', { weekday: 'long' }),
+        weekendStart: weekendStart.toLocaleString('fr-CA'),
+        weekendEnd: weekendEnd.toLocaleString('fr-CA'),
+        weekendStartUTC: weekendStartUTC.toISOString(),
+        weekendEndUTC: weekendEndUTC.toISOString(),
+      });
+    }
+
     // Construire la requête Prisma
     const where: any = {
       status: EventStatus.SCHEDULED,
-      startAt: {
-        gte: new Date(),
-      },
     };
+
+    // SPRINT 1: Appliquer le filtre scope
+    if (filters.scope === 'today') {
+      // Aujourd'hui : événements du jour (timezone Montréal)
+      where.startAt = {
+        gte: todayStartUTC,
+        lte: todayEndUTC,
+      };
+    } else if (filters.scope === 'weekend') {
+      // Week-end : vendredi 00:00 à dimanche 23:59
+      where.startAt = {
+        gte: weekendStartUTC,
+        lte: weekendEndUTC,
+      };
+    } else {
+      // Par défaut : événements futurs
+      where.startAt = {
+        gte: now,
+      };
+    }
 
     // Filtres par catégorie
     if (filters.category) {
       where.category = filters.category;
     }
 
-    // Filtres par tags
-    if (filters.tags && filters.tags.length > 0) {
+    // SPRINT 1: Filtre par tag unique (prioritaire sur tags multiple)
+    if (filters.tag) {
+      where.tags = {
+        has: filters.tag,
+      };
+    } else if (filters.tags && filters.tags.length > 0) {
+      // Filtres par tags multiples (si pas de tag unique)
       where.tags = {
         hasAll: filters.tags,
+      };
+    }
+
+    // Sprint tagging: filtre par genre structuré (EventTag)
+    if (filters.genre) {
+      where.eventTags = {
+        some: {
+          category: 'genre',
+          value: filters.genre,
+        },
       };
     }
 
@@ -214,17 +348,18 @@ export async function GET(request: NextRequest) {
       ];
     }
 
-    // Filtre géographique par distance (Haversine)
-    // Si lat, lon et distanceKm sont fournis, filtrer par cercle
+    // SPRINT 1: Filtre géographique par distance (Haversine)
+    // Support lat/lng (ou lat/lon) et radius (ou distanceKm)
     let distanceFilter: any = null;
-    if (filters.lat && filters.lon && filters.distanceKm) {
-      // Utiliser une requête SQL brute avec la formule Haversine
-      // Pour PostgreSQL avec PostGIS, on peut utiliser ST_DWithin
-      // Sinon, on filtre après la requête
+    const userLat = filters.lat;
+    const userLon = filters.lon || filters.lng; // SPRINT 1: support lng
+    const radius = filters.radius || filters.distanceKm; // SPRINT 1: support radius
+    
+    if (userLat && userLon && radius) {
       distanceFilter = {
-        lat: filters.lat,
-        lon: filters.lon,
-        distanceKm: filters.distanceKm,
+        lat: userLat,
+        lon: userLon,
+        distanceKm: radius,
       };
     }
 
@@ -237,9 +372,7 @@ export async function GET(request: NextRequest) {
     // Pagination
     const skip = (filters.page - 1) * filters.pageSize;
 
-    const now = new Date();
-
-    // Exécuter la requête
+    // Exécuter la requête (utilise 'now' défini plus haut)
     const [events, total] = await Promise.all([
       prisma.event.findMany({
         where,
@@ -267,6 +400,7 @@ export async function GET(request: NextRequest) {
               kind: 'asc', // Priorité: HOMEPAGE > LIST_TOP > MAP_TOP
             },
           },
+          eventTags: true,
           _count: {
             select: {
               favorites: true,
@@ -487,6 +621,16 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Enrichir l'événement avec des tags structurés
+    try {
+      await enrichEventWithTags(event.id);
+    } catch (error) {
+      console.error(
+        'Erreur lors de l’enrichissement des tags structurés pour le nouvel événement:',
+        error,
+      );
+    }
 
     return NextResponse.json(event, { status: 201 });
 

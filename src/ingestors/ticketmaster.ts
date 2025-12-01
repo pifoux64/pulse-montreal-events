@@ -68,7 +68,13 @@ export class TicketmasterConnector extends BaseConnector {
     }
   }
 
-  async listUpdatedSince(since: Date, limit: number = 200): Promise<any[]> {
+  async listUpdatedSince(_since: Date, limit: number = 200): Promise<any[]> {
+    // Ticketmaster est très strict sur le format de startDateTime et renvoie
+    // facilement des erreurs 400 (DIS1015) si le format ne correspond pas
+    // exactement à leurs attentes. Pour un MVP robuste, on préfère :
+    // - ne pas utiliser de filtre startDateTime côté API
+    // - récupérer un batch d'événements triés par date
+    // - laisser la logique d'application filtrer par date si nécessaire.
     const params = new URLSearchParams({
       apikey: this.apiKey as string,
       countryCode: 'CA',
@@ -78,9 +84,8 @@ export class TicketmasterConnector extends BaseConnector {
       size: Math.min(limit, 200).toString(),
     });
 
-    params.set('startDateTime', toIsoUtc(since));
-
     const url = `${this.baseUrl}/events.json?${params.toString()}`;
+    console.log('🎫 Ticketmaster ingestion URL:', url);
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Pulse-Montreal/1.0',

@@ -31,7 +31,7 @@ const createPostSchema = z.object({
   mediaKind: z.nativeEnum(MediaKind).optional(),
 });
 
-export async function GET(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const { searchParams } = new URL(request.url);
     const parsedPagination = paginationSchema.parse({
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: { eventId:
 
     const [posts, total] = await prisma.$transaction([
       prisma.eventPost.findMany({
-        where: { eventId: params.eventId },
+        where: { eventId: params.id },
         orderBy: { createdAt: 'desc' },
         skip,
         take: parsedPagination.pageSize,
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest, { params }: { params: { eventId:
         },
       }),
       prisma.eventPost.count({
-        where: { eventId: params.eventId },
+        where: { eventId: params.id },
       }),
     ]);
 
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest, { params }: { params: { eventId:
   }
 }
 
-export async function POST(request: NextRequest, { params }: { params: { eventId: string } }) {
+export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest, { params }: { params: { eventId
     }
 
     const event = await prisma.event.findUnique({
-      where: { id: params.eventId },
+      where: { id: params.id },
       select: { id: true, title: true, organizerId: true },
     });
 

@@ -104,8 +104,8 @@ export default function Navigation() {
           {/* Actions utilisateur ultra-modernes */}
           <div className="hidden lg:flex items-center space-x-4">
             {/* Barre de recherche avec glassmorphism */}
-            <div className="relative group">
-              <div className="relative rounded-2xl px-4 py-2 flex items-center space-x-3 border border-white/15 bg-white/10 backdrop-blur-xl hover:bg-white/15 transition-all duration-300">
+              <div className="relative group">
+            <div className="relative rounded-2xl px-4 py-2 flex items-center space-x-3 border border-white/15 bg-white/10 backdrop-blur-xl hover:bg-white/15 transition-all duration-300">
                 <Search className="w-4 h-4 text-slate-300 group-focus-within:text-sky-300 transition-colors duration-300" />
                 <input
                   type="text"
@@ -120,7 +120,7 @@ export default function Navigation() {
                   }}
                   className="bg-transparent border-none outline-none text-sm text-slate-100 placeholder-slate-400 w-32 focus:w-48 transition-all duration-300"
                 />
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/10 to-emerald-500/10 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/10 to-emerald-500/10 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none" />
               </div>
             </div>
 

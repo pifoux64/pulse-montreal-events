@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import OptimizedHomePage from '@/components/OptimizedHomePage';
+import HomePage from '@/components/HomePage';
 
 // ISR: Revalider la page toutes les 2 minutes
 export const revalidate = 120;
@@ -13,7 +13,7 @@ export default function Home() {
         </div>
       }
     >
-      <OptimizedHomePage />
+      <HomePage />
     </Suspense>
   );
 }

@@ -27,6 +27,8 @@ enum EventSource {
   MTL_OPEN_DATA
   QUARTIER_SPECTACLES
   TOURISME_MONTREAL
+  LAVITRINE
+  ALLEVENTS
 }
 
 enum EventStatus {
@@ -241,6 +243,7 @@ model Event {
   promotions    Promotion[]
   notifications Notification[]
   posts         EventPost[]
+  eventTags     EventTag[]
 
   @@unique([sourceId, source], name: "unique_source_event")
   // Index pour performance
@@ -252,6 +255,33 @@ model Event {
   @@index([organizerId], name: "idx_event_organizer")
   @@index([venueId], name: "idx_event_venue")
   @@map("events")
+}
+
+model EventTag {
+  id        String   @id @default(uuid()) @db.Uuid
+  eventId   String   @map("event_id") @db.Uuid
+  category  String
+  value     String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // Relations
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId], name: "idx_eventtag_event")
+  @@index([category, value], name: "idx_eventtag_category_value")
+  @@map("event_tags")
+}
+
+model TagDefinition {
+  id        String   @id @default(uuid()) @db.Uuid
+  category  String
+  value     String
+  label     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([category, value], name: "unique_tagdefinition")
+  @@map("tag_definitions")
 }
 
 model EventFeature {
@@ -502,4 +532,16 @@ model EventView {
   @@index([eventId], name: "idx_event_view_event")
   @@index([createdAt], name: "idx_event_view_created_at")
   @@map("event_views")
+}
+
+model UserInterestTag {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  category  String
+  value     String
+  score     Float    @default(0)
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, category, value], name: "unique_user_tag_interest")
+  @@map("user_interest_tags")
 }

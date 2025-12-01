@@ -1,15 +1,14 @@
 'use client';
 
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { Event, EventCategory } from '@/types';
 import { useFavoriteEvents, useFavorites } from '@/hooks/useFavorites';
 import { useSession } from 'next-auth/react';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
-import EventModal from '@/components/EventModal';
 import ModernLoader from '@/components/ModernLoader';
-import { Heart, Filter, Trash2, Share2, Calendar, MapPin, Sparkles } from 'lucide-react';
+import { Heart, Filter, Trash2, Share2, Calendar, MapPin } from 'lucide-react';
 import { usePersistentFilters } from '@/hooks/usePersistentFilters';
 import Link from 'next/link';
 
@@ -94,94 +93,8 @@ const mockCategories: EventCategory[] = [
   }
 ];
 
-// Événements favoris de test
-const mockFavoriteEvents: Event[] = [
-  {
-    id: '1',
-    title: 'Festival Reggae Montréal 2024',
-    description: 'Le plus grand festival de reggae de l\'été à Montréal ! Venez danser au rythme des meilleurs artistes internationaux.',
-    shortDescription: 'Festival de reggae avec artistes internationaux',
-    startDate: new Date('2024-08-15T18:00:00'),
-    endDate: new Date('2024-08-15T23:00:00'),
-    location: {
-      name: 'Parc Jean-Drapeau',
-      address: '1 Circuit Gilles Villeneuve',
-      city: 'Montréal',
-      postalCode: 'H3C 1A9',
-      coordinates: { lat: 45.5088, lng: -73.5542 }
-    },
-    category: 'Musique',
-    subCategory: 'Reggae',
-    tags: ['reggae', 'festival', 'été', 'plein air'],
-    price: { amount: 45, currency: 'CAD', isFree: false },
-    imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
-    ticketUrl: 'https://example.com/tickets',
-    organizerId: 'org1',
-    organizer: { id: 'org1', email: 'org@example.com', name: 'Festival Montréal', role: 'organizer', createdAt: new Date(), updatedAt: new Date() },
-    customFilters: [],
-    accessibility: {
-      wheelchairAccessible: true,
-      hearingAssistance: false,
-      visualAssistance: false,
-      quietSpace: false,
-      signLanguage: false,
-      audioDescription: false,
-      braille: false
-    },
-    targetAudience: ['Adulte', 'Famille'],
-    currentCapacity: 3200,
-    isFeatured: false,
-    isVerified: true,
-    rating: 4.5,
-    reviewCount: 127,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  {
-    id: '2',
-    title: 'Exposition d\'Art Contemporain',
-    description: 'Découvrez les œuvres des artistes montréalais les plus prometteurs dans cette exposition unique.',
-    shortDescription: 'Exposition d\'art contemporain montréalais',
-    startDate: new Date('2024-08-16T10:00:00'),
-    endDate: new Date('2024-08-16T18:00:00'),
-    location: {
-      name: 'Musée d\'Art Contemporain',
-      address: '185 Rue Sainte-Catherine Ouest',
-      city: 'Montréal',
-      postalCode: 'H2X 1K4',
-      coordinates: { lat: 45.5017, lng: -73.5673 }
-    },
-    category: 'Art & Culture',
-    subCategory: 'Exposition',
-    tags: ['art', 'contemporain', 'musée', 'culture'],
-    price: { amount: 15, currency: 'CAD', isFree: false },
-    imageUrl: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=400&h=300&fit=crop',
-    ticketUrl: 'https://example.com/tickets',
-    organizerId: 'org2',
-    organizer: { id: 'org2', email: 'org2@example.com', name: 'MAC Montréal', role: 'organizer', createdAt: new Date(), updatedAt: new Date() },
-    customFilters: [],
-    accessibility: {
-      wheelchairAccessible: true,
-      hearingAssistance: true,
-      visualAssistance: true,
-      quietSpace: true,
-      signLanguage: true,
-      audioDescription: true,
-      braille: true
-    },
-    targetAudience: ['Adulte', 'Famille', 'Étudiant'],
-    currentCapacity: 45,
-    isFeatured: true,
-    isVerified: true,
-    rating: 4.8,
-    reviewCount: 89,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  }
-];
-
 function FavorisPageContent() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const isAuthenticated = status === 'authenticated';
   
   // Charger les favoris depuis l'API si connecté, sinon depuis localStorage
@@ -198,8 +111,6 @@ function FavorisPageContent() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Application des filtres
   // Filtrage des événements avec useMemo pour éviter les boucles infinies
@@ -260,11 +171,6 @@ function FavorisPageContent() {
       newSet.delete(eventId);
       return newSet;
     });
-  };
-
-  const handleEventClick = (event: Event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
   };
 
   const handleSelectEvent = (eventId: string) => {
@@ -631,7 +537,6 @@ function FavorisPageContent() {
                     <EventCard
                       event={event}
                       onFavoriteToggle={handleFavoriteToggle}
-                      onEventClick={handleEventClick}
                       showImage={viewMode === 'grid'}
                       isFavorite={isFavorite(event.id)}
                     />
@@ -664,12 +569,12 @@ function FavorisPageContent() {
                         Se connecter
                       </Link>
                     )}
-                    <a
+                    <Link
                       href="/"
                       className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
                     >
                       Découvrir des événements
-                    </a>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -678,17 +583,6 @@ function FavorisPageContent() {
         </div>
       </main>
 
-      {/* Modal événement */}
-      <EventModal
-        event={selectedEvent}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedEvent(null);
-        }}
-        onFavoriteToggle={handleFavoriteToggle}
-        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
-      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Bell, CheckCheck, Loader2, Wifi } from 'lucide-react';
 
 import { useNotifications, useMarkNotificationsRead } from '@/hooks/useNotifications';
@@ -136,6 +137,13 @@ export default function NotificationBell() {
             {subscribePush.isSuccess && (
               <p className="mt-2 text-[11px] text-emerald-300">Notifications push activées.</p>
             )}
+            <Link
+              href="/notifications"
+              className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-slate-100 hover:border-emerald-400 hover:text-emerald-200 transition"
+              onClick={() => setOpen(false)}
+            >
+              Ouvrir le centre
+            </Link>
           </div>
         </div>
       )}

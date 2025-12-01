@@ -1,15 +1,14 @@
 'use client';
 
-import { Suspense, useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useMemo } from 'react';
 import { Event, EventCategory } from '@/types';
 import { useEvents } from '@/hooks/useEvents';
 import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
-import EventCard from '@/components/EventCard';
-import EventModal from '@/components/EventModal';
 import { Calendar, Filter, ChevronLeft, ChevronRight, MapPin, Clock, Users, Heart } from 'lucide-react';
 import { usePersistentFilters } from '@/hooks/usePersistentFilters';
+import { useRouter } from 'next/navigation';
 
 // Données de test pour le développement
 const mockCategories: EventCategory[] = [
@@ -92,63 +91,50 @@ const mockCategories: EventCategory[] = [
   }
 ];
 
-// Les événements sont maintenant chargés via l'API useEvents()
-
 function CalendrierPageContent() {
   // Utilisation de l'API réelle comme sur la carte
   const { data: events = [], isLoading, error } = useEvents();
+  const router = useRouter();
   
   // Système de favoris
   const { isFavorite, toggleFavorite } = useFavorites(events);
-  
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+
   const { filters, setFilters } = usePersistentFilters();
   const [showFilters, setShowFilters] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<'month' | 'week' | 'day'>('month');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Initialiser les événements filtrés quand les événements arrivent
-  useEffect(() => {
-    if (events.length > 0) {
-      setFilteredEvents(events);
-    }
-  }, [events]);
-
-  // Application des filtres
-  useEffect(() => {
+  // Application des filtres (dérivé, sans setState pour éviter les boucles)
+  const filteredEvents = useMemo(() => {
     let filtered = [...events];
 
     // Filtre par recherche textuelle
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
-      filtered = filtered.filter(event =>
+      filtered = filtered.filter((event) =>
         event.title.toLowerCase().includes(query) ||
         event.description.toLowerCase().includes(query) ||
-        event.tags.some(tag => tag.toLowerCase().includes(query)) ||
-        event.location.name.toLowerCase().includes(query)
+        event.tags.some((tag) => tag.toLowerCase().includes(query)) ||
+        event.location.name.toLowerCase().includes(query),
       );
     }
 
     // Filtre par catégories
     if (filters.categories && filters.categories.length > 0) {
-      filtered = filtered.filter(event =>
-        filters.categories!.includes(event.category)
-      );
+      filtered = filtered.filter((event) => filters.categories!.includes(event.category));
     }
 
     // Filtre par sous-catégories
     if (filters.subCategories && filters.subCategories.length > 0) {
-      filtered = filtered.filter(event =>
-        event.subCategory && filters.subCategories!.includes(event.subCategory)
+      filtered = filtered.filter(
+        (event) => event.subCategory && filters.subCategories!.includes(event.subCategory),
       );
     }
 
     // Filtre par dates
     if (filters.dateRange?.start || filters.dateRange?.end) {
-      filtered = filtered.filter(event => {
+      filtered = filtered.filter((event) => {
         const eventDate = new Date(event.startDate);
         if (filters.dateRange?.start && eventDate < filters.dateRange.start) return false;
         if (filters.dateRange?.end && eventDate > filters.dateRange.end) return false;
@@ -158,14 +144,14 @@ function CalendrierPageContent() {
 
     // Filtre par prix
     if (filters.priceRange?.min || filters.priceRange?.max) {
-      filtered = filtered.filter(event => {
+      filtered = filtered.filter((event) => {
         if (filters.priceRange?.min && event.price.amount < filters.priceRange.min) return false;
         if (filters.priceRange?.max && event.price.amount > filters.priceRange.max) return false;
         return true;
       });
     }
 
-    setFilteredEvents(filtered);
+    return filtered;
   }, [events, filters]);
 
   // Navigation dans le calendrier
@@ -235,12 +221,34 @@ function CalendrierPageContent() {
 
   const handleFavoriteToggle = (eventId: string) => {
     toggleFavorite(eventId);
-    console.log('Toggle favori pour l\'événement:', eventId);
+    console.log("Toggle favori pour l'événement:", eventId);
   };
 
-  const handleEventClick = (event: Event) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
+  const handleEventClick = async (event: Event) => {
+    try {
+      const source = (event as any).source || 'INTERNAL';
+      const externalId = (event as any).externalId || event.id;
+      const res = await fetch(
+        `/api/events/resolve?source=${encodeURIComponent(source)}&externalId=${encodeURIComponent(
+          externalId,
+        )}`,
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.id) {
+          router.push(`/evenement/${data.id}`);
+          return;
+        }
+      }
+
+      const ticketUrl = (event as any).ticketUrl;
+      if (ticketUrl && ticketUrl !== '#') {
+        window.open(ticketUrl, '_blank');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la navigation vers le détail événement (calendrier):', error);
+    }
   };
 
   const formatDate = (date: Date) => {
@@ -475,16 +483,19 @@ function CalendrierPageContent() {
                       {/* Événements du jour */}
                       <div className="space-y-1">
                         {dayEvents.slice(0, 2).map((event) => (
-                          <div
+                          <button
                             key={event.id}
-                            className={`text-xs p-1 rounded truncate ${getCategoryColor(event.category)}`}
+                            type="button"
+                            className={`text-left w-full text-xs p-1 rounded truncate ${getCategoryColor(
+                              event.category,
+                            )}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEventClick(event);
                             }}
                           >
                             {event.title}
-                          </div>
+                          </button>
                         ))}
                         {dayEvents.length > 2 && (
                           <div className="text-xs text-gray-500 text-center">
@@ -506,13 +517,13 @@ function CalendrierPageContent() {
                     Événements du {formatDate(selectedDate)}
                   </h3>
                   
-                  {selectedDayEvents.length > 0 ? (
+                      {selectedDayEvents.length > 0 ? (
                     <div className="grid gap-4">
                       {selectedDayEvents.map((event) => (
                         <div
                           key={event.id}
                           className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
-                          onClick={() => handleEventClick(event)}
+                              onClick={() => handleEventClick(event)}
                         >
                           {event.imageUrl && (
                             <img
@@ -585,14 +596,6 @@ function CalendrierPageContent() {
         </div>
       </main>
 
-      {/* Modal des événements */}
-      <EventModal
-        event={selectedEvent}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onFavoriteToggle={handleFavoriteToggle}
-        isFavorite={selectedEvent ? isFavorite(selectedEvent.id) : false}
-      />
     </div>
   );
 }

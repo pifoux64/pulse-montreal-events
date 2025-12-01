@@ -10,6 +10,7 @@ import { prisma } from '@/lib/prisma';
 import { buildEventJsonLd, canonicalUrlForPath } from '@/lib/seo';
 import { authOptions } from '@/lib/auth';
 import EventTabsSection from '@/components/EventTabsSection';
+import EventDetailMap from '@/components/EventDetailMap';
 import EventFeedPanel from '@/components/event-feed/EventFeedPanel';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
@@ -146,9 +147,13 @@ export default async function EventPage({ params }: { params: { id: string } }) 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Hero Section */}
           <div className="relative overflow-hidden rounded-3xl mb-8">
-            <div className="aspect-[16/9] relative">
+              <div className="aspect-[16/9] relative">
               <Image
-                src={event.imageUrl || '/placeholder-event.jpg'}
+                src={
+                  event.imageUrl
+                    ? `/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`
+                    : '/placeholder-event.jpg'
+                }
                 alt={event.title}
                 fill
                 className="object-cover"
@@ -182,33 +187,42 @@ export default async function EventPage({ params }: { params: { id: string } }) 
               </div>
 
               {/* Event Title & Basic Info */}
-              <div className="absolute bottom-6 left-6 right-6 text-white">
-                <h1 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg">
-                  {event.title}
-                </h1>
-                <div className="flex flex-wrap items-center gap-4 text-sm">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    {eventDate.toLocaleDateString('fr-CA', {
-                      weekday: 'long',
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    {eventDate.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
-                    {eventEndDate && (
-                      <>
-                        <span className="px-1">-</span>
-                        {eventEndDate.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {event.venue?.name ?? 'Montréal'}
+              <div className="absolute inset-x-0 bottom-0">
+                {/* Léger gradient sombre en fond pour les images très claires */}
+                <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
+                <div className="relative px-6 pb-6 md:px-10 md:pb-8 max-w-5xl">
+                  <div className="inline-flex flex-col gap-2 bg-white/90 text-slate-900 rounded-2xl px-4 py-3 shadow-2xl">
+                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-1">
+                      {event.title}
+                    </h1>
+                    <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm text-slate-700">
+                      <div className="flex items-center gap-1">
+                        <Calendar className="h-4 w-4" />
+                        {eventDate.toLocaleDateString('fr-CA', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-4 w-4" />
+                        {eventDate.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                        {eventEndDate && (
+                          <>
+                            <span className="px-1">-</span>
+                            {eventEndDate.toLocaleTimeString('fr-CA', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {event.venue?.name ?? 'Montréal'}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -224,7 +238,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                   <div className="bg-white rounded-2xl p-6 shadow-lg">
                     <h2 className="text-xl font-bold mb-4">Description</h2>
                     <div className="prose prose-gray max-w-none">
-                      <p>{event.description}</p>
+                      <p className="whitespace-pre-line">{event.description}</p>
                     </div>
                   </div>
 
@@ -261,12 +275,20 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                         <div>
                           <div className="font-medium">Prix</div>
                           <div className="text-sm text-gray-600">
-                            {event.priceMin === 0 ? (
+                            {event.priceMin == null && event.priceMax == null ? (
+                              event.url
+                                ? 'Voir les prix sur le site de billetterie'
+                                : 'Prix non communiqué'
+                            ) : event.priceMin === 0 ? (
                               'Gratuit'
-                            ) : event.priceMin != null && event.priceMax != null && event.priceMin === event.priceMax ? (
+                            ) : event.priceMin != null &&
+                              event.priceMax != null &&
+                              event.priceMin === event.priceMax ? (
                               `${(event.priceMin / 100).toFixed(2)} ${event.currency}`
                             ) : (
-                              `${event.priceMin != null ? (event.priceMin / 100).toFixed(2) : '?'} - ${event.priceMax != null ? (event.priceMax / 100).toFixed(2) : '?'} ${event.currency}`
+                              `${event.priceMin != null ? (event.priceMin / 100).toFixed(2) : '?'} - ${
+                                event.priceMax != null ? (event.priceMax / 100).toFixed(2) : '?'
+                              } ${event.currency}`
                             )}
                           </div>
                         </div>
@@ -348,9 +370,17 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                       </div>
 
                       <div className="aspect-video rounded-lg overflow-hidden bg-gray-200">
-                        <div className="w-full h-full flex items-center justify-center text-gray-500">
-                          Carte interactive
-                        </div>
+                        {event.venue ? (
+                          <EventDetailMap
+                            lat={event.venue.lat}
+                            lon={event.venue.lon}
+                            title={event.title}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-500">
+                            Carte interactive bientôt disponible
+                          </div>
+                        )}
                       </div>
 
                       {event.venue && (

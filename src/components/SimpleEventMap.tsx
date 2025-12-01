@@ -28,7 +28,6 @@ const SimpleEventMap = ({
   const mapRef = useRef<any>(null);
   const mapInstanceRef = useRef<any>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   
   // Debug: afficher le nombre d'événements reçus
   console.log('SimpleEventMap reçoit:', events.length, 'événements');
@@ -217,7 +216,6 @@ const SimpleEventMap = ({
             // Ajouter l'événement de clic
             markerElement.addEventListener('click', () => {
               if (eventCount === 1) {
-                setSelectedEvent(firstEvent);
                 onEventClick(firstEvent);
               } else if (onLocationClick) {
                 onLocationClick(locationEvents, firstEvent.location.name);
@@ -370,7 +368,6 @@ const SimpleEventMap = ({
       markerElement.addEventListener('click', () => {
         console.log('Clic sur marqueur:', firstEvent.title);
         if (eventCount === 1) {
-          setSelectedEvent(firstEvent);
           onEventClick(firstEvent);
         } else if (onLocationClick) {
           const locationName = firstEvent.location?.name || (firstEvent as any).venue?.name || 'Lieu inconnu';

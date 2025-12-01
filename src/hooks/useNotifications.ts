@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSession } from 'next-auth/react';
 
 interface NotificationsResponse {
   data: Array<{
@@ -68,10 +69,14 @@ async function markNotificationsRead(payload: { ids?: string[]; markAll?: boolea
 }
 
 export function useNotifications(page = 1, pageSize = 20) {
+  const { status } = useSession();
+  const isAuthenticated = status === 'authenticated';
+
   return useQuery({
     queryKey: ['notifications', page, pageSize],
     queryFn: () => fetchNotifications(page, pageSize),
-    refetchInterval: 60 * 1000,
+    enabled: isAuthenticated, // Ne pas interroger l'API si l'utilisateur n'est pas connecté
+    refetchInterval: isAuthenticated ? 60 * 1000 : false,
   });
 }
 
