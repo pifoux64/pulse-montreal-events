@@ -1,5 +1,4 @@
 import { Poppins } from 'next/font/google';
-import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import './globals.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -156,7 +155,6 @@ export default function RootLayout({
             </ClientLayout>
           </QueryProvider>
         </ErrorBoundary>
-        <Analytics />
       </body>
     </html>
   );
