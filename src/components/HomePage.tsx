@@ -15,14 +15,17 @@
  * - Responsive
  */
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
-import { Event } from '@/types';
+import { Event, EventFilter, EventCategory } from '@/types';
 import { MapPin, Calendar, Heart, ExternalLink, Clock } from 'lucide-react';
+import { GENRES } from '@/lib/tagging/taxonomy';
+import EventFilters from '@/components/EventFilters';
+import { usePersistentFilters } from '@/hooks/usePersistentFilters';
 
 // Types pour l'API
 interface ApiEvent {
@@ -49,6 +52,10 @@ interface ApiEvent {
   _count?: {
     favorites: number;
   };
+  eventTags?: {
+    category: 'type' | 'genre' | 'ambiance' | 'public' | string;
+    value: string;
+  }[];
 }
 
 interface ApiResponse {
@@ -62,6 +69,21 @@ interface ApiResponse {
 // Transformation API → Frontend
 const transformApiEvent = (event: ApiEvent): Event => {
   try {
+    const structuredTags = event.eventTags ?? [];
+    const genreTags = structuredTags
+      .filter((t) => t.category === 'genre')
+      .map((t) => t.value);
+    const ambianceTags = structuredTags
+      .filter((t) => t.category === 'ambiance')
+      .map((t) => t.value);
+    const publicTags = structuredTags
+      .filter((t) => t.category === 'public')
+      .map((t) => t.value);
+
+    const normalizedStructured = [...genreTags, ...ambianceTags, ...publicTags].map((v) =>
+      v.replace(/_/g, ' '),
+    );
+
     return {
       id: event.id,
       title: event.title || 'Sans titre',
@@ -80,8 +102,11 @@ const transformApiEvent = (event: ApiEvent): Event => {
         },
       },
       category: event.category || 'Autre',
-      subCategory: event.tags?.[0] || '',
-      tags: event.tags || [],
+      subCategory: genreTags[0]?.replace(/_/g, ' ') || event.tags?.[0] || '',
+      // Tags = tags DB existants + tags structurés normalisés
+      tags: Array.from(
+        new Set([...(event.tags || []), ...normalizedStructured]),
+      ),
       price: {
         amount: (event.priceMin ?? 0) / 100, // Convertir de cents en dollars
         currency: event.currency || 'CAD',
@@ -120,15 +145,25 @@ type Mode = 'today' | 'weekend';
 export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>('today');
+  const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
+  const { filters, setFilters } = usePersistentFilters();
   const searchParams = useSearchParams();
   const searchQuery = (searchParams.get('search') || '').trim().toLowerCase();
 
-  // Récupérer les événements selon le mode
+  const displayedGenreLabel = selectedGenre ? selectedGenre.replace(/_/g, ' ') : null;
+
+  // Récupérer les événements selon le mode et le genre sélectionné
   const { data: apiData, isLoading, error } = useQuery<ApiResponse>({
-    queryKey: ['events', mode],
+    queryKey: ['events', mode, selectedGenre],
     queryFn: async () => {
       try {
-        const response = await fetch(`/api/events?scope=${mode}&pageSize=50`);
+        const params = new URLSearchParams();
+        params.set('scope', mode);
+        params.set('pageSize', '50');
+        if (selectedGenre) {
+          params.set('genre', selectedGenre);
+        }
+        const response = await fetch(`/api/events?${params.toString()}`);
         if (!response.ok) {
           const errorText = await response.text();
           console.error('Erreur API:', response.status, errorText);
@@ -194,6 +229,214 @@ export default function HomePage() {
     });
   };
 
+  // --- Logique de filtrage avancé (inspirée de OptimizedHomePage) ---
+
+  const toRadians = (value: number) => (value * Math.PI) / 180;
+  const calculateDistanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371;
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(toRadians(lat1)) *
+        Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const displayedEvents = useMemo(() => {
+    let filtered = [...events];
+
+    // Recherche textuelle supplémentaire basée sur filters.searchQuery
+    const textQuery = filters.searchQuery?.trim().toLowerCase() || '';
+    if (textQuery) {
+      filtered = filtered.filter((event) =>
+        event.title.toLowerCase().includes(textQuery) ||
+        event.description.toLowerCase().includes(textQuery) ||
+        event.tags?.some((tag) => tag.toLowerCase().includes(textQuery)) ||
+        event.location?.name?.toLowerCase().includes(textQuery),
+      );
+    }
+
+    // Catégories
+    if (filters.categories && filters.categories.length > 0) {
+      filtered = filtered.filter((event) =>
+        filters.categories!.some(
+          (cat) => event.category.toLowerCase() === cat.toLowerCase(),
+        ),
+      );
+    }
+
+    // Sous-catégories (approximation via tags / subCategory)
+    if (filters.subCategories && filters.subCategories.length > 0) {
+      filtered = filtered.filter((event) => {
+        const sub = (event as any).subCategory;
+        if (sub) {
+          return filters.subCategories!.some(
+            (s) => sub.toLowerCase() === s.toLowerCase(),
+          );
+        }
+        return filters.subCategories!.some(
+          (s) =>
+            event.tags?.some((tag) =>
+              tag.toLowerCase().includes(s.toLowerCase()),
+            ) ||
+            event.description.toLowerCase().includes(s.toLowerCase()) ||
+            event.title.toLowerCase().includes(s.toLowerCase()),
+        );
+      });
+    }
+
+    // Période
+    if (filters.dateRange?.start || filters.dateRange?.end) {
+      const startTime = filters.dateRange?.start?.getTime();
+      const endTime = filters.dateRange?.end?.getTime();
+      filtered = filtered.filter((event) => {
+        const start = event.startDate.getTime();
+        const end = event.endDate ? event.endDate.getTime() : start;
+        if (startTime && end < startTime) return false;
+        if (endTime && start > endTime) return false;
+        return true;
+      });
+    }
+
+    // Prix
+    if (filters.priceRange) {
+      const { min, max } = filters.priceRange;
+      filtered = filtered.filter((event) => {
+        const amount = event.price?.amount ?? 0;
+        if (typeof min === 'number' && amount < min) return false;
+        if (typeof max === 'number' && amount > max) return false;
+        return true;
+      });
+    }
+
+    // Gratuit uniquement
+    if (filters.freeOnly) {
+      filtered = filtered.filter((event) => event.price.isFree);
+    }
+
+    // Localisation
+    if (filters.location?.lat && filters.location?.lng && filters.location?.radius) {
+      const { lat, lng, radius } = filters.location;
+      filtered = filtered.filter((event) => {
+        const coords = event.location?.coordinates;
+        if (!coords) return false;
+        const d = calculateDistanceKm(lat, lng, coords.lat, coords.lng);
+        return d <= radius;
+      });
+    }
+
+    // Quartiers (approximation via nom du lieu)
+    if (filters.neighborhoods && filters.neighborhoods.length > 0) {
+      filtered = filtered.filter((event) => {
+        const place = event.location?.name || '';
+        return filters.neighborhoods!.some((n) =>
+          place.toLowerCase().includes(n.toLowerCase()),
+        );
+      });
+    }
+
+    // Langue
+    if (filters.language && filters.language !== 'BOTH') {
+      const lang = filters.language.toLowerCase();
+      filtered = filtered.filter((event) => {
+        const evLang = (event as any).language?.toLowerCase() || 'fr';
+        return evLang === lang;
+      });
+    }
+
+    // Restriction d'âge (approximation via tags)
+    if (filters.ageRestriction && filters.ageRestriction !== 'Tous') {
+      filtered = filtered.filter((event) =>
+        event.tags.some((tag) =>
+          tag.toLowerCase().includes(filters.ageRestriction!.toLowerCase()),
+        ),
+      );
+    }
+
+    // Tri
+    if (filters.sortBy) {
+      const sorted = [...filtered];
+      switch (filters.sortBy) {
+        case 'price':
+          sorted.sort((a, b) => (a.price.amount || 0) - (b.price.amount || 0));
+          break;
+        case 'popularity':
+          sorted.sort((a, b) => {
+            const aFavs = (a as any)._count?.favorites || 0;
+            const bFavs = (b as any)._count?.favorites || 0;
+            if (aFavs !== bFavs) return bFavs - aFavs;
+            return a.startDate.getTime() - b.startDate.getTime();
+          });
+          break;
+        case 'date':
+        default:
+          sorted.sort(
+            (a, b) => a.startDate.getTime() - b.startDate.getTime(),
+          );
+      }
+      filtered = sorted;
+    }
+
+    return filtered;
+  }, [events, filters]);
+
+  const handleFiltersChange = (newFilters: EventFilter) => {
+    setFilters(newFilters);
+  };
+
+  const handleLocationDetect = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setFilters((prev) => ({
+            ...prev,
+            location: {
+              lat: latitude,
+              lng: longitude,
+              radius: 10,
+            },
+          }));
+        },
+        (error) => {
+          console.error('Erreur de géolocalisation:', error);
+        },
+      );
+    }
+  };
+
+  // Catégories factices pour EventFilters (comme OptimizedHomePage)
+  const mockCategories: EventCategory[] = [
+    {
+      id: '1',
+      name: 'Musique',
+      nameEn: 'Music',
+      icon: '🎵',
+      color: '#ef4444',
+      subCategories: [],
+    },
+    {
+      id: '2',
+      name: 'Art & Culture',
+      nameEn: 'Art & Culture',
+      icon: '🎨',
+      color: '#8b5cf6',
+      subCategories: [],
+    },
+    {
+      id: '3',
+      name: 'Famille',
+      nameEn: 'Family',
+      icon: '👨‍👩‍👧‍👦',
+      color: '#f59e0b',
+      subCategories: [],
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
       <Navigation />
@@ -238,6 +481,27 @@ export default function HomePage() {
             </button>
           </div>
 
+          {/* Filtres genres structurés (basés sur EventTag.genre) */}
+          <div className="mt-6 flex flex-wrap gap-2 justify-center">
+            {GENRES.slice(0, 10).map((genre) => {
+              const isActive = selectedGenre === genre;
+              const label = genre.replace(/_/g, ' ');
+              return (
+                <button
+                  key={genre}
+                  onClick={() => setSelectedGenre(isActive ? null : genre)}
+                  className={`px-3 py-1 text-xs md:text-sm rounded-full border transition-all ${
+                    isActive
+                      ? 'bg-emerald-500 text-white border-emerald-400 shadow'
+                      : 'border-slate-500/60 text-slate-200 hover:border-emerald-300 hover:text-white'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Lien vers la carte - SPRINT 1 */}
           <a
             href="/carte"
@@ -249,6 +513,30 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Panneau de filtres complet */}
+      <section className="px-4 pb-4">
+        <div className="max-w-7xl mx-auto">
+          <EventFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
+            categories={mockCategories}
+            onLocationDetect={handleLocationDetect}
+            neighborhoods={[
+              'Ville-Marie',
+              'Plateau-Mont-Royal',
+              'Rosemont-La Petite-Patrie',
+              'Villeray-Saint-Michel-Parc-Extension',
+              'Mercier-Hochelaga-Maisonneuve',
+              'Côte-des-Neiges-Notre-Dame-de-Grâce',
+              'Le Sud-Ouest',
+              'Ahuntsic-Cartierville',
+              'Outremont',
+              'Verdun',
+            ]}
+          />
+        </div>
+      </section>
+
       {/* Liste d'événements - SPRINT 1 */}
       <section className="px-4 pb-16">
         <div className="max-w-7xl mx-auto">
@@ -256,10 +544,17 @@ export default function HomePage() {
           <div className="mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
               {mode === 'today' ? "Aujourd'hui" : 'Ce week-end'}
+              {displayedGenreLabel && (
+                <span className="ml-2 text-lg text-emerald-300">
+                  · {displayedGenreLabel}
+                </span>
+              )}
             </h2>
             {!isLoading && (
               <p className="text-slate-400">
-                {events.length} événement{events.length > 1 ? 's' : ''} trouvé{events.length > 1 ? 's' : ''}
+                {displayedEvents.length} événement
+                {displayedEvents.length > 1 ? 's' : ''} trouvé
+                {displayedEvents.length > 1 ? 's' : ''}
               </p>
             )}
           </div>
@@ -291,7 +586,7 @@ export default function HomePage() {
           {/* Liste d'événements */}
           {!isLoading && !error && (
             <>
-              {events.length === 0 ? (
+              {displayedEvents.length === 0 ? (
                 <div className="text-center py-16">
                   <Calendar className="w-16 h-16 text-slate-500 mx-auto mb-4" />
                   <p className="text-slate-400 text-lg">
@@ -300,7 +595,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {events.map((event) => (
+                  {displayedEvents.map((event) => (
                     <div
                       key={event.id}
                       className="bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all hover:shadow-xl"

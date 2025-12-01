@@ -269,6 +269,7 @@ model EventTag {
 
   @@index([eventId], name: "idx_eventtag_event")
   @@index([category, value], name: "idx_eventtag_category_value")
+  @@unique([eventId, category, value], name: "unique_event_tag")
   @@map("event_tags")
 }
 
