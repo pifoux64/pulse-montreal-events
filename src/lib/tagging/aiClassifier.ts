@@ -1,9 +1,4 @@
-import OpenAI from 'openai';
-import { EVENT_TYPES, GENRES, AMBIANCES, PUBLICS, TAG_TAXONOMY } from './taxonomy';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { EVENT_TYPES, GENRES, AMBIANCES, PUBLICS } from './taxonomy';
 
 export type AIClassificationInput = {
   title: string;
@@ -48,25 +43,37 @@ export async function classifyEventWithAI(
     description: input.description ?? '',
     venueName: input.venueName ?? '',
   };
-
   try {
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4.1-mini',
-      response_format: { type: 'json_object' },
-      messages: [
-        { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: `Classe cet événement en respectant STRICTEMENT la taxonomie et le format demandé.\n\n${JSON.stringify(
-            userContent,
-          )}`,
-        },
-      ],
-      temperature: 0,
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4.1-mini',
+        response_format: { type: 'json_object' },
+        temperature: 0,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          {
+            role: 'user',
+            content: `Classe cet événement en respectant STRICTEMENT la taxonomie et le format demandé.\n\n${JSON.stringify(
+              userContent,
+            )}`,
+          },
+        ],
+      }),
     });
 
-    const raw = completion.choices[0]?.message?.content ?? '{}';
-    const parsed = JSON.parse(raw) as Partial<AIClassificationOutput>;
+    if (!response.ok) {
+      console.error('Erreur OpenAI API:', response.status, await response.text());
+      return { type: null, genres: [], ambiance: [], public: [] };
+    }
+
+    const data: any = await response.json();
+    const rawContent = data.choices?.[0]?.message?.content ?? '{}';
+    const parsed = JSON.parse(rawContent) as Partial<AIClassificationOutput>;
 
     // Normalisation minimale ici; le filtrage final est fait dans filterToAllowedTags
     return {
