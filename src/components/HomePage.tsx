@@ -525,13 +525,10 @@ export default function HomePage() {
       </section>
 
       {/* Liste d'événements - Design moderne */}
-      <section className="px-4 pb-20 relative">
-        {/* Gradient de transition */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-slate-950/0 via-slate-950/50 to-slate-950 pointer-events-none"></div>
-        
+      <section className="px-4 pb-20 relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="max-w-7xl mx-auto relative">
           {/* En-tête avec compteur moderne */}
-          <div className="mb-12 text-center">
+          <div className="mb-12 text-center pt-8">
             <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 mb-4">
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
               <span className="text-sm text-slate-400 font-medium">
