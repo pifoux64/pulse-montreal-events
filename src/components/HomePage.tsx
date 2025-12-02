@@ -74,6 +74,9 @@ interface ApiResponse {
 const transformApiEvent = (event: ApiEvent): Event => {
   try {
     const structuredTags = event.eventTags ?? [];
+    const categoryTags = structuredTags
+      .filter((t) => t.category === 'category')
+      .map((t) => t.value);
     const genreTags = structuredTags
       .filter((t) => t.category === 'genre')
       .map((t) => t.value);
@@ -83,6 +86,48 @@ const transformApiEvent = (event: ApiEvent): Event => {
     const publicTags = structuredTags
       .filter((t) => t.category === 'public')
       .map((t) => t.value);
+
+    // Déterminer la catégorie principale : utiliser les tags structurés category, sinon déduire des genres, sinon utiliser event.category
+    let mainCategory = categoryTags[0] || null;
+    if (!mainCategory && genreTags.length > 0) {
+      // Si on a des genres musicaux, c'est MUSIC
+      mainCategory = 'MUSIC';
+    } else if (!mainCategory) {
+      // Mapper event.category legacy vers les nouvelles catégories
+      const categoryMap: Record<string, string> = {
+        'MUSIC': 'MUSIC',
+        'ARTS_THEATRE': 'ART_CULTURE',
+        'ARTS & THEATRE': 'ART_CULTURE',
+        'ARTS_AND_THEATRE': 'ART_CULTURE',
+        'SPORTS': 'SPORT',
+        'SPORT': 'SPORT',
+        'FAMILY': 'FAMILY',
+        'COMMUNITY': 'ART_CULTURE',
+        'EDUCATION': 'FAMILY',
+        'MISCELLANEOUS': 'OTHER',
+      };
+      const eventCategoryUpper = event.category?.toUpperCase() || '';
+      mainCategory = categoryMap[eventCategoryUpper] || null;
+      
+      // Si toujours pas de catégorie, essayer de déduire du titre/description
+      if (!mainCategory) {
+        const text = `${event.title || ''} ${event.description || ''}`.toLowerCase();
+        if (text.includes('concert') || text.includes('music') || text.includes('musique') || text.includes('dj') || text.includes('festival')) {
+          mainCategory = 'MUSIC';
+        } else if (text.includes('expo') || text.includes('art') || text.includes('culture') || text.includes('théâtre') || text.includes('theatre')) {
+          mainCategory = 'ART_CULTURE';
+        } else if (text.includes('sport') || text.includes('fitness') || text.includes('course')) {
+          mainCategory = 'SPORT';
+        } else if (text.includes('famille') || text.includes('family') || text.includes('enfant') || text.includes('kids')) {
+          mainCategory = 'FAMILY';
+        }
+      }
+    }
+    
+    // Si toujours pas de catégorie, utiliser 'OTHER' mais permettre l'affichage quand aucun filtre n'est sélectionné
+    if (!mainCategory) {
+      mainCategory = 'OTHER';
+    }
 
     const normalizedStructured = [...genreTags, ...ambianceTags, ...publicTags].map((v) =>
       v.replace(/_/g, ' '),
@@ -105,7 +150,7 @@ const transformApiEvent = (event: ApiEvent): Event => {
           lng: event.venue?.lon ?? -73.5542,
         },
       },
-      category: event.category || 'Autre',
+      category: mainCategory,
       subCategory: genreTags[0]?.replace(/_/g, ' ') || event.tags?.[0] || '',
       // Tags = tags DB existants + tags structurés normalisés
       tags: Array.from(
@@ -243,18 +288,14 @@ export default function HomePage() {
     // Filtre par catégorie (si sélectionnée)
     .filter((event) => {
       if (!selectedCategory) return true;
-      // Vérifier si l'événement correspond à la catégorie
+      // La catégorie principale est déjà calculée dans transformApiEvent
       const eventCategory = event.category?.toUpperCase();
-      if (eventCategory === selectedCategory) return true;
-      // Vérifier aussi dans les tags
-      return event.tags.some(tag => {
-        const tagUpper = tag.toUpperCase();
-        return tagUpper.includes(selectedCategory) || 
-               (selectedCategory === 'MUSIC' && (tagUpper.includes('CONCERT') || tagUpper.includes('MUSIQUE'))) ||
-               (selectedCategory === 'ART_CULTURE' && (tagUpper.includes('EXPO') || tagUpper.includes('ART'))) ||
-               (selectedCategory === 'SPORT' && tagUpper.includes('SPORT')) ||
-               (selectedCategory === 'FAMILY' && (tagUpper.includes('FAMILLE') || tagUpper.includes('ENFANT')));
-      });
+      // Si l'événement est classé comme OTHER et qu'une catégorie est sélectionnée, l'exclure
+      // Sinon, vérifier la correspondance exacte
+      if (eventCategory === 'OTHER' && selectedCategory !== 'OTHER') {
+        return false;
+      }
+      return eventCategory === selectedCategory;
     })
     // Filtre par style (si sélectionné)
     .filter((event) => {
