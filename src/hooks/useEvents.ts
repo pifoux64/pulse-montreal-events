@@ -10,6 +10,8 @@ interface ApiEvent {
   endAt?: string;
   venue?: {
     name: string;
+    address?: string;
+    city?: string;
     lat: number;
     lon: number;
   };
@@ -19,6 +21,7 @@ interface ApiEvent {
   subcategory?: string;
   tags: string[];
   priceMin?: number;
+  priceMax?: number;
   currency?: string;
   imageUrl?: string;
   url?: string;
@@ -26,6 +29,10 @@ interface ApiEvent {
   source: string;
   lat?: number;
   lon?: number;
+  eventTags?: {
+    category: 'type' | 'genre' | 'ambiance' | 'public' | 'category' | string;
+    value: string;
+  }[];
   promotions?: Array<{
     id: string;
     kind: string;
@@ -44,75 +51,151 @@ interface ApiResponse {
 }
 
 // Fonction de transformation des données API vers le format frontend
-const transformApiEvent = (event: ApiEvent): Event => ({
-  id: event.id,
-  title: event.title,
-  description: event.description || '',
-  shortDescription: event.description?.substring(0, 100) + '...' || '',
-  startDate: new Date(event.startAt),
-  endDate: event.endAt ? new Date(event.endAt) : null,
-  location: {
-    name: event.venue?.name || event.address || '',
-    address: event.address || '',
-    city: event.city || 'Montréal',
-    postalCode: '',
-    coordinates: { 
-      lat: event.venue?.lat || event.lat || 45.5088, 
-      lng: event.venue?.lon || event.lon || -73.5542 
+const transformApiEvent = (event: ApiEvent): Event => {
+  // Extraire les tags structurés
+  const structuredTags = event.eventTags ?? [];
+  const categoryTags = structuredTags
+    .filter((t) => t.category === 'category')
+    .map((t) => t.value);
+  const genreTags = structuredTags
+    .filter((t) => t.category === 'genre')
+    .map((t) => t.value);
+  const ambianceTags = structuredTags
+    .filter((t) => t.category === 'ambiance')
+    .map((t) => t.value);
+  const publicTags = structuredTags
+    .filter((t) => t.category === 'public')
+    .map((t) => t.value);
+
+  // Déterminer la catégorie principale : utiliser les tags structurés category, sinon déduire des genres, sinon utiliser event.category
+  let mainCategory = categoryTags[0] || null;
+  if (!mainCategory && genreTags.length > 0) {
+    // Si on a des genres musicaux, c'est MUSIC
+    mainCategory = 'MUSIC';
+  } else if (!mainCategory) {
+    // Mapper event.category legacy vers les nouvelles catégories
+    const categoryMap: Record<string, string> = {
+      'MUSIC': 'MUSIC',
+      'ARTS_THEATRE': 'ART_CULTURE',
+      'ARTS & THEATRE': 'ART_CULTURE',
+      'ARTS_AND_THEATRE': 'ART_CULTURE',
+      'SPORTS': 'SPORT',
+      'SPORT': 'SPORT',
+      'FAMILY': 'FAMILY',
+      'COMMUNITY': 'ART_CULTURE',
+      'EDUCATION': 'FAMILY',
+      'MISCELLANEOUS': 'OTHER',
+      // Mappings depuis l'ancien format
+      'music': 'MUSIC',
+      'arts & theatre': 'ART_CULTURE',
+      'sports': 'SPORT',
+      'family': 'FAMILY',
+      'community': 'ART_CULTURE',
+      'education': 'FAMILY',
+      'miscellaneous': 'OTHER',
+    };
+    const eventCategoryUpper = event.category?.toUpperCase() || '';
+    mainCategory = categoryMap[eventCategoryUpper] || categoryMap[event.category || ''] || null;
+    
+    // Si toujours pas de catégorie, essayer de déduire du titre/description
+    if (!mainCategory) {
+      const text = `${event.title || ''} ${event.description || ''}`.toLowerCase();
+      if (text.includes('concert') || text.includes('music') || text.includes('musique') || text.includes('dj') || text.includes('festival')) {
+        mainCategory = 'MUSIC';
+      } else if (text.includes('expo') || text.includes('art') || text.includes('culture') || text.includes('théâtre') || text.includes('theatre')) {
+        mainCategory = 'ART_CULTURE';
+      } else if (text.includes('sport') || text.includes('fitness') || text.includes('course')) {
+        mainCategory = 'SPORT';
+      } else if (text.includes('famille') || text.includes('family') || text.includes('enfant') || text.includes('kids')) {
+        mainCategory = 'FAMILY';
+      }
     }
-  },
-  category: event.category === 'music' ? 'Musique' : 
-           event.category === 'arts & theatre' ? 'Art & Culture' :
-           event.category === 'sports' ? 'Sport' :
-           event.category === 'family' ? 'Famille' :
-           event.category === 'community' ? 'Art & Culture' :
-           event.category === 'education' ? 'Famille' :
-           event.category === 'miscellaneous' ? 'Autre' : 'Musique',
-  subCategory: event.tags && event.tags.length > 0 ? event.tags[0] : '',
-  tags: event.tags || [],
-  price: { 
-    amount: event.priceMin !== null && event.priceMin !== undefined ? event.priceMin : 0, 
-    currency: event.currency || 'CAD', 
-    // Un événement est gratuit seulement si priceMin est explicitement 0
-    // Si priceMin est null/undefined, on ne sait pas, donc on considère comme payant par défaut
-    isFree: event.priceMin === 0 && (event.priceMax === null || event.priceMax === 0 || event.priceMax === undefined)
-  },
-  imageUrl: event.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=300&fit=crop',
-  ticketUrl: event.url || '#',
-  organizerId: event.organizerId || 'default',
-  organizer: { 
-    id: event.organizerId || 'default',
-    email: 'api@pulse.com',
-    name: event.source,
-    role: 'organizer' as const,
+  }
+  
+  // Si toujours pas de catégorie, utiliser 'OTHER' mais permettre l'affichage quand aucun filtre n'est sélectionné
+  if (!mainCategory) {
+    mainCategory = 'OTHER';
+  }
+
+  // Normaliser les tags structurés pour l'affichage
+  const normalizedStructured = [...genreTags, ...ambianceTags, ...publicTags].map((v) =>
+    v.replace(/_/g, ' '),
+  );
+
+  // Mapper la catégorie principale vers le format d'affichage
+  const categoryDisplayMap: Record<string, string> = {
+    'MUSIC': 'Musique',
+    'ART_CULTURE': 'Art & Culture',
+    'SPORT': 'Sport',
+    'FAMILY': 'Famille',
+    'OTHER': 'Autre',
+  };
+
+  return {
+    id: event.id,
+    title: event.title,
+    description: event.description || '',
+    shortDescription: event.description?.substring(0, 100) + '...' || '',
+    startDate: new Date(event.startAt),
+    endDate: event.endAt ? new Date(event.endAt) : null,
+    location: {
+      name: event.venue?.name || event.address || '',
+      address: event.venue?.address || event.address || '',
+      city: event.venue?.city || event.city || 'Montréal',
+      postalCode: '',
+      coordinates: { 
+        lat: event.venue?.lat || event.lat || 45.5088, 
+        lng: event.venue?.lon || event.lon || -73.5542 
+      }
+    },
+    category: categoryDisplayMap[mainCategory] || mainCategory,
+    subCategory: genreTags[0]?.replace(/_/g, ' ') || event.tags?.[0] || '',
+    tags: Array.from(
+      new Set([...(event.tags || []), ...normalizedStructured]),
+    ),
+    price: { 
+      amount: (event.priceMin ?? 0) / 100, // Convertir de cents en dollars si nécessaire
+      currency: event.currency || 'CAD', 
+      isFree: (event.priceMin ?? 0) === 0
+    },
+    imageUrl: event.imageUrl || null,
+    ticketUrl: event.url || '#',
+    organizerId: event.organizerId || 'default',
+    organizer: { 
+      id: event.organizerId || 'default',
+      email: 'api@pulse.com',
+      name: event.source,
+      role: 'organizer' as const,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    customFilters: [],
+    accessibility: [],
+    status: 'published' as const,
+    source: event.source,
+    externalId: event.id,
+    language: 'fr' as const,
+    minAttendees: Math.floor(Math.random() * 100),
+    maxAttendees: Math.floor(Math.random() * 2000) + 1000,
+    promotions: event.promotions?.map(p => ({
+      id: p.id,
+      kind: p.kind,
+      status: p.status,
+      startsAt: p.startsAt,
+      endsAt: p.endsAt,
+    })),
     createdAt: new Date(),
-    updatedAt: new Date()
-  },
-  customFilters: [],
-  accessibility: [],
-  status: 'published' as const,
-  source: event.source,
-  externalId: event.id,
-  language: 'fr' as const,
-  minAttendees: Math.floor(Math.random() * 100),
-  maxAttendees: Math.floor(Math.random() * 2000) + 1000,
-  promotions: event.promotions?.map(p => ({
-    id: p.id,
-    kind: p.kind,
-    status: p.status,
-    startsAt: p.startsAt,
-    endsAt: p.endsAt,
-  })),
-  createdAt: new Date(),
-  updatedAt: new Date(),
-});
+    updatedAt: new Date(),
+  };
+};
 
 // Hook principal pour récupérer tous les événements
 export const useEvents = () => {
   return useQuery({
     queryKey: ['events'],
     queryFn: async (): Promise<Event[]> => {
-      const response = await fetch('/api/events-simple');
+      // Utiliser l'API /api/events qui inclut les tags structurés
+      const response = await fetch('/api/events?pageSize=200');
       if (!response.ok) {
         throw new Error(`Erreur API: ${response.status}`);
       }
@@ -132,7 +215,7 @@ export const usePrefetchEvents = () => {
     queryClient.prefetchQuery({
       queryKey: ['events'],
       queryFn: async (): Promise<Event[]> => {
-        const response = await fetch('/api/events-simple');
+        const response = await fetch('/api/events?pageSize=200');
         if (!response.ok) {
           throw new Error(`Erreur API: ${response.status}`);
         }

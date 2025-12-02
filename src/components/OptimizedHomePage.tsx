@@ -219,18 +219,48 @@ export default function OptimizedHomePage() {
 
     // Filtre par catégories sélectionnées
     if (filters.categories && filters.categories.length > 0) {
-      filtered = filtered.filter(event => 
-        filters.categories!.some(cat => 
-          event.category.toLowerCase() === cat.toLowerCase()
-        )
-      );
+      filtered = filtered.filter(event => {
+        const eventCategory = event.category?.toUpperCase();
+        return filters.categories!.some(cat => {
+          const catUpper = cat.toUpperCase();
+          // Mapping des catégories d'affichage vers les catégories principales
+          const categoryMap: Record<string, string[]> = {
+            'MUSIC': ['MUSIC', 'MUSIQUE'],
+            'ART_CULTURE': ['ART_CULTURE', 'ART & CULTURE', 'ART'],
+            'SPORT': ['SPORT', 'SPORTS'],
+            'FAMILY': ['FAMILY', 'FAMILLE'],
+            'OTHER': ['OTHER', 'AUTRE'],
+          };
+          // Vérifier correspondance directe ou via mapping
+          return eventCategory === catUpper || 
+                 Object.entries(categoryMap).some(([key, values]) => 
+                   values.includes(catUpper) && values.includes(eventCategory || '')
+                 ) ||
+                 event.category?.toLowerCase() === cat.toLowerCase();
+        });
+      });
     }
 
     // Filtre par catégorie sélectionnée (pour compatibilité)
     if (selectedCategory) {
-      filtered = filtered.filter(event => 
-        event.category.toLowerCase() === selectedCategory.toLowerCase()
-      );
+      filtered = filtered.filter(event => {
+        const eventCategory = event.category?.toUpperCase();
+        const selectedUpper = selectedCategory.toUpperCase();
+        // Mapping des catégories d'affichage vers les catégories principales
+        const categoryMap: Record<string, string[]> = {
+          'MUSIC': ['MUSIC', 'MUSIQUE'],
+          'ART_CULTURE': ['ART_CULTURE', 'ART & CULTURE', 'ART'],
+          'SPORT': ['SPORT', 'SPORTS'],
+          'FAMILY': ['FAMILY', 'FAMILLE'],
+          'OTHER': ['OTHER', 'AUTRE'],
+        };
+        // Vérifier correspondance directe ou via mapping
+        return eventCategory === selectedUpper || 
+               Object.entries(categoryMap).some(([key, values]) => 
+                 values.includes(selectedUpper) && values.includes(eventCategory || '')
+               ) ||
+               event.category?.toLowerCase() === selectedCategory.toLowerCase();
+      });
     }
 
     // Filtre par sous-catégories sélectionnées
