@@ -193,7 +193,7 @@ type Mode = 'today' | 'weekend';
 
 export default function HomePage() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>('today');
+  const [mode, setMode] = useState<Mode>('weekend');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
