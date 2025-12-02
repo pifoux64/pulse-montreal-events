@@ -241,29 +241,51 @@ export default function HomePage() {
     queryKey: ['events', mode, selectedCategory, selectedGenre, selectedStyle],
     queryFn: async () => {
       try {
-        const params = new URLSearchParams();
-        params.set('scope', mode);
-        params.set('pageSize', '50');
-        // Priorité : style > genre > category
-        if (selectedStyle) {
-          // Pour l'instant, on filtre par style via le genre parent
-          if (selectedGenre) {
+        // Récupérer plusieurs pages pour avoir tous les événements (max 100 par page)
+        const allEvents: ApiEvent[] = [];
+        let page = 1;
+        let hasMore = true;
+        
+        while (hasMore && page <= 10) { // Limiter à 10 pages max (1000 événements)
+          const params = new URLSearchParams();
+          params.set('scope', mode);
+          params.set('pageSize', '100'); // Maximum autorisé par l'API
+          params.set('page', page.toString());
+          // Priorité : style > genre > category
+          if (selectedStyle) {
+            // Pour l'instant, on filtre par style via le genre parent
+            if (selectedGenre) {
+              params.set('genre', selectedGenre);
+            }
+          } else if (selectedGenre) {
             params.set('genre', selectedGenre);
+          } else if (selectedCategory === 'MUSIC') {
+            // Si on sélectionne juste MUSIC, on ne filtre pas par genre spécifique
+            // mais on pourrait filtrer côté front
           }
-        } else if (selectedGenre) {
-          params.set('genre', selectedGenre);
-        } else if (selectedCategory === 'MUSIC') {
-          // Si on sélectionne juste MUSIC, on ne filtre pas par genre spécifique
-          // mais on pourrait filtrer côté front
+          
+          const response = await fetch(`/api/events?${params.toString()}`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erreur API:', response.status, errorText);
+            throw new Error(`Erreur API: ${response.status}`);
+          }
+          const data: ApiResponse = await response.json();
+          allEvents.push(...(data.items || []));
+          
+          // Vérifier s'il y a plus de pages
+          hasMore = page < data.totalPages;
+          page++;
         }
-        const response = await fetch(`/api/events?${params.toString()}`);
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Erreur API:', response.status, errorText);
-          throw new Error(`Erreur API: ${response.status}`);
-        }
-        const data = await response.json();
-        return data;
+        
+        // Retourner un objet ApiResponse avec tous les événements
+        return {
+          items: allEvents,
+          total: allEvents.length,
+          page: 1,
+          pageSize: allEvents.length,
+          totalPages: 1,
+        };
       } catch (err) {
         console.error('Erreur lors de la récupération des événements:', err);
         throw err;
