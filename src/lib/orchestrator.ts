@@ -56,7 +56,7 @@ export class IngestionOrchestrator {
       },
       {
         source: EventSource.QUARTIER_SPECTACLES,
-        enabled: true, // Source officielle publique
+        enabled: false, // Désactivé - événements de test uniquement, pas de vrai scraper
         batchSize: 30,
       },
       {
