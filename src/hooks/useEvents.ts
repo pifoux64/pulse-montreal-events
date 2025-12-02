@@ -195,12 +195,25 @@ export const useEvents = () => {
     queryKey: ['events'],
     queryFn: async (): Promise<Event[]> => {
       // Utiliser l'API /api/events qui inclut les tags structurés
-      const response = await fetch('/api/events?pageSize=200');
-      if (!response.ok) {
-        throw new Error(`Erreur API: ${response.status}`);
+      // Récupérer plusieurs pages pour avoir tous les événements (max 100 par page)
+      const allEvents: ApiEvent[] = [];
+      let page = 1;
+      let hasMore = true;
+      
+      while (hasMore && page <= 10) { // Limiter à 10 pages max (1000 événements)
+        const response = await fetch(`/api/events?pageSize=100&page=${page}`);
+        if (!response.ok) {
+          throw new Error(`Erreur API: ${response.status}`);
+        }
+        const data: ApiResponse = await response.json();
+        allEvents.push(...(data.items || []));
+        
+        // Vérifier s'il y a plus de pages
+        hasMore = page < data.totalPages;
+        page++;
       }
-      const data: ApiResponse = await response.json();
-      return data.items?.map(transformApiEvent) || [];
+      
+      return allEvents.map(transformApiEvent);
     },
     staleTime: 2 * 60 * 1000, // 2 minutes - cohérent avec la config globale
     gcTime: 10 * 60 * 1000, // 10 minutes en cache
