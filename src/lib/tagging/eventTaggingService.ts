@@ -37,7 +37,7 @@ export async function enrichEventWithTags(eventId: string): Promise<void> {
 
   const filtered = filterToAllowedTags(aiResult);
 
-  // Préparer les EventTag à écrire (sans doublons)
+  // Préparer les EventTag à écrire
   const tagsToCreate: { category: TagCategory; value: string }[] = [];
 
   if (filtered.type) {
@@ -53,22 +53,12 @@ export async function enrichEventWithTags(eventId: string): Promise<void> {
     tagsToCreate.push({ category: 'public', value: p });
   }
 
-  // Dédoublonnage (un seul EventTag par combinaison eventId/category/value)
-  const uniqueMap = new Map<string, { category: TagCategory; value: string }>();
-  for (const tag of tagsToCreate) {
-    const key = `${tag.category}::${tag.value}`;
-    if (!uniqueMap.has(key)) {
-      uniqueMap.set(key, tag);
-    }
-  }
-  const uniqueTags = Array.from(uniqueMap.values());
-
   // Transaction : on remplace les tags existants de cet événement
   await prisma.$transaction([
     prisma.eventTag.deleteMany({ where: { eventId } }),
-    uniqueTags.length
+    tagsToCreate.length
       ? prisma.eventTag.createMany({
-          data: uniqueTags.map((t) => ({
+          data: tagsToCreate.map((t) => ({
             eventId,
             category: t.category,
             value: t.value,

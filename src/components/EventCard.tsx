@@ -1,18 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, User, LogIn } from 'lucide-react';
+import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User, LogIn } from 'lucide-react';
 import { Event } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { generateMusicTags, getGenreEmoji, getGenreColor } from '@/lib/musicTags';
 import { useSession } from 'next-auth/react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 interface EventCardProps {
   event: Event;
   onFavoriteToggle: (eventId: string) => void;
-  onEventClick?: (event: Event) => void;
+  onEventClick: (event: Event) => void;
   isFavorite?: boolean;
   showImage?: boolean;
 }
@@ -26,11 +27,18 @@ const EventCard = ({
 }: EventCardProps) => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
-  const router = useRouter();
   const isAuthenticated = status === 'authenticated';
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+
+  // Générer des tags enrichis avec détection musicale
+  const enrichedTags = generateMusicTags({
+    title: event.title,
+    description: event.description,
+    category: event.category,
+    tags: event.tags
+  });
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('fr-CA', {
@@ -65,18 +73,36 @@ const EventCard = ({
     return formatDistanceToNow(date, { addSuffix: true, locale: fr });
   };
 
-  const handleCardClick = () => {
-    if (onEventClick) {
-      onEventClick(event);
-      return;
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      'musique': 'bg-red-500',
+      'music': 'bg-red-500',
+      'art': 'bg-sky-500',
+      'arts & theatre': 'bg-sky-500',
+      'sport': 'bg-blue-500',
+      'sports': 'bg-blue-500',
+      'famille': 'bg-orange-500',
+      'family': 'bg-orange-500',
+      'culture': 'bg-teal-500',
+      'community': 'bg-green-500',
+      'gastronomie': 'bg-yellow-500',
+      'education': 'bg-indigo-500',
+    };
+    return colors[category.toLowerCase()] || 'bg-gray-500';
+  };
+
+  const getCategoryIcon = (category: string) => {
+    const isMusic = category.toLowerCase().includes('music') || category.toLowerCase().includes('musique');
+    if (isMusic && enrichedTags.length > 0) {
+      return getGenreEmoji(enrichedTags[0]);
     }
-    router.push(`/evenement/${event.id}`);
+    return '🎵';
   };
 
   return (
     <div 
       className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl"
-      onClick={handleCardClick}
+      onClick={() => onEventClick(event)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -173,6 +199,19 @@ const EventCard = ({
       <div className="p-5">
         {/* En-tête clean */}
         <div className="mb-4">
+          {/* Genre musical principal */}
+          {enrichedTags && enrichedTags.length > 0 && (
+            <div className="mb-2">
+              <span 
+                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                style={{ backgroundColor: getGenreColor(enrichedTags[0]) }}
+              >
+                <span className="mr-1">{getGenreEmoji(enrichedTags[0])}</span>
+                {enrichedTags[0]}
+              </span>
+            </div>
+          )}
+          
           {/* Titre lisible */}
           <h3 className="font-bold text-lg text-gray-900 leading-tight mb-2 line-clamp-2">
             {event.title}
@@ -211,8 +250,9 @@ const EventCard = ({
         </div>
 
         {/* Tags spéciaux et secondaires */}
-        {event.tags.length > 0 && (
+        {(event.tags.length > 0 || enrichedTags.length > 1) && (
           <div className="flex flex-wrap gap-1.5 mb-4">
+            {/* Tags spéciaux prioritaires */}
             {event.tags.map((tag) => {
               const tagLower = tag.toLowerCase();
               // Tags spéciaux avec styles distincts
@@ -256,6 +296,18 @@ const EventCard = ({
                   </span>
                 );
               }
+              // Tags musicaux (genres)
+              if (enrichedTags.includes(tag)) {
+                return (
+                  <span
+                    key={tag}
+                    className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full"
+                  >
+                    {tag}
+                  </span>
+                );
+              }
+              // Tags génériques
               return (
                 <span
                   key={tag}
@@ -264,6 +316,21 @@ const EventCard = ({
                   {tag}
                 </span>
               );
+            })}
+            
+            {/* Tags musicaux supplémentaires */}
+            {enrichedTags.length > 1 && enrichedTags.slice(1, 4).map((tag, index) => {
+              if (!event.tags.includes(tag)) {
+                return (
+                  <span
+                    key={`enriched-${index}`}
+                    className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full"
+                  >
+                    {tag}
+                  </span>
+                );
+              }
+              return null;
             })}
           </div>
         )}
