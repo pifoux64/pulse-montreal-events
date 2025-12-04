@@ -260,8 +260,11 @@ export async function GET(request: NextRequest) {
     }
 
     // Construire la requête Prisma
+    // Inclure les événements SCHEDULED et UPDATED (pas CANCELLED)
     const where: any = {
-      status: EventStatus.SCHEDULED,
+      status: {
+        in: [EventStatus.SCHEDULED, EventStatus.UPDATED],
+      },
     };
 
     // SPRINT 1: Appliquer le filtre scope
