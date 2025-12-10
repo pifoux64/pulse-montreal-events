@@ -7,13 +7,13 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { generateMusicTags, getGenreEmoji, getGenreColor } from '@/lib/musicTags';
 import { useSession } from 'next-auth/react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface EventCardProps {
   event: Event;
   onFavoriteToggle: (eventId: string) => void;
-  onEventClick: (event: Event) => void;
+  onEventClick?: (event: Event) => void;
   isFavorite?: boolean;
   isFavoriteLoading?: boolean;
   showImage?: boolean;
@@ -29,6 +29,7 @@ const EventCard = ({
 }: EventCardProps) => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
   const isAuthenticated = status === 'authenticated';
   const [justToggled, setJustToggled] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
@@ -118,10 +119,18 @@ const EventCard = ({
     return '🎵';
   };
 
+  const handleEventClick = () => {
+    if (onEventClick) {
+      onEventClick(event);
+    } else {
+      router.push(`/evenement/${event.id}`);
+    }
+  };
+
   return (
     <div 
       className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl"
-      onClick={() => onEventClick(event)}
+      onClick={handleEventClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
