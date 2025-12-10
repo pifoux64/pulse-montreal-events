@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
     // Ajouter aux favoris (upsert pour éviter les doublons)
     const favorite = await prisma.favorite.upsert({
       where: {
-        userId_eventId: {
+        unique_user_event_favorite: {
           userId: session.user.id,
           eventId,
         },
