@@ -19,6 +19,9 @@ export interface WebPushSubscription {
 export interface PushNotificationPayload {
   title: string;
   body: string;
+  icon?: string;
+  badge?: string;
+  image?: string;
   data?: Record<string, unknown>;
 }
 
@@ -32,7 +35,7 @@ if (pushReady) {
   webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY!, VAPID_PRIVATE_KEY!);
 } else if (process.env.NODE_ENV !== 'production') {
   console.warn(
-    '[Push] WEB-PUSH non configuré. Définis NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY et VAPID_SUBJECT pour activer l’envoi.'
+    "[Push] WEB-PUSH non configuré. Définis NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY et VAPID_SUBJECT pour activer l'envoi."
   );
 }
 
@@ -49,7 +52,7 @@ export async function sendEventPostPushNotifications({
 
   if (!pushReady) {
     if (process.env.NODE_ENV !== 'production') {
-      console.info('[Push] Abandon de l’envoi: configuration incomplète.', {
+      console.info("[Push] Abandon de l'envoi: configuration incomplète.", {
         missing: {
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: Boolean(VAPID_PUBLIC_KEY),
           VAPID_PRIVATE_KEY: Boolean(VAPID_PRIVATE_KEY),
@@ -67,6 +70,17 @@ export async function sendEventPostPushNotifications({
         return Promise.resolve();
       }
 
+      const notificationPayload = {
+        title: payload.title,
+        body: payload.body,
+        icon: payload.icon || '/icons/icon-128x128.png',
+        badge: payload.badge || '/icons/icon-72x72.png',
+        image: payload.image,
+        data: payload.data || {},
+        requireInteraction: false,
+        silent: false,
+      };
+
       return webpush
         .sendNotification(
           {
@@ -76,10 +90,19 @@ export async function sendEventPostPushNotifications({
               p256dh: keys?.p256dh ?? undefined,
             },
           },
-          JSON.stringify(payload)
+          JSON.stringify(notificationPayload)
         )
         .catch((error) => {
-          console.warn('[Push] Erreur d’envoi', error);
+          // Gérer les erreurs spécifiques
+          if (error.statusCode === 410) {
+            // Souscription expirée - devrait être supprimée de la base
+            console.warn('[Push] Souscription expirée:', endpoint);
+          } else if (error.statusCode === 404) {
+            // Souscription invalide
+            console.warn('[Push] Souscription invalide:', endpoint);
+          } else {
+            console.warn("[Push] Erreur d'envoi:", error);
+          }
         });
     })
   );

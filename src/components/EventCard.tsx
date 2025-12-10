@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User, LogIn } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User, LogIn, Loader2 } from 'lucide-react';
 import { Event } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -15,19 +15,38 @@ interface EventCardProps {
   onFavoriteToggle: (eventId: string) => void;
   onEventClick: (event: Event) => void;
   isFavorite?: boolean;
+  isFavoriteLoading?: boolean;
   showImage?: boolean;
 }
 
 const EventCard = ({ 
   event, 
   onFavoriteToggle, 
-  onEventClick, 
+  onEventClick,
   isFavorite = false,
+  isFavoriteLoading = false,
   showImage = true 
 }: EventCardProps) => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const isAuthenticated = status === 'authenticated';
+  const [justToggled, setJustToggled] = useState(false);
+  const [animationKey, setAnimationKey] = useState(0);
+  
+  // Animation de confirmation après toggle
+  useEffect(() => {
+    if (justToggled) {
+      const timer = setTimeout(() => setJustToggled(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [justToggled]);
+  
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setJustToggled(true);
+    setAnimationKey(prev => prev + 1);
+    onFavoriteToggle(event.id);
+  };
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -167,28 +186,56 @@ const EventCard = ({
             )}
             {isAuthenticated && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFavoriteToggle(event.id);
-                }}
-                className={`p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 group/heart ${
+                onClick={handleFavoriteClick}
+                disabled={isFavoriteLoading}
+                className={`p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 group/heart relative ${
                   isFavorite 
                     ? 'text-red-500 hover:scale-110' 
                     : 'text-gray-600 hover:text-red-500 hover:scale-110'
-                } ${isHovered ? 'scale-105' : ''}`}
+                } ${isHovered ? 'scale-105' : ''} ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''} ${
+                  justToggled && isFavorite ? 'animate-pulse' : ''
+                }`}
+                aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
               >
-                <Heart className={`w-5 h-5 transition-all duration-300 ${isFavorite ? 'fill-current scale-110' : 'group-hover/heart:scale-110'}`} />
+                {isFavoriteLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Heart 
+                      key={animationKey}
+                      className={`w-5 h-5 transition-all duration-300 ${
+                        isFavorite ? 'fill-current scale-110' : 'group-hover/heart:scale-110'
+                      } ${justToggled ? 'animate-bounce' : ''}`} 
+                    />
+                    {justToggled && (
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                    )}
+                  </>
+                )}
               </button>
             )}
             {!isAuthenticated && isFavorite && (
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFavoriteToggle(event.id);
-                }}
-                className="p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 text-red-500 hover:scale-110"
+                onClick={handleFavoriteClick}
+                disabled={isFavoriteLoading}
+                className={`p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 text-red-500 hover:scale-110 relative ${
+                  isFavoriteLoading ? 'opacity-50 cursor-wait' : ''
+                } ${justToggled ? 'animate-pulse' : ''}`}
+                aria-label="Retirer des favoris"
               >
-                <Heart className="w-5 h-5 transition-all duration-300 fill-current" />
+                {isFavoriteLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Heart 
+                      key={animationKey}
+                      className={`w-5 h-5 transition-all duration-300 fill-current ${justToggled ? 'animate-bounce' : ''}`} 
+                    />
+                    {justToggled && (
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                    )}
+                  </>
+                )}
               </button>
             )}
           </div>
@@ -339,18 +386,24 @@ const EventCard = ({
         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
           <div className="flex items-center space-x-3">
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onFavoriteToggle(event.id);
-              }}
+              onClick={handleFavoriteClick}
+              disabled={isFavoriteLoading}
               className={`flex items-center space-x-1 text-sm transition-colors duration-200 ${
                 isFavorite
                   ? 'text-red-600'
                   : 'text-gray-500 hover:text-red-600'
-              }`}
+              } ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''} ${justToggled ? 'animate-pulse' : ''}`}
+              aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
             >
-              <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
-              <span className="hidden sm:inline">Aimer</span>
+              {isFavoriteLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Heart 
+                  key={animationKey}
+                  className={`w-4 h-4 transition-all duration-200 ${isFavorite ? 'fill-current' : ''} ${justToggled ? 'animate-bounce' : ''}`} 
+                />
+              )}
+              <span className="hidden sm:inline">{isFavorite ? 'Aimé' : 'Aimer'}</span>
             </button>
             
             <button

@@ -6,7 +6,7 @@ import { useEvents } from '@/hooks/useEvents';
 import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
-import { Calendar, Filter, ChevronLeft, ChevronRight, MapPin, Clock, Users, Heart } from 'lucide-react';
+import { Calendar, Filter, ChevronLeft, ChevronRight, MapPin, Clock, Users, Heart, Loader2 } from 'lucide-react';
 import { usePersistentFilters } from '@/hooks/usePersistentFilters';
 import { useRouter } from 'next/navigation';
 
@@ -97,7 +97,7 @@ function CalendrierPageContent() {
   const router = useRouter();
   
   // Système de favoris
-  const { isFavorite, toggleFavorite } = useFavorites(events);
+  const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(events);
 
   const { filters, setFilters } = usePersistentFilters();
   const [showFilters, setShowFilters] = useState(true);
@@ -567,13 +567,19 @@ function CalendrierPageContent() {
                                 e.stopPropagation();
                                 handleFavoriteToggle(event.id);
                               }}
+                              disabled={isFavoriteLoading(event.id)}
                               className={`p-2 transition-colors duration-200 ${
                                 isFavorite(event.id) 
                                   ? 'text-red-500' 
                                   : 'text-gray-400 hover:text-red-500'
-                              }`}
+                              } ${isFavoriteLoading(event.id) ? 'opacity-50 cursor-wait' : ''}`}
+                              aria-label={isFavorite(event.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                             >
-                              <Heart className={`w-4 h-4 ${isFavorite(event.id) ? 'fill-current' : ''}`} />
+                              {isFavoriteLoading(event.id) ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Heart className={`w-4 h-4 transition-all duration-200 ${isFavorite(event.id) ? 'fill-current' : ''}`} />
+                              )}
                             </button>
                             
                             <span className={`px-2 py-1 text-xs rounded-full ${getCategoryColor(event.category)}`}>

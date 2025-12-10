@@ -67,7 +67,7 @@ export default function OrganisateurPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Système de favoris
-  const { isFavorite, toggleFavorite } = useFavorites(organizerEvents);
+  const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(organizerEvents);
 
   // Charger les données de l'organisateur
   useEffect(() => {
@@ -440,6 +440,7 @@ export default function OrganisateurPage() {
                       event={event}
                       onFavoriteToggle={handleFavoriteToggle}
                       isFavorite={isFavorite(event.id)}
+                      isFavoriteLoading={isFavoriteLoading(event.id)}
                       showImage={viewMode === 'grid'}
                     />
                   </div>

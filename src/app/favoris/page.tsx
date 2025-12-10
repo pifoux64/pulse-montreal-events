@@ -99,7 +99,7 @@ function FavorisPageContent() {
   
   // Charger les favoris depuis l'API si connecté, sinon depuis localStorage
   const { data: apiFavoriteEvents = [], isLoading: loadingApi, error: apiError } = useFavoriteEvents();
-  const { favoriteEvents: localFavoriteEvents, isFavorite, toggleFavorite, clearAllFavorites } = useFavorites([]);
+  const { favoriteEvents: localFavoriteEvents, isFavorite, toggleFavorite, clearAllFavorites, isFavoriteLoading } = useFavorites([]);
   
   // Utiliser les favoris de l'API si connecté, sinon localStorage
   const favoriteEvents = isAuthenticated ? apiFavoriteEvents : localFavoriteEvents;
@@ -539,6 +539,7 @@ function FavorisPageContent() {
                       onFavoriteToggle={handleFavoriteToggle}
                       showImage={viewMode === 'grid'}
                       isFavorite={isFavorite(event.id)}
+                      isFavoriteLoading={isFavoriteLoading(event.id)}
                     />
                   </div>
                 ))}

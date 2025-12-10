@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Bell, CheckCheck, Loader2, Wifi } from 'lucide-react';
 
 import { useNotifications, useMarkNotificationsRead } from '@/hooks/useNotifications';
-import { useNotificationSubscription } from '@/hooks/useNotificationSubscription';
+import { useNotificationSubscription, useSubscriptionStatus, usePushNotificationSupport } from '@/hooks/useNotificationSubscription';
 
 export default function NotificationBell() {
   const [open, setOpen] = useState(false);
@@ -13,6 +13,8 @@ export default function NotificationBell() {
   const { data, isLoading, isError } = useNotifications();
   const markAsRead = useMarkNotificationsRead();
   const subscribePush = useNotificationSubscription();
+  const { data: isSubscribed, isLoading: checkingStatus } = useSubscriptionStatus();
+  const { isSupported, permission } = usePushNotificationSupport();
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -116,26 +118,50 @@ export default function NotificationBell() {
           </div>
 
           <div className="p-3 border-t border-white/10">
-            <button
-              type="button"
-              onClick={() => subscribePush.mutate()}
-              disabled={subscribePush.isPending}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-slate-100 hover:border-emerald-400 hover:text-emerald-200 transition disabled:opacity-50"
-            >
-              {subscribePush.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Wifi className="h-4 w-4" />
-              )}
-              Activer les notifications push
-            </button>
-            {subscribePush.isError && (
-              <p className="mt-2 text-[11px] text-red-400">
-                {(subscribePush.error as Error)?.message ?? 'Erreur lors de l’activation.'}
+            {!isSupported ? (
+              <p className="text-[11px] text-slate-400 text-center">
+                Les notifications push ne sont pas supportées par ce navigateur.
               </p>
-            )}
-            {subscribePush.isSuccess && (
-              <p className="mt-2 text-[11px] text-emerald-300">Notifications push activées.</p>
+            ) : permission === 'denied' ? (
+              <p className="text-[11px] text-amber-400 text-center">
+                Les notifications ont été bloquées. Autorisez-les dans les paramètres de votre navigateur.
+              </p>
+            ) : checkingStatus ? (
+              <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Vérification...
+              </div>
+            ) : isSubscribed ? (
+              <div className="flex items-center justify-center gap-2 text-[11px] text-emerald-300">
+                <Wifi className="h-3 w-3" />
+                Notifications push activées
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => subscribePush.mutate()}
+                  disabled={subscribePush.isPending}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 px-3 py-2 text-xs font-semibold text-slate-100 hover:border-emerald-400 hover:text-emerald-200 transition disabled:opacity-50"
+                >
+                  {subscribePush.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wifi className="h-4 w-4" />
+                  )}
+                  Activer les notifications push
+                </button>
+                {subscribePush.isError && (
+                  <p className="mt-2 text-[11px] text-red-400">
+                    {(subscribePush.error as Error)?.message ?? "Erreur lors de l'activation."}
+                  </p>
+                )}
+                {subscribePush.isSuccess && (
+                  <p className="mt-2 text-[11px] text-emerald-300">
+                    {subscribePush.data?.message || 'Notifications push activées.'}
+                  </p>
+                )}
+              </>
             )}
             <Link
               href="/notifications"

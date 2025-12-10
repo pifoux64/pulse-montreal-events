@@ -18,6 +18,7 @@ export interface FavoritesHook {
   getFavoriteEvents: (allEvents: Event[]) => Event[];
   isLoading: boolean;
   error: Error | null;
+  isFavoriteLoading: (eventId: string) => boolean;
 }
 
 // Fonction pour charger les favoris depuis l'API (retourne les IDs)
@@ -324,6 +325,19 @@ export const useFavorites = (allEvents: Event[] = []): FavoritesHook => {
   // Calculer les événements favoris actuels
   const favoriteEvents = getFavoriteEvents(allEvents);
 
+  // Vérifier si un événement est en cours de chargement (mutation en cours)
+  const isFavoriteLoading = useCallback(
+    (eventId: string): boolean => {
+      if (!isAuthenticated) {
+        return false; // Pas de chargement pour localStorage
+      }
+      // Vérifier si une mutation est en cours pour cet événement
+      // Note: React Query ne track pas les mutations par paramètre, donc on vérifie globalement
+      return addMutation.isPending || removeMutation.isPending;
+    },
+    [isAuthenticated, addMutation.isPending, removeMutation.isPending]
+  );
+
   return {
     favorites,
     favoriteEvents,
@@ -335,6 +349,7 @@ export const useFavorites = (allEvents: Event[] = []): FavoritesHook => {
     getFavoriteEvents,
     isLoading: isLoading && isAuthenticated,
     error: queryError as Error | null,
+    isFavoriteLoading,
   };
 };
 

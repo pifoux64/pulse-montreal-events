@@ -197,7 +197,7 @@ export default function OptimizedHomePage() {
   const { data: events = [], isLoading: loading, error } = useEvents();
   
   // Système de favoris
-  const { isFavorite, toggleFavorite } = useFavorites(events);
+  const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(events);
 
   // Filtrage des événements basé sur la recherche et les filtres
   const filteredEvents = useMemo(() => {
@@ -694,6 +694,7 @@ export default function OptimizedHomePage() {
                       event={event}
                       onFavoriteToggle={handleFavoriteToggle}
                       isFavorite={isFavorite(event.id)}
+                      isFavoriteLoading={isFavoriteLoading(event.id)}
                       showImage={true}
                     />
                   </div>

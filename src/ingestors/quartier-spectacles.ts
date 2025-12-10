@@ -42,8 +42,18 @@ export class QuartierSpectaclesConnector extends BaseConnector {
   async listUpdatedSince(since: Date, limit: number = 50): Promise<QDSEvent[]> {
     console.log('🎭 Récupération des événements du Quartier des Spectacles...');
     
-    // Pour l'instant, utilisons des événements basés sur les vraies données du site
-    // Ces événements correspondent aux vrais festivals et événements du QDS
+    // ⚠️ TODO: Implémenter un vrai scraper ou API pour récupérer les événements depuis quartierdesspectacles.com
+    // Pour l'instant, cette source retourne un tableau vide
+    // Ne pas utiliser d'événements hardcodés/mockés
+    
+    console.warn('⚠️ Connecteur Quartier Spectacles non implémenté - aucun événement récupéré');
+    
+    return [];
+  }
+
+  // Méthode supprimée - contenait des événements hardcodés
+  /*
+  async listUpdatedSince_OLD(since: Date, limit: number = 50): Promise<QDSEvent[]> {
     const qdsEvents: QDSEvent[] = [
       {
         id: 'qds_1',

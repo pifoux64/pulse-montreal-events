@@ -13,6 +13,7 @@ import { TicketmasterConnector } from '../ingestors/ticketmaster';
 import { MeetupConnector } from '../ingestors/meetup';
 import { LaVitrineConnector } from '../ingestors/lavitrine';
 import { AllEventsConnector } from '../ingestors/allevents';
+import { LepointdeventeConnector } from '../ingestors/lepointdevente';
 import {
   findPotentialDuplicates,
   resolveDuplicate,
@@ -61,7 +62,7 @@ export class IngestionOrchestrator {
       },
       {
         source: EventSource.TOURISME_MONTREAL,
-        enabled: false, // Désactivé pour éviter les événements de démo
+        enabled: true, // Activé
         batchSize: 30,
       },
       {
@@ -72,7 +73,7 @@ export class IngestionOrchestrator {
       },
       {
         source: EventSource.MEETUP,
-        enabled: false,
+        enabled: !!process.env.MEETUP_TOKEN, // S'active automatiquement si le token est défini
         batchSize: 100,
       },
       {
@@ -84,6 +85,11 @@ export class IngestionOrchestrator {
         source: EventSource.ALLEVENTS,
         enabled: false, // Désactivé pour éviter les événements de démo
         batchSize: 50,
+      },
+      {
+        source: EventSource.LEPOINTDEVENTE,
+        enabled: false, // Désactivé - Nécessite un partenariat API (pas de scraping)
+        batchSize: 100,
       },
       // TODO: Ajouter d'autres connecteurs
       // {
@@ -122,6 +128,9 @@ export class IngestionOrchestrator {
             break;
           case EventSource.ALLEVENTS:
             this.connectors.set(config.source, new AllEventsConnector());
+            break;
+          case EventSource.LEPOINTDEVENTE:
+            this.connectors.set(config.source, new LepointdeventeConnector());
             break;
           // Ajouter d'autres connecteurs ici
         }
@@ -165,9 +174,22 @@ export class IngestionOrchestrator {
   }
 
   /**
-   * Lance l'ingestion pour une source spécifique
+   * Lance l'ingestion pour une seule source spécifique (méthode publique)
    */
-  async runSourceIngestion(source: EventSource, connector: BaseConnector): Promise<ImportStats> {
+  async runSingleSource(source: EventSource): Promise<ImportStats> {
+    const connector = this.connectors.get(source);
+    
+    if (!connector) {
+      throw new Error(`Connecteur non trouvé pour la source ${source}. La source n'est peut-être pas activée.`);
+    }
+
+    return this.runSourceIngestion(source, connector);
+  }
+
+  /**
+   * Lance l'ingestion pour une source spécifique (méthode privée)
+   */
+  private async runSourceIngestion(source: EventSource, connector: BaseConnector): Promise<ImportStats> {
     const startTime = Date.now();
     const stats: ImportStats = {
       totalFetched: 0,
@@ -182,11 +204,17 @@ export class IngestionOrchestrator {
     };
 
     // Créer un job d'import
+    const startedAt = new Date();
     const importJob = await prisma.importJob.create({
       data: {
         source,
         status: ImportJobStatus.RUNNING,
-        runAt: new Date(),
+        startedAt,
+        runAt: startedAt, // Conservé pour compatibilité
+        nbCreated: 0,
+        nbUpdated: 0,
+        nbSkipped: 0,
+        nbErrors: 0,
       },
     });
 
@@ -241,35 +269,109 @@ export class IngestionOrchestrator {
 
         } catch (error) {
           stats.totalErrors++;
-          stats.errors.push(`Erreur traitement événement: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+          const errorMsg = error instanceof Error 
+            ? `${error.name}: ${error.message}` 
+            : String(error).substring(0, 200);
+          
+          // Limiter le nombre d'erreurs stockées pour éviter des tableaux trop longs
+          if (stats.errors.length < 100) {
+            stats.errors.push(`Événement ${rawEvent.id || 'inconnu'}: ${errorMsg}`);
+          } else if (stats.errors.length === 100) {
+            stats.errors.push('... (erreurs supplémentaires non affichées)');
+          }
+          
           logger.error('Erreur lors du traitement d\'un événement:', error);
         }
       }
 
       stats.duration = Date.now() - startTime;
+      const finishedAt = new Date();
 
       // Marquer le job comme réussi
       await prisma.importJob.update({
         where: { id: importJob.id },
         data: {
           status: ImportJobStatus.SUCCESS,
+          finishedAt,
+          nbCreated: stats.totalCreated,
+          nbUpdated: stats.totalUpdated,
+          nbSkipped: stats.totalSkipped,
+          nbErrors: stats.totalErrors,
           stats,
         },
       });
 
     } catch (error) {
       stats.duration = Date.now() - startTime;
+      const finishedAt = new Date();
+      
+      // Construire un message d'erreur détaillé mais limité en taille
+      let errorMessage = 'Erreur inconnue';
+      if (error instanceof Error) {
+        errorMessage = `${error.name}: ${error.message}`;
+        if (error.stack) {
+          // Limiter la stack trace à 500 caractères
+          const stackPreview = error.stack.substring(0, 500);
+          errorMessage += `\nStack: ${stackPreview}${error.stack.length > 500 ? '...' : ''}`;
+        }
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else {
+        errorMessage = JSON.stringify(error).substring(0, 500);
+      }
+      
+      // Limiter le nombre d'erreurs stockées (max 50)
+      const limitedErrors = stats.errors.slice(0, 50);
+      if (stats.errors.length > 50) {
+        limitedErrors.push(`... et ${stats.errors.length - 50} autres erreurs`);
+      }
+      
       // Marquer le job comme échoué
       await prisma.importJob.update({
         where: { id: importJob.id },
         data: {
           status: ImportJobStatus.ERROR,
-          errorText: error instanceof Error ? error.message : 'Erreur inconnue',
-          stats,
+          finishedAt,
+          nbCreated: stats.totalCreated,
+          nbUpdated: stats.totalUpdated,
+          nbSkipped: stats.totalSkipped,
+          nbErrors: stats.totalErrors + 1, // +1 pour l'erreur principale
+          errorText: errorMessage.substring(0, 2000), // Limiter à 2000 caractères
+          stats: {
+            ...stats,
+            errors: limitedErrors,
+            mainError: errorMessage.substring(0, 500),
+          },
         },
       });
 
-      throw error;
+      // Ne pas re-lancer l'erreur pour éviter de bloquer l'ingestion des autres sources
+      // L'erreur est déjà enregistrée dans ImportJob
+      logger.error(`Erreur lors de l'ingestion de ${source}:`, error);
+    } finally {
+      // S'assurer que le job est toujours finalisé, même en cas d'erreur non capturée
+      try {
+        const currentJob = await prisma.importJob.findUnique({
+          where: { id: importJob.id },
+        });
+        
+        if (currentJob?.status === ImportJobStatus.RUNNING) {
+          // Si le job est encore en RUNNING, le finaliser
+          await prisma.importJob.update({
+            where: { id: importJob.id },
+            data: {
+              status: ImportJobStatus.ERROR,
+              finishedAt: new Date(),
+              errorText: 'Import interrompu - finalisé automatiquement',
+              nbErrors: stats.totalErrors + 1,
+            },
+          });
+          logger.warn(`Import ${importJob.id} finalisé automatiquement (était encore en RUNNING)`);
+        }
+      } catch (finalizeError) {
+        // Si même la finalisation échoue, logger mais ne pas bloquer
+        logger.error(`Erreur lors de la finalisation de l'import ${importJob.id}:`, finalizeError);
+      }
     }
 
     return stats;
@@ -308,7 +410,31 @@ export class IngestionOrchestrator {
       return 'skipped';
     }
 
-    // Chercher les doublons potentiels
+    // ÉTAPE 1: Recherche par clé primaire (source, sourceId)
+    // C'est la méthode la plus fiable et la plus rapide
+    if (unifiedEvent.sourceId) {
+      const existingBySourceId = await prisma.event.findUnique({
+        where: {
+          unique_source_event: {
+            source: unifiedEvent.source,
+            sourceId: unifiedEvent.sourceId,
+          },
+        },
+        include: {
+          venue: true,
+        },
+      });
+
+      if (existingBySourceId) {
+        // Événement existe déjà avec cette clé primaire → UPDATE
+        logger.debug(`Événement trouvé par (source, sourceId): ${unifiedEvent.source}#${unifiedEvent.sourceId}`);
+        await this.updateEvent(existingBySourceId.id, unifiedEvent);
+        return 'updated';
+      }
+    }
+
+    // ÉTAPE 2: Fallback - Détection de doublons par titre+date+lieu
+    // Utilisé seulement si pas de sourceId ou si l'événement n'existe pas encore
     const existingEvents = await this.getExistingEventsForDeduplication(unifiedEvent);
     const duplicates = await findPotentialDuplicates(
       this.toDeduplicationEvent(unifiedEvent),
@@ -325,17 +451,17 @@ export class IngestionOrchestrator {
 
       switch (resolution) {
         case 'keep_existing':
-          logger.debug(`Doublon détecté, conservation de l'existant: ${unifiedEvent.title}`);
+          logger.debug(`Doublon détecté par similarité, conservation de l'existant: ${unifiedEvent.title}`);
           return 'skipped';
 
         case 'replace':
-          logger.debug(`Doublon détecté, remplacement: ${unifiedEvent.title}`);
+          logger.debug(`Doublon détecté par similarité, remplacement: ${unifiedEvent.title}`);
           await this.updateEvent(bestMatch.event.id, unifiedEvent);
           return 'updated';
 
         case 'merge':
           // TODO: Implémenter la logique de merge si nécessaire
-          logger.debug(`Doublon détecté, merge: ${unifiedEvent.title}`);
+          logger.debug(`Doublon détecté par similarité, merge: ${unifiedEvent.title}`);
           await this.updateEvent(bestMatch.event.id, unifiedEvent);
           return 'updated';
       }
@@ -455,14 +581,17 @@ export class IngestionOrchestrator {
       },
     });
 
-    // Enrichissement en tags structurés
-    try {
-      await enrichEventWithTags(created.id);
-    } catch (error) {
-      logger.error(
-        `Erreur lors de l'enrichissement des tags pour l'événement créé ${created.id}:`,
-        error,
-      );
+    // Enrichissement en tags structurés (peut être désactivé si rate limit)
+    if (process.env.DISABLE_TAG_ENRICHMENT !== 'true') {
+      try {
+        await enrichEventWithTags(created.id);
+      } catch (error) {
+        // Ignorer silencieusement les erreurs d'enrichissement (souvent rate limit)
+        // L'événement est quand même créé, on pourra l'enrichir plus tard
+        logger.debug(
+          `Enrichissement tags ignoré pour ${created.id} (erreur: ${error instanceof Error ? error.message : 'inconnue'})`,
+        );
+      }
     }
   }
 
@@ -494,14 +623,16 @@ export class IngestionOrchestrator {
       },
     });
 
-    // Recalcul des tags structurés après mise à jour
-    try {
-      await enrichEventWithTags(updated.id);
-    } catch (error) {
-      logger.error(
-        `Erreur lors de l'enrichissement des tags pour l'événement mis à jour ${updated.id}:`,
-        error,
-      );
+    // Recalcul des tags structurés après mise à jour (peut être désactivé si rate limit)
+    if (process.env.DISABLE_TAG_ENRICHMENT !== 'true') {
+      try {
+        await enrichEventWithTags(updated.id);
+      } catch (error) {
+        // Ignorer silencieusement les erreurs d'enrichissement (souvent rate limit)
+        logger.debug(
+          `Enrichissement tags ignoré pour ${updated.id} (erreur: ${error instanceof Error ? error.message : 'inconnue'})`,
+        );
+      }
     }
   }
 

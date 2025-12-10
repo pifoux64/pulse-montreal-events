@@ -22,7 +22,7 @@ import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Event } from '@/types';
-import { MapPin, Calendar, Heart, ExternalLink, Clock } from 'lucide-react';
+import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2 } from 'lucide-react';
 import { 
   MAIN_CATEGORIES, 
   GENRES, 
@@ -336,7 +336,7 @@ export default function HomePage() {
       const inLocation = event.location.name.toLowerCase().includes(searchQuery);
       return inTitle || inDescription || inTags || inLocation;
     });
-  const { isFavorite, toggleFavorite } = useFavorites(events);
+  const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(events);
 
   const handleFavoriteToggle = async (eventId: string) => {
     try {
@@ -684,17 +684,23 @@ export default function HomePage() {
                                 e.stopPropagation();
                                 handleFavoriteToggle(event.id);
                               }}
-                              className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+                              disabled={isFavoriteLoading(event.id)}
+                              className={`p-2 rounded-full backdrop-blur-sm transition-all relative ${
                                 isFavorite(event.id)
                                   ? 'bg-red-500 text-white'
                                   : 'bg-white/20 text-white hover:bg-white/30'
-                              }`}
+                              } ${isFavoriteLoading(event.id) ? 'opacity-50 cursor-wait' : ''}`}
+                              aria-label={isFavorite(event.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
                             >
-                              <Heart
-                                className={`w-5 h-5 ${
-                                  isFavorite(event.id) ? 'fill-current' : ''
-                                }`}
-                              />
+                              {isFavoriteLoading(event.id) ? (
+                                <Loader2 className="w-5 h-5 animate-spin" />
+                              ) : (
+                                <Heart
+                                  className={`w-5 h-5 transition-all duration-200 ${
+                                    isFavorite(event.id) ? 'fill-current' : ''
+                                  }`}
+                                />
+                              )}
                             </button>
                           </div>
                           {event.price.isFree && (

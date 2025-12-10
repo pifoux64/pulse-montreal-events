@@ -124,8 +124,7 @@ export default function OptimizedCartePage() {
   const { data: events = [], isLoading: loading, error } = useEvents();
   
   // Système de favoris
-  const { isFavorite, toggleFavorite } = useFavorites(events);
-  const [filteredEvents, setFilteredEvents] = useState<Event[]>([]);
+  const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(events);
   const { filters, setFilters } = usePersistentFilters();
   const [mapViewState, setMapViewState] = useState<MapViewState>({
     center: [45.5017, -73.5673], // Centre de Montréal
@@ -145,15 +144,8 @@ export default function OptimizedCartePage() {
   const [showFreeOnly, setShowFreeOnly] = useState(false);
   const router = useRouter();
 
-  // Stabiliser les dépendances avec useMemo
-  const stableFilters = useMemo(() => JSON.stringify(filters), [filters]);
-  const stableUserLocation = useMemo(() => 
-    userLocation ? `${userLocation[0]},${userLocation[1]}` : null, 
-    [userLocation]
-  );
-
-  // Appliquer les filtres
-  useEffect(() => {
+  // Calculer les événements filtrés avec useMemo pour éviter les boucles infinies
+  const filteredEvents = useMemo(() => {
     let filtered = [...events];
 
     // ===== FILTRE DE RECHERCHE TEXTUELLE =====
@@ -324,8 +316,27 @@ export default function OptimizedCartePage() {
     }
 
     console.log(`🔍 Filtrage: ${events.length} → ${filtered.length} événements (Public: ${filters.targetAudience?.length || 0}, Accessibilité: ${filters.accessibility ? Object.values(filters.accessibility).filter(Boolean).length : 0})`);
-    setFilteredEvents(filtered);
-  }, [events, stableFilters, stableUserLocation, filters, userLocation, showFreeOnly]);
+    return filtered;
+    // Utiliser les valeurs primitives pour éviter les boucles infinies
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    events,
+    filters.searchQuery,
+    filters.categories?.join(','),
+    filters.subCategories?.join(','),
+    filters.priceRange?.min,
+    filters.priceRange?.max,
+    filters.dateRange?.start?.getTime(),
+    filters.dateRange?.end?.getTime(),
+    filters.targetAudience?.join(','),
+    JSON.stringify(filters.accessibility),
+    filters.location?.radius,
+    filters.location?.lat,
+    filters.location?.lng,
+    userLocation?.[0],
+    userLocation?.[1],
+    showFreeOnly,
+  ]);
 
   // Gestionnaires d'événements stables
   const handleFiltersChange = useCallback((newFilters: EventFilter) => {
@@ -538,6 +549,7 @@ export default function OptimizedCartePage() {
                         onFavoriteToggle={handleFavoriteToggle}
                         onEventClick={handleEventClick}
                         isFavorite={isFavorite(event.id)}
+                        isFavoriteLoading={isFavoriteLoading(event.id)}
                         showImage={false}
                       />
                     ))}

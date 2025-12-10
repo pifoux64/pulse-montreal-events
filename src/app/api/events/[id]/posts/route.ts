@@ -206,9 +206,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         payload: {
           title: `Nouveau post pour ${event.title}`,
           body: getNotificationPreview(sanitizedContent),
+          icon: '/icons/icon-128x128.png',
+          badge: '/icons/icon-72x72.png',
+          image: event.imageUrl,
           data: {
             eventId: event.id,
             postId: post.id,
+            type: 'EVENT_POST_PUBLISHED',
           },
         },
       });

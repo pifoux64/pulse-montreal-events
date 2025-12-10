@@ -13,7 +13,65 @@ export type AIClassificationOutput = {
   public: string[];
 };
 
-export async function classifyEventWithAI(
+/**
+ * Retry avec backoff exponentiel pour gérer les rate limits OpenAI
+ */
+async function classifyWithRetry(
+  input: AIClassificationInput,
+  maxRetries: number = 3,
+  initialDelay: number = 1000,
+): Promise<AIClassificationOutput> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const result = await classifyEventWithAIInternal(input);
+      return result;
+    } catch (error: any) {
+      const isRateLimit = error?.status === 429 || error?.message?.includes('429');
+      const isLastAttempt = attempt === maxRetries - 1;
+
+      if (isRateLimit && !isLastAttempt) {
+        // Extraire le délai suggéré par OpenAI si disponible
+        let delay = initialDelay * Math.pow(2, attempt); // Backoff exponentiel
+        
+        // Si l'erreur contient un délai suggéré, l'utiliser
+        if (error?.retryAfter) {
+          delay = error.retryAfter * 1000; // Convertir secondes en ms
+        } else if (error?.message) {
+          // Parser le message d'erreur OpenAI pour extraire le délai
+          const retryMatch = error.message.match(/try again in (\d+)ms/i);
+          if (retryMatch) {
+            delay = parseInt(retryMatch[1], 10);
+          }
+        }
+
+        // Limiter le délai max à 60 secondes
+        delay = Math.min(delay, 60000);
+
+        console.warn(
+          `⚠️ Rate limit OpenAI (429) - Tentative ${attempt + 1}/${maxRetries} - Retry dans ${delay}ms`,
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      // Si ce n'est pas un rate limit ou c'est la dernière tentative, logger et retourner vide
+      if (isLastAttempt) {
+        console.error(
+          `❌ Erreur OpenAI après ${maxRetries} tentatives:`,
+          error?.message || error,
+        );
+      }
+      return { type: null, genres: [], ambiance: [], public: [] };
+    }
+  }
+
+  return { type: null, genres: [], ambiance: [], public: [] };
+}
+
+/**
+ * Fonction interne qui fait l'appel API réel
+ */
+async function classifyEventWithAIInternal(
   input: AIClassificationInput,
 ): Promise<AIClassificationOutput> {
   if (!process.env.OPENAI_API_KEY) {
@@ -157,8 +215,23 @@ export async function classifyEventWithAI(
     });
 
     if (!response.ok) {
-      console.error('Erreur OpenAI API:', response.status, await response.text());
-      return { type: null, genres: [], ambiance: [], public: [] };
+      const errorText = await response.text();
+      let errorData: any = { status: response.status, message: errorText };
+      
+      // Essayer de parser le JSON d'erreur si disponible
+      try {
+        errorData = { ...errorData, ...JSON.parse(errorText) };
+      } catch {
+        // Ignorer si ce n'est pas du JSON
+      }
+
+      // Créer une erreur avec les détails pour le retry
+      const error = new Error(errorText) as any;
+      error.status = response.status;
+      error.message = errorText;
+      error.retryAfter = errorData.retry_after || errorData.retryAfter;
+      
+      throw error;
     }
 
     const data: any = await response.json();
@@ -176,9 +249,18 @@ export async function classifyEventWithAI(
         ? parsed.public.filter((p) => typeof p === 'string')
         : [],
     };
-  } catch (error) {
-    console.error('Erreur classifyEventWithAI:', error);
-    return { type: null, genres: [], ambiance: [], public: [] };
+  } catch (error: any) {
+    // Re-lancer l'erreur pour que le retry puisse la gérer
+    throw error;
   }
+}
+
+/**
+ * Fonction publique avec retry automatique
+ */
+export async function classifyEventWithAI(
+  input: AIClassificationInput,
+): Promise<AIClassificationOutput> {
+  return classifyWithRetry(input);
 }
 

@@ -54,8 +54,18 @@ export class LaVitrineConnector extends BaseConnector {
   async listUpdatedSince(since: Date, limit: number = 50): Promise<LaVitrineEvent[]> {
     console.log('🎭 Récupération des événements de La Vitrine...');
     
-    // TODO: Remplacer par un vrai scraping ou API
-    // Exemple de structure pour des événements culturels québécois
+    // ⚠️ TODO: Implémenter un vrai scraper ou API pour récupérer les événements depuis lavitrine.com
+    // Pour l'instant, cette source retourne un tableau vide
+    // Ne pas utiliser d'événements hardcodés/mockés
+    
+    console.warn('⚠️ Connecteur LaVitrine non implémenté - aucun événement récupéré');
+    
+    return [];
+  }
+
+  // Méthode supprimée - contenait des événements hardcodés
+  /*
+  async listUpdatedSince_OLD(since: Date, limit: number = 50): Promise<LaVitrineEvent[]> {
     const vitrineEvents: LaVitrineEvent[] = [
       {
         id: 'vitrine_1',
@@ -371,6 +381,11 @@ export class LaVitrineConnector extends BaseConnector {
    * }
    */
 }
+
+
+
+
+
 
 
 

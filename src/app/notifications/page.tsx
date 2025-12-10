@@ -6,7 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
 import { useNotifications, useMarkNotificationsRead } from '@/hooks/useNotifications';
-import { useNotificationSubscription } from '@/hooks/useNotificationSubscription';
+import { useNotificationSubscription, useSubscriptionStatus, usePushNotificationSupport } from '@/hooks/useNotificationSubscription';
 
 const PAGE_SIZE = 20;
 
@@ -15,6 +15,8 @@ export default function NotificationsPage() {
   const { data, isLoading, isError } = useNotifications(page, PAGE_SIZE);
   const markNotifications = useMarkNotificationsRead(page, PAGE_SIZE);
   const subscribePush = useNotificationSubscription();
+  const { data: isSubscribed, isLoading: checkingStatus } = useSubscriptionStatus();
+  const { isSupported, permission } = usePushNotificationSupport();
 
   const notifications = data?.data ?? [];
   const unreadCount = data?.meta.unreadCount ?? 0;
@@ -72,26 +74,50 @@ export default function NotificationsPage() {
               )}
               Tout marquer comme lu
             </button>
-            <button
-              type="button"
-              onClick={() => subscribePush.mutate()}
-              disabled={subscribePush.isPending}
-              className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-emerald-300 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {subscribePush.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Wifi className="h-4 w-4" />
-              )}
-              Activer les notifications push
-            </button>
-            {subscribePush.isError && (
-              <p className="text-xs text-red-500 max-w-sm text-right">
-                {(subscribePush.error as Error)?.message ?? 'Impossible d’activer les notifications push.'}
+            {!isSupported ? (
+              <p className="text-xs text-slate-500 max-w-sm text-right">
+                Les notifications push ne sont pas supportées par ce navigateur.
               </p>
-            )}
-            {subscribePush.isSuccess && (
-              <p className="text-xs text-emerald-600">Notifications push activées pour ce navigateur.</p>
+            ) : permission === 'denied' ? (
+              <p className="text-xs text-amber-600 max-w-sm text-right">
+                Les notifications ont été bloquées. Autorisez-les dans les paramètres de votre navigateur.
+              </p>
+            ) : checkingStatus ? (
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Vérification...
+              </div>
+            ) : isSubscribed ? (
+              <div className="flex items-center gap-2 text-xs text-emerald-600">
+                <Wifi className="h-4 w-4" />
+                Notifications push activées
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => subscribePush.mutate()}
+                  disabled={subscribePush.isPending}
+                  className="inline-flex items-center gap-2 rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:border-emerald-300 hover:text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {subscribePush.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Wifi className="h-4 w-4" />
+                  )}
+                  Activer les notifications push
+                </button>
+                {subscribePush.isError && (
+                  <p className="text-xs text-red-500 max-w-sm text-right">
+                    {(subscribePush.error as Error)?.message ?? "Impossible d'activer les notifications push."}
+                  </p>
+                )}
+                {subscribePush.isSuccess && (
+                  <p className="text-xs text-emerald-600">
+                    {subscribePush.data?.message || 'Notifications push activées pour ce navigateur.'}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </header>
@@ -175,6 +201,13 @@ export default function NotificationsPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
 
 
 

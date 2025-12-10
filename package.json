@@ -20,7 +20,9 @@
     "checkenv": "tsx scripts/checkEnv.ts",
     "setup-apis": "tsx scripts/setup-api-keys.ts",
     "test-ingestion": "tsx scripts/test-ingestion.ts",
-    "enrich:locations": "tsx scripts/enrichLocations.ts"
+    "enrich:locations": "tsx scripts/enrichLocations.ts",
+    "cleanup:subscriptions": "tsx scripts/cleanup-expired-subscriptions.ts",
+    "cleanup:imports": "tsx scripts/clean-stuck-imports.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
@@ -53,8 +55,8 @@
     "nodemailer": "^6.10.1",
     "pino": "^9.4.0",
     "pino-pretty": "^10.3.1",
-    "react": "19.1.2",
-    "react-dom": "19.1.2",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1",
     "react-hook-form": "^7.62.0",
     "react-leaflet": "^5.0.0",
     "react-map-gl": "^7.1.7",

@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Calendar, MapPin, Clock, DollarSign, Users, Tag, ExternalLink, Heart, Share2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, DollarSign, Users, Tag, ExternalLink } from 'lucide-react';
 import { EventStatus } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 
@@ -12,6 +12,7 @@ import { authOptions } from '@/lib/auth';
 import EventTabsSection from '@/components/EventTabsSection';
 import EventDetailMap from '@/components/EventDetailMap';
 import EventFeedPanel from '@/components/event-feed/EventFeedPanel';
+import EventDetailActions from '@/components/EventDetailActions';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -98,9 +99,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       other: {
         'event:start_time': event.startAt.toISOString(),
         'event:end_time': event.endAt ? event.endAt.toISOString() : undefined,
-        'event:location:latitude': event.venue?.lat?.toString(),
-        'event:location:longitude': event.venue?.lon?.toString(),
-        'event:location:venue': event.venue?.name,
+        'event:location:latitude': event.venue?.lat?.toString() ?? undefined,
+        'event:location:longitude': event.venue?.lon?.toString() ?? undefined,
+        'event:location:venue': event.venue?.name ?? undefined,
         'event:location:address': event.venue
           ? `${event.venue.address}, ${event.venue.city} ${event.venue.postalCode}`
           : undefined,
@@ -177,13 +178,8 @@ export default async function EventPage({ params }: { params: { id: string } }) 
               </div>
 
               {/* Action Buttons */}
-              <div className="absolute top-4 right-4 flex gap-2">
-                <button className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors">
-                  <Heart className="h-5 w-5" />
-                </button>
-                <button className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors">
-                  <Share2 className="h-5 w-5" />
-                </button>
+              <div className="absolute top-4 right-4">
+                <EventDetailActions eventId={event.id} eventTitle={event.title} />
               </div>
 
               {/* Event Title & Basic Info */}
