@@ -416,16 +416,24 @@ export async function GET(request: NextRequest) {
     // Filtres par prix
     if (filters.free) {
       // Pour les événements gratuits, on utilise une condition OR
+      // Utiliser OR directement dans where au lieu de where.OR pour éviter les conflits
       if (!where.OR) {
-        where.OR = [];
+        where.OR = [
+          { priceMin: 0 },
+          { priceMin: null }
+        ];
+      } else {
+        // Si on a déjà un OR, on doit combiner avec AND
+        const existingOr = Array.isArray(where.OR) ? where.OR : [where.OR];
+        where.AND = [
+          { OR: existingOr },
+          { OR: [
+            { priceMin: 0 },
+            { priceMin: null }
+          ]}
+        ];
+        delete where.OR;
       }
-      if (!Array.isArray(where.OR)) {
-        where.OR = [where.OR];
-      }
-      where.OR.push(
-        { priceMin: 0 },
-        { priceMin: null }
-      );
     } else {
       if (filters.priceMin !== undefined) {
         where.priceMin = { gte: filters.priceMin };
