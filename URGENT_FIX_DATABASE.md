@@ -4,8 +4,10 @@
 
 L'API retourne une erreur 500 car Vercel ne peut pas se connecter à Supabase :
 ```
-Can't reach database server at `aws-1-ca-central-1.pooler.supabase.com:5432`
+Can't reach database server at `db.dtveugfincrygcgsuyxo.supabase.co:5432`
 ```
+
+**⚠️ CAUSE IDENTIFIÉE** : Vous utilisez l'URL **directe** de la base de données au lieu de l'URL du **pooler**.
 
 **Impact** : 
 - ❌ Page d'accueil : 0 événements
@@ -19,12 +21,19 @@ Can't reach database server at `aws-1-ca-central-1.pooler.supabase.com:5432`
 1. Allez sur https://app.supabase.com
 2. Sélectionnez votre projet
 3. Allez dans **Settings** → **Database**
-4. Dans la section **Connection string**, sélectionnez **URI** (pas "Transaction")
-5. Copiez la chaîne de connexion qui ressemble à :
+4. **IMPORTANT** : Dans la section **Connection string**, vous verrez plusieurs options :
+   - ❌ **Direct connection** : `db.xxx.supabase.co:5432` → **NE PAS UTILISER** (ne fonctionne pas sur Vercel)
+   - ✅ **Connection pooling** : `xxx.pooler.supabase.com:5432` → **UTILISER CELUI-CI**
+5. Sélectionnez **Connection pooling** → **Session mode** → **URI**
+6. Copiez la chaîne de connexion qui ressemble à :
    ```
    postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-1-ca-central-1.pooler.supabase.com:5432/postgres
    ```
-6. **Important** : Remplacez `[PASSWORD]` par votre mot de passe de base de données Supabase
+   **OU** (selon votre région) :
+   ```
+   postgresql://postgres.[PROJECT-REF]:[PASSWORD]@[REGION].pooler.supabase.com:5432/postgres
+   ```
+7. **Important** : Remplacez `[PASSWORD]` par votre mot de passe de base de données Supabase
 
 ### Étape 2 : Ajouter les paramètres requis
 
@@ -63,16 +72,27 @@ postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-1-ca-central-1.pooler.supabas
 3. L'erreur 500 devrait disparaître
 4. Les événements devraient s'afficher
 
-## 🔍 Vérification Alternative : Connexion Directe
+## 🔍 Vérification : Identifier le Problème
 
-Si le pooler ne fonctionne pas, essayez la connexion directe :
+### ❌ URL Directe (NE FONCTIONNE PAS sur Vercel)
+Si votre `DATABASE_URL` ressemble à :
+```
+postgresql://postgres.xxx:password@db.xxx.supabase.co:5432/postgres
+```
+→ **C'est l'URL directe, elle ne fonctionne pas sur Vercel !**
 
-1. Dans Supabase Dashboard → Settings → Database
-2. Utilisez le port **6543** au lieu de **5432**
-3. URL :
-   ```
-   postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-1-ca-central-1.pooler.supabase.com:6543/postgres
-   ```
+### ✅ URL Pooler (FONCTIONNE sur Vercel)
+Votre `DATABASE_URL` doit ressembler à :
+```
+postgresql://postgres.xxx:password@xxx.pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1
+```
+→ **C'est l'URL du pooler, elle fonctionne sur Vercel !**
+
+### Comment trouver l'URL du pooler dans Supabase :
+1. Supabase Dashboard → Settings → Database
+2. Section **Connection pooling**
+3. Choisir **Session mode** (pas Transaction)
+4. Copier l'URI qui contient `.pooler.supabase.com`
 
 ## ⚠️ Erreurs Courantes
 

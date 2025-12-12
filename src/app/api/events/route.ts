@@ -649,6 +649,19 @@ export async function GET(request: NextRequest) {
                             errorMessage.includes('connection') ||
                             (error as any)?.code === 'P1001';
     
+    // Détecter si l'URL est une URL directe (db.xxx.supabase.co) au lieu d'un pooler
+    const isDirectConnection = errorMessage.includes('db.') && errorMessage.includes('.supabase.co:5432');
+    const databaseUrl = process.env.DATABASE_URL || '';
+    const hasDirectUrl = databaseUrl.includes('db.') && databaseUrl.includes('.supabase.co:5432');
+    const hasPoolerUrl = databaseUrl.includes('.pooler.supabase.com');
+    
+    let helpMessage = 'Consultez URGENT_FIX_DATABASE.md pour la configuration';
+    if (isDirectConnection || hasDirectUrl) {
+      helpMessage = '⚠️ Vous utilisez une URL DIRECTE (db.xxx.supabase.co) au lieu d\'un POOLER. Sur Vercel, vous DEVEZ utiliser l\'URL du pooler (xxx.pooler.supabase.com). Consultez URGENT_FIX_DATABASE.md';
+    } else if (!hasPoolerUrl && isDatabaseError) {
+      helpMessage = '⚠️ Votre DATABASE_URL ne semble pas utiliser le pooler Supabase. Consultez URGENT_FIX_DATABASE.md pour utiliser l\'URL du pooler.';
+    }
+    
     return NextResponse.json(
       { 
         error: isDatabaseError 
@@ -656,7 +669,11 @@ export async function GET(request: NextRequest) {
           : 'Erreur serveur lors de la récupération des événements',
         details: errorMessage,
         ...(isDatabaseError ? {
-          help: 'Consultez docs/VERCEL_SUPABASE_SETUP.md pour la configuration'
+          help: helpMessage,
+          ...(isDirectConnection || hasDirectUrl ? {
+            issue: 'URL_DIRECTE_DETECTEE',
+            solution: 'Utilisez l\'URL du pooler Supabase (xxx.pooler.supabase.com) au lieu de l\'URL directe (db.xxx.supabase.co)'
+          } : {})
         } : {})
       },
       { status: 500 }
