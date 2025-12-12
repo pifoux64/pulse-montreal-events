@@ -469,6 +469,11 @@ export async function GET(request: NextRequest) {
     // Pagination
     const skip = (filters.page - 1) * filters.pageSize;
 
+    // Log de débogage pour la structure where (en développement)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Structure where:', JSON.stringify(where, null, 2));
+    }
+
     // Exécuter la requête (utilise 'now' défini plus haut)
     const [events, total] = await Promise.all([
       prisma.event.findMany({
@@ -602,8 +607,21 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Erreur lors de la récupération des événements:', error);
+    // Logger plus de détails pour le débogage
+    if (error instanceof Error) {
+      console.error('Message d\'erreur:', error.message);
+      console.error('Stack trace:', error.stack);
+      // Si c'est une erreur Prisma, logger les détails
+      if ('code' in error) {
+        console.error('Code d\'erreur Prisma:', (error as any).code);
+        console.error('Meta Prisma:', (error as any).meta);
+      }
+    }
     return NextResponse.json(
-      { error: 'Erreur serveur lors de la récupération des événements' },
+      { 
+        error: 'Erreur serveur lors de la récupération des événements',
+        details: error instanceof Error ? error.message : 'Erreur inconnue'
+      },
       { status: 500 }
     );
   }
