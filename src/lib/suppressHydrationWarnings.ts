@@ -23,9 +23,12 @@ export function suppressHydrationWarnings() {
         'requestProvider.js',
         'evmAsk.js',
         'Cannot set property ethereum',
+        'Cannot redefine property: ethereum',
         'runtime.lastError',
         'Could not establish connection',
-        'Receiving end does not exist'
+        'Receiving end does not exist',
+        'chrome-extension',
+        'Extension context'
       ];
 
       // Ne pas afficher l'erreur si elle correspond à un pattern à supprimer

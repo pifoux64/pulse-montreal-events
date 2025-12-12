@@ -9,6 +9,48 @@ export default function ExtensionCleaner() {
     // Marquer que nous sommes côté client pour éviter l'hydratation mismatch
     setIsClient(true);
 
+    // Installer le gestionnaire d'erreurs global AVANT tout pour capturer les erreurs d'extensions
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    const originalErrorHandler = window.onerror;
+    const originalUnhandledRejection = window.onunhandledrejection;
+
+    // Gestionnaire d'erreurs global pour capturer les erreurs d'extensions
+    window.onerror = (message, source, lineno, colno, error) => {
+      const messageStr = String(message || '');
+      if (
+        messageStr.includes('Cannot redefine property: ethereum') ||
+        messageStr.includes('evmAsk.js') ||
+        messageStr.includes('requestProvider.js') ||
+        messageStr.includes('chrome-extension')
+      ) {
+        // Supprimer ces erreurs d'extensions
+        return true; // Empêcher la propagation
+      }
+      // Appeler le gestionnaire original si défini
+      if (originalErrorHandler) {
+        return originalErrorHandler.call(window, message, source, lineno, colno, error);
+      }
+      return false;
+    };
+
+    // Gestionnaire pour les promesses rejetées non gérées
+    window.onunhandledrejection = (event) => {
+      const reason = String(event.reason || '');
+      if (
+        reason.includes('Cannot redefine property: ethereum') ||
+        reason.includes('evmAsk.js') ||
+        reason.includes('chrome-extension')
+      ) {
+        event.preventDefault(); // Empêcher l'affichage de l'erreur
+        return;
+      }
+      // Appeler le gestionnaire original si défini
+      if (originalUnhandledRejection) {
+        originalUnhandledRejection.call(window, event);
+      }
+    };
+
     // Suppression immédiate et continue des attributs d'extensions
     const cleanAttributes = () => {
       if (typeof document !== 'undefined') {
@@ -38,17 +80,32 @@ export default function ExtensionCleaner() {
     // Prévention des erreurs ethereum/crypto wallet
     const preventCryptoErrors = () => {
       if (typeof window !== 'undefined') {
-        // Créer un proxy pour window.ethereum si nécessaire
-        if (!window.ethereum) {
-          try {
-            Object.defineProperty(window, 'ethereum', {
-              value: null,
-              writable: false,
-              configurable: false
-            });
-          } catch (e) {
-            // Ignore si déjà défini
+        // Ne PAS essayer de définir ethereum si elle existe déjà ou est non-configurable
+        // Les extensions crypto wallet la définissent elles-mêmes
+        // On installe juste un gestionnaire d'erreurs global pour capturer les conflits
+        try {
+          // Vérifier si ethereum existe déjà
+          const descriptor = Object.getOwnPropertyDescriptor(window, 'ethereum');
+          if (descriptor && !descriptor.configurable) {
+            // ethereum existe et est non-configurable, ne rien faire
+            return;
           }
+          
+          // Si ethereum n'existe pas, on peut essayer de créer un placeholder
+          // mais seulement si configurable
+          if (!window.ethereum && (!descriptor || descriptor.configurable)) {
+            try {
+              Object.defineProperty(window, 'ethereum', {
+                value: null,
+                writable: true, // Permettre aux extensions de le modifier
+                configurable: true // Permettre aux extensions de le redéfinir
+              });
+            } catch (e) {
+              // Ignore si déjà défini par une extension
+            }
+          }
+        } catch (e) {
+          // Ignore toute erreur liée à ethereum
         }
       }
     };
@@ -93,10 +150,7 @@ export default function ExtensionCleaner() {
       }
     }
 
-    // Filtrage amélioré des erreurs console
-    const originalError = console.error;
-    const originalWarn = console.warn;
-
+    // Filtrage amélioré des erreurs console (en plus du gestionnaire global)
     console.error = (...args) => {
       const message = args[0]?.toString() || '';
       const suppressedErrors = [
@@ -147,6 +201,8 @@ export default function ExtensionCleaner() {
       }
       console.error = originalError;
       console.warn = originalWarn;
+      window.onerror = originalErrorHandler;
+      window.onunhandledrejection = originalUnhandledRejection;
     };
   }, []);
 
