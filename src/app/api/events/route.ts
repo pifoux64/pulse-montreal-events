@@ -308,42 +308,34 @@ export async function GET(request: NextRequest) {
     }
 
     // SPRINT 2: Filtres par tags structurés (EventTag)
-    // Construire un filtre combiné pour les EventTag
-    const eventTagFilters: any[] = [];
-    
+    // Pour l'instant, on supporte un seul filtre EventTag à la fois
+    // TODO: Implémenter support multiple filtres avec AND logique
     if (filters.genre) {
-      eventTagFilters.push({
-        category: 'genre',
-        value: filters.genre,
-      });
-    }
-    
-    if (filters.type) {
-      eventTagFilters.push({
-        category: 'type',
-        value: filters.type,
-      });
-    }
-    
-    if (filters.ambiance) {
-      eventTagFilters.push({
-        category: 'ambiance',
-        value: filters.ambiance,
-      });
-    }
-    
-    if (filters.public) {
-      eventTagFilters.push({
-        category: 'public',
-        value: filters.public,
-      });
-    }
-    
-    // Appliquer les filtres EventTag (tous doivent être satisfaits)
-    if (eventTagFilters.length > 0) {
       where.eventTags = {
         some: {
-          OR: eventTagFilters,
+          category: 'genre',
+          value: filters.genre,
+        },
+      };
+    } else if (filters.type) {
+      where.eventTags = {
+        some: {
+          category: 'type',
+          value: filters.type,
+        },
+      };
+    } else if (filters.ambiance) {
+      where.eventTags = {
+        some: {
+          category: 'ambiance',
+          value: filters.ambiance,
+        },
+      };
+    } else if (filters.public) {
+      where.eventTags = {
+        some: {
+          category: 'public',
+          value: filters.public,
         },
       };
     }
