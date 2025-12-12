@@ -243,11 +243,6 @@ export default function HomePage() {
     : null;
 
   // Récupérer les événements selon le mode et les filtres sélectionnés
-  // Récupérer les paramètres de date depuis l'URL
-  const dateFrom = searchParams.get('dateFrom');
-  const dateTo = searchParams.get('dateTo');
-  const customDateMode = dateFrom || dateTo;
-
   const { data: apiData, isLoading, error } = useQuery<ApiResponse>({
     queryKey: ['events', mode, selectedCategory, selectedGenre, selectedStyle, dateFrom, dateTo],
     queryFn: async () => {
