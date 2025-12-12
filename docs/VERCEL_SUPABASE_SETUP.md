@@ -16,36 +16,50 @@ Can't reach database server at `aws-1-ca-central-1.pooler.supabase.com:5432`
 3. Allez dans **Settings** → **Environment Variables**
 4. Vérifiez que `DATABASE_URL` est bien définie
 
-### 2. Format de la DATABASE_URL
+### 2. Format de la DATABASE_URL pour Vercel (Serverless)
 
-La `DATABASE_URL` doit être au format :
+**Pour Vercel (serverless/edge functions), utilisez le Pooler Transaction Mode (port 6543)** :
+
 ```
-postgresql://postgres:[PASSWORD]@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1
+postgresql://postgres:[PASSWORD]@db.abcdefghijklmnopqrst.supabase.co:6543/postgres
 ```
 
 **Important** :
-- Utilisez le **pooler** (`pooler.supabase.com`) pour Vercel, pas la connexion directe
-- Le paramètre `pgbouncer=true` est nécessaire
-- Le paramètre `connection_limit=1` est recommandé pour éviter les problèmes de connexion
+- Utilisez le port **6543** (Transaction mode) pour Vercel
+- C'est l'URL directe mais avec le port 6543 (pas 5432)
+- Pas besoin de paramètres `pgbouncer=true` ou `connection_limit=1`
+- Le Transaction mode est idéal pour les fonctions serverless
+
+**Alternative : Pooler Session Mode (si Transaction ne fonctionne pas)** :
+```
+postgresql://postgres.abcdefghijklmnopqrst:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
+```
 
 ### 3. Obtenir la DATABASE_URL depuis Supabase
 
 1. Allez sur [Supabase Dashboard](https://app.supabase.com)
 2. Sélectionnez votre projet
 3. Allez dans **Settings** → **Database**
-4. Dans la section **Connection string**, sélectionnez **URI** (pas Transaction)
-5. Copiez la chaîne de connexion
-6. Remplacez `[YOUR-PASSWORD]` par votre mot de passe de base de données
+4. Cliquez sur **"Connect"** en haut de la page
+5. **Pour Vercel (serverless)** : Sélectionnez **"Transaction mode"** (port 6543)
+   - Format : `postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres`
+6. **Alternative** : Si Transaction ne fonctionne pas, essayez **"Session mode"** (port 5432 sur pooler)
+   - Format : `postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres`
+7. Remplacez `[PASSWORD]` par votre mot de passe de base de données
 
-### 4. Utiliser la connexion directe (alternative)
+### 4. Configuration Recommandée pour Vercel
 
-Si le pooler ne fonctionne pas, vous pouvez utiliser la connexion directe :
-
+**Option 1 : Transaction Mode (Recommandé pour Vercel)**
 ```
-postgresql://postgres:[PASSWORD]@aws-1-ca-central-1.pooler.supabase.com:6543/postgres
+postgresql://postgres:Pulse2025%21%40%23@db.dtveugfincrygcgsuyxo.supabase.co:6543/postgres
 ```
 
-**Note** : Le port `6543` est pour la connexion directe (sans pooler).
+**Option 2 : Session Mode (Alternative)**
+```
+postgresql://postgres.dtveugfincrygcgsuyxo:Pulse2025%21%40%23@aws-0-ca-central-1.pooler.supabase.com:5432/postgres
+```
+
+**Note** : Le port `6543` est pour le Transaction mode (idéal pour serverless). Le port `5432` sur pooler est pour le Session mode.
 
 ### 5. Vérifier les restrictions IP sur Supabase
 
@@ -85,9 +99,17 @@ Pour vérifier que la connexion fonctionne :
 
 ## Configuration recommandée pour Vercel
 
+**Transaction Mode (Recommandé pour serverless)** :
 ```env
-DATABASE_URL="postgresql://postgres:[PASSWORD]@aws-1-ca-central-1.pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1"
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres"
 ```
+
+**Session Mode (Alternative)** :
+```env
+DATABASE_URL="postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+```
+
+**Référence** : [Documentation Supabase - Connection Pooler](https://supabase.com/docs/guides/database/connecting-to-postgres#connection-pooler)
 
 ## Support
 
