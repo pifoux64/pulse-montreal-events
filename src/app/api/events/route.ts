@@ -159,6 +159,9 @@ export async function GET(request: NextRequest) {
       scope: params.scope || undefined, // SPRINT 1: today | weekend | all
       tag: params.tag || undefined, // SPRINT 1: tag unique
       genre: params.genre || undefined,
+      type: params.type || undefined, // SPRINT 2: type d'événement
+      ambiance: params.ambiance || undefined, // SPRINT 2: ambiance
+      public: params.public || undefined, // SPRINT 2: public
       tags: params.tags ? params.tags.split(',') : undefined,
       priceMin: params.priceMin ? parseInt(params.priceMin) : undefined,
       priceMax: params.priceMax ? parseInt(params.priceMax) : undefined,
@@ -169,6 +172,9 @@ export async function GET(request: NextRequest) {
       organizerId: params.organizerId || undefined,
       page: params.page ? parseInt(params.page) : 1,
       pageSize: params.pageSize ? parseInt(params.pageSize) : 20,
+      // SPRINT 2: Support dateFrom et dateTo pour dates personnalisées
+      dateFrom: params.dateFrom || undefined,
+      dateTo: params.dateTo || undefined,
     });
 
     // SPRINT 1: Logique temporelle selon scope (timezone Montréal)
@@ -350,10 +356,17 @@ export async function GET(request: NextRequest) {
 
     // Filtres par prix
     if (filters.free) {
-      where.OR = [
+      // Pour les événements gratuits, on utilise une condition OR
+      if (!where.OR) {
+        where.OR = [];
+      }
+      if (!Array.isArray(where.OR)) {
+        where.OR = [where.OR];
+      }
+      where.OR.push(
         { priceMin: 0 },
-        { priceMin: null },
-      ];
+        { priceMin: null }
+      );
     } else {
       if (filters.priceMin !== undefined) {
         where.priceMin = { gte: filters.priceMin };
@@ -370,11 +383,23 @@ export async function GET(request: NextRequest) {
 
     // Recherche textuelle
     if (filters.q) {
-      where.OR = [
+      // Pour la recherche, on utilise une condition OR
+      const searchOr = [
         { title: { contains: filters.q, mode: 'insensitive' } },
         { description: { contains: filters.q, mode: 'insensitive' } },
-        { tags: { has: filters.q } },
+        { tags: { has: filters.q } }
       ];
+      
+      // Si on a déjà un OR (pour free), on doit combiner avec AND
+      if (where.OR && Array.isArray(where.OR)) {
+        where.AND = [
+          { OR: where.OR },
+          { OR: searchOr }
+        ];
+        delete where.OR;
+      } else {
+        where.OR = searchOr;
+      }
     }
 
     // SPRINT 1: Filtre géographique par distance (Haversine)
