@@ -292,7 +292,7 @@ export async function GET(request: NextRequest) {
           lte: weekendEndUTC,
         };
       } else {
-        // Par défaut : événements futurs
+        // Par défaut : événements futurs (si pas de scope spécifié)
         where.startAt = {
           gte: now,
         };
@@ -390,7 +390,8 @@ export async function GET(request: NextRequest) {
     }
     
     // S'assurer qu'on a au moins un filtre de date si aucun n'a été défini
-    if (!where.startAt) {
+    // (Cela ne devrait jamais arriver car on l'a déjà défini plus haut, mais sécurité)
+    if (!where.startAt || (typeof where.startAt === 'object' && Object.keys(where.startAt).length === 0)) {
       where.startAt = {
         gte: now, // Par défaut : événements futurs
       };
