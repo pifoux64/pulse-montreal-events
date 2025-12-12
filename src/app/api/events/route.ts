@@ -276,24 +276,30 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    // SPRINT 1: Appliquer le filtre scope
-    if (filters.scope === 'today') {
-      // Aujourd'hui : événements du jour (timezone Montréal)
-      where.startAt = {
-        gte: todayStartUTC,
-        lte: todayEndUTC,
-      };
-    } else if (filters.scope === 'weekend') {
-      // Week-end : vendredi 00:00 à dimanche 23:59
-      where.startAt = {
-        gte: weekendStartUTC,
-        lte: weekendEndUTC,
-      };
+    // SPRINT 1: Appliquer le filtre scope (seulement si pas de dateFrom/dateTo)
+    // Les dates personnalisées (dateFrom/dateTo) ont priorité sur scope
+    if (!filters.dateFrom && !filters.dateTo) {
+      if (filters.scope === 'today') {
+        // Aujourd'hui : événements du jour (timezone Montréal)
+        where.startAt = {
+          gte: todayStartUTC,
+          lte: todayEndUTC,
+        };
+      } else if (filters.scope === 'weekend') {
+        // Week-end : vendredi 00:00 à dimanche 23:59
+        where.startAt = {
+          gte: weekendStartUTC,
+          lte: weekendEndUTC,
+        };
+      } else {
+        // Par défaut : événements futurs
+        where.startAt = {
+          gte: now,
+        };
+      }
     } else {
-      // Par défaut : événements futurs
-      where.startAt = {
-        gte: now,
-      };
+      // Si on a dateFrom/dateTo, on initialise startAt pour les dates personnalisées
+      where.startAt = {};
     }
 
     // Filtres par catégorie
@@ -347,6 +353,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Filtres par dates (SPRINT 2: Support dates personnalisées)
+    // Ces filtres ont priorité sur scope
     if (filters.dateFrom) {
       try {
         const dateFrom = new Date(filters.dateFrom);
@@ -355,10 +362,10 @@ export async function GET(request: NextRequest) {
           if (filters.dateFrom.length === 10) {
             dateFrom.setHours(0, 0, 0, 0);
           }
-          where.startAt = {
-            ...where.startAt,
-            gte: dateFrom,
-          };
+          if (!where.startAt) {
+            where.startAt = {};
+          }
+          where.startAt.gte = dateFrom;
         }
       } catch (e) {
         console.error('Erreur parsing dateFrom:', filters.dateFrom, e);
@@ -372,14 +379,21 @@ export async function GET(request: NextRequest) {
           if (filters.dateTo.length === 10) {
             dateTo.setHours(23, 59, 59, 999);
           }
-          where.startAt = {
-            ...where.startAt,
-            lte: dateTo,
-          };
+          if (!where.startAt) {
+            where.startAt = {};
+          }
+          where.startAt.lte = dateTo;
         }
       } catch (e) {
         console.error('Erreur parsing dateTo:', filters.dateTo, e);
       }
+    }
+    
+    // S'assurer qu'on a au moins un filtre de date si aucun n'a été défini
+    if (!where.startAt) {
+      where.startAt = {
+        gte: now, // Par défaut : événements futurs
+      };
     }
 
     // Filtres par prix
