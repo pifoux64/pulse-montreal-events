@@ -124,8 +124,8 @@ const EventFiltersSchema = z.object({
   q: z.string().optional(),
   category: z.nativeEnum(EventCategory).optional(),
   tags: z.array(z.string()).optional(),
-  dateFrom: z.string().datetime().optional(),
-  dateTo: z.string().datetime().optional(),
+  dateFrom: z.string().optional(), // Accepte ISO datetime ou date simple
+  dateTo: z.string().optional(), // Accepte ISO datetime ou date simple
   priceMin: z.number().int().min(0).optional(),
   priceMax: z.number().int().min(0).optional(),
   free: z.boolean().optional(),
@@ -346,12 +346,40 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Filtres par dates
+    // Filtres par dates (SPRINT 2: Support dates personnalisées)
     if (filters.dateFrom) {
-      where.startAt.gte = new Date(filters.dateFrom);
+      try {
+        const dateFrom = new Date(filters.dateFrom);
+        if (!isNaN(dateFrom.getTime())) {
+          // Si c'est juste une date (sans heure), commencer à 00:00:00
+          if (filters.dateFrom.length === 10) {
+            dateFrom.setHours(0, 0, 0, 0);
+          }
+          where.startAt = {
+            ...where.startAt,
+            gte: dateFrom,
+          };
+        }
+      } catch (e) {
+        console.error('Erreur parsing dateFrom:', filters.dateFrom, e);
+      }
     }
     if (filters.dateTo) {
-      where.startAt.lte = new Date(filters.dateTo);
+      try {
+        const dateTo = new Date(filters.dateTo);
+        if (!isNaN(dateTo.getTime())) {
+          // Si c'est juste une date (sans heure), terminer à 23:59:59
+          if (filters.dateTo.length === 10) {
+            dateTo.setHours(23, 59, 59, 999);
+          }
+          where.startAt = {
+            ...where.startAt,
+            lte: dateTo,
+          };
+        }
+      } catch (e) {
+        console.error('Erreur parsing dateTo:', filters.dateTo, e);
+      }
     }
 
     // Filtres par prix
