@@ -396,6 +396,22 @@ export async function GET(request: NextRequest) {
         gte: now, // Par défaut : événements futurs
       };
     }
+    
+    // Validation : s'assurer que where.startAt a au moins une propriété valide
+    if (where.startAt && typeof where.startAt === 'object') {
+      const startAtKeys = Object.keys(where.startAt);
+      if (startAtKeys.length === 0) {
+        // Si vide, ajouter au moins gte
+        where.startAt.gte = now;
+      }
+      // S'assurer que les dates sont des objets Date valides
+      if (where.startAt.gte && !(where.startAt.gte instanceof Date)) {
+        where.startAt.gte = new Date(where.startAt.gte);
+      }
+      if (where.startAt.lte && !(where.startAt.lte instanceof Date)) {
+        where.startAt.lte = new Date(where.startAt.lte);
+      }
+    }
 
     // Filtres par prix
     if (filters.free) {
