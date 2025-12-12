@@ -51,6 +51,12 @@ Les sources suivantes sont désactivées dans l'orchestrateur (`enabled: false`)
 - **Raison** : Événements de démo uniquement (données mockées)
 - **Note** : Connecteur existe mais utilise des données hardcodées
 
+### Open Data Montréal
+- **Statut** : ⚠️ Prêt mais nécessite configuration
+- **Configuration** : Nécessite `OPEN_DATA_MONTREAL_URL` dans les variables d'environnement
+- **Note** : Connecteur implémenté, mais nécessite d'identifier un dataset d'événements sur donnees.montreal.ca
+- **Référence** : `docs/OPEN_DATA_MONTREAL_SETUP.md`
+
 ### Quartier Spectacles
 - **Statut** : 🔴 Désactivé
 - **Raison** : Événements de test uniquement, pas de vrai scraper

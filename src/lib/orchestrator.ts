@@ -14,6 +14,7 @@ import { MeetupConnector } from '../ingestors/meetup';
 import { LaVitrineConnector } from '../ingestors/lavitrine';
 import { AllEventsConnector } from '../ingestors/allevents';
 import { LepointdeventeConnector } from '../ingestors/lepointdevente';
+import { OpenDataMontrealConnector } from '../ingestors/open-data-montreal';
 import {
   findPotentialDuplicates,
   resolveDuplicate,
@@ -69,7 +70,7 @@ export class IngestionOrchestrator {
         source: EventSource.TICKETMASTER,
         enabled: !!process.env.TICKETMASTER_API_KEY,
         apiKey: process.env.TICKETMASTER_API_KEY,
-        batchSize: 200,
+        batchSize: 500, // Augmenté pour atteindre l'objectif de 300+ événements
       },
       {
         source: EventSource.MEETUP,
@@ -89,6 +90,11 @@ export class IngestionOrchestrator {
       {
         source: EventSource.LEPOINTDEVENTE,
         enabled: false, // Désactivé - Nécessite un partenariat API (pas de scraping)
+        batchSize: 100,
+      },
+      {
+        source: EventSource.MTL_OPEN_DATA,
+        enabled: !!process.env.OPEN_DATA_MONTREAL_URL, // S'active si l'URL est configurée
         batchSize: 100,
       },
       // TODO: Ajouter d'autres connecteurs
@@ -131,6 +137,9 @@ export class IngestionOrchestrator {
             break;
           case EventSource.LEPOINTDEVENTE:
             this.connectors.set(config.source, new LepointdeventeConnector());
+            break;
+          case EventSource.MTL_OPEN_DATA:
+            this.connectors.set(config.source, new OpenDataMontrealConnector(process.env.OPEN_DATA_MONTREAL_URL));
             break;
           // Ajouter d'autres connecteurs ici
         }

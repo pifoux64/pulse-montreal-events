@@ -118,6 +118,9 @@ const EventFiltersSchema = z.object({
   scope: z.enum(['today', 'weekend', 'all']).optional(),
   tag: z.string().optional(), // SPRINT 1: Filtre par tag unique
   genre: z.string().optional(), // Sprint tagging: filtre par genre structuré
+  type: z.string().optional(), // SPRINT 2: Filtre par type d'événement (EventTag)
+  ambiance: z.string().optional(), // SPRINT 2: Filtre par ambiance (EventTag)
+  public: z.string().optional(), // SPRINT 2: Filtre par public (EventTag)
   q: z.string().optional(),
   category: z.nativeEnum(EventCategory).optional(),
   tags: z.array(z.string()).optional(),
@@ -304,12 +307,43 @@ export async function GET(request: NextRequest) {
       };
     }
 
-    // Sprint tagging: filtre par genre structuré (EventTag)
+    // SPRINT 2: Filtres par tags structurés (EventTag)
+    // Construire un filtre combiné pour les EventTag
+    const eventTagFilters: any[] = [];
+    
     if (filters.genre) {
+      eventTagFilters.push({
+        category: 'genre',
+        value: filters.genre,
+      });
+    }
+    
+    if (filters.type) {
+      eventTagFilters.push({
+        category: 'type',
+        value: filters.type,
+      });
+    }
+    
+    if (filters.ambiance) {
+      eventTagFilters.push({
+        category: 'ambiance',
+        value: filters.ambiance,
+      });
+    }
+    
+    if (filters.public) {
+      eventTagFilters.push({
+        category: 'public',
+        value: filters.public,
+      });
+    }
+    
+    // Appliquer les filtres EventTag (tous doivent être satisfaits)
+    if (eventTagFilters.length > 0) {
       where.eventTags = {
         some: {
-          category: 'genre',
-          value: filters.genre,
+          OR: eventTagFilters,
         },
       };
     }

@@ -75,30 +75,72 @@ export class TicketmasterConnector extends BaseConnector {
     // - ne pas utiliser de filtre startDateTime côté API
     // - récupérer un batch d'événements triés par date
     // - laisser la logique d'application filtrer par date si nécessaire.
-    const params = new URLSearchParams({
-      apikey: this.apiKey as string,
-      countryCode: 'CA',
-      city: 'Montreal',
-      locale: '*',
-      sort: 'date,asc',
-      size: Math.min(limit, 200).toString(),
-    });
+    
+    const allEvents: any[] = [];
+    const pageSize = 200; // Maximum par page selon l'API Ticketmaster
+    let page = 0;
+    const maxPages = Math.ceil(limit / pageSize);
 
-    const url = `${this.baseUrl}/events.json?${params.toString()}`;
-    console.log('🎫 Ticketmaster ingestion URL:', url);
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Pulse-Montreal/1.0',
-      },
-    });
+    while (page < maxPages && allEvents.length < limit) {
+      const params = new URLSearchParams({
+        apikey: this.apiKey as string,
+        countryCode: 'CA',
+        city: 'Montreal',
+        locale: '*',
+        sort: 'date,asc',
+        size: pageSize.toString(),
+        page: page.toString(),
+      });
 
-    if (!response.ok) {
-      const body = await response.text();
-      throw new Error(`Ticketmaster API error ${response.status}: ${body}`);
+      const url = `${this.baseUrl}/events.json?${params.toString()}`;
+      console.log(`🎫 Ticketmaster ingestion page ${page + 1}:`, url);
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Pulse-Montreal/1.0',
+        },
+      });
+
+      if (!response.ok) {
+        const body = await response.text();
+        throw new Error(`Ticketmaster API error ${response.status}: ${body}`);
+      }
+
+      const data = await response.json();
+      const events = data?._embedded?.events ?? [];
+      
+      if (events.length === 0) {
+        // Plus d'événements disponibles
+        break;
+      }
+
+      allEvents.push(...events);
+      
+      // Vérifier s'il y a une page suivante
+      const totalPages = data?.page?.totalPages ?? 1;
+      if (page >= totalPages - 1 || allEvents.length >= limit) {
+        break;
+      }
+
+      page++;
+      await this.rateLimit(); // Respecter les limites de taux
     }
 
-    const data = await response.json();
-    return data?._embedded?.events ?? [];
+    // Filtrer les événements passés (garder seulement les événements futurs)
+    const now = new Date();
+    const futureEvents = allEvents.filter((event) => {
+      const eventDate = event?.dates?.start?.dateTime 
+        ? new Date(event.dates.start.dateTime)
+        : event?.dates?.start?.localDate 
+          ? new Date(`${event.dates.start.localDate}T${event.dates.start.localTime || '00:00:00'}`)
+          : null;
+      
+      return eventDate && eventDate >= now;
+    });
+
+    console.log(`✅ Ticketmaster: ${futureEvents.length} événements futurs récupérés (${allEvents.length} total, ${allEvents.length - futureEvents.length} passés exclus)`);
+    
+    return futureEvents.slice(0, limit);
   }
 
   async mapToUnifiedEvent(rawEvent: any): Promise<UnifiedEvent> {

@@ -58,6 +58,12 @@ export interface Event {
     startsAt: string;
     endsAt: string;
   }>;
+  // Tags structurés (EventTag) - SPRINT 2
+  eventTags?: Array<{
+    id: string;
+    category: 'type' | 'genre' | 'ambiance' | 'public';
+    value: string;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }

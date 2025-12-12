@@ -55,6 +55,7 @@ export async function GET(
           },
         },
         features: true,
+        eventTags: true, // SPRINT 2: Inclure les tags structurés
         promotions: {
           where: {
             startsAt: { lte: new Date() },
@@ -179,6 +180,7 @@ export async function PATCH(
           },
         },
         features: true,
+        eventTags: true, // SPRINT 2: Inclure les tags structurés
         promotions: {
           where: {
             startsAt: { lte: new Date() },

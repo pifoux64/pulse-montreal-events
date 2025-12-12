@@ -13,6 +13,7 @@ import EventTabsSection from '@/components/EventTabsSection';
 import EventDetailMap from '@/components/EventDetailMap';
 import EventFeedPanel from '@/components/event-feed/EventFeedPanel';
 import EventDetailActions from '@/components/EventDetailActions';
+import EventTagsDisplay from '@/components/EventTagsDisplay';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -24,6 +25,7 @@ async function fetchEvent(id: string) {
       venue: true,
       organizer: true,
       features: true,
+      eventTags: true, // SPRINT 2: Inclure les tags structurés
     },
   });
 }
@@ -238,25 +240,37 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                     </div>
                   </div>
 
-                  {/* Tags */}
-                  {event.tags.length > 0 && (
+                  {/* Tags structurés (EventTag) - SPRINT 2 */}
+                  {(event.eventTags && event.eventTags.length > 0) || event.tags.length > 0 ? (
                     <div className="bg-white rounded-2xl p-6 shadow-lg">
                       <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                         <Tag className="h-5 w-5" />
                         Tags
                       </h2>
-                      <div className="flex flex-wrap gap-2">
-                        {event.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
+                      {event.eventTags && event.eventTags.length > 0 ? (
+                        <EventTagsDisplay 
+                          eventTags={event.eventTags.map(tag => ({
+                            id: tag.id,
+                            category: tag.category as 'type' | 'genre' | 'ambiance' | 'public',
+                            value: tag.value,
+                          }))}
+                          showCategoryLabels={true}
+                        />
+                      ) : (
+                        // Fallback : Tags simples (ancien système)
+                        <div className="flex flex-wrap gap-2">
+                          {event.tags.map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Sidebar */}

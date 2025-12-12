@@ -9,6 +9,7 @@ import { generateMusicTags, getGenreEmoji, getGenreColor } from '@/lib/musicTags
 import { useSession } from 'next-auth/react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import EventTagsDisplay, { EventTag } from './EventTagsDisplay';
 
 interface EventCardProps {
   event: Event;
@@ -255,17 +256,39 @@ const EventCard = ({
       <div className="p-5">
         {/* En-tête clean */}
         <div className="mb-4">
-          {/* Genre musical principal */}
-          {enrichedTags && enrichedTags.length > 0 && (
-            <div className="mb-2">
-              <span 
-                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
-                style={{ backgroundColor: getGenreColor(enrichedTags[0]) }}
-              >
-                <span className="mr-1">{getGenreEmoji(enrichedTags[0])}</span>
-                {enrichedTags[0]}
-              </span>
-            </div>
+          {/* Genre musical principal - Utilise EventTag si disponible, sinon fallback enrichedTags */}
+          {event.eventTags && event.eventTags.length > 0 ? (
+            // Afficher le premier genre depuis EventTag
+            (() => {
+              const firstGenre = event.eventTags.find(tag => tag.category === 'genre');
+              if (firstGenre) {
+                return (
+                  <div className="mb-2">
+                    <span 
+                      className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                      style={{ backgroundColor: getGenreColor(firstGenre.value) }}
+                    >
+                      <span className="mr-1">{getGenreEmoji(firstGenre.value)}</span>
+                      {firstGenre.value.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+                );
+              }
+              return null;
+            })()
+          ) : (
+            // Fallback : utiliser enrichedTags si EventTag n'est pas disponible
+            enrichedTags && enrichedTags.length > 0 && (
+              <div className="mb-2">
+                <span 
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium text-white"
+                  style={{ backgroundColor: getGenreColor(enrichedTags[0]) }}
+                >
+                  <span className="mr-1">{getGenreEmoji(enrichedTags[0])}</span>
+                  {enrichedTags[0]}
+                </span>
+              </div>
+            )
           )}
           
           {/* Titre lisible */}
@@ -305,9 +328,18 @@ const EventCard = ({
           )}
         </div>
 
-        {/* Tags spéciaux et secondaires */}
-        {(event.tags.length > 0 || enrichedTags.length > 1) && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
+        {/* Tags structurés (EventTag) - SPRINT 2 */}
+        {event.eventTags && event.eventTags.length > 0 ? (
+          <div className="mb-4">
+            <EventTagsDisplay 
+              eventTags={event.eventTags as EventTag[]} 
+              maxTagsPerCategory={2}
+            />
+          </div>
+        ) : (
+          /* Fallback : Tags spéciaux et secondaires (ancien système) */
+          (event.tags.length > 0 || enrichedTags.length > 1) && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
             {/* Tags spéciaux prioritaires */}
             {event.tags.map((tag) => {
               const tagLower = tag.toLowerCase();
@@ -389,6 +421,7 @@ const EventCard = ({
               return null;
             })}
           </div>
+          )
         )}
 
         {/* Actions simplifiées */}

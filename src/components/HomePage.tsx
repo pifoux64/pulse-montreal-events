@@ -189,16 +189,22 @@ const transformApiEvent = (event: ApiEvent): Event => {
   }
 };
 
-type Mode = 'today' | 'weekend';
+type Mode = 'today' | 'weekend' | 'custom';
 
 export default function HomePage() {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>('weekend');
+  const searchParams = useSearchParams();
+  const searchQuery = (searchParams.get('search') || '').trim().toLowerCase();
+  
+  // Récupérer les paramètres de date depuis l'URL pour déterminer le mode initial
+  const dateFrom = searchParams.get('dateFrom');
+  const dateTo = searchParams.get('dateTo');
+  const customDateMode = dateFrom || dateTo;
+  
+  const [mode, setMode] = useState<Mode>(customDateMode ? 'custom' : 'weekend');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-  const searchQuery = (searchParams.get('search') || '').trim().toLowerCase();
 
   // Réinitialiser genre et style quand on change de catégorie
   const handleCategorySelect = (category: string) => {
@@ -237,8 +243,13 @@ export default function HomePage() {
     : null;
 
   // Récupérer les événements selon le mode et les filtres sélectionnés
+  // Récupérer les paramètres de date depuis l'URL
+  const dateFrom = searchParams.get('dateFrom');
+  const dateTo = searchParams.get('dateTo');
+  const customDateMode = dateFrom || dateTo;
+
   const { data: apiData, isLoading, error } = useQuery<ApiResponse>({
-    queryKey: ['events', mode, selectedCategory, selectedGenre, selectedStyle],
+    queryKey: ['events', mode, selectedCategory, selectedGenre, selectedStyle, dateFrom, dateTo],
     queryFn: async () => {
       try {
         // Récupérer plusieurs pages pour avoir tous les événements (max 100 par page)
@@ -248,7 +259,17 @@ export default function HomePage() {
         
         while (hasMore && page <= 10) { // Limiter à 10 pages max (1000 événements)
           const params = new URLSearchParams();
-          params.set('scope', mode);
+          
+          // Gérer le mode de date
+          if (customDateMode) {
+            // Mode date personnalisée
+            if (dateFrom) params.set('dateFrom', dateFrom);
+            if (dateTo) params.set('dateTo', dateTo);
+          } else {
+            // Mode preset (today/weekend)
+            params.set('scope', mode);
+          }
+          
           params.set('pageSize', '100'); // Maximum autorisé par l'API
           params.set('page', page.toString());
           // Priorité : style > genre > category
@@ -394,7 +415,7 @@ export default function HomePage() {
           </p>
 
           {/* Boutons CTA modernes */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <button
               onClick={() => setMode('today')}
               className={`group relative px-10 py-5 rounded-2xl font-semibold text-lg transition-all duration-500 overflow-hidden ${
@@ -427,6 +448,112 @@ export default function HomePage() {
                 Que faire ce week-end ?
               </span>
             </button>
+          </div>
+
+          {/* Sélecteur de date personnalisé */}
+          <div className="mb-12 max-w-2xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-xl">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Calendar className="w-5 h-5 text-slate-300" />
+                <label className="text-base font-semibold text-slate-200">
+                  Ou choisir une date précise ou une plage de dates
+                </label>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Date de début
+                  </label>
+                  <input
+                    type="date"
+                    value={dateFrom ? new Date(dateFrom).toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const params = new URLSearchParams(window.location.search);
+                      
+                      if (e.target.value) {
+                        const startDate = new Date(e.target.value);
+                        startDate.setHours(0, 0, 0, 0);
+                        setMode('custom');
+                        params.set('dateFrom', startDate.toISOString());
+                        
+                        // Si pas de date de fin, définir la fin de la journée
+                        if (!params.get('dateTo')) {
+                          const endDate = new Date(startDate);
+                          endDate.setHours(23, 59, 59, 999);
+                          params.set('dateTo', endDate.toISOString());
+                        }
+                      } else {
+                        params.delete('dateFrom');
+                        // Si on supprime la date de début et qu'il n'y a pas de date de fin, supprimer aussi dateTo
+                        if (!params.get('dateTo')) {
+                          params.delete('dateTo');
+                          setMode('weekend'); // Revenir au mode par défaut
+                        }
+                      }
+                      
+                      router.push(params.toString() ? `/?${params.toString()}` : '/');
+                    }}
+                    min={new Date().toISOString().split('T')[0]} // Empêcher de sélectionner des dates passées
+                    className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Date de fin <span className="text-xs text-slate-400">(optionnel)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={dateTo ? new Date(dateTo).toISOString().split('T')[0] : ''}
+                    onChange={(e) => {
+                      const params = new URLSearchParams(window.location.search);
+                      
+                      if (e.target.value) {
+                        const endDate = new Date(e.target.value);
+                        endDate.setHours(23, 59, 59, 999);
+                        setMode('custom');
+                        params.set('dateTo', endDate.toISOString());
+                        
+                        // S'assurer qu'il y a une date de début
+                        if (!params.get('dateFrom')) {
+                          const startDate = new Date(e.target.value);
+                          startDate.setHours(0, 0, 0, 0);
+                          params.set('dateFrom', startDate.toISOString());
+                        }
+                      } else {
+                        params.delete('dateTo');
+                        // Si on supprime la date de fin et qu'il n'y a pas de date de début, supprimer aussi dateFrom
+                        if (!params.get('dateFrom')) {
+                          params.delete('dateFrom');
+                          setMode('weekend'); // Revenir au mode par défaut
+                        }
+                      }
+                      
+                      router.push(params.toString() ? `/?${params.toString()}` : '/');
+                    }}
+                    min={dateFrom ? new Date(dateFrom).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
+                    className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                </div>
+              </div>
+              {(dateFrom || dateTo) && (
+                <div className="mt-4 flex items-center justify-center">
+                  <button
+                    onClick={() => {
+                      const params = new URLSearchParams(window.location.search);
+                      params.delete('dateFrom');
+                      params.delete('dateTo');
+                      setMode('weekend');
+                      router.push(params.toString() ? `/?${params.toString()}` : '/');
+                    }}
+                    className="text-sm text-slate-300 hover:text-white underline transition-colors"
+                  >
+                    Réinitialiser les dates
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Filtres hiérarchiques : Catégorie → Genre → Style - Design moderne */}
