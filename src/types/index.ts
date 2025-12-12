@@ -116,6 +116,10 @@ export interface EventFilter {
   freeOnly?: boolean; // Événements gratuits uniquement
   ageRestriction?: string; // Filtre par âge minimum (ex: "18+", "21+")
   sortBy?: 'date' | 'price' | 'popularity' | 'distance'; // Option de tri
+  // SPRINT 2: Filtres par tags structurés
+  type?: string; // Type d'événement (concert, dj_set, festival, etc.)
+  ambiance?: string; // Ambiance (intime, grande_salle, underground, etc.)
+  public?: string; // Public cible (tout_public, 18_plus, famille)
 }
 
 export interface FavoriteEvent {

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Filter, X, Search, MapPin, Calendar, DollarSign, Users, Accessibility, Globe, Tag, Clock, TrendingUp, ArrowUpDown } from 'lucide-react';
 import { EventFilter, EventCategory } from '@/types';
+import { EVENT_TYPES, AMBIANCES, PUBLICS } from '@/lib/tagging/taxonomy';
 
 interface EventFiltersProps {
   filters: EventFilter;
@@ -706,6 +707,69 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
                   </label>
                 ))}
               </div>
+            </div>
+
+            {/* SPRINT 2: Filtres par tags structurés */}
+            {/* Type d'événement */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+                <Tag className="w-4 h-4" />
+                <span>Type d'événement</span>
+              </h4>
+              <select
+                value={localFilters.type || ''}
+                onChange={(e) => handleFilterChange('type', e.target.value || undefined)}
+                className="w-full form-input"
+              >
+                <option value="">Tous les types</option>
+                {EVENT_TYPES.map((type) => (
+                  <option key={type} value={type}>
+                    {type.replace(/_/g, ' ')}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Ambiance */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+                <Globe className="w-4 h-4" />
+                <span>Ambiance</span>
+              </h4>
+              <select
+                value={localFilters.ambiance || ''}
+                onChange={(e) => handleFilterChange('ambiance', e.target.value || undefined)}
+                className="w-full form-input"
+              >
+                <option value="">Toutes les ambiances</option>
+                {AMBIANCES.map((ambiance) => (
+                  <option key={ambiance} value={ambiance}>
+                    {ambiance.replace(/_/g, ' ')}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Public (tags structurés) */}
+            <div>
+              <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
+                <Users className="w-4 h-4" />
+                <span>Public (tags structurés)</span>
+              </h4>
+              <select
+                value={localFilters.public || ''}
+                onChange={(e) => handleFilterChange('public', e.target.value || undefined)}
+                className="w-full form-input"
+              >
+                <option value="">Tous les publics</option>
+                {PUBLICS.map((publicType) => (
+                  <option key={publicType} value={publicType}>
+                    {publicType === 'tout_public' ? 'Tout public' : 
+                     publicType === '18_plus' ? '18+' : 
+                     publicType.replace(/_/g, ' ')}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         )}

@@ -62,11 +62,19 @@ export default function PricingPage() {
               </div>
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-slate-300">Classification IA automatique (tags structurés)</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                 <span className="text-slate-300">1 promotion active à la fois</span>
               </div>
               <div className="flex items-start gap-3">
                 <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                 <span className="text-slate-300">Promotions en brouillon illimitées</span>
+              </div>
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                <span className="text-slate-300">Apparition sur carte et calendrier</span>
               </div>
               <div className="flex items-start gap-3">
                 <X className="w-5 h-5 text-slate-600 flex-shrink-0 mt-0.5" />
@@ -139,6 +147,10 @@ export default function PricingPage() {
                 <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
                 <span className="text-white font-medium">Badge "Vérifié" sur votre profil</span>
               </div>
+              <div className="flex items-start gap-3">
+                <Check className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                <span className="text-white font-medium">Publication multi-plateformes (à venir)</span>
+              </div>
             </div>
           </div>
         </div>
@@ -156,7 +168,7 @@ export default function PricingPage() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">Gestion d'événements</h3>
               <p className="text-slate-300">
-                Créez et gérez vos événements facilement. Ajoutez des photos, descriptions, prix et toutes les informations nécessaires.
+                Créez et gérez vos événements facilement. Ajoutez des photos, descriptions, prix et toutes les informations nécessaires. Classification IA automatique pour un meilleur référencement.
               </p>
             </div>
 
@@ -166,7 +178,7 @@ export default function PricingPage() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">Visibilité maximale</h3>
               <p className="text-slate-300">
-                Vos événements apparaissent sur la carte interactive, le calendrier et dans les résultats de recherche.
+                Vos événements apparaissent sur la carte interactive, le calendrier et dans les résultats de recherche. Filtres avancés par type, ambiance et public pour une meilleure découverte.
               </p>
             </div>
 
@@ -201,12 +213,12 @@ export default function PricingPage() {
             </div>
 
             <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10">
-              <div className="w-12 h-12 bg-red-500/20 rounded-lg flex items-center justify-center mb-4">
-                <Shield className="w-6 h-6 text-red-400" />
+              <div className="w-12 h-12 bg-indigo-500/20 rounded-lg flex items-center justify-center mb-4">
+                <Zap className="w-6 h-6 text-indigo-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Sécurité</h3>
+              <h3 className="text-xl font-semibold text-white mb-2">Classification IA</h3>
               <p className="text-slate-300">
-                Vos données sont protégées et sécurisées. Conformité avec les normes de confidentialité québécoises.
+                Vos événements sont automatiquement classés et taggés par intelligence artificielle (type, genre, ambiance, public) pour une meilleure visibilité.
               </p>
             </div>
           </div>

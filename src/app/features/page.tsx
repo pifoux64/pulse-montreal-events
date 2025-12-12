@@ -52,7 +52,7 @@ export default function FeaturesPage() {
     {
       icon: Filter,
       title: 'Filtres intelligents',
-      description: 'Filtrez par catégorie, date, prix, localisation et bien plus. Trouvez exactement ce que vous cherchez.',
+      description: 'Filtrez par catégorie, date personnalisée, prix, localisation, type d\'événement, ambiance et public. Trouvez exactement ce que vous cherchez.',
       color: 'from-amber-500 to-orange-500',
     },
     {
@@ -88,13 +88,13 @@ export default function FeaturesPage() {
     {
       icon: Globe,
       title: 'Multi-sources',
-      description: 'Événements agrégés depuis plusieurs sources : Ticketmaster, Eventbrite, Meetup et plus encore.',
+      description: 'Événements agrégés depuis plusieurs sources légales : Ticketmaster, Open Data Montréal, et plus encore. Plus de 400 événements disponibles.',
       color: 'from-sky-500 to-blue-500',
     },
     {
       icon: Zap,
-      title: 'Temps réel',
-      description: 'Les événements sont mis à jour en temps réel. Ne manquez jamais une nouveauté.',
+      title: 'Classification IA',
+      description: 'Tous les événements sont automatiquement classés et taggés par intelligence artificielle (type, genre, ambiance, public) pour une meilleure découverte.',
       color: 'from-yellow-400 to-orange-500',
     },
     {
@@ -169,7 +169,11 @@ export default function FeaturesPage() {
                 <ul className="space-y-2 text-slate-300">
                   <li className="flex items-start gap-2">
                     <span className="text-sky-400 mt-1">•</span>
-                    <span>Recherche par catégorie, date, prix</span>
+                    <span>Recherche par catégorie, date personnalisée, prix</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-sky-400 mt-1">•</span>
+                    <span>Filtres avancés : type, ambiance, public cible</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-sky-400 mt-1">•</span>
@@ -177,7 +181,11 @@ export default function FeaturesPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-sky-400 mt-1">•</span>
-                    <span>Sauvegarde de vos favoris</span>
+                    <span>Sauvegarde de vos favoris avec export ICS</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-sky-400 mt-1">•</span>
+                    <span>Tags structurés pour une meilleure découverte</span>
                   </li>
                 </ul>
               </div>
@@ -202,6 +210,14 @@ export default function FeaturesPage() {
                   <li className="flex items-start gap-2">
                     <span className="text-red-400 mt-1">•</span>
                     <span>Partage avec vos amis</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-400 mt-1">•</span>
+                    <span>Export ICS pour votre calendrier</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-red-400 mt-1">•</span>
+                    <span>Notifications push pour vos favoris</span>
                   </li>
                 </ul>
               </div>
@@ -230,11 +246,19 @@ export default function FeaturesPage() {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-400 mt-1">•</span>
+                    <span>Classification IA automatique (tags structurés)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 mt-1">•</span>
                     <span>Import ICS en masse (PRO)</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-emerald-400 mt-1">•</span>
                     <span>Gestion de lieux et profils</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-emerald-400 mt-1">•</span>
+                    <span>Publication multi-plateformes (à venir)</span>
                   </li>
                 </ul>
               </div>

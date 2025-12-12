@@ -40,12 +40,15 @@ postgresql://postgres.abcdefghijklmnopqrst:[PASSWORD]@aws-0-[REGION].pooler.supa
 1. Allez sur [Supabase Dashboard](https://app.supabase.com)
 2. Sélectionnez votre projet
 3. Allez dans **Settings** → **Database**
-4. Cliquez sur **"Connect"** en haut de la page
-5. **Pour Vercel (serverless)** : Sélectionnez **"Transaction mode"** (port 6543)
+4. Dans la section **Connection string** ou **Connection info**, vous verrez plusieurs options :
+   - **Direct connection** (port 5432) - Ne pas utiliser pour Vercel
+   - **Transaction mode** (port 6543) - ✅ **Recommandé pour Vercel**
+   - **Session mode** (port 5432 sur pooler) - Alternative
+5. **Pour Vercel (serverless)** : Utilisez l'URL **Transaction mode** (port 6543)
    - Format : `postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres`
-6. **Alternative** : Si Transaction ne fonctionne pas, essayez **"Session mode"** (port 5432 sur pooler)
+6. **Alternative** : Si Transaction ne fonctionne pas, utilisez **Session mode**
    - Format : `postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres`
-7. Remplacez `[PASSWORD]` par votre mot de passe de base de données
+7. Remplacez `[PASSWORD]` par votre mot de passe de base de données (encodez les caractères spéciaux en URL : `!` = `%21`, `@` = `%40`, `#` = `%23`)
 
 ### 4. Configuration Recommandée pour Vercel
 
@@ -61,11 +64,18 @@ postgresql://postgres.dtveugfincrygcgsuyxo:Pulse2025%21%40%23@aws-0-ca-central-1
 
 **Note** : Le port `6543` est pour le Transaction mode (idéal pour serverless). Le port `5432` sur pooler est pour le Session mode.
 
-### 5. Vérifier les restrictions IP sur Supabase
+### 5. Vérifier les restrictions IP sur Supabase (si disponible)
 
-1. Allez dans **Settings** → **Database** → **Connection pooling**
-2. Vérifiez que les IPs de Vercel ne sont pas bloquées
-3. Si nécessaire, autorisez toutes les IPs (0.0.0.0/0) pour le pooler
+**Note** : Dans certaines versions de Supabase, les restrictions IP peuvent être dans :
+- **Settings** → **Database** → **Network restrictions** (ou **IP restrictions**)
+- Ou dans **Settings** → **Database** → **Connection pooling** → **IP Allowlist**
+
+Si vous ne trouvez pas cette section, le pooler est probablement configuré pour accepter toutes les connexions par défaut.
+
+**Si vous avez des problèmes de connexion** :
+1. Vérifiez les logs Vercel pour voir l'erreur exacte
+2. Essayez d'abord le Transaction Mode (port 6543) - c'est généralement le plus compatible avec Vercel
+3. Si ça ne fonctionne pas, contactez le support Supabase pour vérifier les restrictions IP
 
 ### 6. Redéployer après modification
 

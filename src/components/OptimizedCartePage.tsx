@@ -315,7 +315,76 @@ export default function OptimizedCartePage() {
       });
     }
 
-    console.log(`🔍 Filtrage: ${events.length} → ${filtered.length} événements (Public: ${filters.targetAudience?.length || 0}, Accessibilité: ${filters.accessibility ? Object.values(filters.accessibility).filter(Boolean).length : 0})`);
+    // ===== SPRINT 2: FILTRES PAR TAGS STRUCTURÉS =====
+    // Filtre par type d'événement
+    if (filters.type) {
+      filtered = filtered.filter(event => {
+        // Vérifier dans les tags structurés (eventTags) si disponibles
+        const eventTags = (event as any).eventTags || [];
+        const hasTypeTag = eventTags.some((tag: any) => 
+          tag.category === 'type' && tag.value === filters.type
+        );
+        
+        // Fallback : vérifier dans les tags normalisés
+        if (!hasTypeTag) {
+          const normalizedType = filters.type.replace(/_/g, ' ').toLowerCase();
+          return event.tags.some(tag => 
+            tag.toLowerCase().includes(normalizedType) ||
+            tag.toLowerCase() === normalizedType
+          );
+        }
+        
+        return hasTypeTag;
+      });
+    }
+
+    // Filtre par ambiance
+    if (filters.ambiance) {
+      filtered = filtered.filter(event => {
+        // Vérifier dans les tags structurés (eventTags) si disponibles
+        const eventTags = (event as any).eventTags || [];
+        const hasAmbianceTag = eventTags.some((tag: any) => 
+          tag.category === 'ambiance' && tag.value === filters.ambiance
+        );
+        
+        // Fallback : vérifier dans les tags normalisés
+        if (!hasAmbianceTag) {
+          const normalizedAmbiance = filters.ambiance.replace(/_/g, ' ').toLowerCase();
+          return event.tags.some(tag => 
+            tag.toLowerCase().includes(normalizedAmbiance) ||
+            tag.toLowerCase() === normalizedAmbiance
+          );
+        }
+        
+        return hasAmbianceTag;
+      });
+    }
+
+    // Filtre par public (tags structurés)
+    if (filters.public) {
+      filtered = filtered.filter(event => {
+        // Vérifier dans les tags structurés (eventTags) si disponibles
+        const eventTags = (event as any).eventTags || [];
+        const hasPublicTag = eventTags.some((tag: any) => 
+          tag.category === 'public' && tag.value === filters.public
+        );
+        
+        // Fallback : vérifier dans les tags normalisés
+        if (!hasPublicTag) {
+          const normalizedPublic = filters.public === 'tout_public' ? 'tout public' :
+                                  filters.public === '18_plus' ? '18+' :
+                                  filters.public.replace(/_/g, ' ').toLowerCase();
+          return event.tags.some(tag => 
+            tag.toLowerCase().includes(normalizedPublic) ||
+            tag.toLowerCase() === normalizedPublic
+          );
+        }
+        
+        return hasPublicTag;
+      });
+    }
+
+    console.log(`🔍 Filtrage: ${events.length} → ${filtered.length} événements (Public: ${filters.targetAudience?.length || 0}, Accessibilité: ${filters.accessibility ? Object.values(filters.accessibility).filter(Boolean).length : 0}, Type: ${filters.type || 'none'}, Ambiance: ${filters.ambiance || 'none'}, Public: ${filters.public || 'none'})`);
     return filtered;
     // Utiliser les valeurs primitives pour éviter les boucles infinies
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -333,6 +402,9 @@ export default function OptimizedCartePage() {
     filters.location?.radius,
     filters.location?.lat,
     filters.location?.lng,
+    filters.type, // SPRINT 2
+    filters.ambiance, // SPRINT 2
+    filters.public, // SPRINT 2
     userLocation?.[0],
     userLocation?.[1],
     showFreeOnly,

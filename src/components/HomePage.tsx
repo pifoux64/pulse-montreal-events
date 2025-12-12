@@ -28,7 +28,10 @@ import {
   GENRES, 
   CATEGORY_LABELS, 
   getGenresForCategory, 
-  getStylesForGenre 
+  getStylesForGenre,
+  EVENT_TYPES,
+  AMBIANCES,
+  PUBLICS,
 } from '@/lib/tagging/taxonomy';
 
 // Types pour l'API
@@ -205,6 +208,9 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedGenre, setSelectedGenre] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedAmbiance, setSelectedAmbiance] = useState<string | null>(null);
+  const [selectedPublic, setSelectedPublic] = useState<string | null>(null);
 
   // Réinitialiser genre et style quand on change de catégorie
   const handleCategorySelect = (category: string) => {
@@ -244,7 +250,7 @@ export default function HomePage() {
 
   // Récupérer les événements selon le mode et les filtres sélectionnés
   const { data: apiData, isLoading, error } = useQuery<ApiResponse>({
-    queryKey: ['events', mode, selectedCategory, selectedGenre, selectedStyle, dateFrom, dateTo],
+    queryKey: ['events', mode, selectedCategory, selectedGenre, selectedStyle, selectedType, selectedAmbiance, selectedPublic, dateFrom, dateTo],
     queryFn: async () => {
       try {
         // Récupérer plusieurs pages pour avoir tous les événements (max 100 par page)
@@ -278,6 +284,17 @@ export default function HomePage() {
           } else if (selectedCategory === 'MUSIC') {
             // Si on sélectionne juste MUSIC, on ne filtre pas par genre spécifique
             // mais on pourrait filtrer côté front
+          }
+          
+          // Filtres avancés SPRINT 2
+          if (selectedType) {
+            params.set('type', selectedType);
+          }
+          if (selectedAmbiance) {
+            params.set('ambiance', selectedAmbiance);
+          }
+          if (selectedPublic) {
+            params.set('public', selectedPublic);
           }
           
           const response = await fetch(`/api/events?${params.toString()}`);
@@ -693,6 +710,134 @@ export default function HomePage() {
                 </div>
               </div>
             )}
+
+            {/* Filtres avancés SPRINT 2 : Type, Ambiance, Public */}
+            <div className="mt-8 pt-8 border-t border-white/10">
+              <div className="mb-4 text-center">
+                <span className="text-sm text-slate-400 font-medium">
+                  Filtres avancés
+                </span>
+              </div>
+              
+              {/* Type d'événement */}
+              <div className="mb-6">
+                <div className="mb-2 text-center">
+                  <span className="text-xs text-slate-500 font-medium">
+                    Type d'événement
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
+                  <button
+                    onClick={() => setSelectedType(null)}
+                    className={`px-4 py-2 text-xs md:text-sm rounded-full border-2 transition-all duration-300 transform hover:scale-110 ${
+                      !selectedType
+                        ? 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-transparent shadow-lg shadow-slate-500/50'
+                        : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                    }`}
+                  >
+                    Tout
+                  </button>
+                  {EVENT_TYPES.slice(0, 10).map((type, index) => {
+                    const isActive = selectedType === type;
+                    const label = type.replace(/_/g, ' ');
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedType(isActive ? null : type)}
+                        className={`px-4 py-2 text-xs md:text-sm rounded-full border-2 transition-all duration-300 transform hover:scale-110 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-indigo-500 to-blue-500 text-white border-transparent shadow-lg shadow-indigo-500/50'
+                            : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-indigo-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                        }`}
+                        style={{ animationDelay: `${(index + 1) * 30}ms` }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Ambiance */}
+              <div className="mb-6">
+                <div className="mb-2 text-center">
+                  <span className="text-xs text-slate-500 font-medium">
+                    Ambiance
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
+                  <button
+                    onClick={() => setSelectedAmbiance(null)}
+                    className={`px-4 py-2 text-xs md:text-sm rounded-full border-2 transition-all duration-300 transform hover:scale-110 ${
+                      !selectedAmbiance
+                        ? 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-transparent shadow-lg shadow-slate-500/50'
+                        : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                    }`}
+                  >
+                    Tout
+                  </button>
+                  {AMBIANCES.map((ambiance, index) => {
+                    const isActive = selectedAmbiance === ambiance;
+                    const label = ambiance.replace(/_/g, ' ');
+                    return (
+                      <button
+                        key={ambiance}
+                        onClick={() => setSelectedAmbiance(isActive ? null : ambiance)}
+                        className={`px-4 py-2 text-xs md:text-sm rounded-full border-2 transition-all duration-300 transform hover:scale-110 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white border-transparent shadow-lg shadow-rose-500/50'
+                            : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-rose-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                        }`}
+                        style={{ animationDelay: `${(index + 1) * 30}ms` }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Public */}
+              <div className="mb-4">
+                <div className="mb-2 text-center">
+                  <span className="text-xs text-slate-500 font-medium">
+                    Public cible
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 justify-center max-w-2xl mx-auto">
+                  <button
+                    onClick={() => setSelectedPublic(null)}
+                    className={`px-4 py-2 text-xs md:text-sm rounded-full border-2 transition-all duration-300 transform hover:scale-110 ${
+                      !selectedPublic
+                        ? 'bg-gradient-to-r from-slate-500 to-slate-600 text-white border-transparent shadow-lg shadow-slate-500/50'
+                        : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                    }`}
+                  >
+                    Tout
+                  </button>
+                  {PUBLICS.map((publicType, index) => {
+                    const isActive = selectedPublic === publicType;
+                    const label = publicType === 'tout_public' ? 'Tout public' : 
+                                 publicType === '18_plus' ? '18+' : 
+                                 publicType.replace(/_/g, ' ');
+                    return (
+                      <button
+                        key={publicType}
+                        onClick={() => setSelectedPublic(isActive ? null : publicType)}
+                        className={`px-4 py-2 text-xs md:text-sm rounded-full border-2 transition-all duration-300 transform hover:scale-110 ${
+                          isActive
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white border-transparent shadow-lg shadow-amber-500/50'
+                            : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-amber-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
+                        }`}
+                        style={{ animationDelay: `${(index + 1) * 30}ms` }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Lien vers la carte - Design moderne */}
@@ -728,11 +873,14 @@ export default function HomePage() {
                 </span>
               )}
             </h2>
-            {displayedFilterLabel && (
+            {(displayedFilterLabel || selectedType || selectedAmbiance || selectedPublic) && (
               <p className="text-slate-400 text-sm">
                 Filtres actifs : {selectedCategory && CATEGORY_LABELS[selectedCategory]?.fr}
                 {selectedGenre && ` → ${selectedGenre.replace(/_/g, ' ')}`}
                 {selectedStyle && ` → ${selectedStyle.replace(/_/g, ' ')}`}
+                {selectedType && ` • Type: ${selectedType.replace(/_/g, ' ')}`}
+                {selectedAmbiance && ` • Ambiance: ${selectedAmbiance.replace(/_/g, ' ')}`}
+                {selectedPublic && ` • Public: ${selectedPublic === 'tout_public' ? 'Tout public' : selectedPublic === '18_plus' ? '18+' : selectedPublic.replace(/_/g, ' ')}`}
               </p>
             )}
           </div>
