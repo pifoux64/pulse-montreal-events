@@ -641,10 +641,23 @@ export async function GET(request: NextRequest) {
         console.error('Meta Prisma:', (error as any).meta);
       }
     }
+    
+    // Détecter les erreurs de connexion à la base de données
+    const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+    const isDatabaseError = errorMessage.includes('Can\'t reach database server') || 
+                            errorMessage.includes('database server') ||
+                            errorMessage.includes('connection') ||
+                            (error as any)?.code === 'P1001';
+    
     return NextResponse.json(
       { 
-        error: 'Erreur serveur lors de la récupération des événements',
-        details: error instanceof Error ? error.message : 'Erreur inconnue'
+        error: isDatabaseError 
+          ? 'Erreur de connexion à la base de données. Veuillez vérifier la configuration DATABASE_URL sur Vercel.'
+          : 'Erreur serveur lors de la récupération des événements',
+        details: errorMessage,
+        ...(isDatabaseError ? {
+          help: 'Consultez docs/VERCEL_SUPABASE_SETUP.md pour la configuration'
+        } : {})
       },
       { status: 500 }
     );
