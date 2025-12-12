@@ -35,6 +35,11 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') {
     return;
   }
+  
+  // Ignorer les requêtes chrome-extension:// (extensions Chrome)
+  if (event.request.url.startsWith('chrome-extension://')) {
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)
@@ -62,10 +67,13 @@ self.addEventListener('fetch', (event) => {
         }
 
         // Si la requête réussit, met à jour le cache
-        if (response.status === 200) {
+        // Ignorer les requêtes chrome-extension:// (extensions Chrome)
+        if (response.status === 200 && !event.request.url.startsWith('chrome-extension://')) {
           const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
+            cache.put(event.request, responseToCache).catch(() => {
+              // Ignorer les erreurs de cache (ex: chrome-extension)
+            });
           });
         }
         return response;

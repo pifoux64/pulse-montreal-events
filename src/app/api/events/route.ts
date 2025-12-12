@@ -655,11 +655,11 @@ export async function GET(request: NextRequest) {
     const hasDirectUrl = databaseUrl.includes('db.') && databaseUrl.includes('.supabase.co:5432');
     const hasPoolerUrl = databaseUrl.includes('.pooler.supabase.com');
     
-    let helpMessage = 'Consultez URGENT_FIX_DATABASE.md pour la configuration';
+    let helpMessage = 'Consultez docs/VERCEL_SUPABASE_SETUP.md pour la configuration';
     if (isDirectConnection || hasDirectUrl) {
-      helpMessage = '⚠️ Vous utilisez une URL DIRECTE (db.xxx.supabase.co) au lieu d\'un POOLER. Sur Vercel, vous DEVEZ utiliser l\'URL du pooler (xxx.pooler.supabase.com). Consultez URGENT_FIX_DATABASE.md';
+      helpMessage = '⚠️ Vous utilisez une URL DIRECTE (db.xxx.supabase.co) au lieu d\'un POOLER. Sur Vercel, vous DEVEZ utiliser l\'URL du pooler (xxx.pooler.supabase.com). Consultez docs/VERCEL_SUPABASE_SETUP.md';
     } else if (!hasPoolerUrl && isDatabaseError) {
-      helpMessage = '⚠️ Votre DATABASE_URL ne semble pas utiliser le pooler Supabase. Consultez URGENT_FIX_DATABASE.md pour utiliser l\'URL du pooler.';
+      helpMessage = '⚠️ Votre DATABASE_URL ne semble pas utiliser le pooler Supabase. Consultez docs/VERCEL_SUPABASE_SETUP.md pour utiliser l\'URL du pooler.';
     }
     
     return NextResponse.json(
