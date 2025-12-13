@@ -22,7 +22,7 @@ import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Event } from '@/types';
-import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2 } from 'lucide-react';
+import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter } from 'lucide-react';
 import { 
   MAIN_CATEGORIES, 
   GENRES, 
@@ -211,6 +211,7 @@ export default function HomePage() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [selectedAmbiance, setSelectedAmbiance] = useState<string | null>(null);
   const [selectedPublic, setSelectedPublic] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Réinitialiser genre et style quand on change de catégorie
   const handleCategorySelect = (category: string) => {
@@ -714,11 +715,18 @@ export default function HomePage() {
             {/* Filtres avancés SPRINT 2 : Type, Ambiance, Public */}
             <div className="mt-8 pt-8 border-t border-white/10">
               <div className="mb-4 text-center">
-                <span className="text-sm text-slate-400 font-medium">
-                  Filtres avancés
-                </span>
+                <button
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+                >
+                  <Filter className="w-4 h-4" />
+                  {showAdvanced ? 'Masquer les filtres avancés' : 'Afficher les filtres avancés'}
+                </button>
               </div>
               
+              {/* Filtres avancés (affichage conditionnel) */}
+              {showAdvanced && (
+              <>
               {/* Type d'événement */}
               <div className="mb-6">
                 <div className="mb-2 text-center">
@@ -837,6 +845,8 @@ export default function HomePage() {
                   })}
                 </div>
               </div>
+              </>
+              )}
             </div>
           </div>
 
