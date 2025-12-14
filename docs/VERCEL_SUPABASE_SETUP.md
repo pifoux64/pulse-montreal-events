@@ -107,17 +107,24 @@ Pour vérifier que la connexion fonctionne :
 - ✅ Utiliser `connection_limit=1` dans la DATABASE_URL
 - ✅ Vérifier que Prisma utilise bien le singleton pattern
 
+### "prepared statement already exists" (Erreur Prisma)
+- ✅ Cette erreur est automatiquement résolue par le code qui ajoute `?prepare=false` à la DATABASE_URL en production
+- ✅ Si l'erreur persiste, vérifiez que votre DATABASE_URL sur Vercel inclut `?prepare=false` à la fin
+- ✅ Format recommandé : `postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres?prepare=false`
+
 ## Configuration recommandée pour Vercel
 
 **Transaction Mode (Recommandé pour serverless)** :
 ```env
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres"
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres?prepare=false"
 ```
 
 **Session Mode (Alternative)** :
 ```env
-DATABASE_URL="postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres"
+DATABASE_URL="postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres?prepare=false"
 ```
+
+**Note** : Le paramètre `?prepare=false` est automatiquement ajouté par le code en production pour éviter l'erreur "prepared statement already exists" avec Prisma dans les environnements serverless.
 
 **Référence** : [Documentation Supabase - Connection Pooler](https://supabase.com/docs/guides/database/connecting-to-postgres#connection-pooler)
 
