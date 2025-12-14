@@ -108,23 +108,29 @@ Pour vérifier que la connexion fonctionne :
 - ✅ Vérifier que Prisma utilise bien le singleton pattern
 
 ### "prepared statement already exists" (Erreur Prisma)
-- ✅ Cette erreur est automatiquement résolue par le code qui ajoute `?prepare=false` à la DATABASE_URL en production
-- ✅ Si l'erreur persiste, vérifiez que votre DATABASE_URL sur Vercel inclut `?prepare=false` à la fin
-- ✅ Format recommandé : `postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres?prepare=false`
+- ✅ Cette erreur est automatiquement résolue par le code qui ajoute `?pgbouncer=true` pour le pooler Supabase
+- ✅ Pour le pooler Supabase (pooler.supabase.com), utiliser `pgbouncer=true` au lieu de `prepare=false`
+- ✅ Format recommandé pour pooler : `postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true`
+- ✅ Format recommandé pour Transaction mode direct : `postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres?pgbouncer=true`
 
 ## Configuration recommandée pour Vercel
 
-**Transaction Mode (Recommandé pour serverless)** :
+**Transaction Mode avec Pooler (Recommandé pour serverless)** :
 ```env
-DATABASE_URL="postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres?prepare=false"
+DATABASE_URL="postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true"
+```
+
+**Transaction Mode Direct (Alternative)** :
+```env
+DATABASE_URL="postgresql://postgres:[PASSWORD]@db.xxx.supabase.co:6543/postgres?pgbouncer=true"
 ```
 
 **Session Mode (Alternative)** :
 ```env
-DATABASE_URL="postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres?prepare=false"
+DATABASE_URL="postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres?pgbouncer=true"
 ```
 
-**Note** : Le paramètre `?prepare=false` est automatiquement ajouté par le code en production pour éviter l'erreur "prepared statement already exists" avec Prisma dans les environnements serverless.
+**Note** : Le paramètre `?pgbouncer=true` est automatiquement ajouté par le code en production pour le pooler Supabase afin d'éviter l'erreur "prepared statement already exists" avec Prisma dans les environnements serverless.
 
 **Référence** : [Documentation Supabase - Connection Pooler](https://supabase.com/docs/guides/database/connecting-to-postgres#connection-pooler)
 
