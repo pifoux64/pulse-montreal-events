@@ -499,43 +499,58 @@ export async function GET(request: NextRequest) {
     }
 
     // Exécuter la requête (utilise 'now' défini plus haut)
-    const [events, total] = await Promise.all([
-      prisma.event.findMany({
-        where,
-        orderBy,
-        skip,
-        take: filters.pageSize,
-        include: {
-          venue: true,
-          organizer: {
-            include: {
-              user: {
-                select: {
-                  name: true,
+    let events, total;
+    try {
+      [events, total] = await Promise.all([
+        prisma.event.findMany({
+          where,
+          orderBy,
+          skip,
+          take: filters.pageSize,
+          include: {
+            venue: true,
+            organizer: {
+              include: {
+                user: {
+                  select: {
+                    name: true,
+                  },
                 },
               },
             },
-          },
-          promotions: {
-            where: {
-              status: PromotionStatus.ACTIVE,
-              startsAt: { lte: now },
-              endsAt: { gte: now },
+            promotions: {
+              where: {
+                status: PromotionStatus.ACTIVE,
+                startsAt: { lte: now },
+                endsAt: { gte: now },
+              },
+              orderBy: {
+                kind: 'asc', // Priorité: HOMEPAGE > LIST_TOP > MAP_TOP
+              },
             },
-            orderBy: {
-              kind: 'asc', // Priorité: HOMEPAGE > LIST_TOP > MAP_TOP
+            eventTags: true,
+            _count: {
+              select: {
+                favorites: true,
+              },
             },
           },
-          eventTags: true,
-          _count: {
-            select: {
-              favorites: true,
-            },
-          },
-        },
-      }),
-      prisma.event.count({ where }),
-    ]);
+        }),
+        prisma.event.count({ where }),
+      ]);
+    } catch (prismaError) {
+      console.error('❌ Erreur Prisma lors de la requête:', prismaError);
+      if (prismaError instanceof Error) {
+        console.error('Message:', prismaError.message);
+        console.error('Stack:', prismaError.stack);
+      }
+      if ('code' in prismaError) {
+        console.error('Code Prisma:', (prismaError as any).code);
+        console.error('Meta Prisma:', JSON.stringify((prismaError as any).meta, null, 2));
+      }
+      // Re-lancer l'erreur pour qu'elle soit capturée par le catch global
+      throw prismaError;
+    }
 
     // Appliquer le filtre de distance après la requête (si nécessaire)
     let filteredEvents = events;
@@ -630,37 +645,54 @@ export async function GET(request: NextRequest) {
     return response;
 
   } catch (error) {
-    console.error('Erreur lors de la récupération des événements:', error);
+    console.error('❌ Erreur lors de la récupération des événements:', error);
     // Logger plus de détails pour le débogage
     if (error instanceof Error) {
-      console.error('Message d\'erreur:', error.message);
-      console.error('Stack trace:', error.stack);
+      console.error('📝 Message d\'erreur:', error.message);
+      console.error('📍 Stack trace:', error.stack);
       // Si c'est une erreur Prisma, logger les détails
       if ('code' in error) {
-        console.error('Code d\'erreur Prisma:', (error as any).code);
-        console.error('Meta Prisma:', (error as any).meta);
+        console.error('🔑 Code d\'erreur Prisma:', (error as any).code);
+        console.error('📊 Meta Prisma:', JSON.stringify((error as any).meta, null, 2));
       }
     }
     
     // Détecter les erreurs de connexion à la base de données
     const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
-    const isDatabaseError = errorMessage.includes('Can\'t reach database server') || 
-                            errorMessage.includes('database server') ||
-                            errorMessage.includes('connection') ||
-                            (error as any)?.code === 'P1001';
+    const errorCode = (error as any)?.code;
+    
+    const isDatabaseError = 
+      errorMessage.includes('Can\'t reach database server') || 
+      errorMessage.includes('database server') ||
+      errorMessage.includes('connection') ||
+      errorMessage.includes('timeout') ||
+      errorMessage.includes('ECONNREFUSED') ||
+      errorMessage.includes('ENOTFOUND') ||
+      errorCode === 'P1001' || // Can't reach database server
+      errorCode === 'P1002' || // Database server closed the connection
+      errorCode === 'P1003' || // Database does not exist
+      errorCode === 'P1017';   // Server has closed the connection
     
     // Détecter si l'URL est une URL directe (db.xxx.supabase.co) au lieu d'un pooler
     const isDirectConnection = errorMessage.includes('db.') && errorMessage.includes('.supabase.co:5432');
     const databaseUrl = process.env.DATABASE_URL || '';
     const hasDirectUrl = databaseUrl.includes('db.') && databaseUrl.includes('.supabase.co:5432');
-    const hasPoolerUrl = databaseUrl.includes('.pooler.supabase.com');
+    const hasPoolerUrl = databaseUrl.includes('.pooler.supabase.com') || databaseUrl.includes(':6543');
     
     let helpMessage = 'Consultez docs/VERCEL_SUPABASE_SETUP.md pour la configuration';
-    if (isDirectConnection || hasDirectUrl) {
-      helpMessage = '⚠️ Vous utilisez une URL DIRECTE (db.xxx.supabase.co) au lieu d\'un POOLER. Sur Vercel, vous DEVEZ utiliser l\'URL du pooler (xxx.pooler.supabase.com). Consultez docs/VERCEL_SUPABASE_SETUP.md';
-    } else if (!hasPoolerUrl && isDatabaseError) {
-      helpMessage = '⚠️ Votre DATABASE_URL ne semble pas utiliser le pooler Supabase. Consultez docs/VERCEL_SUPABASE_SETUP.md pour utiliser l\'URL du pooler.';
+    if (isDirectConnection || (hasDirectUrl && !databaseUrl.includes(':6543'))) {
+      helpMessage = '⚠️ Vous utilisez une URL DIRECTE (db.xxx.supabase.co:5432) au lieu d\'un POOLER. Sur Vercel, vous DEVEZ utiliser l\'URL du pooler (xxx.pooler.supabase.com) ou le port 6543. Consultez docs/VERCEL_SUPABASE_SETUP.md';
+    } else if (!hasPoolerUrl && !databaseUrl.includes(':6543') && isDatabaseError) {
+      helpMessage = '⚠️ Votre DATABASE_URL ne semble pas utiliser le pooler Supabase. Consultez docs/VERCEL_SUPABASE_SETUP.md pour utiliser l\'URL du pooler ou le port 6543.';
     }
+    
+    // Logger l'environnement pour le débogage (sans exposer les secrets)
+    console.error('🌍 Environnement:', {
+      nodeEnv: process.env.NODE_ENV,
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      databaseUrlFormat: databaseUrl ? (databaseUrl.includes('pooler') ? 'pooler' : databaseUrl.includes(':6543') ? 'transaction-mode' : 'direct') : 'missing',
+      errorCode,
+    });
     
     return NextResponse.json(
       { 
@@ -668,11 +700,12 @@ export async function GET(request: NextRequest) {
           ? 'Erreur de connexion à la base de données. Veuillez vérifier la configuration DATABASE_URL sur Vercel.'
           : 'Erreur serveur lors de la récupération des événements',
         details: errorMessage,
+        errorCode: errorCode || undefined,
         ...(isDatabaseError ? {
           help: helpMessage,
-          ...(isDirectConnection || hasDirectUrl ? {
+          ...(isDirectConnection || (hasDirectUrl && !databaseUrl.includes(':6543')) ? {
             issue: 'URL_DIRECTE_DETECTEE',
-            solution: 'Utilisez l\'URL du pooler Supabase (xxx.pooler.supabase.com) au lieu de l\'URL directe (db.xxx.supabase.co)'
+            solution: 'Utilisez l\'URL du pooler Supabase (xxx.pooler.supabase.com) ou le port 6543 au lieu de l\'URL directe (db.xxx.supabase.co:5432)'
           } : {})
         } : {})
       },
