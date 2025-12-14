@@ -224,31 +224,10 @@ function CalendrierPageContent() {
     console.log("Toggle favori pour l'événement:", eventId);
   };
 
-  const handleEventClick = async (event: Event) => {
-    try {
-      const source = (event as any).source || 'INTERNAL';
-      const externalId = (event as any).externalId || event.id;
-      const res = await fetch(
-        `/api/events/resolve?source=${encodeURIComponent(source)}&externalId=${encodeURIComponent(
-          externalId,
-        )}`,
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.id) {
-          router.push(`/evenement/${data.id}`);
-          return;
-        }
-      }
-
-      const ticketUrl = (event as any).ticketUrl;
-      if (ticketUrl && ticketUrl !== '#') {
-        window.open(ticketUrl, '_blank');
-      }
-    } catch (error) {
-      console.error('Erreur lors de la navigation vers le détail événement (calendrier):', error);
-    }
+  const handleEventClick = (event: Event) => {
+    // Rediriger directement vers la page de l'événement Pulse
+    // L'ID de l'événement est déjà l'ID Prisma depuis l'API
+    router.push(`/evenement/${event.id}`);
   };
 
   const formatDate = (date: Date) => {

@@ -437,33 +437,10 @@ export default function OptimizedCartePage() {
   }, [toggleFavorite]);
 
   const handleEventClick = useCallback(
-    async (event: Event) => {
-      try {
-        // Tenter de résoudre vers un événement Prisma à partir de la source + externalId
-        const source = (event as any).source || 'INTERNAL';
-        const externalId = (event as any).externalId || event.id;
-        const res = await fetch(
-          `/api/events/resolve?source=${encodeURIComponent(source)}&externalId=${encodeURIComponent(
-            externalId,
-          )}`,
-        );
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.id) {
-            router.push(`/evenement/${data.id}`);
-            return;
-          }
-        }
-
-        // Fallback : ouvrir le lien de billetterie si disponible
-        const ticketUrl = (event as any).ticketUrl;
-        if (ticketUrl && ticketUrl !== '#') {
-          window.open(ticketUrl, '_blank');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la navigation vers le détail événement:', error);
-      }
+    (event: Event) => {
+      // Rediriger directement vers la page de l'événement Pulse
+      // L'ID de l'événement est déjà l'ID Prisma depuis l'API
+      router.push(`/evenement/${event.id}`);
     },
     [router],
   );
