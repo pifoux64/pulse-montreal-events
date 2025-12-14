@@ -75,3 +75,4 @@ export default function EventDetailMap({ lat, lon, title }: EventDetailMapProps)
 
 
 
+
