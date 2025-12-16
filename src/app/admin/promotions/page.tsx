@@ -383,7 +383,7 @@ export default function AdminPromotionsPage() {
                         <div className="flex items-center gap-2">
                           <Clock className="w-4 h-4" />
                           <span>
-                            {new Date(promotion.startsAt).toLocaleDateString('fr-CA')} - {new Date(promotion.endsAt).toLocaleDateString('fr-CA')}
+                            {new Date(promotion.startsAt).toLocaleDateString('fr-CA', { timeZone: 'America/Montreal' })} - {new Date(promotion.endsAt).toLocaleDateString('fr-CA', { timeZone: 'America/Montreal' })}
                           </span>
                         </div>
                         <div>

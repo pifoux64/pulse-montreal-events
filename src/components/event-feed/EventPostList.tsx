@@ -70,6 +70,7 @@ export default function EventPostList({ eventId }: EventPostListProps) {
                 {new Date(post.createdAt).toLocaleString('fr-CA', {
                   dateStyle: 'medium',
                   timeStyle: 'short',
+                  timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
                 })}
               </p>
             </div>

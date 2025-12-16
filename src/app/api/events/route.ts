@@ -126,6 +126,7 @@ const EventFiltersSchema = z.object({
   tags: z.array(z.string()).optional(),
   dateFrom: z.string().optional(), // Accepte ISO datetime ou date simple
   dateTo: z.string().optional(), // Accepte ISO datetime ou date simple
+  futureOnly: z.boolean().optional(), // Si true, ne retourne que les événements futurs (par défaut: false = inclut les événements passés)
   priceMin: z.number().int().min(0).optional(),
   priceMax: z.number().int().min(0).optional(),
   free: z.boolean().optional(),
@@ -175,6 +176,7 @@ export async function GET(request: NextRequest) {
       // SPRINT 2: Support dateFrom et dateTo pour dates personnalisées
       dateFrom: params.dateFrom || undefined,
       dateTo: params.dateTo || undefined,
+      futureOnly: params.futureOnly === 'true' || params.futureOnly === true,
     });
 
     // SPRINT 1: Logique temporelle selon scope (timezone Montréal)
@@ -182,8 +184,8 @@ export async function GET(request: NextRequest) {
     const montrealTimezone = 'America/Montreal';
     const now = new Date();
     
-    // Fonction helper pour obtenir une date en heure de Montréal
-    const getMontrealDate = (date: Date) => {
+    // Fonction helper pour obtenir les composants de date en timezone Montréal
+    const getMontrealDateParts = (date: Date) => {
       const formatter = new Intl.DateTimeFormat('en-CA', {
         timeZone: montrealTimezone,
         year: 'numeric',
@@ -195,74 +197,129 @@ export async function GET(request: NextRequest) {
         hour12: false,
       });
       const parts = formatter.formatToParts(date);
-      const year = parseInt(parts.find(p => p.type === 'year')!.value);
-      const month = parseInt(parts.find(p => p.type === 'month')!.value) - 1;
-      const day = parseInt(parts.find(p => p.type === 'day')!.value);
-      const hour = parseInt(parts.find(p => p.type === 'hour')!.value);
-      const minute = parseInt(parts.find(p => p.type === 'minute')!.value);
-      const second = parseInt(parts.find(p => p.type === 'second')!.value);
-      return new Date(year, month, day, hour, minute, second);
+      return {
+        year: parseInt(parts.find(p => p.type === 'year')!.value),
+        month: parseInt(parts.find(p => p.type === 'month')!.value) - 1,
+        day: parseInt(parts.find(p => p.type === 'day')!.value),
+        hour: parseInt(parts.find(p => p.type === 'hour')!.value),
+        minute: parseInt(parts.find(p => p.type === 'minute')!.value),
+        second: parseInt(parts.find(p => p.type === 'second')!.value),
+      };
     };
     
-    const nowMontreal = getMontrealDate(now);
+    // Fonction pour créer une date UTC à partir d'une date/heure locale de Montréal
+    // Méthode simple : créer une date UTC de test et ajuster jusqu'à ce que les composants correspondent
+    const createUTCDateFromMontreal = (year: number, month: number, day: number, hour: number = 0, minute: number = 0, second: number = 0): Date => {
+      // Créer une string ISO pour cette date/heure
+      const isoString = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+      
+      // Créer une date de test en UTC
+      let testDate = new Date(isoString + 'Z');
+      
+      // Vérifier ce que cette date représente en Montréal
+      let montrealParts = getMontrealDateParts(testDate);
+      
+      // Ajuster si nécessaire (maximum 3 tentatives pour éviter les boucles infinies)
+      let attempts = 0;
+      while ((montrealParts.year !== year || montrealParts.month !== month || montrealParts.day !== day || 
+              montrealParts.hour !== hour || montrealParts.minute !== minute) && attempts < 3) {
+        // Calculer la différence
+        const diffHours = hour - montrealParts.hour;
+        const diffDays = day - montrealParts.day;
+        const diffMinutes = minute - montrealParts.minute;
+        
+        // Ajuster la date
+        testDate = new Date(testDate.getTime() + (diffHours * 60 + diffDays * 24 * 60 + diffMinutes) * 60 * 1000);
+        montrealParts = getMontrealDateParts(testDate);
+        attempts++;
+      }
+      
+      // Vérifier que la date est valide
+      if (isNaN(testDate.getTime())) {
+        // Fallback : utiliser l'offset moyen pour Montréal (UTC-5)
+        return new Date(Date.UTC(year, month, day, hour + 5, minute, second));
+      }
+      
+      return testDate;
+    };
     
-    // Aujourd'hui : début et fin de journée (timezone Montréal)
-    const todayStart = new Date(nowMontreal);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(nowMontreal);
-    todayEnd.setHours(23, 59, 59, 999);
+    // Obtenir les composants de la date actuelle en timezone Montréal
+    const nowParts = getMontrealDateParts(now);
     
-    // Calculer le week-end (vendredi 00:00 à dimanche 23:59)
-    const dayOfWeek = nowMontreal.getDay(); // 0 = dimanche, 5 = vendredi, 6 = samedi
-    let weekendStart: Date;
-    let weekendEnd: Date;
+    // Aujourd'hui : début et fin de journée (timezone Montréal) en UTC
+    let todayStartUTC = createUTCDateFromMontreal(nowParts.year, nowParts.month, nowParts.day, 0, 0, 0);
+    let todayEndUTC = createUTCDateFromMontreal(nowParts.year, nowParts.month, nowParts.day, 23, 59, 59);
     
+    // Calculer le week-end (vendredi 00:00 à dimanche 23:59) en timezone Montréal
+    // Utiliser les composants de date de Montréal pour déterminer le jour de la semaine
+    // Créer une date locale avec les composants de Montréal pour obtenir le jour de la semaine
+    const montrealLocalDate = new Date(nowParts.year, nowParts.month, nowParts.day);
+    const dayOfWeek = montrealLocalDate.getDay(); // 0 = dimanche, 5 = vendredi, 6 = samedi
+    
+    let weekendStartUTC: Date;
+    let weekendEndUTC: Date;
+    
+    // Calculer le week-end en utilisant les dates UTC directement
     if (dayOfWeek === 0) {
       // Dimanche : week-end actuel (vendredi passé à dimanche actuel)
-      weekendStart = new Date(nowMontreal);
-      weekendStart.setDate(nowMontreal.getDate() - 2); // Vendredi
-      weekendStart.setHours(0, 0, 0, 0);
-      weekendEnd = new Date(nowMontreal);
-      weekendEnd.setHours(23, 59, 59, 999);
+      const fridayDate = new Date(todayStartUTC);
+      fridayDate.setUTCDate(todayStartUTC.getUTCDate() - 2);
+      weekendStartUTC = fridayDate;
+      weekendEndUTC = todayEndUTC;
     } else if (dayOfWeek >= 5) {
       // Vendredi ou samedi : week-end actuel
-      weekendStart = new Date(nowMontreal);
       if (dayOfWeek === 6) {
-        weekendStart.setDate(nowMontreal.getDate() - 1); // Vendredi
+        // Samedi : vendredi était hier
+        const fridayDate = new Date(todayStartUTC);
+        fridayDate.setUTCDate(todayStartUTC.getUTCDate() - 1);
+        weekendStartUTC = fridayDate;
+      } else {
+        // Vendredi : aujourd'hui
+        weekendStartUTC = todayStartUTC;
       }
-      weekendStart.setHours(0, 0, 0, 0);
-      weekendEnd = new Date(weekendStart);
-      weekendEnd.setDate(weekendStart.getDate() + 2); // Dimanche
-      weekendEnd.setHours(23, 59, 59, 999);
+      // Dimanche = vendredi + 2 jours
+      const sundayDate = new Date(weekendStartUTC);
+      sundayDate.setUTCDate(weekendStartUTC.getUTCDate() + 2);
+      sundayDate.setUTCHours(23, 59, 59, 999);
+      weekendEndUTC = sundayDate;
     } else {
       // Lundi à jeudi : week-end prochain
       const daysUntilFriday = 5 - dayOfWeek;
-      weekendStart = new Date(nowMontreal);
-      weekendStart.setDate(nowMontreal.getDate() + daysUntilFriday);
-      weekendStart.setHours(0, 0, 0, 0);
-      weekendEnd = new Date(weekendStart);
-      weekendEnd.setDate(weekendStart.getDate() + 2); // Dimanche
-      weekendEnd.setHours(23, 59, 59, 999);
+      const fridayDate = new Date(todayStartUTC);
+      fridayDate.setUTCDate(todayStartUTC.getUTCDate() + daysUntilFriday);
+      weekendStartUTC = fridayDate;
+      
+      // Dimanche = vendredi + 2 jours
+      const sundayDate = new Date(weekendStartUTC);
+      sundayDate.setUTCDate(weekendStartUTC.getUTCDate() + 2);
+      sundayDate.setUTCHours(23, 59, 59, 999);
+      weekendEndUTC = sundayDate;
     }
     
-    // Les dates JavaScript sont toujours stockées en UTC
-    // getMontrealDate crée des dates avec les composants locaux mais elles sont interprétées en UTC
-    // Pour la requête DB, on utilise directement les dates car Prisma/PostgreSQL gère les timezones
-    // On doit juste s'assurer que les dates représentent bien l'heure locale de Montréal
+    // Vérifier que les dates sont valides
+    if (isNaN(todayStartUTC.getTime()) || isNaN(todayEndUTC.getTime())) {
+      console.error('❌ Dates invalides pour today:', { todayStartUTC, todayEndUTC });
+      // Fallback : utiliser maintenant comme date de début
+      todayStartUTC = new Date(now);
+      todayStartUTC.setUTCHours(0, 0, 0, 0);
+      todayEndUTC = new Date(now);
+      todayEndUTC.setUTCHours(23, 59, 59, 999);
+    }
     
-    // Méthode simple : utiliser les dates telles quelles car elles sont déjà en UTC
-    // La DB compare les dates UTC stockées avec les dates UTC passées
-    const todayStartUTC = todayStart;
-    const todayEndUTC = todayEnd;
-    const weekendStartUTC = weekendStart;
-    const weekendEndUTC = weekendEnd;
+    if (isNaN(weekendStartUTC.getTime()) || isNaN(weekendEndUTC.getTime())) {
+      console.error('❌ Dates invalides pour weekend:', { weekendStartUTC, weekendEndUTC });
+      // Fallback : utiliser aujourd'hui comme week-end
+      weekendStartUTC = new Date(todayStartUTC);
+      weekendEndUTC = new Date(todayEndUTC);
+    }
     
     // Log pour déboguer
     if (filters.scope === 'weekend') {
+      const nowMontrealStr = now.toLocaleString('fr-CA', { timeZone: montrealTimezone, weekday: 'long' });
       console.log('🔍 Debug weekend:', {
-        jourActuel: nowMontreal.toLocaleDateString('fr-CA', { weekday: 'long' }),
-        weekendStart: weekendStart.toLocaleString('fr-CA'),
-        weekendEnd: weekendEnd.toLocaleString('fr-CA'),
+        jourActuel: nowMontrealStr,
+        nowParts: nowParts,
+        dayOfWeek: dayOfWeek,
         weekendStartUTC: weekendStartUTC.toISOString(),
         weekendEndUTC: weekendEndUTC.toISOString(),
       });
@@ -292,10 +349,13 @@ export async function GET(request: NextRequest) {
           lte: weekendEndUTC,
         };
       } else {
-        // Par défaut : événements futurs (si pas de scope spécifié)
-        where.startAt = {
-          gte: now,
-        };
+        // Par défaut : tous les événements (passés et futurs) sauf si futureOnly est true
+        if (filters.futureOnly) {
+          where.startAt = {
+            gte: now,
+          };
+        }
+        // Sinon, pas de filtre de date = tous les événements
       }
     } else {
       // Si on a dateFrom/dateTo, on initialise startAt pour les dates personnalisées
@@ -390,18 +450,21 @@ export async function GET(request: NextRequest) {
     }
     
     // S'assurer qu'on a au moins un filtre de date si aucun n'a été défini
-    // (Cela ne devrait jamais arriver car on l'a déjà défini plus haut, mais sécurité)
+    // Seulement si futureOnly est true, on filtre les événements futurs
     if (!where.startAt || (typeof where.startAt === 'object' && Object.keys(where.startAt).length === 0)) {
-      where.startAt = {
-        gte: now, // Par défaut : événements futurs
-      };
+      if (filters.futureOnly) {
+        where.startAt = {
+          gte: now, // Seulement si futureOnly est true
+        };
+      }
+      // Sinon, pas de filtre = tous les événements (passés et futurs)
     }
     
     // Validation : s'assurer que where.startAt a au moins une propriété valide
     if (where.startAt && typeof where.startAt === 'object') {
       const startAtKeys = Object.keys(where.startAt);
-      if (startAtKeys.length === 0) {
-        // Si vide, ajouter au moins gte
+      // Si vide et futureOnly est true, ajouter le filtre
+      if (startAtKeys.length === 0 && filters.futureOnly) {
         where.startAt.gte = now;
       }
       // S'assurer que les dates sont des objets Date valides
@@ -485,6 +548,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Tri
+    // Par défaut : événements futurs en premier (triés par date croissante), puis événements passés (triés par date décroissante)
+    // On ne peut pas faire cela directement avec Prisma, donc on triera après la requête
     let orderBy: any = [{ startAt: 'asc' }];
     if (filters.sort === 'popularity') {
       orderBy = [{ favorites: { _count: 'desc' } }, { startAt: 'asc' }];
@@ -502,42 +567,42 @@ export async function GET(request: NextRequest) {
     let events, total;
     try {
       [events, total] = await Promise.all([
-        prisma.event.findMany({
-          where,
-          orderBy,
-          skip,
-          take: filters.pageSize,
-          include: {
-            venue: true,
-            organizer: {
-              include: {
-                user: {
-                  select: {
-                    name: true,
-                  },
+      prisma.event.findMany({
+        where,
+        orderBy,
+        skip,
+        take: filters.pageSize,
+        include: {
+          venue: true,
+          organizer: {
+            include: {
+              user: {
+                select: {
+                  name: true,
                 },
               },
             },
-            promotions: {
-              where: {
-                status: PromotionStatus.ACTIVE,
-                startsAt: { lte: now },
-                endsAt: { gte: now },
-              },
-              orderBy: {
-                kind: 'asc', // Priorité: HOMEPAGE > LIST_TOP > MAP_TOP
-              },
+          },
+          promotions: {
+            where: {
+              status: PromotionStatus.ACTIVE,
+              startsAt: { lte: now },
+              endsAt: { gte: now },
             },
-            eventTags: true,
-            _count: {
-              select: {
-                favorites: true,
-              },
+            orderBy: {
+              kind: 'asc', // Priorité: HOMEPAGE > LIST_TOP > MAP_TOP
             },
           },
-        }),
-        prisma.event.count({ where }),
-      ]);
+          eventTags: true,
+          _count: {
+            select: {
+              favorites: true,
+            },
+          },
+        },
+      }),
+      prisma.event.count({ where }),
+    ]);
     } catch (prismaError) {
       console.error('❌ Erreur Prisma lors de la requête:', prismaError);
       if (prismaError instanceof Error) {
@@ -591,8 +656,20 @@ export async function GET(request: NextRequest) {
       return 0;
     });
 
+    // Trier les événements : futurs en premier (par date croissante), puis passés (par date décroissante)
+    const nowForSort = new Date();
+    const futureEvents = sortedByPromotions.filter(e => new Date(e.startAt) >= nowForSort);
+    const pastEvents = sortedByPromotions.filter(e => new Date(e.startAt) < nowForSort);
+    
+    // Trier les événements futurs par date croissante, et les passés par date décroissante
+    futureEvents.sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
+    pastEvents.sort((a, b) => new Date(b.startAt).getTime() - new Date(a.startAt).getTime());
+    
+    // Combiner : futurs en premier, puis passés
+    const sortedByTime = [...futureEvents, ...pastEvents];
+
     // Si recherche par proximité, trier par distance
-    let sortedEvents = sortedByPromotions;
+    let sortedEvents = sortedByTime;
     if (filters.sort === 'proximity' && filters.lat && filters.lon) {
       sortedEvents = sortedByPromotions
         .map(event => ({
@@ -663,8 +740,8 @@ export async function GET(request: NextRequest) {
     
     const isDatabaseError = 
       errorMessage.includes('Can\'t reach database server') || 
-      errorMessage.includes('database server') ||
-      errorMessage.includes('connection') ||
+                            errorMessage.includes('database server') ||
+                            errorMessage.includes('connection') ||
       errorMessage.includes('timeout') ||
       errorMessage.includes('ECONNREFUSED') ||
       errorMessage.includes('ENOTFOUND') ||

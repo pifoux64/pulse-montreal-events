@@ -197,12 +197,25 @@ function CalendrierPageContent() {
     return days;
   }, [currentDate]);
 
+  // Fonction helper pour obtenir la date en timezone Montréal
+  const getMontrealDateKey = (date: Date): string => {
+    // Utiliser Intl.DateTimeFormat pour obtenir les composants de date en timezone Montréal
+    const formatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Montreal',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    // Format retourne YYYY-MM-DD directement
+    return formatter.format(date);
+  };
+
   // Événements par jour
   const eventsByDay = useMemo(() => {
     const eventsMap = new Map<string, Event[]>();
     
     filteredEvents.forEach(event => {
-      const dateKey = event.startDate.toISOString().split('T')[0];
+      const dateKey = getMontrealDateKey(event.startDate);
       if (!eventsMap.has(dateKey)) {
         eventsMap.set(dateKey, []);
       }
@@ -215,7 +228,7 @@ function CalendrierPageContent() {
   // Événements du jour sélectionné
   const selectedDayEvents = useMemo(() => {
     if (!selectedDate) return [];
-    const dateKey = selectedDate.toISOString().split('T')[0];
+    const dateKey = getMontrealDateKey(selectedDate);
     return eventsByDay.get(dateKey) || [];
   }, [selectedDate, eventsByDay]);
 
@@ -235,14 +248,16 @@ function CalendrierPageContent() {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'America/Montreal' // Toujours utiliser le timezone Montréal
     }).format(date);
   };
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('fr-CA', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Montreal' // Toujours utiliser le timezone Montréal
     }).format(date);
   };
 
@@ -417,7 +432,8 @@ function CalendrierPageContent() {
               <h2 className="text-2xl font-bold text-gray-900">
                 {currentDate.toLocaleDateString('fr-CA', { 
                   month: 'long', 
-                  year: 'numeric' 
+                  year: 'numeric',
+                  timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
                 })}
               </h2>
             </div>
@@ -436,7 +452,7 @@ function CalendrierPageContent() {
               {/* Jours du mois */}
               <div className="grid grid-cols-7">
                 {calendarDays.map((date, index) => {
-                  const dateKey = date.toISOString().split('T')[0];
+                  const dateKey = getMontrealDateKey(date);
                   const dayEvents = eventsByDay.get(dateKey) || [];
                   const isSelected = selectedDate && date.toDateString() === selectedDate.toDateString();
                   

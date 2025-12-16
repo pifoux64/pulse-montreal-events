@@ -114,7 +114,7 @@ export default function PolitiqueConfidentialitePage() {
 
           <section>
             <p className="text-sm text-slate-400">
-              Dernière mise à jour : {new Date().toLocaleDateString('fr-CA', { year: 'numeric', month: 'long', day: 'numeric' })}
+              Dernière mise à jour : {new Date().toLocaleDateString('fr-CA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Montreal' })}
             </p>
           </section>
         </div>

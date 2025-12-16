@@ -46,11 +46,13 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
       year: 'numeric',
       month: 'long',
       day: 'numeric',
+      timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
     });
 
     const eventTime = new Date(event.startAt).toLocaleTimeString('fr-CA', {
       hour: '2-digit',
       minute: '2-digit',
+      timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
     });
 
     const descriptionSnippet = event.description
@@ -201,17 +203,23 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
+                          timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
                         })}
                       </div>
                       <div className="flex items-center gap-1">
                         <Clock className="h-4 w-4" />
-                        {eventDate.toLocaleTimeString('fr-CA', { hour: '2-digit', minute: '2-digit' })}
+                        {eventDate.toLocaleTimeString('fr-CA', { 
+                          hour: '2-digit', 
+                          minute: '2-digit',
+                          timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
+                        })}
                         {eventEndDate && (
                           <>
                             <span className="px-1">-</span>
                             {eventEndDate.toLocaleTimeString('fr-CA', {
                               hour: '2-digit',
                               minute: '2-digit',
+                              timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
                             })}
                           </>
                         )}

@@ -211,7 +211,7 @@ export function formatPrice(priceMin?: number, priceMax?: number, currency = 'CA
 }
 
 /**
- * Formatte une date pour l'affichage
+ * Formatte une date pour l'affichage (toujours en timezone Montréal)
  */
 export function formatEventDate(date: string | Date, locale = 'fr-CA'): string {
   const eventDate = new Date(date);
@@ -221,8 +221,28 @@ export function formatEventDate(date: string | Date, locale = 'fr-CA'): string {
     month: 'long',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
   });
+}
+
+/**
+ * Constante pour le timezone Montréal (à utiliser partout)
+ */
+export const MONTREAL_TIMEZONE = 'America/Montreal';
+
+/**
+ * Convertit une date en format YYYY-MM-DD en timezone Montréal (pour les inputs HTML date)
+ */
+export function toMontrealDateString(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Montreal',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  });
+  return formatter.format(d);
 }
 
 /**

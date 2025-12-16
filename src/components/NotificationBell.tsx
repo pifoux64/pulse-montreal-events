@@ -111,6 +111,7 @@ export default function NotificationBell() {
                   {new Date(notification.createdAt).toLocaleString('fr-CA', {
                     dateStyle: 'medium',
                     timeStyle: 'short',
+                    timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
                   })}
                 </p>
               </div>

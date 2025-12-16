@@ -23,6 +23,7 @@ import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Event } from '@/types';
 import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter } from 'lucide-react';
+import { toMontrealDateString } from '@/lib/utils';
 import { 
   MAIN_CATEGORIES, 
   GENRES, 
@@ -479,7 +480,7 @@ export default function HomePage() {
                   </label>
                   <input
                     type="date"
-                    value={dateFrom ? new Date(dateFrom).toISOString().split('T')[0] : ''}
+                    value={dateFrom ? toMontrealDateString(dateFrom) : ''}
                     onChange={(e) => {
                       const params = new URLSearchParams(window.location.search);
                       
@@ -506,7 +507,7 @@ export default function HomePage() {
                       
                       router.push(params.toString() ? `/?${params.toString()}` : '/');
                     }}
-                    min={new Date().toISOString().split('T')[0]} // Empêcher de sélectionner des dates passées
+                    min={toMontrealDateString(new Date())} // Empêcher de sélectionner des dates passées
                     className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     style={{ colorScheme: 'dark' }}
                   />
@@ -517,7 +518,7 @@ export default function HomePage() {
                   </label>
                   <input
                     type="date"
-                    value={dateTo ? new Date(dateTo).toISOString().split('T')[0] : ''}
+                    value={dateTo ? toMontrealDateString(dateTo) : ''}
                     onChange={(e) => {
                       const params = new URLSearchParams(window.location.search);
                       
@@ -544,7 +545,7 @@ export default function HomePage() {
                       
                       router.push(params.toString() ? `/?${params.toString()}` : '/');
                     }}
-                    min={dateFrom ? new Date(dateFrom).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]}
+                    min={dateFrom ? toMontrealDateString(dateFrom) : toMontrealDateString(new Date())}
                     className="w-full px-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                     style={{ colorScheme: 'dark' }}
                   />

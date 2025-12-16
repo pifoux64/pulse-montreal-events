@@ -135,6 +135,7 @@ export default function AdminIngestionPage() {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
+      timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
       hour: '2-digit',
       minute: '2-digit',
     });

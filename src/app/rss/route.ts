@@ -50,6 +50,7 @@ export async function GET(request: NextRequest) {
         <p><strong>📅 Date:</strong> ${new Date(event.startAt || event.date).toLocaleDateString('fr-CA', {
           weekday: 'long',
           year: 'numeric',
+          timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
           month: 'long',
           day: 'numeric',
           hour: '2-digit',

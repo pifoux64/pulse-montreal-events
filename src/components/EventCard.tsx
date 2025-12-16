@@ -67,21 +67,24 @@ const EventCard = ({
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
     }).format(date);
   };
 
   const formatDateShort = (date: Date) => {
     return new Intl.DateTimeFormat('fr-CA', {
       month: 'short',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
     }).format(date);
   };
 
   const formatTime = (date: Date) => {
     return new Intl.DateTimeFormat('fr-CA', {
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
     }).format(date);
   };
 

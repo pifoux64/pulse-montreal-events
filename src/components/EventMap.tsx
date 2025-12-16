@@ -73,6 +73,7 @@ const EventMap = ({
 
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('fr-CA', {
+      timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
       weekday: 'long',
       year: 'numeric',
       month: 'long',
