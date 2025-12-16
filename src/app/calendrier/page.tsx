@@ -176,22 +176,45 @@ function CalendrierPageContent() {
     setSelectedDate(new Date());
   };
 
-  // Génération des jours du mois
+  // Génération des jours du mois (en timezone Montréal)
   const calendarDays = useMemo(() => {
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
+    // Obtenir les composants de date en timezone Montréal pour le mois courant
+    const montrealCurrentDate = currentDate.toLocaleString('en-CA', {
+      timeZone: 'America/Montreal',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    });
+    const [yearStr, monthStr, dayStr] = montrealCurrentDate.split('-');
+    const year = parseInt(yearStr);
+    const month = parseInt(monthStr) - 1; // 0-indexed
     
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    // Créer le premier jour du mois en timezone Montréal (midi pour éviter les problèmes de décalage)
+    const firstDayMontreal = new Date(`${year}-${String(month + 1).padStart(2, '0')}-01T12:00:00Z`);
+    const firstDayParts = getMontrealDateParts(firstDayMontreal);
+    const firstDayWeekday = firstDayMontreal.toLocaleString('en-US', { 
+      timeZone: 'America/Montreal', 
+      weekday: 'long' 
+    });
+    const weekdayMap: Record<string, number> = {
+      'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+      'Thursday': 4, 'Friday': 5, 'Saturday': 6
+    };
+    const firstDayOfWeek = weekdayMap[firstDayWeekday] ?? 0;
     
+    // Calculer le dernier jour du mois
+    const lastDayMontreal = new Date(`${year}-${String(month + 1).padStart(2, '0')}-${new Date(year, month + 1, 0).getDate()}T12:00:00Z`);
+    
+    // Commencer le calendrier au dimanche de la semaine qui contient le premier jour
+    const startOffset = firstDayOfWeek;
     const days = [];
-    const currentDateObj = new Date(startDate);
     
-    while (currentDateObj <= lastDay || days.length < 42) {
-      days.push(new Date(currentDateObj));
-      currentDateObj.setDate(currentDateObj.getDate() + 1);
+    // Générer 42 jours (6 semaines)
+    for (let i = 0; i < 42; i++) {
+      const dayOffset = i - startOffset;
+      const dayDate = new Date(firstDayMontreal);
+      dayDate.setUTCDate(firstDayMontreal.getUTCDate() + dayOffset);
+      days.push(dayDate);
     }
     
     return days;
@@ -267,7 +290,18 @@ function CalendrierPageContent() {
   };
 
   const isCurrentMonth = (date: Date) => {
-    return date.getMonth() === currentDate.getMonth();
+    // Comparer les mois en timezone Montréal
+    const dateMontreal = date.toLocaleString('en-CA', {
+      timeZone: 'America/Montreal',
+      year: 'numeric',
+      month: '2-digit',
+    });
+    const currentMontreal = currentDate.toLocaleString('en-CA', {
+      timeZone: 'America/Montreal',
+      year: 'numeric',
+      month: '2-digit',
+    });
+    return dateMontreal === currentMontreal;
   };
 
   const getCategoryColor = (category: string) => {

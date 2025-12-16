@@ -251,49 +251,116 @@ export async function GET(request: NextRequest) {
     let todayEndUTC = createUTCDateFromMontreal(nowParts.year, nowParts.month, nowParts.day, 23, 59, 59);
     
     // Calculer le week-end (vendredi 00:00 à dimanche 23:59) en timezone Montréal
-    // Utiliser les composants de date de Montréal pour déterminer le jour de la semaine
-    // Créer une date locale avec les composants de Montréal pour obtenir le jour de la semaine
-    const montrealLocalDate = new Date(nowParts.year, nowParts.month, nowParts.day);
-    const dayOfWeek = montrealLocalDate.getDay(); // 0 = dimanche, 5 = vendredi, 6 = samedi
+    // Utiliser une date de référence en timezone Montréal pour obtenir le jour de la semaine
+    const montrealDateRef = createUTCDateFromMontreal(nowParts.year, nowParts.month, nowParts.day, 12, 0, 0);
+    const montrealDatePartsRef = getMontrealDateParts(montrealDateRef);
+    
+    // Calculer le jour de la semaine en utilisant l'algorithme de Zeller ou une méthode simple
+    // Utiliser une date de référence pour obtenir le jour de la semaine en Montréal
+    const testDate = new Date(montrealDateRef);
+    const montrealWeekday = testDate.toLocaleString('en-US', { 
+      timeZone: montrealTimezone, 
+      weekday: 'long' 
+    });
+    
+    // Convertir le nom du jour en nombre (0=dimanche, 1=lundi, ..., 6=samedi)
+    const weekdayMap: Record<string, number> = {
+      'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
+      'Thursday': 4, 'Friday': 5, 'Saturday': 6
+    };
+    const dayOfWeek = weekdayMap[montrealWeekday] ?? 0;
     
     let weekendStartUTC: Date;
     let weekendEndUTC: Date;
     
-    // Calculer le week-end en utilisant les dates UTC directement
+    // Calculer le week-end en utilisant les dates UTC créées avec createUTCDateFromMontreal
     if (dayOfWeek === 0) {
       // Dimanche : week-end actuel (vendredi passé à dimanche actuel)
-      const fridayDate = new Date(todayStartUTC);
-      fridayDate.setUTCDate(todayStartUTC.getUTCDate() - 2);
-      weekendStartUTC = fridayDate;
+      // Calculer vendredi (2 jours avant)
+      const fridayParts = { ...nowParts };
+      fridayParts.day -= 2;
+      // Gérer le cas où on passe au mois précédent
+      if (fridayParts.day < 1) {
+        fridayParts.month -= 1;
+        if (fridayParts.month < 0) {
+          fridayParts.month = 11;
+          fridayParts.year -= 1;
+        }
+        const daysInPrevMonth = new Date(fridayParts.year, fridayParts.month + 1, 0).getDate();
+        fridayParts.day = daysInPrevMonth + fridayParts.day;
+      }
+      weekendStartUTC = createUTCDateFromMontreal(fridayParts.year, fridayParts.month, fridayParts.day, 0, 0, 0);
       weekendEndUTC = todayEndUTC;
     } else if (dayOfWeek >= 5) {
       // Vendredi ou samedi : week-end actuel
       if (dayOfWeek === 6) {
         // Samedi : vendredi était hier
-        const fridayDate = new Date(todayStartUTC);
-        fridayDate.setUTCDate(todayStartUTC.getUTCDate() - 1);
-        weekendStartUTC = fridayDate;
+        const fridayParts = { ...nowParts };
+        fridayParts.day -= 1;
+        if (fridayParts.day < 1) {
+          fridayParts.month -= 1;
+          if (fridayParts.month < 0) {
+            fridayParts.month = 11;
+            fridayParts.year -= 1;
+          }
+          const daysInPrevMonth = new Date(fridayParts.year, fridayParts.month + 1, 0).getDate();
+          fridayParts.day = daysInPrevMonth;
+        }
+        weekendStartUTC = createUTCDateFromMontreal(fridayParts.year, fridayParts.month, fridayParts.day, 0, 0, 0);
       } else {
         // Vendredi : aujourd'hui
         weekendStartUTC = todayStartUTC;
       }
       // Dimanche = vendredi + 2 jours
-      const sundayDate = new Date(weekendStartUTC);
-      sundayDate.setUTCDate(weekendStartUTC.getUTCDate() + 2);
-      sundayDate.setUTCHours(23, 59, 59, 999);
-      weekendEndUTC = sundayDate;
+      const sundayParts = { ...nowParts };
+      if (dayOfWeek === 5) {
+        // Vendredi : dimanche = +2 jours
+        sundayParts.day += 2;
+      } else {
+        // Samedi : dimanche = +1 jour
+        sundayParts.day += 1;
+      }
+      // Gérer le cas où on passe au mois suivant
+      const daysInMonth = new Date(sundayParts.year, sundayParts.month + 1, 0).getDate();
+      if (sundayParts.day > daysInMonth) {
+        sundayParts.day -= daysInMonth;
+        sundayParts.month += 1;
+        if (sundayParts.month > 11) {
+          sundayParts.month = 0;
+          sundayParts.year += 1;
+        }
+      }
+      weekendEndUTC = createUTCDateFromMontreal(sundayParts.year, sundayParts.month, sundayParts.day, 23, 59, 59);
     } else {
       // Lundi à jeudi : week-end prochain
       const daysUntilFriday = 5 - dayOfWeek;
-      const fridayDate = new Date(todayStartUTC);
-      fridayDate.setUTCDate(todayStartUTC.getUTCDate() + daysUntilFriday);
-      weekendStartUTC = fridayDate;
+      const fridayParts = { ...nowParts };
+      fridayParts.day += daysUntilFriday;
+      // Gérer le cas où on passe au mois suivant
+      const daysInMonth = new Date(fridayParts.year, fridayParts.month + 1, 0).getDate();
+      if (fridayParts.day > daysInMonth) {
+        fridayParts.day -= daysInMonth;
+        fridayParts.month += 1;
+        if (fridayParts.month > 11) {
+          fridayParts.month = 0;
+          fridayParts.year += 1;
+        }
+      }
+      weekendStartUTC = createUTCDateFromMontreal(fridayParts.year, fridayParts.month, fridayParts.day, 0, 0, 0);
       
       // Dimanche = vendredi + 2 jours
-      const sundayDate = new Date(weekendStartUTC);
-      sundayDate.setUTCDate(weekendStartUTC.getUTCDate() + 2);
-      sundayDate.setUTCHours(23, 59, 59, 999);
-      weekendEndUTC = sundayDate;
+      const sundayParts = { ...fridayParts };
+      sundayParts.day += 2;
+      const daysInMonthSunday = new Date(sundayParts.year, sundayParts.month + 1, 0).getDate();
+      if (sundayParts.day > daysInMonthSunday) {
+        sundayParts.day -= daysInMonthSunday;
+        sundayParts.month += 1;
+        if (sundayParts.month > 11) {
+          sundayParts.month = 0;
+          sundayParts.year += 1;
+        }
+      }
+      weekendEndUTC = createUTCDateFromMontreal(sundayParts.year, sundayParts.month, sundayParts.day, 23, 59, 59);
     }
     
     // Vérifier que les dates sont valides
@@ -316,12 +383,16 @@ export async function GET(request: NextRequest) {
     // Log pour déboguer
     if (filters.scope === 'weekend') {
       const nowMontrealStr = now.toLocaleString('fr-CA', { timeZone: montrealTimezone, weekday: 'long' });
+      const weekendStartMontreal = weekendStartUTC.toLocaleString('fr-CA', { timeZone: montrealTimezone, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const weekendEndMontreal = weekendEndUTC.toLocaleString('fr-CA', { timeZone: montrealTimezone, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       console.log('🔍 Debug weekend:', {
         jourActuel: nowMontrealStr,
         nowParts: nowParts,
         dayOfWeek: dayOfWeek,
         weekendStartUTC: weekendStartUTC.toISOString(),
+        weekendStartMontreal: weekendStartMontreal,
         weekendEndUTC: weekendEndUTC.toISOString(),
+        weekendEndMontreal: weekendEndMontreal,
       });
     }
 
