@@ -246,7 +246,7 @@ export default function IntegrationsPage() {
             const Icon = platform.icon;
             const status = getConnectionStatus(platform.id);
             const connection = connections.find(c => c.platform === platform.id);
-            const isConnecting = isConnecting === platform.id;
+            const isConnectingThis = isConnecting === platform.id;
             
             return (
               <div
@@ -306,10 +306,10 @@ export default function IntegrationsPage() {
                   {status === 'disconnected' ? (
                     <button
                       onClick={() => handleConnect(platform.id)}
-                      disabled={isConnecting}
+                      disabled={isConnectingThis}
                       className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      {isConnecting ? (
+                      {isConnectingThis ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
                           Connexion...

@@ -28,7 +28,7 @@ type InterestTag = {
 };
 
 export default function ProfilClient() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -294,13 +294,15 @@ export default function ProfilClient() {
                   Déconnecter
                 </button>
 
-                <a
-                  href="/organisateur/integrations"
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-gray-700"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                  Intégrations organisateur
-                </a>
+                {(session?.user?.role === 'ORGANIZER' || (session?.user as any)?.organizer) && (
+                  <a
+                    href="/organisateur/integrations"
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-gray-700"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    Intégrations organisateur (publier sur Facebook/Eventbrite)
+                  </a>
+                )}
               </div>
             </div>
           ) : (
