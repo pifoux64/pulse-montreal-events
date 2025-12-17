@@ -30,6 +30,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import Link from 'next/link';
+import FollowOrganizerButton from '@/components/FollowOrganizerButton';
 
 interface OrganizerData {
   id: string;
@@ -278,7 +279,8 @@ export default function OrganisateurPage() {
                 </p>
                 
                 {/* Liens sociaux et site web */}
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex items-center gap-4 mb-6 flex-wrap">
+                  <FollowOrganizerButton organizerId={organizerId} />
                   {organizer.website && (
                     <a
                       href={organizer.website}

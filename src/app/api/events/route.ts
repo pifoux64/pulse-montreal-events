@@ -10,7 +10,7 @@ import { authOptions, requireRole, requireVerifiedOrganizer } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 import { geocodeAddress, getDefaultCoordinates } from '@/lib/geocode';
-import { EventCategory, EventLanguage, EventStatus, UserRole, PromotionStatus } from '@prisma/client';
+import { EventCategory, EventLanguage, EventStatus, UserRole, PromotionStatus, NotificationType } from '@prisma/client';
 import { enrichEventWithTags } from '@/lib/tagging/eventTaggingService';
 
 /**
@@ -1013,6 +1013,38 @@ export async function POST(request: NextRequest) {
           data: featuresToCreate,
         });
       }
+    }
+
+    // SPRINT 6: Notifier les followers de l'organisateur
+    try {
+      const followers = await prisma.organizerFollow.findMany({
+        where: { organizerId: organizer.id },
+        select: { userId: true },
+      });
+
+      if (followers.length > 0) {
+        const notifications = followers.map((follow) => ({
+          userId: follow.userId,
+          eventId: event.id,
+          type: 'SYSTEM' as const,
+          title: `Nouvel événement de ${organizer.displayName}`,
+          body: `${event.title} vient d'être créé.`,
+          data: {
+            organizerId: organizer.id,
+            organizerName: organizer.displayName,
+          },
+        }));
+
+        await prisma.notification.createMany({
+          data: notifications,
+        });
+
+        // Envoyer les notifications push si configuré
+        // (Le push sera géré par le système de notifications existant)
+      }
+    } catch (error) {
+      // Ne pas faire échouer la création de l'événement si les notifications échouent
+      console.error('Erreur lors de la notification des followers:', error);
     }
 
     // Enrichir l'événement avec des tags structurés

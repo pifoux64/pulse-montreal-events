@@ -126,6 +126,7 @@ model User {
   interestTags              UserInterestTag[]
   accounts                  Account[]
   sessions                  Session[]
+  organizerFollows         OrganizerFollow[] @relation("UserFollows")
 
   @@map("users")
 }
@@ -188,8 +189,26 @@ model Organizer {
   subscriptions       Subscription[]
   platformConnections PlatformConnection[]
   publicationLogs     PublicationLog[]
+  followers           OrganizerFollow[]
 
   @@map("organizers")
+}
+
+// SPRINT 6: Suivre un organisateur pour recevoir des notifications
+model OrganizerFollow {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  organizerId String   @map("organizer_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user      User      @relation("UserFollows", fields: [userId], references: [id], onDelete: Cascade)
+  organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizerId], name: "unique_user_organizer_follow")
+  @@index([userId], name: "idx_organizer_follow_user")
+  @@index([organizerId], name: "idx_organizer_follow_organizer")
+  @@map("organizer_follows")
 }
 
 model Venue {

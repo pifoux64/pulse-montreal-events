@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { Heart, Share2, Loader2, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { useFavorites } from '@/hooks/useFavorites';
+import EventShareModal from './EventShareModal';
 
 interface EventDetailActionsProps {
   eventId: string;
@@ -21,6 +22,7 @@ export default function EventDetailActions({ eventId, eventTitle }: EventDetailA
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [justToggled, setJustToggled] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const handleFavoriteClick = async () => {
     if (!isAuthenticated) {
@@ -39,34 +41,8 @@ export default function EventDetailActions({ eventId, eventTitle }: EventDetailA
     }
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    const shareData = {
-      title: eventTitle,
-      text: `Découvrez cet événement : ${eventTitle}`,
-      url: url,
-    };
-
-    try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
-      } else {
-        // Fallback : copier dans le presse-papiers
-        await navigator.clipboard.writeText(url);
-        alert('Lien copié dans le presse-papiers !');
-      }
-    } catch (error: any) {
-      // L'utilisateur a annulé le partage ou erreur
-      if (error.name !== 'AbortError') {
-        // Si l'API de partage n'est pas disponible, copier dans le presse-papiers
-        try {
-          await navigator.clipboard.writeText(url);
-          alert('Lien copié dans le presse-papiers !');
-        } catch (clipboardError) {
-          console.error('Erreur lors de la copie:', clipboardError);
-        }
-      }
-    }
+  const handleShare = () => {
+    setShowShareModal(true);
   };
 
   const favoriteButton = (
@@ -112,16 +88,24 @@ export default function EventDetailActions({ eventId, eventTitle }: EventDetailA
   );
 
   return (
-    <div className="flex gap-2">
-      {favoriteButton}
-      <button
-        onClick={handleShare}
-        className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
-        aria-label="Partager cet événement"
-      >
-        <Share2 className="h-5 w-5" />
-      </button>
-    </div>
+    <>
+      <div className="flex gap-2">
+        {favoriteButton}
+        <button
+          onClick={handleShare}
+          className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
+          aria-label="Partager cet événement"
+        >
+          <Share2 className="h-5 w-5" />
+        </button>
+      </div>
+      <EventShareModal
+        eventId={eventId}
+        eventTitle={eventTitle}
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+      />
+    </>
   );
 }
 

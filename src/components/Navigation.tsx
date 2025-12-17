@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3 } from 'lucide-react';
+import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
 import NotificationBell from './NotificationBell';
@@ -159,6 +159,14 @@ export default function Navigation() {
                         <div className="text-xs text-slate-400">{session.user.email}</div>
                       </div>
                       <Link
+                        href="/pour-toi"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        Pour toi
+                      </Link>
+                      <Link
                         href="/favoris"
                         onClick={() => setIsUserMenuOpen(false)}
                         className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
@@ -302,6 +310,16 @@ export default function Navigation() {
                   </div>
                 ) : session?.user ? (
                   <div className="space-y-3">
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        router.push('/pour-toi');
+                      }}
+                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
+                    >
+                      <Sparkles className="w-5 h-5 text-slate-200" />
+                      <span className="font-medium text-slate-100">Pour toi</span>
+                    </button>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);

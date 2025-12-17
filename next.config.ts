@@ -113,14 +113,8 @@ const nextConfig: NextConfig = {
   },
 
   // Configuration Turbopack (maintenant stable)
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
-  },
+  // Note: Les fichiers icon.svg, apple-icon.svg sont gérés automatiquement par Next.js comme metadata
+  // On ne configure pas de règles pour les SVG car Next.js les gère nativement
 
   // Suppression des warnings d'hydratation en développement
   ...(process.env.NODE_ENV === 'development' && {
