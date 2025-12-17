@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   }
 
   const conn = await prisma.musicServiceConnection.findUnique({
-    where: { userId_service: { userId: session.user.id, service: 'spotify' } },
+    where: { unique_user_music_service: { userId: session.user.id, service: 'spotify' } },
   });
   if (!conn) {
     return NextResponse.json({ error: 'Spotify non connecté' }, { status: 400 });

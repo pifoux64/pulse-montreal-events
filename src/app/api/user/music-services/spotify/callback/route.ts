@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   const me = await spotifyGetMe(tokens.access_token);
 
   await prisma.musicServiceConnection.upsert({
-    where: { userId_service: { userId: session.user.id, service: 'spotify' } },
+    where: { unique_user_music_service: { userId: session.user.id, service: 'spotify' } },
     create: {
       userId: session.user.id,
       service: 'spotify',
