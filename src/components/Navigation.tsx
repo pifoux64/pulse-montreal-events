@@ -166,6 +166,14 @@ export default function Navigation() {
                         <Heart className="w-4 h-4" />
                         Mes favoris
                       </Link>
+                      <Link
+                        href="/profil"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
+                      >
+                        <User className="w-4 h-4" />
+                        Mon profil
+                      </Link>
                 {(session.user.role === 'ORGANIZER' || session.user.organizer) && (
                   <>
                     <Link
@@ -297,7 +305,7 @@ export default function Navigation() {
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
-                        router.push('/favoris');
+                        router.push('/profil');
                       }}
                       className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
                     >

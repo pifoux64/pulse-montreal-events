@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import { CheckCircle, ExternalLink, Loader2, Music, RefreshCw, Trash2, AlertCircle } from 'lucide-react';
+import { CheckCircle, ExternalLink, Loader2, Music, RefreshCw, Trash2, AlertCircle, Plus, X } from 'lucide-react';
+import { GENRES, EVENT_TYPES, AMBIANCES, PUBLICS, getStylesForGenre } from '@/lib/tagging/taxonomy';
 
 type MusicConnection = {
   id: string;
@@ -12,6 +13,16 @@ type MusicConnection = {
   externalUserId: string;
   expiresAt: string;
   lastSyncAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type InterestTag = {
+  id: string;
+  category: string;
+  value: string;
+  score: number;
+  source: string;
   createdAt: string;
   updatedAt: string;
 };
@@ -27,6 +38,12 @@ export default function ProfilClient() {
   const [success, setSuccess] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
+  const [interestTags, setInterestTags] = useState<InterestTag[]>([]);
+  const [loadingInterests, setLoadingInterests] = useState(true);
+  const [adding, setAdding] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<'genre' | 'style' | 'type' | 'ambiance'>('genre');
+  const [selectedGenreForStyles, setSelectedGenreForStyles] = useState<string>('reggae');
+  const [selectedValue, setSelectedValue] = useState<string>('');
 
   const spotifyConnection = useMemo(
     () => connections.find((c) => c.service === 'spotify') ?? null,
@@ -51,6 +68,7 @@ export default function ProfilClient() {
   useEffect(() => {
     if (status !== 'authenticated') return;
     refreshConnections();
+    refreshInterests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -65,6 +83,20 @@ export default function ProfilClient() {
       setError(e.message || 'Erreur inconnue');
     } finally {
       setLoadingConnections(false);
+    }
+  };
+
+  const refreshInterests = async () => {
+    try {
+      setLoadingInterests(true);
+      const res = await fetch('/api/user/interest-tags');
+      if (!res.ok) throw new Error('Erreur lors du chargement des goûts');
+      const data = await res.json();
+      setInterestTags(data.tags || []);
+    } catch (e: any) {
+      setError(e.message || 'Erreur inconnue');
+    } finally {
+      setLoadingInterests(false);
     }
   };
 
@@ -94,6 +126,7 @@ export default function ProfilClient() {
       if (!res.ok) throw new Error(data.error || 'Erreur de synchronisation');
       setSuccess(`Synchronisation terminée: ${data.pulseGenres?.length || 0} genre(s) détecté(s).`);
       await refreshConnections();
+      await refreshInterests();
     } catch (e: any) {
       setError(e.message || 'Erreur inconnue');
     } finally {
@@ -111,10 +144,53 @@ export default function ProfilClient() {
       if (!res.ok) throw new Error(data.error || 'Erreur de déconnexion');
       setSuccess('Spotify déconnecté.');
       await refreshConnections();
+      await refreshInterests();
     } catch (e: any) {
       setError(e.message || 'Erreur inconnue');
     } finally {
       setDisconnecting(false);
+    }
+  };
+
+  const addManualInterest = async () => {
+    if (!selectedValue) return;
+    try {
+      setAdding(true);
+      setError(null);
+      const res = await fetch('/api/user/interest-tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: selectedCategory,
+          value: selectedValue,
+          source: 'manual',
+          score: 1,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de l’ajout');
+      setSuccess('Préférence ajoutée.');
+      await refreshInterests();
+    } catch (e: any) {
+      setError(e.message || 'Erreur inconnue');
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const removeInterest = async (tag: InterestTag) => {
+    try {
+      setError(null);
+      const res = await fetch('/api/user/interest-tags', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ category: tag.category, value: tag.value, source: tag.source }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de la suppression');
+      await refreshInterests();
+    } catch (e: any) {
+      setError(e.message || 'Erreur inconnue');
     }
   };
 
@@ -239,6 +315,171 @@ export default function ProfilClient() {
                 Nécessite: <code>SPOTIFY_CLIENT_ID</code> et <code>SPOTIFY_CLIENT_SECRET</code> dans l’environnement.
               </p>
             </div>
+          )}
+        </section>
+
+        <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900">Mes goûts & préférences</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Ces préférences servent aux recommandations et notifications. Vous pouvez compléter/ajuster ce que Spotify a détecté.
+              </p>
+            </div>
+          </div>
+
+          {loadingInterests ? (
+            <div className="mt-4 flex items-center gap-2 text-gray-600">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Chargement…
+            </div>
+          ) : (
+            <>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Détecté depuis Spotify</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {interestTags
+                      .filter((t) => t.source === 'spotify' && t.category === 'genre')
+                      .map((t) => (
+                        <span
+                          key={t.id}
+                          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-sm"
+                        >
+                          {t.value}
+                          <button
+                            type="button"
+                            onClick={() => removeInterest(t)}
+                            className="text-green-700 hover:text-green-900"
+                            title="Retirer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    {interestTags.filter((t) => t.source === 'spotify' && t.category === 'genre').length === 0 && (
+                      <p className="text-sm text-gray-500">Aucun genre Spotify enregistré (sync non faite ou vide).</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Mes préférences manuelles</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {interestTags
+                      .filter((t) => t.source === 'manual')
+                      .map((t) => (
+                        <span
+                          key={t.id}
+                          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 text-sm"
+                        >
+                          {t.category}:{t.value}
+                          <button
+                            type="button"
+                            onClick={() => removeInterest(t)}
+                            className="text-blue-700 hover:text-blue-900"
+                            title="Retirer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    {interestTags.filter((t) => t.source === 'manual').length === 0 && (
+                      <p className="text-sm text-gray-500">Aucune préférence manuelle pour l’instant.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 border-t border-gray-200 pt-6">
+                <h3 className="font-semibold text-gray-900 mb-3">Ajouter une préférence</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-1">Catégorie</label>
+                    <select
+                      value={selectedCategory}
+                      onChange={(e) => {
+                        const v = e.target.value as any;
+                        setSelectedCategory(v);
+                        setSelectedValue('');
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="genre">Genre</option>
+                      <option value="style">Style</option>
+                      <option value="type">Type</option>
+                      <option value="ambiance">Ambiance</option>
+                    </select>
+                  </div>
+
+                  {selectedCategory === 'style' && (
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-1">Genre (pour styles)</label>
+                      <select
+                        value={selectedGenreForStyles}
+                        onChange={(e) => {
+                          setSelectedGenreForStyles(e.target.value);
+                          setSelectedValue('');
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      >
+                        {GENRES.map((g) => (
+                          <option key={g} value={g}>
+                            {g}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className={selectedCategory === 'style' ? '' : 'md:col-span-2'}>
+                    <label className="block text-sm text-gray-700 mb-1">Valeur</label>
+                    <select
+                      value={selectedValue}
+                      onChange={(e) => setSelectedValue(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                    >
+                      <option value="">Sélectionner…</option>
+                      {selectedCategory === 'genre' &&
+                        GENRES.map((g) => (
+                          <option key={g} value={g}>
+                            {g}
+                          </option>
+                        ))}
+                      {selectedCategory === 'type' &&
+                        EVENT_TYPES.map((t) => (
+                          <option key={t} value={t}>
+                            {t}
+                          </option>
+                        ))}
+                      {selectedCategory === 'ambiance' &&
+                        AMBIANCES.map((a) => (
+                          <option key={a} value={a}>
+                            {a}
+                          </option>
+                        ))}
+                      {selectedCategory === 'style' &&
+                        getStylesForGenre(selectedGenreForStyles).map((s) => (
+                          <option key={s} value={s}>
+                            {s}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  <button
+                    onClick={addManualInterest}
+                    disabled={adding || !selectedValue}
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                    Ajouter
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </section>
       </main>
