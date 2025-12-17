@@ -10,7 +10,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { refreshSpotifyToken, spotifyGetTopArtists } from '@/lib/music-services/spotify';
-import { mapSpotifyGenresToPulseGenres } from '@/lib/music-services/genreMapping';
+import { mapSpotifyGenresToPulseGenres, mapSpotifyGenresToPulseStyles } from '@/lib/music-services/genreMapping';
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -61,6 +61,9 @@ export async function POST(request: NextRequest) {
   );
 
   const pulseGenres = mapSpotifyGenresToPulseGenres(allSpotifyGenres);
+  const pulseStyles = Array.from(
+    new Set(pulseGenres.flatMap((g) => mapSpotifyGenresToPulseStyles(allSpotifyGenres, g))),
+  );
 
   // Upsert intérêts (source spotify). On garde un score simple basé sur occurrences.
   const counts = new Map<string, number>();
@@ -74,6 +77,9 @@ export async function POST(request: NextRequest) {
   await prisma.userInterestTag.deleteMany({
     where: { userId: session.user.id, source: 'spotify', category: 'genre' },
   });
+  await prisma.userInterestTag.deleteMany({
+    where: { userId: session.user.id, source: 'spotify', category: 'style' },
+  });
 
   await prisma.userInterestTag.createMany({
     data: pulseGenres.map((genre) => ({
@@ -85,6 +91,18 @@ export async function POST(request: NextRequest) {
     })),
   });
 
+  if (pulseStyles.length > 0) {
+    await prisma.userInterestTag.createMany({
+      data: pulseStyles.map((style) => ({
+        userId: session.user.id,
+        category: 'style',
+        value: style,
+        source: 'spotify',
+        score: 1,
+      })),
+    });
+  }
+
   await prisma.musicServiceConnection.update({
     where: { id: conn.id },
     data: { lastSyncAt: new Date() },
@@ -95,6 +113,7 @@ export async function POST(request: NextRequest) {
     service: 'spotify',
     spotifyGenresCount: allSpotifyGenres.length,
     pulseGenres,
+    pulseStyles,
   });
 }
 

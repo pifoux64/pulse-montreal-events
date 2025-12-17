@@ -363,6 +363,33 @@ export default function ProfilClient() {
                       <p className="text-sm text-gray-500">Aucun genre Spotify enregistré (sync non faite ou vide).</p>
                     )}
                   </div>
+
+                  <div className="mt-3">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Styles détectés</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {interestTags
+                        .filter((t) => t.source === 'spotify' && t.category === 'style')
+                        .map((t) => (
+                          <span
+                            key={t.id}
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm"
+                          >
+                            {t.value}
+                            <button
+                              type="button"
+                              onClick={() => removeInterest(t)}
+                              className="text-emerald-700 hover:text-emerald-900"
+                              title="Retirer"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      {interestTags.filter((t) => t.source === 'spotify' && t.category === 'style').length === 0 && (
+                        <p className="text-sm text-gray-500">Aucun style détecté pour l’instant.</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div>
