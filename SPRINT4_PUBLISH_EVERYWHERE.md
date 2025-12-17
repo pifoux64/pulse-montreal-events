@@ -1,8 +1,40 @@
 # 🟧 SPRINT 4 — PUBLISH ONCE → PUBLISH EVERYWHERE
 
 **Date** : Janvier 2025  
-**Statut** : 📋 Planifié  
+**Statut** : 🔄 En cours  
 **Objectif** : Système complet de publication multi-plateformes (Facebook, Eventbrite, Resident Advisor, Bandsintown)
+
+---
+
+## ✅ Progrès Actuel
+
+### Complété
+- ✅ Schéma d'événement universel (`universalEventSchema.ts`)
+- ✅ Validateurs par plateforme (`validators.ts`)
+- ✅ Modèles Prisma (`PlatformConnection`, `PublicationLog`)
+- ✅ Module Facebook Publisher (`facebookPublisher.ts`)
+- ✅ Module Eventbrite Publisher (`eventbritePublisher.ts`)
+- ✅ Module Resident Advisor Exporter (`residentAdvisorExporter.ts`)
+- ✅ Module Bandsintown Publisher (`bandsintownPublisher.ts`)
+- ✅ Orchestrateur de publication (`publishOrchestrator.ts`)
+- ✅ API endpoint `/api/events/[id]/publish`
+
+### Complété (suite)
+- ✅ Page d'intégrations organisateur (`/organisateur/integrations`)
+- ✅ Callbacks OAuth Facebook et Eventbrite
+- ✅ Bouton "Publier partout" (`PublishEverywhereButton`)
+- ✅ Section de publication dans la page événement (`EventPublishSection`)
+- ✅ Champs "Lineup" et "Description longue" dans le formulaire
+- ✅ Stockage dans EventFeature et récupération dans l'orchestrateur
+
+### Fonctionnalités disponibles
+- ✅ Connexion OAuth Facebook (avec sélection de page)
+- ✅ Connexion OAuth Eventbrite
+- ✅ Export Resident Advisor (JSON/CSV)
+- ✅ Publication Bandsintown (nécessite API key)
+- ✅ Publication automatique sur toutes les plateformes connectées
+- ✅ Logs de publication avec statuts
+- ✅ Interface complète de gestion des intégrations
 
 **Principe** : "Créer un événement une fois sur Pulse → le publier automatiquement sur toutes les plateformes connectées"
 

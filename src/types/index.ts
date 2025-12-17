@@ -182,6 +182,8 @@ export interface MapViewState {
 export interface EventFormData {
   title: string;
   description: string;
+  longDescription?: string; // SPRINT 4: Description longue pour Facebook/Eventbrite
+  lineup?: string[]; // SPRINT 4: Liste d'artistes pour RA/Bandsintown
   startDate: string;
   endDate: string;
   location: {

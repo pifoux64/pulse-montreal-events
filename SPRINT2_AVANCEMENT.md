@@ -42,40 +42,49 @@
 
 ---
 
-## ⏳ Ce qui reste à faire
+## ✅ Filtres avancés - COMPLÉTÉ
 
-### Filtres avancés
-- [ ] Créer composant `AdvancedFilters.tsx`
-- [ ] Ajouter filtres par type, genres, ambiance, public
-- [ ] Intégrer dans `OptimizedHomePage.tsx`
-- [ ] Intégrer dans `OptimizedCartePage.tsx`
-- [ ] Modifier `/api/events` pour supporter les nouveaux filtres
+### Implémentation
+- ✅ Filtres par type, ambiance, public dans `EventFilters.tsx` (lignes 712-773)
+- ✅ Intégration dans `HomePage.tsx` avec UI complète (filtres avancés visibles)
+- ✅ Intégration dans `OptimizedCartePage.tsx` via `EventFilters` (filtres disponibles dans le panneau)
+- ✅ API `/api/events` supporte les filtres `type`, `ambiance`, `public` (déjà implémenté)
+- ✅ Logique de filtrage dans `OptimizedCartePage.tsx` (lignes 318-385)
+
+### Fichiers modifiés
+- `src/components/EventFilters.tsx` : Filtres avancés avec selects pour type, ambiance, public
+- `src/components/HomePage.tsx` : UI complète avec filtres avancés (type, ambiance, public)
+- `src/components/OptimizedCartePage.tsx` : Logique de filtrage par tags structurés
+- `src/types/index.ts` : Type `EventFilter` avec champs `type`, `ambiance`, `public`
 
 ---
 
 ## 📊 Résultats
 
-### Backend (Déjà fait)
+### Backend (Complété)
 - ✅ 78% des événements (368/474) ont des tags IA structurés
 - ✅ Enrichissement automatique après ingestion
 - ✅ API retourne eventTags
+- ✅ API supporte filtres par type, ambiance, public
 
-### Frontend (En cours)
+### Frontend (Complété)
 - ✅ Affichage des tags dans EventCard
 - ✅ Affichage des tags dans EventPage
-- ⏳ Filtres avancés (prochaine étape)
+- ✅ Filtres avancés sur page d'accueil (`HomePage.tsx`)
+- ✅ Filtres avancés sur page carte (`OptimizedCartePage.tsx` via `EventFilters`)
 
 ---
 
-## 🎯 Prochaine Étape
+## 🎯 SPRINT 2 - STATUT : ✅ COMPLÉTÉ
 
-Implémenter les filtres avancés pour permettre aux utilisateurs de filtrer par :
-- Type d'événement (concert, dj_set, etc.)
-- Genres musicaux (pop, rock, techno, etc.)
-- Ambiance (salle_de_concert, warehouse, etc.)
-- Public (tout_public, 18_plus, famille)
+Tous les objectifs du SPRINT 2 ont été atteints :
+- ✅ Taxonomy complète
+- ✅ Classification IA fonctionnelle
+- ✅ Service d'enrichissement
+- ✅ Intégration dans l'ingestion
+- ✅ Affichage tags dans EventCard et EventPage
+- ✅ Filtres avancés sur `/carte` et `/` (accueil)
+- ✅ API supporte tous les filtres EventTag
 
----
-
-**Statut** : ✅ Affichage des tags complété, filtres avancés à faire
+**Prochaine étape** : SPRINT 4 - Publication multi-plateformes
 

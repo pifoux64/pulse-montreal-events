@@ -23,8 +23,8 @@
 
 ---
 
-### 🟩 SPRINT 2 — CLASSIFICATION IA & TAGGING INTELLIGENT 🔄
-**Statut** : 🔄 En cours  
+### 🟩 SPRINT 2 — CLASSIFICATION IA & TAGGING INTELLIGENT ✅
+**Statut** : ✅ Complété  
 **Objectif** : Taxonomie complète, IA classification automatique, tags affichés, filtres avancés
 
 **Livrables** :
@@ -34,13 +34,14 @@
 - ✅ Intégration dans l'ingestion (enrichissement automatique)
 - ✅ Affichage tags EventCard (EventTagsDisplay créé)
 - ✅ Affichage tags EventPage (EventTagsDisplay intégré)
-- 🔄 Filtres avancés sur `/carte` et `/` (en cours)
+- ✅ Filtres avancés sur `/carte` et `/` (complété)
 - ✅ API supporte filtres `type`, `genre`, `ambiance`, `public`
 
 **Résultats** :
 - 78% des événements (368/474) ont des tags IA structurés
 - Tags affichés dans EventCard et EventPage
-- Filtres API prêts, UI en cours
+- Filtres avancés disponibles sur page d'accueil et carte
+- UI complète avec filtres par type, ambiance, public
 
 **Documentation** : `SPRINT2_PLAN_ACTION.md`, `SPRINT2_AVANCEMENT.md`
 
@@ -62,9 +63,20 @@
 
 ---
 
-### 🟧 SPRINT 4 — PUBLISH ONCE → PUBLISH EVERYWHERE 📋
-**Statut** : 📋 Planifié  
+### 🟧 SPRINT 4 — PUBLISH ONCE → PUBLISH EVERYWHERE ✅
+**Statut** : ✅ Complété  
 **Objectif** : Système complet de publication multi-plateformes (Facebook, Eventbrite, RA, Bandsintown)
+
+**Livrables** :
+- ✅ Schéma d'événement universel
+- ✅ Modules de publication (Facebook, Eventbrite, RA, Bandsintown)
+- ✅ Modèles Prisma (PlatformConnection, PublicationLog)
+- ✅ Page d'intégrations organisateur
+- ✅ Callbacks OAuth Facebook et Eventbrite
+- ✅ Bouton "Publier partout" dans l'UI
+- ✅ Champs "Lineup" et "Description longue" dans le formulaire
+- ✅ Orchestrateur de publication
+- ✅ API endpoints complets
 
 **Tâches principales** :
 
@@ -115,8 +127,8 @@
 
 ---
 
-### 🟥 SPRINT 5 — MONÉTISATION (STRIPE + BOOSTS + NOTIFS PAYANTES) 📋
-**Statut** : 📋 Planifié  
+### 🟥 SPRINT 5 — MONÉTISATION (STRIPE + BOOSTS + NOTIFS PAYANTES) ⏸️
+**Statut** : ⏸️ En attente (reporté)  
 **Objectif** : Stripe Subscriptions, Payments one-shot, Boosts, Notifications payantes, Dashboard PRO
 
 **Tâches principales** :
@@ -129,18 +141,29 @@
 
 ---
 
-### 🟪 SPRINT 6 — SOCIAL + RECOMMANDATIONS 📋
+### 🟪 SPRINT 6 — SOCIAL + RECOMMANDATIONS PERSONNALISÉES 📋
 **Statut** : 📋 Planifié  
-**Objectif** : Suivre organisateurs, feed événement, recommandations IA, partage social + QR code
+**Objectif** : Recommandations ultra-personnalisées basées sur Spotify/Apple Music + préférences utilisateur, feed événement, partage social
 
 **Tâches principales** :
-1. Follow Organisateur (OrganizerFollow, notifications)
-2. Feed événement (CRUD texte, images, vidéos)
-3. Recommandations IA (basé sur favoris, historique, genres)
-4. Page "Pour toi" personnalisée
-5. QR code + partage
+1. **Connexion Spotify & Apple Music** (OAuth, synchronisation automatique)
+2. **Analyse des goûts musicaux** (extraction genres/styles depuis historique d'écoute)
+3. **Page de profil avec préférences musicales** (genres, styles, types, ambiances)
+4. **Moteur de recommandations personnalisées** (scoring basé sur goûts musicaux)
+5. **Page "Pour toi"** (événements recommandés avec explications)
+6. **Notifications personnalisées** (alertes pour nouveaux événements correspondant aux goûts)
+7. Follow Organisateur (OrganizerFollow, notifications)
+8. Feed événement (CRUD texte, images, vidéos)
+9. QR code + partage
 
-**Documentation** : À créer
+**Fonctionnalités clés** :
+- ✅ Connexion Spotify/Apple Music en 2 clics
+- ✅ Détection automatique des goûts musicaux (reggae, dancehall, etc.)
+- ✅ Préférences manuelles dans le profil
+- ✅ Recommandations basées sur l'écoute réelle
+- ✅ Notifications ciblées par genre/style
+
+**Documentation** : `SPRINT6_RECOMMANDATIONS_PERSONNALISEES.md`
 
 ---
 
@@ -149,20 +172,20 @@
 | Sprint | Statut | Priorité | Complexité |
 |--------|--------|----------|------------|
 | SPRINT 1 | ✅ Complété | - | - |
-| SPRINT 2 | 🔄 En cours | Haute | Moyenne |
+| SPRINT 2 | ✅ Complété | - | - |
 | SPRINT 3 | ✅ Complété | - | - |
-| SPRINT 4 | 📋 Planifié | Haute | Élevée |
-| SPRINT 5 | 📋 Planifié | Moyenne | Élevée |
-| SPRINT 6 | 📋 Planifié | Basse | Moyenne |
+| SPRINT 4 | ✅ Complété | - | - |
+| SPRINT 5 | ⏸️ En attente | - | - |
+| SPRINT 6 | 📋 Planifié | Haute | Élevée |
 
 ---
 
 ## 🎯 Prochaines Étapes Recommandées
 
-1. **Terminer SPRINT 2** : Compléter les filtres avancés sur `/carte` et `/`
-2. **Commencer SPRINT 4** : Système de publication multi-plateformes
-3. **SPRINT 5** : Monétisation (après SPRINT 4)
-4. **SPRINT 6** : Social et recommandations (après SPRINT 5)
+1. **✅ SPRINT 2 complété** : Tous les filtres avancés sont implémentés
+2. **✅ SPRINT 4 complété** : Système de publication multi-plateformes opérationnel
+3. **SPRINT 6** : Social et recommandations personnalisées (Spotify/Apple Music)
+4. **SPRINT 5 (plus tard)** : Monétisation (Stripe, Boosts, Notifications payantes)
 
 ---
 

@@ -191,7 +191,6 @@ function CalendrierPageContent() {
     
     // Créer le premier jour du mois en timezone Montréal (midi pour éviter les problèmes de décalage)
     const firstDayMontreal = new Date(`${year}-${String(month + 1).padStart(2, '0')}-01T12:00:00Z`);
-    const firstDayParts = getMontrealDateParts(firstDayMontreal);
     const firstDayWeekday = firstDayMontreal.toLocaleString('en-US', { 
       timeZone: 'America/Montreal', 
       weekday: 'long' 

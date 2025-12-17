@@ -14,6 +14,7 @@ import EventDetailMap from '@/components/EventDetailMap';
 import EventFeedPanel from '@/components/event-feed/EventFeedPanel';
 import EventDetailActions from '@/components/EventDetailActions';
 import EventTagsDisplay from '@/components/EventTagsDisplay';
+import EventPublishSection from '@/components/EventPublishSection';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -414,6 +415,14 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                       )}
                     </div>
                   </div>
+
+                  {/* Publication multi-plateformes (pour organisateurs) */}
+                  {canPostToFeed && (
+                    <EventPublishSection 
+                      eventId={event.id} 
+                      organizerId={event.organizerId} 
+                    />
+                  )}
 
                   {/* CTA Button */}
                   {!isPastEvent && !isCancelled && event.url && (

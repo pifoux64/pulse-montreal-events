@@ -85,6 +85,8 @@ function generateAutoTags(eventData: z.infer<typeof CreateEventSchema>): string[
 const CreateEventSchema = z.object({
   title: z.string().min(1).max(255),
   description: z.string().min(10),
+  longDescription: z.string().optional(), // SPRINT 4: Description longue pour Facebook/Eventbrite
+  lineup: z.array(z.string()).optional(), // SPRINT 4: Liste d'artistes pour RA/Bandsintown
   startAt: z.string().datetime(),
   endAt: z.string().datetime().optional(),
   venueId: z.string().uuid().optional(),
@@ -251,14 +253,9 @@ export async function GET(request: NextRequest) {
     let todayEndUTC = createUTCDateFromMontreal(nowParts.year, nowParts.month, nowParts.day, 23, 59, 59);
     
     // Calculer le week-end (vendredi 00:00 à dimanche 23:59) en timezone Montréal
-    // Utiliser une date de référence en timezone Montréal pour obtenir le jour de la semaine
-    const montrealDateRef = createUTCDateFromMontreal(nowParts.year, nowParts.month, nowParts.day, 12, 0, 0);
-    const montrealDatePartsRef = getMontrealDateParts(montrealDateRef);
-    
-    // Calculer le jour de la semaine en utilisant l'algorithme de Zeller ou une méthode simple
-    // Utiliser une date de référence pour obtenir le jour de la semaine en Montréal
-    const testDate = new Date(montrealDateRef);
-    const montrealWeekday = testDate.toLocaleString('en-US', { 
+    // Obtenir le jour de la semaine de manière fiable en utilisant les composants de date en timezone Montréal
+    // Méthode 1 : Utiliser toLocaleString avec timezone Montréal
+    const montrealWeekday = now.toLocaleString('en-US', { 
       timeZone: montrealTimezone, 
       weekday: 'long' 
     });
@@ -268,13 +265,32 @@ export async function GET(request: NextRequest) {
       'Sunday': 0, 'Monday': 1, 'Tuesday': 2, 'Wednesday': 3,
       'Thursday': 4, 'Friday': 5, 'Saturday': 6
     };
-    const dayOfWeek = weekdayMap[montrealWeekday] ?? 0;
+    const dayOfWeekFromString = weekdayMap[montrealWeekday] ?? 0;
+    
+    // Méthode 2 : Créer une date locale avec les composants Montréal et obtenir son jour
+    // Cette méthode est plus fiable car elle utilise directement les composants de date en timezone Montréal
+    const montrealLocalDate = new Date(nowParts.year, nowParts.month, nowParts.day);
+    const dayOfWeekFromLocal = montrealLocalDate.getDay(); // 0=dimanche, 1=lundi, ..., 6=samedi
+    
+    // Utiliser dayOfWeekFromLocal comme source principale (plus fiable)
+    // dayOfWeekFromString sert de vérification
+    const finalDayOfWeek = dayOfWeekFromLocal;
+    
+    // Log de débogage si les deux méthodes donnent des résultats différents
+    if (dayOfWeekFromString !== dayOfWeekFromLocal) {
+      console.warn('⚠️ Incohérence dans le calcul du jour de la semaine:', {
+        fromString: dayOfWeekFromString,
+        fromLocal: dayOfWeekFromLocal,
+        montrealWeekday,
+        nowParts,
+      });
+    }
     
     let weekendStartUTC: Date;
     let weekendEndUTC: Date;
     
     // Calculer le week-end en utilisant les dates UTC créées avec createUTCDateFromMontreal
-    if (dayOfWeek === 0) {
+    if (finalDayOfWeek === 0) {
       // Dimanche : week-end actuel (vendredi passé à dimanche actuel)
       // Calculer vendredi (2 jours avant)
       const fridayParts = { ...nowParts };
@@ -291,9 +307,9 @@ export async function GET(request: NextRequest) {
       }
       weekendStartUTC = createUTCDateFromMontreal(fridayParts.year, fridayParts.month, fridayParts.day, 0, 0, 0);
       weekendEndUTC = todayEndUTC;
-    } else if (dayOfWeek >= 5) {
+    } else if (finalDayOfWeek >= 5) {
       // Vendredi ou samedi : week-end actuel
-      if (dayOfWeek === 6) {
+      if (finalDayOfWeek === 6) {
         // Samedi : vendredi était hier
         const fridayParts = { ...nowParts };
         fridayParts.day -= 1;
@@ -313,7 +329,7 @@ export async function GET(request: NextRequest) {
       }
       // Dimanche = vendredi + 2 jours
       const sundayParts = { ...nowParts };
-      if (dayOfWeek === 5) {
+      if (finalDayOfWeek === 5) {
         // Vendredi : dimanche = +2 jours
         sundayParts.day += 2;
       } else {
@@ -333,7 +349,7 @@ export async function GET(request: NextRequest) {
       weekendEndUTC = createUTCDateFromMontreal(sundayParts.year, sundayParts.month, sundayParts.day, 23, 59, 59);
     } else {
       // Lundi à jeudi : week-end prochain
-      const daysUntilFriday = 5 - dayOfWeek;
+      const daysUntilFriday = 5 - finalDayOfWeek;
       const fridayParts = { ...nowParts };
       fridayParts.day += daysUntilFriday;
       // Gérer le cas où on passe au mois suivant
@@ -388,7 +404,7 @@ export async function GET(request: NextRequest) {
       console.log('🔍 Debug weekend:', {
         jourActuel: nowMontrealStr,
         nowParts: nowParts,
-        dayOfWeek: dayOfWeek,
+        dayOfWeek: finalDayOfWeek,
         weekendStartUTC: weekendStartUTC.toISOString(),
         weekendStartMontreal: weekendStartMontreal,
         weekendEndUTC: weekendEndUTC.toISOString(),
@@ -972,12 +988,39 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // SPRINT 4: Stocker longDescription et lineup dans EventFeature
+    if (eventData.longDescription || (eventData.lineup && eventData.lineup.length > 0)) {
+      const featuresToCreate: Array<{ eventId: string; featureKey: string; featureValue: any }> = [];
+      
+      if (eventData.longDescription) {
+        featuresToCreate.push({
+          eventId: event.id,
+          featureKey: 'longDescription',
+          featureValue: eventData.longDescription,
+        });
+      }
+      
+      if (eventData.lineup && eventData.lineup.length > 0) {
+        featuresToCreate.push({
+          eventId: event.id,
+          featureKey: 'lineup',
+          featureValue: eventData.lineup,
+        });
+      }
+      
+      if (featuresToCreate.length > 0) {
+        await prisma.eventFeature.createMany({
+          data: featuresToCreate,
+        });
+      }
+    }
+
     // Enrichir l'événement avec des tags structurés
     try {
       await enrichEventWithTags(event.id);
     } catch (error) {
       console.error(
-        'Erreur lors de l’enrichissement des tags structurés pour le nouvel événement:',
+        'Erreur lors de l\'enrichissement des tags structurés pour le nouvel événement:',
         error,
       );
     }

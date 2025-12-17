@@ -150,6 +150,8 @@ export default function PublierPage() {
       const apiData = {
         title: data.title,
         description: data.description,
+        longDescription: data.longDescription || undefined, // SPRINT 4
+        lineup: data.lineup && data.lineup.length > 0 ? data.lineup : undefined, // SPRINT 4
         startAt: new Date(data.startDate).toISOString(),
         endAt: data.endDate ? new Date(data.endDate).toISOString() : undefined,
         venue: {

@@ -183,7 +183,7 @@ Refonte complète de la page d'accueil avec mode "Aujourd'hui" / "Ce week-end"
 - [ ] API publique documentée
 - [ ] Analytics et métriques avancées
 - [ ] Partenariats organisateurs
-- [ ] Monétisation (promotions payantes)
+- [ ] Monétisation (promotions payantes) ⏸️ (reporté : SPRINT 5)
 
 ---
 

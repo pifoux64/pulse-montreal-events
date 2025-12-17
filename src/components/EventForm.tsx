@@ -11,6 +11,8 @@ import { EventFormData, EventCategory, CustomFilter } from '@/types';
 const eventFormSchema = z.object({
   title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
   description: z.string().min(20, 'La description doit contenir au moins 20 caractères'),
+  longDescription: z.string().optional(), // SPRINT 4: Description longue optionnelle
+  lineup: z.array(z.string()).optional(), // SPRINT 4: Lineup optionnel
   startDate: z.string().min(1, 'La date de début est requise'),
   endDate: z.string().min(1, 'La date de fin est requise'),
   location: z.object({
@@ -81,6 +83,8 @@ const EventForm = ({
     defaultValues: {
       title: initialData?.title || '',
       description: initialData?.description || '',
+      longDescription: initialData?.longDescription || '',
+      lineup: initialData?.lineup || [],
       startDate: initialData?.startDate || '',
       endDate: initialData?.endDate || '',
       location: initialData?.location || {
@@ -264,6 +268,98 @@ const EventForm = ({
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>
             )}
+          </div>
+
+          {/* SPRINT 4: Description longue pour Facebook/Eventbrite */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Description longue <span className="text-gray-500">(optionnel)</span>
+            </label>
+            <Controller
+              name="longDescription"
+              control={control}
+              render={({ field }) => (
+                <textarea
+                  {...field}
+                  rows={6}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Description détaillée pour Facebook et Eventbrite (optionnel, sinon la description standard sera utilisée)..."
+                />
+              )}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Cette description sera utilisée pour les publications sur Facebook et Eventbrite. Si vide, la description standard sera utilisée.
+            </p>
+          </div>
+
+          {/* SPRINT 4: Lineup (artistes) pour RA/Bandsintown */}
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Lineup (artistes) <span className="text-gray-500">(optionnel)</span>
+            </label>
+            <Controller
+              name="lineup"
+              control={control}
+              render={({ field }) => {
+                const lineup = field.value || [];
+                return (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newTag}
+                        onChange={(e) => setNewTag(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && newTag.trim()) {
+                            e.preventDefault();
+                            field.onChange([...lineup, newTag.trim()]);
+                            setNewTag('');
+                          }
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Ajouter un artiste et appuyez sur Entrée"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newTag.trim()) {
+                            field.onChange([...lineup, newTag.trim()]);
+                            setNewTag('');
+                          }
+                        }}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {lineup.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {lineup.map((artist, index) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                          >
+                            {artist}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                field.onChange(lineup.filter((_, i) => i !== index));
+                              }}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-gray-500">
+                      Liste des artistes qui se produiront. Requis pour Resident Advisor et Bandsintown.
+                    </p>
+                  </div>
+                );
+              }}
+            />
           </div>
         </div>
       </div>
