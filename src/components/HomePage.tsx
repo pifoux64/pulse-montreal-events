@@ -23,7 +23,7 @@ import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Event } from '@/types';
-import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter, Sparkles, Trophy, ArrowRight, Brain } from 'lucide-react';
+import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter, Sparkles, Trophy, ArrowRight, Brain, TrendingUp, Flame } from 'lucide-react';
 import { toMontrealDateString } from '@/lib/utils';
 import Link from 'next/link';
 import { 
@@ -868,6 +868,7 @@ export default function HomePage() {
       </section>
 
       {/* Sections IA : Top 5 et Recommandations */}
+      <HomePageTrendingSections />
       <HomePageAISections />
 
       {/* Liste d'événements - Design moderne */}
@@ -1059,6 +1060,220 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+/**
+ * Sections Trending : Trending tonight et Popular this weekend
+ * Sprint V2: Social proof + trending
+ */
+function HomePageTrendingSections() {
+  // Récupérer les événements trending pour aujourd'hui
+  const { data: trendingTodayData, isLoading: trendingTodayLoading } = useQuery({
+    queryKey: ['trending-today'],
+    queryFn: async () => {
+      const res = await fetch('/api/trending?scope=today&limit=6');
+      if (!res.ok) return { events: [] };
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: true,
+  });
+
+  // Récupérer les événements trending pour le week-end
+  const { data: trendingWeekendData, isLoading: trendingWeekendLoading } = useQuery({
+    queryKey: ['trending-weekend'],
+    queryFn: async () => {
+      const res = await fetch('/api/trending?scope=weekend&limit=6');
+      if (!res.ok) return { events: [] };
+      return res.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnMount: true,
+  });
+
+  const trendingToday = trendingTodayData?.events || [];
+  const trendingWeekend = trendingWeekendData?.events || [];
+
+  // Ne rien afficher si pas de contenu
+  if (trendingToday.length === 0 && trendingWeekend.length === 0) {
+    return null;
+  }
+
+  const { favorites, isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites();
+
+  // Transformer les événements trending en format Event
+  const transformTrendingEvent = (trendingEvent: any): Event => {
+    return {
+      id: trendingEvent.id,
+      title: trendingEvent.title,
+      description: trendingEvent.description || '',
+      shortDescription: trendingEvent.description?.substring(0, 100) + '...' || '',
+      startDate: new Date(trendingEvent.startAt),
+      endDate: trendingEvent.endAt ? new Date(trendingEvent.endAt) : undefined,
+      location: trendingEvent.venue
+        ? {
+            name: trendingEvent.venue.name,
+            address: trendingEvent.venue.address || '',
+            city: trendingEvent.venue.city || 'Montréal',
+            postalCode: '',
+            coordinates: {
+              lat: trendingEvent.venue.lat,
+              lng: trendingEvent.venue.lon,
+            },
+          }
+        : {
+            name: 'Lieu à confirmer',
+            address: '',
+            city: 'Montréal',
+            postalCode: '',
+            coordinates: { lat: 45.5088, lng: -73.5542 },
+          },
+      category: trendingEvent.category,
+      subCategory: '',
+      tags: trendingEvent.tags || [],
+      price: {
+        amount: (trendingEvent.priceMin || 0) / 100,
+        currency: trendingEvent.currency || 'CAD',
+        isFree: (trendingEvent.priceMin || 0) === 0,
+      },
+      imageUrl: trendingEvent.imageUrl,
+      ticketUrl: trendingEvent.url || '#',
+      organizerId: 'default',
+      organizer: {
+        id: 'default',
+        email: 'api@pulse.com',
+        name: 'Organisateur',
+        role: 'organizer' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      customFilters: [],
+      accessibility: [],
+      status: 'published' as const,
+      source: trendingEvent.source,
+      externalId: trendingEvent.id,
+      language: 'fr' as const,
+      minAttendees: 0,
+      maxAttendees: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+  };
+
+  return (
+    <section className="px-4 py-12 relative bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-y border-white/5">
+      <div className="max-w-7xl mx-auto space-y-12">
+        {/* Section Trending tonight */}
+        {trendingToday.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-red-500/20 to-orange-500/20 border border-red-500/30">
+                  <Flame className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+                    Trending tonight
+                  </h2>
+                  <p className="text-sm text-slate-400 mt-1">Les événements les plus populaires ce soir</p>
+                </div>
+              </div>
+              <Link
+                href="/ce-soir"
+                className="text-sm text-red-400 hover:text-red-300 flex items-center gap-1"
+              >
+                Voir tout
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {trendingTodayLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {trendingToday.slice(0, 6).map((trendingEvent: any) => {
+                  const event = transformTrendingEvent(trendingEvent);
+                  return (
+                    <div key={event.id} className="relative">
+                      <EventCard
+                        event={event}
+                        onFavoriteToggle={toggleFavorite}
+                        isFavorite={isFavorite(event.id)}
+                        isFavoriteLoading={isFavoriteLoading(event.id)}
+                      />
+                      {/* Badge Trending */}
+                      <div className="absolute top-2 left-2 z-10">
+                        <span className="px-2 py-1 rounded-lg bg-red-500/90 text-white text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
+                          <TrendingUp className="w-3 h-3" />
+                          Trending
+                        </span>
+                      </div>
+                      {/* Social proof */}
+                      {trendingEvent.favoritesToday > 0 && (
+                        <div className="absolute top-2 right-2 z-10">
+                          <span className="px-2 py-1 rounded-lg bg-black/60 text-white text-xs backdrop-blur-sm">
+                            {trendingEvent.favoritesToday} sauvegardé{trendingEvent.favoritesToday > 1 ? 's' : ''} aujourd'hui
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Section Popular this weekend */}
+        {trendingWeekend.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30">
+                  <TrendingUp className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+                    Popular this weekend
+                  </h2>
+                  <p className="text-sm text-slate-400 mt-1">Les événements les plus populaires ce week-end</p>
+                </div>
+              </div>
+              <Link
+                href="/ce-weekend"
+                className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+              >
+                Voir tout
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {trendingWeekendLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {trendingWeekend.slice(0, 6).map((trendingEvent: any) => {
+                  const event = transformTrendingEvent(trendingEvent);
+                  return (
+                    <EventCard
+                      key={event.id}
+                      event={event}
+                      onFavoriteToggle={toggleFavorite}
+                      isFavorite={isFavorite(event.id)}
+                      isFavoriteLoading={isFavoriteLoading(event.id)}
+                      favoritesToday={trendingEvent.favoritesToday || 0}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

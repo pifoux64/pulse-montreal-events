@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User, LogIn, Loader2 } from 'lucide-react';
+import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User, LogIn, Loader2, TrendingUp } from 'lucide-react';
 import { generateEventShareText, shareWithWebAPI, copyToClipboard, addUtmParams } from '@/lib/sharing/shareUtils';
 import { trackShareClick, trackShareSuccess, trackFavorite } from '@/lib/analytics/tracking';
 import SaveAndSharePrompt from './SaveAndSharePrompt';
@@ -22,6 +22,9 @@ interface EventCardProps {
   isFavorite?: boolean;
   isFavoriteLoading?: boolean;
   showImage?: boolean;
+  // Sprint V2: Social proof
+  favoritesToday?: number;
+  isTrending?: boolean;
 }
 
 const EventCard = ({ 
@@ -30,7 +33,9 @@ const EventCard = ({
   onEventClick,
   isFavorite = false,
   isFavoriteLoading = false,
-  showImage = true 
+  showImage = true,
+  favoritesToday = 0,
+  isTrending = false,
 }: EventCardProps) => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
@@ -235,8 +240,27 @@ const EventCard = ({
           {/* Overlay subtil */}
           <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
           
+          {/* Badge Trending */}
+          {isTrending && (
+            <div className="absolute top-4 left-4 z-10">
+              <span className="px-2 py-1 rounded-lg bg-red-500/90 text-white text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
+                <TrendingUp className="w-3 h-3" />
+                Trending
+              </span>
+            </div>
+          )}
+
+          {/* Social proof: "{X} saves today" */}
+          {favoritesToday > 0 && (
+            <div className="absolute top-4 right-4 z-10">
+              <span className="px-2 py-1 rounded-lg bg-black/60 text-white text-xs backdrop-blur-sm">
+                {favoritesToday} sauvegardé{favoritesToday > 1 ? 's' : ''} aujourd'hui
+              </span>
+            </div>
+          )}
+
           {/* Prix avec glassmorphism */}
-          <div className="absolute top-4 left-4 flex flex-col gap-2">
+          <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2`}>
             <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
               event.price.isFree 
                 ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' 
