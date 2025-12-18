@@ -36,7 +36,13 @@ export type PulsePicksTheme =
   | 'afrobeat'
   | 'experimental'
   | 'world'
-  | 'classique';
+  | 'classique'
+  | 'disco'
+  | 'country'
+  | 'folk'
+  | 'indie'
+  | 'alternative'
+  | 'dubstep';
 
 export interface GeneratePicksOptions {
   theme: PulsePicksTheme;
@@ -102,6 +108,12 @@ function buildThemeFilters(theme: PulsePicksTheme) {
     case 'experimental':
     case 'world':
     case 'classique':
+    case 'disco':
+    case 'country':
+    case 'folk':
+    case 'indie':
+    case 'alternative':
+    case 'dubstep':
       return {
         category: 'MUSIC',
         extraTagFilters: [{ category: 'genre', value: theme }],
@@ -146,7 +158,8 @@ function scoreEventForTheme(theme: PulsePicksTheme, event: any): number {
   const musicGenres: PulsePicksTheme[] = [
     'reggae', 'hip_hop', 'pop', 'rnb', 'rock', 'heavy_metal', 'punk', 'jazz',
     'soul', 'funk', 'blues', 'techno', 'house', 'trance', 'drum_and_bass',
-    'electronic', 'latin', 'afrobeat', 'experimental', 'world', 'classique'
+    'electronic', 'latin', 'afrobeat', 'experimental', 'world', 'classique',
+    'disco', 'country', 'folk', 'indie', 'alternative', 'dubstep'
   ];
   
   if (musicGenres.includes(theme)) {

@@ -45,6 +45,12 @@ export const GENRES = [
   'experimental',  // Genre principal (styles: noise, avant_garde, etc.)
   'world',         // Genre principal (styles: folk, traditional, etc.)
   'classique',     // Genre principal (styles: baroque, romantique, contemporain, etc.)
+  'disco',         // Genre principal (styles: nu_disco, disco_house, italo_disco, etc.)
+  'country',       // Genre principal (styles: country_rock, bluegrass, americana, etc.)
+  'folk',          // Genre principal (styles: indie_folk, folk_rock, acoustic, etc.)
+  'indie',         // Genre principal (styles: indie_rock, indie_pop, lo_fi, etc.)
+  'alternative',   // Genre principal (styles: alt_rock, grunge, shoegaze, post_rock, etc.)
+  'dubstep',       // Genre principal (styles: brostep, melodic_dubstep, riddim, etc.)
   'other',         // Autre (genre non spécifié)
 ] as const;
 
@@ -254,6 +260,64 @@ export const MUSIC_STYLES: Record<string, readonly string[]> = {
     'piano',
     'violon',
     'violoncelle',
+  ] as const,
+  
+  // Styles de DISCO
+  disco: [
+    'nu_disco',
+    'disco_house',
+    'italo_disco',
+    'eurodisco',
+    'space_disco',
+  ] as const,
+  
+  // Styles de COUNTRY
+  country: [
+    'country_rock',
+    'bluegrass',
+    'americana',
+    'honky_tonk',
+    'outlaw_country',
+    'country_pop',
+  ] as const,
+  
+  // Styles de FOLK
+  folk: [
+    'indie_folk',
+    'folk_rock',
+    'acoustic',
+    'singer_songwriter',
+    'traditional_folk',
+    'contemporary_folk',
+  ] as const,
+  
+  // Styles de INDIE
+  indie: [
+    'indie_rock',
+    'indie_pop',
+    'lo_fi',
+    'bedroom_pop',
+    'indie_folk',
+    'indie_electronic',
+  ] as const,
+  
+  // Styles de ALTERNATIVE
+  alternative: [
+    'alt_rock',
+    'grunge',
+    'shoegaze',
+    'post_rock',
+    'britpop',
+    'emo',
+  ] as const,
+  
+  // Styles de DUBSTEP
+  dubstep: [
+    'brostep',
+    'melodic_dubstep',
+    'riddim',
+    'deep_dubstep',
+    'future_bass',
   ] as const,
 } as const;
 

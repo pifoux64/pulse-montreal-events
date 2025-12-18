@@ -38,6 +38,12 @@ const THEMES: PulsePicksTheme[] = [
   'experimental',
   'world',
   'classique',
+  'disco',
+  'country',
+  'folk',
+  'indie',
+  'alternative',
+  'dubstep',
 ];
 
 async function generateTop5ForAllThemes() {
