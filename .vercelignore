@@ -1,0 +1,14 @@
+# Fichiers à ignorer lors du déploiement Vercel
+.env.local
+.env.development.local
+.env.test.local
+scripts/
+*.md
+!README.md
+docs/
+test/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
