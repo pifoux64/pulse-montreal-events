@@ -76,12 +76,22 @@ export default function ProfilClient() {
   const refreshConnections = async () => {
     try {
       setLoadingConnections(true);
+      setError(null); // Réinitialiser l'erreur avant le fetch
       const res = await fetch('/api/user/music-services');
-      if (!res.ok) throw new Error('Erreur lors du chargement des connexions');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erreur ${res.status}: ${res.statusText}`);
+      }
       const data = await res.json();
       setConnections(data.connections || []);
     } catch (e: any) {
-      setError(e.message || 'Erreur inconnue');
+      // Gérer les erreurs réseau différemment des erreurs serveur
+      if (e.name === 'TypeError' && e.message.includes('fetch')) {
+        setError('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else {
+        setError(e.message || 'Erreur lors du chargement des connexions');
+      }
+      console.error('Erreur refreshConnections:', e);
     } finally {
       setLoadingConnections(false);
     }
@@ -90,12 +100,22 @@ export default function ProfilClient() {
   const refreshInterests = async () => {
     try {
       setLoadingInterests(true);
+      setError(null); // Réinitialiser l'erreur avant le fetch
       const res = await fetch('/api/user/interest-tags');
-      if (!res.ok) throw new Error('Erreur lors du chargement des goûts');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erreur ${res.status}: ${res.statusText}`);
+      }
       const data = await res.json();
       setInterestTags(data.tags || []);
     } catch (e: any) {
-      setError(e.message || 'Erreur inconnue');
+      // Gérer les erreurs réseau différemment des erreurs serveur
+      if (e.name === 'TypeError' && e.message.includes('fetch')) {
+        setError('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else {
+        setError(e.message || 'Erreur lors du chargement des goûts');
+      }
+      console.error('Erreur refreshInterests:', e);
     } finally {
       setLoadingInterests(false);
     }
@@ -294,16 +314,6 @@ export default function ProfilClient() {
                   {disconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
                   Déconnecter
                 </button>
-
-                {(session?.user?.role === 'ORGANIZER' || (session?.user as any)?.organizer) && (
-                  <a
-                    href="/organisateur/integrations"
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center gap-2 text-gray-700"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Intégrations organisateur (publier sur Facebook/Eventbrite)
-                  </a>
-                )}
               </div>
             </div>
           ) : (
@@ -512,6 +522,32 @@ export default function ProfilClient() {
             </>
           )}
         </section>
+
+        {(session?.user?.role === 'ORGANIZER' || (session?.user as any)?.organizer) && (
+          <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <ExternalLink className="w-5 h-5 text-indigo-600" />
+                  Intégrations organisateur
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Publiez vos événements sur Facebook, Eventbrite et d'autres plateformes.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <a
+                href="/organisateur/integrations"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Gérer les intégrations (Facebook/Eventbrite)
+              </a>
+            </div>
+          </section>
+        )}
 
         <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-start justify-between gap-4">

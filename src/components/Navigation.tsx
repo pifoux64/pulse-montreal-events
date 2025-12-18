@@ -221,93 +221,81 @@ export default function Navigation() {
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </button>
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/15 shadow-2xl overflow-hidden z-50">
+                  <div className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/15 shadow-2xl overflow-hidden z-50">
                     <div className="p-2">
-                      <div className="px-3 py-2 text-sm text-slate-300 border-b border-white/10">
-                        <div className="font-medium text-white">{session.user.name || 'Utilisateur'}</div>
-                        <div className="text-xs text-slate-400">{session.user.email}</div>
+                      {/* En-tête utilisateur */}
+                      <div className="px-3 py-3 text-sm border-b border-white/10 mb-1">
+                        <div className="font-semibold text-white">{session.user.name || 'Utilisateur'}</div>
+                        <div className="text-xs text-slate-400 mt-0.5">{session.user.email}</div>
+                      </div>
+                      
+                      {/* Section Mon compte */}
+                      <div className="px-3 py-1.5 mb-1">
+                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          Mon compte
+                        </div>
                       </div>
                       <Link
-                        href="/pour-toi"
+                        href="/profil"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
                       >
-                        <Sparkles className="w-4 h-4" />
-                        Pour toi
+                        <User className="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-colors" />
+                        <span>Mon profil</span>
                       </Link>
                       <Link
                         href="/favoris"
                         onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
                       >
-                        <Heart className="w-4 h-4" />
-                        Mes favoris
+                        <Heart className="w-4 h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
+                        <span>Mes favoris</span>
+                        {favoritesCount > 0 && (
+                          <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                            {favoritesCount > 99 ? '99+' : favoritesCount}
+                          </span>
+                        )}
                       </Link>
-                      <Link
-                        href="/profil"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        <User className="w-4 h-4" />
-                        Mon profil
-                      </Link>
-                      <div className="border-t border-white/10 my-1" />
-                      <div className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase">
-                        Découvrir
-                      </div>
-                      <Link
-                        href="/famille"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        <Users className="w-4 h-4" />
-                        Famille
-                      </Link>
-                      <Link
-                        href="/culture"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        <Palette className="w-4 h-4" />
-                        Culture
-                      </Link>
-                      <Link
-                        href="/sport"
-                        onClick={() => setIsUserMenuOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
-                      >
-                        <Trophy className="w-4 h-4" />
-                        Sport
-                      </Link>
-                {(session.user.role === 'ORGANIZER' || session.user.organizer) && (
-                  <>
-                    <Link
-                      href="/organisateur/dashboard"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <BarChart3 className="w-4 h-4" />
-                      Tableau de bord
-                    </Link>
-                    <Link
-                      href="/organisateur/mon-profil"
-                      onClick={() => setIsUserMenuOpen(false)}
-                      className="flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors"
-                    >
-                      <User className="w-4 h-4" />
-                      Mon profil organisateur
-                    </Link>
-                  </>
-                )}
+                      
+                      {/* Section Organisateur (si applicable) */}
+                      {(session.user.role === 'ORGANIZER' || session.user.organizer) && (
+                        <>
+                          <div className="border-t border-white/10 my-2" />
+                          <div className="px-3 py-1.5 mb-1">
+                            <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                              Organisateur
+                            </div>
+                          </div>
+                          <Link
+                            href="/organisateur/dashboard"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
+                          >
+                            <BarChart3 className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                            <span>Tableau de bord</span>
+                          </Link>
+                          <Link
+                            href="/organisateur/mon-profil"
+                            onClick={() => setIsUserMenuOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
+                          >
+                            <User className="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-colors" />
+                            <span>Mon profil organisateur</span>
+                          </Link>
+                        </>
+                      )}
+                      
+                      {/* Déconnexion */}
+                      <div className="border-t border-white/10 my-2" />
                       <button
                         onClick={() => {
                           signOut({ callbackUrl: '/' });
                           setIsUserMenuOpen(false);
                         }}
-                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors group"
                       >
-                        <LogOut className="w-4 h-4" />
-                        Déconnexion
+                        <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span>Déconnexion</span>
                       </button>
                     </div>
                   </div>
@@ -441,16 +429,37 @@ export default function Navigation() {
                   </div>
                 ) : session?.user ? (
                   <div className="space-y-3">
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        router.push('/pour-toi');
-                      }}
-                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
-                    >
-                      <Sparkles className="w-5 h-5 text-slate-200" />
-                      <span className="font-medium text-slate-100">Pour toi</span>
-                    </button>
+                    {/* En-tête utilisateur mobile */}
+                    <div className="p-3 rounded-2xl bg-white/10 border border-white/15">
+                      <div className="flex items-center space-x-3">
+                        {session.user.image ? (
+                          <Image
+                            src={session.user.image}
+                            alt={session.user.name || 'User'}
+                            width={40}
+                            height={40}
+                            className="rounded-full"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-sky-500 to-emerald-500 flex items-center justify-center">
+                            <User className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                        <div className="text-left flex-1">
+                          <div className="font-semibold text-slate-100">
+                            {session.user.name || 'Mon compte'}
+                          </div>
+                          <p className="text-xs text-slate-400">{session.user.email}</p>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Section Mon compte mobile */}
+                    <div className="px-3 py-1">
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        Mon compte
+                      </div>
+                    </div>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);
@@ -459,47 +468,58 @@ export default function Navigation() {
                       className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
                     >
                       <User className="w-5 h-5 text-slate-200" />
-                      <div className="text-left">
-                        <span className="font-medium text-slate-100">
-                          {session.user.name || 'Mon compte'}
+                      <span className="font-medium text-slate-100">Mon profil</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        router.push('/favoris');
+                      }}
+                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100 relative"
+                    >
+                      <Heart className="w-5 h-5 text-slate-200" />
+                      <span className="font-medium text-slate-100">Mes favoris</span>
+                      {favoritesCount > 0 && (
+                        <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
+                          {favoritesCount > 99 ? '99+' : favoritesCount}
                         </span>
-                        <p className="text-xs text-slate-400">{session.user.email}</p>
-                      </div>
+                      )}
                     </button>
+                    
+                    {/* Section Organisateur mobile (si applicable) */}
+                    {(session.user.role === 'ORGANIZER' || session.user.organizer) && (
+                      <>
+                        <div className="border-t border-white/10 my-2" />
+                        <div className="px-3 py-1">
+                          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                            Organisateur
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            router.push('/organisateur/dashboard');
+                          }}
+                          className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
+                        >
+                          <BarChart3 className="w-5 h-5 text-slate-200" />
+                          <span className="font-medium text-slate-100">Tableau de bord</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsMenuOpen(false);
+                            router.push('/organisateur/mon-profil');
+                          }}
+                          className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
+                        >
+                          <User className="w-5 h-5 text-slate-200" />
+                          <span className="font-medium text-slate-100">Mon profil organisateur</span>
+                        </button>
+                      </>
+                    )}
+                    
+                    {/* Déconnexion mobile */}
                     <div className="border-t border-white/10 my-2" />
-                    <div className="px-3 py-1 text-xs font-semibold text-slate-400 uppercase">
-                      Découvrir
-                    </div>
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        router.push('/famille');
-                      }}
-                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
-                    >
-                      <Users className="w-5 h-5 text-slate-200" />
-                      <span className="font-medium text-slate-100">Famille</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        router.push('/culture');
-                      }}
-                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
-                    >
-                      <Palette className="w-5 h-5 text-slate-200" />
-                      <span className="font-medium text-slate-100">Culture</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        setIsMenuOpen(false);
-                        router.push('/sport');
-                      }}
-                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
-                    >
-                      <Trophy className="w-5 h-5 text-slate-200" />
-                      <span className="font-medium text-slate-100">Sport</span>
-                    </button>
                     <button
                       onClick={() => {
                         setIsMenuOpen(false);

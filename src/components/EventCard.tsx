@@ -265,7 +265,7 @@ const EventCard = ({
       )}
 
       {/* Contenu simplifié et lisible */}
-      <div className="p-5">
+      <div className="p-5 bg-slate-800/90 backdrop-blur-xl">
         {/* En-tête clean */}
         <div className="mb-4">
           {/* Genre musical principal - Utilise EventTag si disponible, sinon fallback enrichedTags */}
@@ -304,7 +304,7 @@ const EventCard = ({
           )}
           
           {/* Titre lisible */}
-          <h3 className="font-bold text-lg text-gray-900 leading-tight mb-2 line-clamp-2">
+          <h3 className="font-bold text-lg text-white leading-tight mb-2 line-clamp-2">
             {event.title}
           </h3>
         </div>
@@ -312,16 +312,16 @@ const EventCard = ({
         {/* Infos essentielles */}
         <div className="space-y-2 mb-4">
           {/* Date et heure */}
-          <div className="flex items-center text-sm text-gray-600">
-            <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+          <div className="flex items-center text-sm text-slate-200">
+            <Calendar className="w-4 h-4 mr-2 text-blue-400" />
             <span className="font-medium">{formatDateShort(event.startDate)}</span>
-            <span className="mx-2">•</span>
+            <span className="mx-2 text-slate-400">•</span>
             <span>{formatTime(event.startDate)}</span>
           </div>
           
           {/* Lieu */}
-          <div className="flex items-center text-sm text-gray-600">
-            <MapPin className="w-4 h-4 mr-2 text-green-500" />
+          <div className="flex items-center text-sm text-slate-200">
+            <MapPin className="w-4 h-4 mr-2 text-green-400" />
             <span className="font-medium truncate">{event.location.name}</span>
           </div>
 
@@ -330,9 +330,9 @@ const EventCard = ({
             <Link
               href={`/organisateur/${event.organizerId}`}
               onClick={(e) => e.stopPropagation()}
-              className="flex items-center text-sm text-gray-600 hover:text-sky-600 transition-colors duration-200 group"
+              className="flex items-center text-sm text-slate-200 hover:text-sky-400 transition-colors duration-200 group"
             >
-              <User className="w-4 h-4 mr-2 text-sky-500" />
+              <User className="w-4 h-4 mr-2 text-sky-400" />
               <span className="font-medium truncate group-hover:underline">
                 {event.organizer.name}
               </span>
@@ -370,7 +370,7 @@ const EventCard = ({
                 return (
                   <span
                     key={tag}
-                    className="px-2.5 py-1 bg-red-500/20 border border-red-400/50 text-red-600 text-xs font-semibold rounded-full"
+                    className="px-2.5 py-1 bg-red-500/20 border border-red-400/50 text-red-300 text-xs font-semibold rounded-full"
                   >
                     {tag}
                   </span>
@@ -380,7 +380,7 @@ const EventCard = ({
                 return (
                   <span
                     key={tag}
-                    className="px-2.5 py-1 bg-blue-500/20 border border-blue-400/50 text-blue-600 text-xs font-semibold rounded-full"
+                    className="px-2.5 py-1 bg-blue-500/20 border border-blue-400/50 text-blue-300 text-xs font-semibold rounded-full"
                   >
                     🌳 {tag}
                   </span>
@@ -390,7 +390,7 @@ const EventCard = ({
                 return (
                   <span
                     key={tag}
-                    className="px-2.5 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-600 text-xs font-semibold rounded-full"
+                    className="px-2.5 py-1 bg-purple-500/20 border border-purple-400/50 text-purple-300 text-xs font-semibold rounded-full"
                   >
                     ♿ {tag}
                   </span>
@@ -401,7 +401,7 @@ const EventCard = ({
                 return (
                   <span
                     key={tag}
-                    className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full"
+                    className="px-2 py-1 bg-slate-700/50 text-slate-200 text-xs rounded-full border border-slate-600/50"
                   >
                     {tag}
                   </span>
@@ -411,7 +411,7 @@ const EventCard = ({
               return (
                 <span
                   key={tag}
-                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                  className="px-2 py-1 bg-slate-700/50 text-slate-200 text-xs rounded-full border border-slate-600/50"
                 >
                   {tag}
                 </span>
@@ -424,7 +424,7 @@ const EventCard = ({
                 return (
                   <span
                     key={`enriched-${index}`}
-                    className="px-2 py-1 bg-slate-100 text-slate-700 text-xs rounded-full"
+                    className="px-2 py-1 bg-slate-700/50 text-slate-200 text-xs rounded-full border border-slate-600/50"
                   >
                     {tag}
                   </span>
@@ -437,15 +437,15 @@ const EventCard = ({
         )}
 
         {/* Actions simplifiées */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-700/50">
           <div className="flex items-center space-x-3">
             <button
               onClick={handleFavoriteClick}
               disabled={isFavoriteLoading}
               className={`flex items-center space-x-1 text-sm transition-colors duration-200 ${
                 isFavorite
-                  ? 'text-red-600'
-                  : 'text-gray-500 hover:text-red-600'
+                  ? 'text-red-400'
+                  : 'text-slate-300 hover:text-red-400'
               } ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''} ${justToggled ? 'animate-pulse' : ''}`}
               aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
             >
@@ -457,7 +457,7 @@ const EventCard = ({
                   className={`w-4 h-4 transition-all duration-200 ${isFavorite ? 'fill-current' : ''} ${justToggled ? 'animate-bounce' : ''}`} 
                 />
               )}
-              <span className="hidden sm:inline">{isFavorite ? 'Aimé' : 'Aimer'}</span>
+              <span className="hidden sm:inline text-slate-200">{isFavorite ? 'Aimé' : 'Aimer'}</span>
             </button>
             
             <button
@@ -465,10 +465,10 @@ const EventCard = ({
                 e.stopPropagation();
                 // TODO: Implémenter le partage
               }}
-              className="flex items-center space-x-1 text-sm text-gray-500 hover:text-blue-600 transition-colors duration-200"
+              className="flex items-center space-x-1 text-sm text-slate-300 hover:text-blue-400 transition-colors duration-200"
             >
               <Share2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Partager</span>
+              <span className="hidden sm:inline text-slate-200">Partager</span>
             </button>
           </div>
           
@@ -478,7 +478,7 @@ const EventCard = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-medium hover:bg-blue-700 transition-colors duration-200"
+              className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm font-medium hover:bg-blue-600 transition-colors duration-200 shadow-lg"
             >
               Billets
             </a>

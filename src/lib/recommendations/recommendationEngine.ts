@@ -59,6 +59,7 @@ export async function getPersonalizedRecommendations(
     userProfile.types.size === 0 &&
     userProfile.ambiances.size === 0
   ) {
+    console.log(`[Recommendations] User ${userId} has no profile, returning popular events`);
     return await getPopularEvents(limit, scope);
   }
 
@@ -67,9 +68,12 @@ export async function getPersonalizedRecommendations(
   const dateFilter = buildDateFilter(scope, now);
 
   // Récupérer les événements futurs avec leurs tags
+  // Inclure SCHEDULED et UPDATED (les deux sont des événements valides)
   const events = await prisma.event.findMany({
     where: {
-      status: 'SCHEDULED',
+      status: {
+        in: ['SCHEDULED', 'UPDATED'],
+      },
       startAt: dateFilter,
       ...(genre && {
         eventTags: {
@@ -112,6 +116,12 @@ export async function getPersonalizedRecommendations(
     take: 200, // Récupérer plus d'événements pour filtrer par score
   });
 
+  // Si aucun événement trouvé, retourner des événements populaires
+  if (events.length === 0) {
+    console.log(`[Recommendations] No events found for user ${userId}, returning popular events`);
+    return await getPopularEvents(limit, scope);
+  }
+
   // Calculer les scores pour chaque événement
   const scoredEvents: RecommendationResult[] = events
     .map((event) => {
@@ -126,6 +136,12 @@ export async function getPersonalizedRecommendations(
     .filter((result) => result.score >= minScore)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
+
+  // Si après filtrage il n'y a plus d'événements, retourner des événements populaires
+  if (scoredEvents.length === 0) {
+    console.log(`[Recommendations] No scored events above minScore ${minScore} for user ${userId}, returning popular events`);
+    return await getPopularEvents(limit, scope);
+  }
 
   // Mettre en cache (TTL 1 heure)
   recommendationCache.set(cacheKey, scoredEvents, 3600);
@@ -287,9 +303,13 @@ async function getPopularEvents(limit: number, scope: 'today' | 'weekend' | 'all
   const now = new Date();
   const dateFilter = buildDateFilter(scope, now);
 
+  console.log(`[getPopularEvents] Fetching popular events, scope: ${scope}, limit: ${limit}`);
+
   const events = await prisma.event.findMany({
     where: {
-      status: 'SCHEDULED',
+      status: {
+        in: ['SCHEDULED', 'UPDATED'],
+      },
       startAt: dateFilter,
     },
     include: {
@@ -322,6 +342,8 @@ async function getPopularEvents(limit: number, scope: 'today' | 'weekend' | 'all
     ],
     take: limit,
   });
+
+  console.log(`[getPopularEvents] Found ${events.length} popular events`);
 
   return events.map((event) => ({
     event,

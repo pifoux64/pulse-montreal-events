@@ -33,7 +33,10 @@ export async function GET(request: NextRequest) {
     const genre = searchParams.get('genre') || undefined;
     const style = searchParams.get('style') || undefined;
     const scope = (searchParams.get('scope') as 'today' | 'weekend' | 'all') || 'all';
-    const minScore = parseFloat(searchParams.get('minScore') || '0.1');
+    // Réduire le minScore pour permettre plus de recommandations
+    const minScore = parseFloat(searchParams.get('minScore') || '0.05');
+
+    console.log(`[Recommendations] User ${session.user.id}, scope: ${scope}, limit: ${limit}, minScore: ${minScore}`);
 
     const recommendations = await getPersonalizedRecommendations(session.user.id, {
       limit,
@@ -42,6 +45,8 @@ export async function GET(request: NextRequest) {
       scope,
       minScore,
     });
+
+    console.log(`[Recommendations] Found ${recommendations.length} recommendations for user ${session.user.id}`);
 
     return NextResponse.json({
       recommendations,

@@ -176,7 +176,7 @@ export default function EventTagsDisplay({
         return (
           <div key={key} className="flex flex-wrap gap-1.5 items-center">
             {showCategoryLabels && (
-              <span className="text-xs font-medium text-gray-500 mr-1">
+              <span className="text-xs font-medium text-slate-300 mr-1">
                 {label}:
               </span>
             )}
@@ -197,7 +197,7 @@ export default function EventTagsDisplay({
               );
             })}
             {maxTagsPerCategory && tags.length > maxTagsPerCategory && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-slate-300">
                 +{tags.length - maxTagsPerCategory}
               </span>
             )}
