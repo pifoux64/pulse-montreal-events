@@ -132,25 +132,13 @@ const nextConfig: NextConfig = {
   // Note: Les fichiers icon.svg, apple-icon.svg sont gérés automatiquement par Next.js comme metadata
   // On ne configure pas de règles pour les SVG car Next.js les gère nativement
 
-  // Suppression des warnings d'hydratation en développement
+  // Configuration pour le développement
+  // Note: On utilise Turbopack (--turbopack), donc pas de config webpack personnalisée
+  // Turbopack gère automatiquement les overlays d'erreur et les optimisations
   ...(process.env.NODE_ENV === 'development' && {
     onDemandEntries: {
       maxInactiveAge: 25 * 1000,
       pagesBufferLength: 2,
-    },
-    webpack: (config: any, { dev, isServer }: any) => {
-      if (dev && !isServer) {
-        // Supprimer les warnings d'hydratation non critiques
-        const originalEntry = config.entry;
-        config.entry = async () => {
-          const entries = await originalEntry();
-          if (entries['main.js'] && !entries['main.js'].includes('./client/dev-error-overlay.js')) {
-            entries['main.js'].push('./client/dev-error-overlay.js');
-          }
-          return entries;
-        };
-      }
-      return config;
     },
   }),
 

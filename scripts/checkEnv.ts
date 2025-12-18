@@ -32,6 +32,9 @@ const requiredVars = {
     'NEXT_PUBLIC_SUPABASE_URL',
     'NEXT_PUBLIC_SUPABASE_ANON_KEY',
   ],
+  'CRON & Jobs': [
+    'CRON_SECRET',
+  ],
 };
 
 const optionalVars = {
@@ -53,6 +56,10 @@ const optionalVars = {
     'STRIPE_PUBLIC_KEY',
     'STRIPE_SECRET_KEY',
     'SUPABASE_SERVICE_ROLE_KEY',
+  ],
+  'Email & Social': [
+    'RESEND_API_KEY',
+    'NEXT_PUBLIC_APP_URL',
   ],
 };
 
@@ -127,11 +134,26 @@ if (authUrl) {
   }
 }
 
+// Générer CRON_SECRET si absent
+if (!process.env.CRON_SECRET) {
+  console.log('\n🔐 Génération d\'un CRON_SECRET...');
+  const crypto = require('crypto');
+  const generatedSecret = crypto.randomBytes(32).toString('hex');
+  console.log(`  ✅ CRON_SECRET généré: ${generatedSecret}`);
+  console.log('  💡 Ajoutez cette ligne à votre .env.local ou variables Vercel:');
+  console.log(`     CRON_SECRET=${generatedSecret}`);
+  console.log('  ⚠️  Note: Ce secret doit être le même en local et en production');
+}
+
 // Résumé
 console.log('\n📊 Résumé:');
 if (hasErrors) {
   console.log('  ❌ Des variables requises sont manquantes');
   console.log('  💡 Copiez .env.example vers .env.local et configurez les valeurs');
+  console.log('\n📝 Variables à configurer pour les nouvelles fonctionnalités:');
+  console.log('  - CRON_SECRET: Secret pour sécuriser les endpoints CRON (généré ci-dessus)');
+  console.log('  - RESEND_API_KEY: Clé API Resend pour l\'envoi d\'emails (https://resend.com/api-keys)');
+  console.log('  - NEXT_PUBLIC_APP_URL: URL publique de l\'app (ex: https://pulse-mtl.vercel.app)');
   process.exit(1);
 } else {
   console.log('  ✅ Toutes les variables requises sont présentes');
