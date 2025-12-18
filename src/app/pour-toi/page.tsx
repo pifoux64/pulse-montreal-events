@@ -156,7 +156,35 @@ export default function PourToiPage() {
     return null;
   }
 
-  // Récupérer un Top 5 pertinent (le plus récent avec des événements)
+  // Récupérer le genre le plus écouté sur Spotify
+  const { data: mostListenedGenre } = useQuery({
+    queryKey: ['most-listened-genre', session?.user?.id],
+    queryFn: async () => {
+      const response = await fetch('/api/user/most-listened-genre');
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.genre;
+    },
+    enabled: status === 'authenticated',
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+
+  // Récupérer le Top 5 du genre le plus écouté
+  const { data: top5GenreData } = useQuery({
+    queryKey: ['top5-genre', mostListenedGenre],
+    queryFn: async () => {
+      if (!mostListenedGenre) return null;
+      const response = await fetch(`/api/editorial/pulse-picks/genre/${mostListenedGenre}?_t=${Date.now()}`);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.post;
+    },
+    enabled: !!mostListenedGenre,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnMount: true,
+  });
+
+  // Récupérer un Top 5 général (fallback si pas de genre Spotify)
   const { data: top5Data } = useQuery({
     queryKey: ['top5-for-recommendations'],
     queryFn: async () => {
@@ -166,6 +194,7 @@ export default function PourToiPage() {
       // Prendre le premier Top 5 qui a des événements
       return data.posts?.find((p: any) => p.eventsCount > 0) || data.posts?.[0] || null;
     },
+    enabled: !mostListenedGenre || !top5GenreData, // Seulement si pas de genre Spotify ou pas de Top 5 pour ce genre
     staleTime: 2 * 60 * 1000, // 2 minutes au lieu de 10
     refetchOnMount: true,
   });
@@ -236,8 +265,57 @@ export default function PourToiPage() {
           </p>
         </div>
 
-        {/* Section Top 5 Pulse Picks */}
-        {top5Data && (
+        {/* Section Top 5 du genre le plus écouté sur Spotify */}
+        {top5GenreData && mostListenedGenre && (
+          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 shadow-lg">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
+                  <Music className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    Top 5 {mostListenedGenre.charAt(0).toUpperCase() + mostListenedGenre.slice(1).replace(/_/g, ' ')}
+                    <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 text-green-700 flex items-center gap-1">
+                      <Brain className="w-3 h-3" />
+                      Basé sur Spotify
+                    </span>
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Votre genre le plus écouté • {top5GenreData.eventsCount} événement{top5GenreData.eventsCount > 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`/top-5/${top5GenreData.slug}`}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors text-sm"
+              >
+                Voir le Top 5
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {top5GenreData.description && (
+              <p className="text-sm text-gray-700 mb-4 line-clamp-2">{top5GenreData.description}</p>
+            )}
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Calendar className="w-4 h-4" />
+              <span>
+                {new Date(top5GenreData.periodStart).toLocaleDateString('fr-CA', {
+                  month: 'long',
+                  day: 'numeric',
+                })}
+                {' - '}
+                {new Date(top5GenreData.periodEnd).toLocaleDateString('fr-CA', {
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Section Top 5 Pulse Picks général (fallback) */}
+        {top5Data && !top5GenreData && (
           <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-lg">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
