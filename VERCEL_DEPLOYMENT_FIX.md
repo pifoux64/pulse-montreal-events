@@ -40,7 +40,8 @@ RESEND_API_KEY = [ton clé Resend]
 OPENAI_API_KEY = [ton clé OpenAI]
 SPOTIFY_CLIENT_ID = [ton clé]
 SPOTIFY_CLIENT_SECRET = [ton secret]
-NEXT_PUBLIC_APP_URL = https://montreal-events.vercel.app
+NEXT_PUBLIC_APP_URL = https://pulse-event.ca (⚠️ PAS http://127.0.0.1:3000 !)
+```
 ```
 
 ### 4. Forcer un Nouveau Déploiement
