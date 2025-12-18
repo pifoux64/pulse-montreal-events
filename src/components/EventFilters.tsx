@@ -154,6 +154,13 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
   const [activePreset, setActivePreset] = useState<DatePresetKey | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // SPRINT 1: Recherche intelligente (IA)
+  const [aiEnabled, setAiEnabled] = useState(true);
+  const [aiExplanation, setAiExplanation] = useState<string | null>(null);
+  const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
   useEffect(() => {
     setLocalFilters(filters);
   }, [filters]);
@@ -184,6 +191,160 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
 
   const handleSearchChange = (value: string) => {
     handleFilterChange('searchQuery', value);
+    // Réinitialiser les explications IA quand l'utilisateur modifie manuellement
+    setAiExplanation(null);
+    setAiConfidence(null);
+    setAiError(null);
+  };
+
+  /**
+   * Applique la recherche intelligente (IA) via l'endpoint /api/ai/search-to-filters
+   */
+  const handleAISearch = async () => {
+    const query = (localFilters.searchQuery || '').trim();
+    if (!query) return;
+
+    try {
+      setAiLoading(true);
+      setAiError(null);
+
+      // TODO: plus tard, passer la position réelle de l'utilisateur
+      const res = await fetch('/api/ai/search-to-filters', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          queryText: query,
+          timezone: 'America/Montreal',
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Erreur lors de la recherche intelligente');
+      }
+
+      const aiFilters = data.filters as {
+        timeScope: 'today' | 'weekend' | 'dateRange' | 'all';
+        rangeStart?: string;
+        rangeEnd?: string;
+        radiusKm?: number;
+        categories?: Array<'music' | 'culture' | 'family' | 'sports' | 'exhibition' | 'community' | 'education' | 'nightlife' | 'other'>;
+        musicGenres?: string[];
+        tags?: string[];
+        isFree?: boolean;
+        ageRestriction?: 'all' | '18+' | '21+';
+        language?: 'fr' | 'en' | 'other';
+        confidence: number;
+        explanation: string;
+      };
+
+      // Construire de nouveaux filtres à partir de la réponse IA
+      const newFilters: EventFilter = { ...localFilters };
+
+      // 1) Période
+      const now = new Date();
+      switch (aiFilters.timeScope) {
+        case 'today': {
+          const start = startOfDay(now);
+          const end = endOfDay(now);
+          newFilters.dateRange = { start, end };
+          break;
+        }
+        case 'weekend': {
+          const { start, end } = getWeekendRange();
+          newFilters.dateRange = { start, end };
+          break;
+        }
+        case 'dateRange': {
+          if (aiFilters.rangeStart || aiFilters.rangeEnd) {
+            newFilters.dateRange = {
+              ...(aiFilters.rangeStart ? { start: new Date(aiFilters.rangeStart) } : {}),
+              ...(aiFilters.rangeEnd ? { end: new Date(aiFilters.rangeEnd) } : {}),
+            } as EventFilter['dateRange'];
+          }
+          break;
+        }
+        case 'all':
+        default:
+          // Pas de filtre de date spécifique
+          break;
+      }
+
+      // 2) Gratuit
+      if (aiFilters.isFree !== undefined) {
+        newFilters.freeOnly = aiFilters.isFree;
+      }
+
+      // 3) Langue
+      if (aiFilters.language === 'fr') {
+        newFilters.language = 'FR';
+      } else if (aiFilters.language === 'en') {
+        newFilters.language = 'EN';
+      }
+
+      // 4) Restriction d'âge
+      if (aiFilters.ageRestriction && aiFilters.ageRestriction !== 'all') {
+        newFilters.ageRestriction = aiFilters.ageRestriction;
+      }
+
+      // 5) Tags (genres musicaux + autres tags)
+      const combinedTags = new Set<string>(newFilters.tags || []);
+      (aiFilters.musicGenres || []).forEach((g) => combinedTags.add(g));
+      (aiFilters.tags || []).forEach((t) => combinedTags.add(t));
+      if (combinedTags.size > 0) {
+        newFilters.tags = Array.from(combinedTags);
+      }
+
+      // 6) Catégories (mapper catégories IA -> catégories d'affichage)
+      if (aiFilters.categories && aiFilters.categories.length > 0) {
+        const categoryMap: Record<string, string> = {};
+        categories.forEach((cat) => {
+          // On mappe par id (ex: MUSIC) et par nom en minuscules
+          categoryMap[cat.id.toLowerCase()] = cat.name;
+          categoryMap[cat.name.toLowerCase()] = cat.name;
+        });
+
+        const mappedCategories: string[] = [];
+        aiFilters.categories.forEach((catKey) => {
+          const key = catKey.toLowerCase();
+          const prismaKey =
+            key === 'music'
+              ? 'music'
+              : key === 'family'
+              ? 'family'
+              : key === 'sports'
+              ? 'sport'
+              : key;
+
+          const byId = categoryMap[prismaKey.toUpperCase()];
+          const byName = categoryMap[prismaKey];
+          const match = byId || byName;
+          if (match && !mappedCategories.includes(match)) {
+            mappedCategories.push(match);
+          }
+        });
+
+        if (mappedCategories.length > 0) {
+          newFilters.categories = mappedCategories;
+        }
+      }
+
+      // Garder la requête texte telle quelle
+      newFilters.searchQuery = query;
+
+      setLocalFilters(newFilters);
+      onFiltersChange(newFilters);
+
+      setAiExplanation(aiFilters.explanation || null);
+      setAiConfidence(aiFilters.confidence ?? null);
+    } catch (error: any) {
+      console.error('Erreur recherche IA:', error);
+      setAiError(error.message || 'Erreur lors de la recherche intelligente');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleCategoryChange = (categoryId: string, isChecked: boolean) => {
@@ -295,15 +456,180 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
 
       {/* Barre de recherche */}
       <div className="p-3 border-b border-gray-200">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Rechercher un événement..."
-            value={localFilters.searchQuery || ''}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-          />
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <input
+                type="text"
+                placeholder="Rechercher un événement (ex: reggae gratuit ce soir)..."
+                value={localFilters.searchQuery || ''}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && aiEnabled) {
+                    e.preventDefault();
+                    void handleAISearch();
+                  }
+                }}
+                className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setAiEnabled(!aiEnabled);
+                setAiExplanation(null);
+                setAiConfidence(null);
+                setAiError(null);
+              }}
+              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+                aiEnabled
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : 'bg-white text-gray-700 border-gray-300'
+              }`}
+            >
+              IA
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleAISearch()}
+              disabled={aiLoading || !localFilters.searchQuery?.trim()}
+              className="px-3 py-1.5 text-xs font-medium rounded-full border border-indigo-500 text-indigo-600 hover:bg-indigo-50 disabled:opacity-50"
+            >
+              {aiLoading ? 'Analyse…' : 'Interpréter'}
+            </button>
+          </div>
+          {(aiExplanation || aiError) && (
+            <div className="text-[11px] leading-snug">
+              {aiError ? (
+                <span className="text-red-600">{aiError}</span>
+              ) : (
+                <span className="text-gray-500">
+                  {aiExplanation}
+                  {aiConfidence !== null && (
+                    <span className="ml-1 text-gray-400">
+                      ({Math.round(aiConfidence * 100)} %)
+                    </span>
+                  )}
+                </span>
+              )}
+            </div>
+          )}
+          
+          {/* Chips d'interprétation - Filtres appliqués par l'IA */}
+          {aiExplanation && !aiError && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {/* Période */}
+              {localFilters.dateRange?.start && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newFilters = { ...localFilters };
+                    delete newFilters.dateRange;
+                    setLocalFilters(newFilters);
+                    onFiltersChange(newFilters);
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors"
+                  title="Cliquer pour retirer"
+                >
+                  {activePreset ? DATE_PRESETS[activePreset].label : 'Période'}
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              )}
+              
+              {/* Gratuit */}
+              {localFilters.freeOnly && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleFilterChange('freeOnly', false);
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
+                  title="Cliquer pour retirer"
+                >
+                  Gratuit
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              )}
+              
+              {/* Langue */}
+              {localFilters.language && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleFilterChange('language', undefined);
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
+                  title="Cliquer pour retirer"
+                >
+                  {localFilters.language === 'FR' ? 'Français' : localFilters.language === 'EN' ? 'English' : localFilters.language}
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              )}
+              
+              {/* Âge */}
+              {localFilters.ageRestriction && localFilters.ageRestriction !== 'Tous' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleFilterChange('ageRestriction', undefined);
+                  }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded-full hover:bg-orange-200 transition-colors"
+                  title="Cliquer pour retirer"
+                >
+                  {localFilters.ageRestriction}
+                  <X className="w-2.5 h-2.5" />
+                </button>
+              )}
+              
+              {/* Catégories */}
+              {localFilters.categories && localFilters.categories.length > 0 && (
+                <>
+                  {localFilters.categories.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => {
+                        const newCategories = localFilters.categories?.filter((c) => c !== cat) || [];
+                        handleFilterChange('categories', newCategories.length > 0 ? newCategories : undefined);
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-purple-100 text-purple-700 rounded-full hover:bg-purple-200 transition-colors"
+                      title="Cliquer pour retirer"
+                    >
+                      {cat}
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  ))}
+                </>
+              )}
+              
+              {/* Tags/Genres */}
+              {localFilters.tags && localFilters.tags.length > 0 && (
+                <>
+                  {localFilters.tags.slice(0, 3).map((tag) => (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => {
+                        const newTags = localFilters.tags?.filter((t) => t !== tag) || [];
+                        handleFilterChange('tags', newTags.length > 0 ? newTags : undefined);
+                      }}
+                      className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-pink-100 text-pink-700 rounded-full hover:bg-pink-200 transition-colors"
+                      title="Cliquer pour retirer"
+                    >
+                      {tag}
+                      <X className="w-2.5 h-2.5" />
+                    </button>
+                  ))}
+                  {localFilters.tags.length > 3 && (
+                    <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium text-gray-500">
+                      +{localFilters.tags.length - 3}
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
