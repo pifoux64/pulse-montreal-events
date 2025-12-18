@@ -3,9 +3,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/utils';
-import EventCard from '@/components/EventCard';
-import { useFavorites } from '@/hooks/useFavorites';
 import Top5EventCardWrapper from '@/components/Top5EventCardWrapper';
+import Top5PageClient from './Top5PageClient';
 
 interface Top5PageProps {
   params: { slug: string };
@@ -114,19 +113,18 @@ export default async function Top5Page({ params }: Top5PageProps) {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
-        <p className="text-slate-300 text-sm mb-4">
-          Top 5 {post.theme} à Montréal
-        </p>
-        <p className="text-slate-400 text-xs mb-6">
-          Période du {formatEventDate(post.periodStart)} au {formatEventDate(post.periodEnd)}
-        </p>
-
-        {post.description && (
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 mb-8 text-sm text-slate-100 whitespace-pre-line">
-            {post.description}
-          </div>
-        )}
+        <Top5PageClient
+          post={{
+            id: post.id,
+            slug: post.slug,
+            title: post.title || `Top 5 ${post.theme}`,
+            theme: post.theme,
+            description: post.description,
+            periodStart: post.periodStart,
+            periodEnd: post.periodEnd,
+          }}
+          eventIds={post.eventsOrder}
+        />
 
         {orderedEvents.length === 0 ? (
           <p className="text-slate-400 text-sm">Aucun événement sélectionné pour ce Top 5 pour le moment.</p>
