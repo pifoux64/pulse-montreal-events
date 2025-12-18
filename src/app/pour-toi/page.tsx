@@ -160,13 +160,14 @@ export default function PourToiPage() {
   const { data: top5Data } = useQuery({
     queryKey: ['top5-for-recommendations'],
     queryFn: async () => {
-      const response = await fetch('/api/editorial/pulse-picks/public?limit=1');
+      const response = await fetch(`/api/editorial/pulse-picks/public?limit=10&_t=${Date.now()}`);
       if (!response.ok) return null;
       const data = await response.json();
       // Prendre le premier Top 5 qui a des événements
       return data.posts?.find((p: any) => p.eventsCount > 0) || data.posts?.[0] || null;
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes au lieu de 10
+    refetchOnMount: true,
   });
 
   // Récupérer les recommandations

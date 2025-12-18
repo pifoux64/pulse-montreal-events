@@ -1072,10 +1072,12 @@ function HomePageAISections() {
   const { data: top5Data, isLoading: top5Loading } = useQuery({
     queryKey: ['pulse-picks-public'],
     queryFn: async () => {
-      const res = await fetch('/api/editorial/pulse-picks/public?limit=3');
+      const res = await fetch(`/api/editorial/pulse-picks/public?limit=3&_t=${Date.now()}`);
       if (!res.ok) return { posts: [] };
       return res.json();
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes au lieu de 10
+    refetchOnMount: true,
   });
 
   // Récupérer les recommandations si connecté

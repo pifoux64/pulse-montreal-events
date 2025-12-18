@@ -17,9 +17,10 @@ export async function GET(request: NextRequest) {
         status: 'PUBLISHED',
         ...(theme && { theme }),
       },
-      orderBy: {
-        periodStart: 'desc',
-      },
+      orderBy: [
+        { publishedAt: 'desc' }, // D'abord par date de publication
+        { periodStart: 'desc' },  // Puis par période
+      ],
       take: limit,
       include: {
         _count: {
