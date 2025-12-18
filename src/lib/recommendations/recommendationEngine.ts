@@ -5,6 +5,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { buildUserMusicProfile, UserMusicProfile } from './userProfileBuilder';
+import { getUserTasteProfile } from './tasteProfileBuilder';
 import { Event } from '@prisma/client';
 import { recommendationCache, getRecommendationCacheKey } from './cache';
 
@@ -49,15 +50,40 @@ export async function getPersonalizedRecommendations(
     return cached.slice(0, limit);
   }
 
-  // Construire le profil utilisateur
+  // Construire le profil utilisateur (musique + goûts)
   const userProfile = await buildUserMusicProfile(userId);
+  const tasteProfile = await getUserTasteProfile(userId);
+
+  // Enrichir le profil avec les données de TasteProfile si disponible
+  if (tasteProfile) {
+    // Fusionner les genres de TasteProfile
+    for (const [genre, weight] of Object.entries(tasteProfile.topGenres)) {
+      const currentWeight = userProfile.genres.get(genre) || 0;
+      userProfile.genres.set(genre, Math.max(currentWeight, weight));
+    }
+
+    // Fusionner les tags de TasteProfile
+    for (const [tag, weight] of Object.entries(tasteProfile.topTags)) {
+      // Les tags peuvent être des genres ou des styles
+      if (!userProfile.genres.has(tag) && !userProfile.styles.has(tag)) {
+        // Essayer de détecter si c'est un genre ou un style
+        const genrePatterns = ['reggae', 'hip_hop', 'rock', 'jazz', 'techno', 'house', 'pop'];
+        if (genrePatterns.some((g) => tag.toLowerCase().includes(g))) {
+          userProfile.genres.set(tag, weight);
+        } else {
+          userProfile.styles.set(tag, weight);
+        }
+      }
+    }
+  }
 
   // Si l'utilisateur n'a aucun intérêt, retourner des événements populaires
   if (
     userProfile.genres.size === 0 &&
     userProfile.styles.size === 0 &&
     userProfile.types.size === 0 &&
-    userProfile.ambiances.size === 0
+    userProfile.ambiances.size === 0 &&
+    (!tasteProfile || Object.keys(tasteProfile.topTags).length === 0)
   ) {
     console.log(`[Recommendations] User ${userId} has no profile, returning popular events`);
     return await getPopularEvents(limit, scope);

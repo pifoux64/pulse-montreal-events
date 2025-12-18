@@ -91,6 +91,14 @@ export async function GET(
       },
     });
 
+    // SPRINT 2: Tracker l'interaction VIEW pour recommandations
+    if (session?.user?.id) {
+      const { trackInteraction } = await import('@/lib/recommendations/interactionTracker');
+      await trackInteraction(session.user.id, event.id, 'VIEW').catch(() => {
+        // Ignorer les erreurs de tracking
+      });
+    }
+
     return NextResponse.json(event);
 
   } catch (error) {

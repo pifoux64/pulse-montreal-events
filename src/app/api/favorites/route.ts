@@ -158,6 +158,12 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // SPRINT 2: Tracker l'interaction FAVORITE
+    const { trackInteraction } = await import('@/lib/recommendations/interactionTracker');
+    await trackInteraction(session.user.id, eventId, 'FAVORITE').catch(() => {
+      // Ignorer les erreurs de tracking
+    });
+
     return NextResponse.json(favorite, { status: 201 });
 
   } catch (error) {

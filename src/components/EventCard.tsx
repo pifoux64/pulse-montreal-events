@@ -124,7 +124,18 @@ const EventCard = ({
     return '🎵';
   };
 
-  const handleEventClick = () => {
+  const handleEventClick = async () => {
+    // SPRINT 2: Tracker l'interaction CLICK
+    if (isAuthenticated && session?.user?.id) {
+      fetch('/api/user/interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId: event.id, type: 'CLICK' }),
+      }).catch(() => {
+        // Ignorer les erreurs de tracking
+      });
+    }
+
     if (onEventClick) {
       onEventClick(event);
     } else {

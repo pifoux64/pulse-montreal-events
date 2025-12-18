@@ -5,6 +5,7 @@
  */
 
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { X, Copy, Share2, Facebook, Twitter, Linkedin, QrCode, Check } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -21,6 +22,7 @@ export default function EventShareModal({
   isOpen,
   onClose,
 }: EventShareModalProps) {
+  const { data: session } = useSession();
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
 
@@ -42,6 +44,17 @@ export default function EventShareModal({
   };
 
   const handleShare = async (platform: 'native' | 'facebook' | 'twitter' | 'linkedin') => {
+    // SPRINT 2: Tracker l'interaction SHARE
+    if (session?.user?.id) {
+      fetch('/api/user/interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, type: 'SHARE' }),
+      }).catch(() => {
+        // Ignorer les erreurs de tracking
+      });
+    }
+
     if (platform === 'native') {
       try {
         if (navigator.share) {

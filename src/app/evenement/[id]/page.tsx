@@ -15,6 +15,7 @@ import EventFeedPanel from '@/components/event-feed/EventFeedPanel';
 import EventDetailActions from '@/components/EventDetailActions';
 import EventTagsDisplay from '@/components/EventTagsDisplay';
 import EventPublishSection from '@/components/EventPublishSection';
+import SimilarEvents from '@/components/SimilarEvents';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -440,6 +441,9 @@ export default async function EventPage({ params }: { params: { id: string } }) 
             }
             feedContent={<EventFeedPanel eventId={event.id} canPost={canPostToFeed} />}
           />
+
+          {/* Événements similaires - SPRINT 2 */}
+          <SimilarEvents eventId={event.id} limit={6} />
         </div>
       </div>
     );

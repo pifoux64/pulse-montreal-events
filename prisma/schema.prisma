@@ -140,7 +140,10 @@ model User {
   interestTags              UserInterestTag[]
   accounts                  Account[]
   sessions                  Session[]
-  organizerFollows         OrganizerFollow[] @relation("UserFollows")
+  organizerFollows          OrganizerFollow[]          @relation("UserFollows")
+  eventInteractions         UserEventInteraction[]
+  tasteProfile              UserTasteProfile?
+  EditorialPost             EditorialPost[]
 
   @@map("users")
 }
@@ -198,7 +201,7 @@ model Organizer {
   verified    Boolean @default(false)
 
   // Relations
-  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   events              Event[]
   subscriptions       Subscription[]
   platformConnections PlatformConnection[]
@@ -274,15 +277,16 @@ model Event {
   updatedAt      DateTime      @updatedAt @map("updated_at")
 
   // Relations
-  organizer     Organizer?     @relation(fields: [organizerId], references: [id], onDelete: SetNull)
-  venue         Venue?         @relation(fields: [venueId], references: [id], onDelete: SetNull)
-  features      EventFeature[]
-  favorites     Favorite[]
-  promotions    Promotion[]
-  notifications Notification[]
-  posts         EventPost[]
-  eventTags     EventTag[]
-  eventSources  EventSourceLink[]  // SPRINT A: Plusieurs sources pour un même événement
+  organizer        Organizer?             @relation(fields: [organizerId], references: [id], onDelete: SetNull)
+  venue            Venue?                 @relation(fields: [venueId], references: [id], onDelete: SetNull)
+  features         EventFeature[]
+  favorites        Favorite[]
+  promotions       Promotion[]
+  notifications    Notification[]
+  posts            EventPost[]
+  eventTags        EventTag[]
+  eventSources     EventSourceLink[] // SPRINT A: Plusieurs sources pour un même événement
+  userInteractions UserEventInteraction[]
 
   @@unique([sourceId, source], name: "unique_source_event")
   // Index pour performance
@@ -424,21 +428,55 @@ model AdPlacement {
   @@map("ad_placements")
 }
 
+// SPRINT 3: Pulse Picks / Top 5 éditoriaux
+
+enum EditorialPostStatus {
+  DRAFT // En cours de rédaction
+  SCHEDULED // Planifié pour une date donnée
+  PUBLISHED // Visible publiquement
+  ARCHIVED // Archivé
+}
+
+model EditorialPost {
+  id            String              @id @default(uuid()) @db.Uuid
+  slug          String              @unique // ex: "top-5-famille-week-2025-03-10"
+  title         String
+  theme         String // ex: "famille", "culture", "rock", "gratuit"
+  description   String?             @db.Text // Texte éditorial écrit par l'humain
+  status        EditorialPostStatus @default(DRAFT)
+  periodStart   DateTime            @map("period_start") // Début de la période (ex: lundi de la semaine)
+  periodEnd     DateTime            @map("period_end") // Fin de la période (ex: dimanche)
+  eventsOrder   String[]            @default([]) @map("events_order") // Liste ordonnée d'IDs d'événements (Top 5)
+  tags          String[]            @default([]) // Tags libres pour SEO/filtrage (\"famille\", \"gratuit\", etc.)
+  coverImageUrl String?             @map("cover_image_url")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  publishedAt   DateTime?           @map("published_at")
+  authorId      String?             @map("author_id") @db.Uuid
+
+  // Relations
+  author User? @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([theme, periodStart, periodEnd], name: "idx_editorial_theme_period")
+  @@index([status, periodStart], name: "idx_editorial_status_period")
+  @@map("editorial_posts")
+}
+
 // SPRINT A: Architecture d'ingestion générique
 model Source {
-  id            String       @id @default(uuid()) @db.Uuid
-  name          String       // Nom lisible de la source (ex: "Ville de Montréal - Données ouvertes")
-  type          SourceType   // API | RSS | ICS | OPEN_DATA | MANUAL
-  eventSource   EventSource  @map("event_source") // Correspondance avec EventSource enum (champ scalaire)
-  legalStatus   LegalStatus  @default(PENDING_VERIFICATION) @map("legal_status")
-  isEnabled     Boolean      @default(true) @map("is_enabled")
-  syncInterval  Int          @default(43200) @map("sync_interval") // en secondes (12h par défaut)
-  lastSyncAt    DateTime?    @map("last_sync_at")
-  config        Json         // Configuration spécifique (URL, API keys, mapping, etc.)
-  description   String?      @db.Text // Documentation de la source
-  documentationUrl String?   @map("documentation_url") // Lien vers la documentation officielle
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
+  id               String      @id @default(uuid()) @db.Uuid
+  name             String // Nom lisible de la source (ex: "Ville de Montréal - Données ouvertes")
+  type             SourceType // API | RSS | ICS | OPEN_DATA | MANUAL
+  eventSource      EventSource @map("event_source") // Correspondance avec EventSource enum (champ scalaire)
+  legalStatus      LegalStatus @default(PENDING_VERIFICATION) @map("legal_status")
+  isEnabled        Boolean     @default(true) @map("is_enabled")
+  syncInterval     Int         @default(43200) @map("sync_interval") // en secondes (12h par défaut)
+  lastSyncAt       DateTime?   @map("last_sync_at")
+  config           Json // Configuration spécifique (URL, API keys, mapping, etc.)
+  description      String?     @db.Text // Documentation de la source
+  documentationUrl String?     @map("documentation_url") // Lien vers la documentation officielle
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
 
   // Relations
   importJobs       ImportJob[]
@@ -454,7 +492,7 @@ model Source {
 model ImportJob {
   id            String          @id @default(uuid()) @db.Uuid
   sourceId      String?         @map("source_id") @db.Uuid // Nouveau: référence à Source
-  source        EventSource     // Conservé pour compatibilité
+  source        EventSource // Conservé pour compatibilité
   status        ImportJobStatus @default(PENDING)
   startedAt     DateTime        @default(now()) @map("started_at")
   finishedAt    DateTime?       @map("finished_at")
@@ -483,14 +521,14 @@ model ImportJob {
 }
 
 model SourceHealth {
-  id                 String   @id @default(uuid()) @db.Uuid
-  sourceId           String   @unique @map("source_id") @db.Uuid
-  lastSuccessAt      DateTime? @map("last_success_at")
-  lastErrorAt        DateTime? @map("last_error_at")
-  consecutiveFailures Int     @default(0) @map("consecutive_failures")
-  nextRunAt          DateTime? @map("next_run_at")
-  lastErrorMessage    String?  @map("last_error_message") @db.Text
-  updatedAt          DateTime @updatedAt @map("updated_at")
+  id                  String    @id @default(uuid()) @db.Uuid
+  sourceId            String    @unique @map("source_id") @db.Uuid
+  lastSuccessAt       DateTime? @map("last_success_at")
+  lastErrorAt         DateTime? @map("last_error_at")
+  consecutiveFailures Int       @default(0) @map("consecutive_failures")
+  nextRunAt           DateTime? @map("next_run_at")
+  lastErrorMessage    String?   @map("last_error_message") @db.Text
+  updatedAt           DateTime  @updatedAt @map("updated_at")
 
   // Relations
   source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
@@ -500,19 +538,19 @@ model SourceHealth {
 
 // Table de jointure pour gérer plusieurs sources pour un même événement (déduplication)
 model EventSourceLink {
-  id        String      @id @default(uuid()) @db.Uuid
-  eventId   String      @map("event_id") @db.Uuid
-  sourceId  String?     @map("source_id") @db.Uuid // Référence à Source (nouveau système)
-  source    EventSource // Source legacy (EventSource enum) - champ scalaire
-  sourceUrl String?     @map("source_url") // URL de l'événement sur la source
-  externalId String?    @map("external_id") // ID externe de l'événement sur la source
-  isPrimary Boolean     @default(false) @map("is_primary") // Source principale (pour ticketUrl, etc.)
-  createdAt DateTime    @default(now()) @map("created_at")
-  updatedAt DateTime    @updatedAt @map("updated_at")
+  id         String      @id @default(uuid()) @db.Uuid
+  eventId    String      @map("event_id") @db.Uuid
+  sourceId   String?     @map("source_id") @db.Uuid // Référence à Source (nouveau système)
+  source     EventSource // Source legacy (EventSource enum) - champ scalaire
+  sourceUrl  String?     @map("source_url") // URL de l'événement sur la source
+  externalId String?     @map("external_id") // ID externe de l'événement sur la source
+  isPrimary  Boolean     @default(false) @map("is_primary") // Source principale (pour ticketUrl, etc.)
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
 
   // Relations
-  event     Event       @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  sourceRef Source?     @relation(fields: [sourceId], references: [id], onDelete: SetNull)
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sourceRef Source? @relation(fields: [sourceId], references: [id], onDelete: SetNull)
 
   @@unique([eventId, sourceId, source], name: "unique_event_source")
   @@index([eventId], name: "idx_event_source_event")
@@ -678,16 +716,16 @@ model UserInterestTag {
 
 // SPRINT 6: Connexions Spotify / Apple Music pour recommandations personnalisées
 model MusicServiceConnection {
-  id             String   @id @default(uuid()) @db.Uuid
-  userId         String   @map("user_id") @db.Uuid
-  service        String   // spotify | apple_music
-  accessToken    String   @map("access_token") @db.Text
-  refreshToken   String?  @map("refresh_token") @db.Text
-  expiresAt      DateTime @map("expires_at")
-  externalUserId String   @map("external_user_id")
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  service        String // spotify | apple_music
+  accessToken    String    @map("access_token") @db.Text
+  refreshToken   String?   @map("refresh_token") @db.Text
+  expiresAt      DateTime  @map("expires_at")
+  externalUserId String    @map("external_user_id")
   lastSyncAt     DateTime? @map("last_sync_at")
-  createdAt      DateTime @default(now()) @map("created_at")
-  updatedAt      DateTime @updatedAt @map("updated_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -700,12 +738,12 @@ model MusicServiceConnection {
 model PlatformConnection {
   id             String    @id @default(uuid()) @db.Uuid
   organizerId    String    @map("organizer_id") @db.Uuid
-  platform       String    // 'facebook', 'eventbrite', 'bandsintown'
+  platform       String // 'facebook', 'eventbrite', 'bandsintown'
   platformUserId String?   @map("platform_user_id") // ID utilisateur/organisation sur la plateforme
   accessToken    String?   @map("access_token") @db.Text
   refreshToken   String?   @map("refresh_token") @db.Text
   expiresAt      DateTime? @map("expires_at")
-  metadata       Json?     // Données supplémentaires (pages Facebook, organisateurs Eventbrite, etc.)
+  metadata       Json? // Données supplémentaires (pages Facebook, organisateurs Eventbrite, etc.)
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
@@ -716,18 +754,64 @@ model PlatformConnection {
   @@map("platform_connections")
 }
 
+// SPRINT 2: Interactions utilisateur pour recommandations personnalisées
+enum UserEventInteractionType {
+  VIEW // Vue de la page événement
+  CLICK // Clic sur un événement (dans une liste)
+  FAVORITE // Ajout aux favoris
+  SHARE // Partage d'un événement
+  DISMISS // "Pas intéressé" / rejet explicite
+}
+
+model UserEventInteraction {
+  id        String                   @id @default(uuid()) @db.Uuid
+  userId    String                   @map("user_id") @db.Uuid
+  eventId   String                   @map("event_id") @db.Uuid
+  type      UserEventInteractionType
+  createdAt DateTime                 @default(now()) @map("created_at")
+
+  // Relations
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId, type], name: "unique_user_event_interaction")
+  @@index([userId, type, createdAt], name: "idx_user_interaction_user_type_created")
+  @@index([eventId], name: "idx_user_interaction_event")
+  @@index([createdAt], name: "idx_user_interaction_created_at")
+  @@map("user_event_interactions")
+}
+
+// SPRINT 2: Profil de goûts agrégé (recomputed nightly)
+model UserTasteProfile {
+  id                     String   @id @default(uuid()) @db.Uuid
+  userId                 String   @unique @map("user_id") @db.Uuid
+  topTags                Json     @default("{}") @map("top_tags") // { tag: weight }
+  topGenres              Json     @default("{}") @map("top_genres") // { genre: weight }
+  preferredNeighborhoods Json     @default("[]") @map("preferred_neighborhoods") // string[]
+  preferredTimeSlots     Json     @default("{}") @map("preferred_time_slots") // { hour: count }
+  lastComputedAt         DateTime @default(now()) @map("last_computed_at")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "idx_taste_profile_user")
+  @@map("user_taste_profiles")
+}
+
 model PublicationLog {
-  id              String    @id @default(uuid()) @db.Uuid
-  eventId         String    @map("event_id") @db.Uuid
-  organizerId     String    @map("organizer_id") @db.Uuid
-  platform        String    // 'facebook', 'eventbrite', 'resident_advisor', 'bandsintown'
-  status          String    // 'success', 'error', 'pending'
-  platformEventId String?   @map("platform_event_id") // ID de l'événement sur la plateforme
-  platformEventUrl String?   @map("platform_event_url") // URL de l'événement sur la plateforme
-  errorMessage    String?   @map("error_message") @db.Text
-  metadata        Json?     // Données supplémentaires (réponse API, etc.)
-  createdAt       DateTime  @default(now()) @map("created_at")
-  updatedAt       DateTime  @updatedAt @map("updated_at")
+  id               String   @id @default(uuid()) @db.Uuid
+  eventId          String   @map("event_id") @db.Uuid
+  organizerId      String   @map("organizer_id") @db.Uuid
+  platform         String // 'facebook', 'eventbrite', 'resident_advisor', 'bandsintown'
+  status           String // 'success', 'error', 'pending'
+  platformEventId  String?  @map("platform_event_id") // ID de l'événement sur la plateforme
+  platformEventUrl String?  @map("platform_event_url") // URL de l'événement sur la plateforme
+  errorMessage     String?  @map("error_message") @db.Text
+  metadata         Json? // Données supplémentaires (réponse API, etc.)
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
 
   organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
 

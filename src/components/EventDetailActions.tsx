@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { usePathname } from 'next/navigation';
-import { Heart, Share2, Loader2, LogIn } from 'lucide-react';
+import { Heart, Share2, Loader2, LogIn, X } from 'lucide-react';
 import Link from 'next/link';
 import { useFavorites } from '@/hooks/useFavorites';
 import EventShareModal from './EventShareModal';
@@ -43,6 +43,23 @@ export default function EventDetailActions({ eventId, eventTitle }: EventDetailA
 
   const handleShare = () => {
     setShowShareModal(true);
+  };
+
+  const handleDismiss = async () => {
+    if (!isAuthenticated || !session?.user?.id) {
+      return;
+    }
+
+    try {
+      await fetch('/api/user/interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, type: 'DISMISS' }),
+      });
+      // Optionnel: rediriger vers la page précédente ou masquer l'événement
+    } catch (error) {
+      console.error('Erreur lors du tracking DISMISS:', error);
+    }
   };
 
   const favoriteButton = (
@@ -98,6 +115,16 @@ export default function EventDetailActions({ eventId, eventTitle }: EventDetailA
         >
           <Share2 className="h-5 w-5" />
         </button>
+        {isAuthenticated && (
+          <button
+            onClick={handleDismiss}
+            className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-colors"
+            aria-label="Pas intéressé"
+            title="Pas intéressé"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
       <EventShareModal
         eventId={eventId}
