@@ -47,39 +47,18 @@ const nextConfig: NextConfig = {
         hostname: '*.universe.com',
       },
     ],
-    // Configuration pour Next.js 16 : autoriser les images locales et les query strings sur /api/image-proxy
     localPatterns: [
       {
         pathname: '/api/image-proxy',
-        search: '*', // Autoriser tous les query strings pour le proxy d'images
       },
       {
         pathname: '/Pulse_Logo.png',
-        search: '', // Image locale sans query string
       },
       {
         pathname: '/Pulse_Logo_only_heart.png',
-        search: '', // Image locale sans query string
       },
       {
-        pathname: '/**/*.png',
-        search: '', // Autoriser toutes les images PNG locales
-      },
-      {
-        pathname: '/**/*.jpg',
-        search: '', // Autoriser toutes les images JPG locales
-      },
-      {
-        pathname: '/**/*.jpeg',
-        search: '', // Autoriser toutes les images JPEG locales
-      },
-      {
-        pathname: '/**/*.webp',
-        search: '', // Autoriser toutes les images WebP locales
-      },
-      {
-        pathname: '/**/*.svg',
-        search: '', // Autoriser toutes les images SVG locales
+        pathname: '/placeholder-event.jpg',
       },
     ],
     formats: ['image/webp', 'image/avif'],
