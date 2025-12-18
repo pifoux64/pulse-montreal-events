@@ -5,7 +5,7 @@
  * Affiche les événements recommandés basés sur les goûts musicaux de l'utilisateur
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -150,9 +150,15 @@ export default function PourToiPage() {
   const router = useRouter();
   const [scope, setScope] = useState<Scope>('all');
 
-  // Rediriger si non authentifié
+  // Rediriger si non authentifié (dans useEffect pour éviter setState pendant render)
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/pour-toi');
+    }
+  }, [status, router]);
+
+  // Ne rien afficher si non authentifié (la redirection est en cours)
   if (status === 'unauthenticated') {
-    router.push('/auth/signin?callbackUrl=/pour-toi');
     return null;
   }
 
