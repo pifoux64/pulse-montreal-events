@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3, Sparkles, Users, Palette, Trophy } from 'lucide-react';
+import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3, Sparkles, Users, Palette, Trophy, Compass, Music } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
 import NotificationBell from './NotificationBell';
@@ -42,6 +42,7 @@ export default function Navigation() {
   const navigationItems = [
     { name: t('map'), href: '/carte', icon: Map },
     { name: t('calendar'), href: '/calendrier', icon: Calendar },
+    { name: 'Pour toi', href: '/pour-toi', icon: Sparkles },
     { name: t('favorites'), href: '/favoris', icon: Heart },
     { name: t('publish'), href: '/publier', icon: Plus },
   ];
@@ -98,6 +99,73 @@ export default function Navigation() {
                   </Link>
                 );
               })}
+              
+              {/* Menu déroulant "Découvrir" - Amélioré */}
+              <div className="relative group">
+                <button className="group relative px-6 py-3 rounded-2xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-3">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative z-10">
+                    <Compass className="w-5 h-5" />
+                  </div>
+                  <span className="relative z-10">Découvrir</span>
+                  <div className="relative z-10 ml-1">
+                    <svg className="w-4 h-4 transition-transform group-hover:rotate-180 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </button>
+                
+                {/* Menu déroulant amélioré */}
+                <div className="absolute top-full left-0 mt-3 w-56 bg-slate-900/98 backdrop-blur-2xl rounded-2xl border border-white/20 shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 overflow-hidden">
+                  {/* Effet de brillance en haut */}
+                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400 to-transparent" />
+                  
+                  <div className="p-3 space-y-1">
+                    <Link
+                      href="/musique"
+                      className="group/item flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-pink-500/20 hover:to-purple-500/20 border border-transparent hover:border-pink-500/30"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500/20 to-purple-500/20 group-hover/item:scale-110 transition-transform">
+                        <Music className="w-4 h-4 text-pink-400" />
+                      </div>
+                      <span className="font-medium">Musique</span>
+                    </Link>
+                    
+                    <Link
+                      href="/famille"
+                      className="group/item flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-orange-500/20 hover:to-pink-500/20 border border-transparent hover:border-orange-500/30"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-pink-500/20 group-hover/item:scale-110 transition-transform">
+                        <Users className="w-4 h-4 text-orange-400" />
+                      </div>
+                      <span className="font-medium">Famille</span>
+                    </Link>
+                    
+                    <Link
+                      href="/culture"
+                      className="group/item flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-indigo-500/20 border border-transparent hover:border-purple-500/30"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 group-hover/item:scale-110 transition-transform">
+                        <Palette className="w-4 h-4 text-purple-400" />
+                      </div>
+                      <span className="font-medium">Culture</span>
+                    </Link>
+                    
+                    <Link
+                      href="/sport"
+                      className="group/item flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-cyan-500/20 border border-transparent hover:border-blue-500/30"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 group-hover/item:scale-110 transition-transform">
+                        <Trophy className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <span className="font-medium">Sport</span>
+                    </Link>
+                  </div>
+                  
+                  {/* Effet de brillance en bas */}
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-400 to-transparent" />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -320,6 +388,40 @@ export default function Navigation() {
                     </Link>
                   );
                 })}
+                
+                {/* Pages verticales dans le menu mobile */}
+                <Link
+                  href="/musique"
+                  className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center space-x-3 group text-slate-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Music className="w-6 h-6 text-slate-200 group-hover:text-pink-300 group-hover:scale-105 transition-transform duration-300" />
+                  <span className="font-semibold text-slate-100">Musique</span>
+                </Link>
+                <Link
+                  href="/famille"
+                  className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center space-x-3 group text-slate-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Users className="w-6 h-6 text-slate-200 group-hover:text-orange-300 group-hover:scale-105 transition-transform duration-300" />
+                  <span className="font-semibold text-slate-100">Famille</span>
+                </Link>
+                <Link
+                  href="/culture"
+                  className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center space-x-3 group text-slate-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Palette className="w-6 h-6 text-slate-200 group-hover:text-purple-300 group-hover:scale-105 transition-transform duration-300" />
+                  <span className="font-semibold text-slate-100">Culture</span>
+                </Link>
+                <Link
+                  href="/sport"
+                  className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center space-x-3 group text-slate-100"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <Trophy className="w-6 h-6 text-slate-200 group-hover:text-blue-300 group-hover:scale-105 transition-transform duration-300" />
+                  <span className="font-semibold text-slate-100">Sport</span>
+                </Link>
               </div>
 
               {/* Actions utilisateur mobile */}

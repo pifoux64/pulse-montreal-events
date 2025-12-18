@@ -30,6 +30,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
       },
+      {
+        protocol: 'https',
+        hostname: 's1.ticketm.net',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.ticketm.net',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
   },

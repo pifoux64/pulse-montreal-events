@@ -214,7 +214,7 @@ export default function ProfilClient() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Profil</h1>
           <p className="text-gray-600">
-            Connectez Spotify pour obtenir des recommandations basées sur vos goûts (ex: reggae, dancehall).
+            Connectez Spotify pour obtenir des recommandations basées sur vos goûts (ex: musique classique, electro, musées, sorties en famille etc..).
           </p>
         </div>
 
