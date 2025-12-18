@@ -25,12 +25,12 @@ export interface UserMusicProfile {
  * en fusionnant les sources (Spotify, Apple Music, manuel, historique)
  */
 export async function buildUserMusicProfile(userId: string): Promise<UserMusicProfile> {
-  // Récupérer tous les tags d'intérêt de l'utilisateur
+  // Récupérer tous les tags d'intérêt de l'utilisateur (optimisé : une seule requête)
   const interestTags = await prisma.userInterestTag.findMany({
     where: { userId },
   });
 
-  // Récupérer les favoris de l'utilisateur avec leurs tags
+  // Récupérer les favoris de l'utilisateur avec leurs tags (optimisé : include une seule fois)
   const favorites = await prisma.favorite.findMany({
     where: { userId },
     include: {
@@ -40,6 +40,7 @@ export async function buildUserMusicProfile(userId: string): Promise<UserMusicPr
         },
       },
     },
+    take: 100, // Limiter à 100 favoris pour éviter les requêtes trop lourdes
   });
 
   // Construire les maps de poids

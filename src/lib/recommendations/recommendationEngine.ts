@@ -6,6 +6,7 @@
 import { prisma } from '@/lib/prisma';
 import { buildUserMusicProfile, UserMusicProfile } from './userProfileBuilder';
 import { Event } from '@prisma/client';
+import { recommendationCache, getRecommendationCacheKey } from './cache';
 
 export interface RecommendationResult {
   event: Event & {
@@ -40,6 +41,13 @@ export async function getPersonalizedRecommendations(
     scope = 'all',
     minScore = 0.1,
   } = options;
+
+  // Vérifier le cache (TTL 1 heure)
+  const cacheKey = getRecommendationCacheKey(userId, { genre, style, scope });
+  const cached = recommendationCache.get<RecommendationResult[]>(cacheKey);
+  if (cached) {
+    return cached.slice(0, limit);
+  }
 
   // Construire le profil utilisateur
   const userProfile = await buildUserMusicProfile(userId);
@@ -118,6 +126,9 @@ export async function getPersonalizedRecommendations(
     .filter((result) => result.score >= minScore)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
+
+  // Mettre en cache (TTL 1 heure)
+  recommendationCache.set(cacheKey, scoredEvents, 3600);
 
   return scoredEvents;
 }

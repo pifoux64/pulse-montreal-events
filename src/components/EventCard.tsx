@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User, LogIn, Loader2 } from 'lucide-react';
 import { Event } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
@@ -35,10 +36,10 @@ const EventCard = ({
   const [justToggled, setJustToggled] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
   
-  // Animation de confirmation après toggle
+  // Animation de confirmation après toggle avec effet de particules
   useEffect(() => {
     if (justToggled) {
-      const timer = setTimeout(() => setJustToggled(false), 600);
+      const timer = setTimeout(() => setJustToggled(false), 800);
       return () => clearTimeout(timer);
     }
   }, [justToggled]);
@@ -138,14 +139,18 @@ const EventCard = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image avec design simplifié */}
+      {/* Image avec design simplifié et lazy loading */}
       {showImage && event.imageUrl && !imageError && (
-        <div className="relative h-48 overflow-hidden">
-          <img
+        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
+          <Image
             src={event.imageUrl}
             alt={event.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-500"
             onError={() => setImageError(true)}
+            loading="lazy"
+            unoptimized={event.imageUrl.startsWith('http') && !event.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || '')}
           />
           
           {/* Overlay subtil */}
@@ -201,12 +206,12 @@ const EventCard = ({
               <button
                 onClick={handleFavoriteClick}
                 disabled={isFavoriteLoading}
-                className={`p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 group/heart relative ${
+                className={`p-3 rounded-2xl transition-all duration-500 glass-effect border border-white/30 group/heart relative overflow-visible ${
                   isFavorite 
-                    ? 'text-red-500 hover:scale-110' 
+                    ? 'text-red-500 hover:scale-110 bg-red-500/10' 
                     : 'text-gray-600 hover:text-red-500 hover:scale-110'
                 } ${isHovered ? 'scale-105' : ''} ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''} ${
-                  justToggled && isFavorite ? 'animate-pulse' : ''
+                  justToggled && isFavorite ? 'animate-pulse ring-2 ring-red-400 ring-offset-2' : ''
                 }`}
                 aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
               >
@@ -216,12 +221,16 @@ const EventCard = ({
                   <>
                     <Heart 
                       key={animationKey}
-                      className={`w-5 h-5 transition-all duration-300 ${
-                        isFavorite ? 'fill-current scale-110' : 'group-hover/heart:scale-110'
+                      className={`w-5 h-5 transition-all duration-500 ${
+                        isFavorite ? 'fill-current scale-110 drop-shadow-lg' : 'group-hover/heart:scale-110'
                       } ${justToggled ? 'animate-bounce' : ''}`} 
                     />
-                    {justToggled && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                    {justToggled && isFavorite && (
+                      <>
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+                        <span className="absolute -top-2 -right-2 w-2 h-2 bg-red-400 rounded-full animate-ping" style={{ animationDelay: '0.2s' }} />
+                        <span className="absolute -top-3 -right-3 w-1.5 h-1.5 bg-red-300 rounded-full animate-ping" style={{ animationDelay: '0.4s' }} />
+                      </>
                     )}
                   </>
                 )}

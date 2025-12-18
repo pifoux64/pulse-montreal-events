@@ -8,7 +8,7 @@ import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
 import ModernLoader from '@/components/ModernLoader';
-import { Heart, Filter, Trash2, Share2, Calendar, MapPin } from 'lucide-react';
+import { Heart, Filter, Trash2, Share2, Calendar, MapPin, Search, ArrowUpDown, Grid, List } from 'lucide-react';
 import { usePersistentFilters } from '@/hooks/usePersistentFilters';
 import Link from 'next/link';
 
@@ -111,6 +111,8 @@ function FavorisPageContent() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [selectedEvents, setSelectedEvents] = useState<Set<string>>(new Set());
   const [isSelectMode, setIsSelectMode] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'title' | 'price'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
 
   // Application des filtres
   // Filtrage des événements avec useMemo pour éviter les boucles infinies
@@ -164,6 +166,31 @@ function FavorisPageContent() {
     return filtered;
   }, [favoriteEvents, filters.searchQuery, filters.categories, filters.subCategories, filters.dateRange, filters.priceRange]);
 
+  // Tri des événements filtrés
+  const sortedEvents = useMemo(() => {
+    const sorted = [...filteredEvents];
+    
+    sorted.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case 'date':
+          comparison = a.startDate.getTime() - b.startDate.getTime();
+          break;
+        case 'title':
+          comparison = a.title.localeCompare(b.title, 'fr');
+          break;
+        case 'price':
+          comparison = a.price.amount - b.price.amount;
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
+    });
+    
+    return sorted;
+  }, [filteredEvents, sortBy, sortOrder]);
+
   const handleFavoriteToggle = (eventId: string) => {
     toggleFavorite(eventId);
     setSelectedEvents(prev => {
@@ -198,10 +225,10 @@ function FavorisPageContent() {
   };
 
   const handleSelectAll = () => {
-    if (selectedEvents.size === filteredEvents.length) {
+    if (selectedEvents.size === sortedEvents.length) {
       setSelectedEvents(new Set());
     } else {
-      setSelectedEvents(new Set(filteredEvents.map(event => event.id)));
+      setSelectedEvents(new Set(sortedEvents.map(event => event.id)));
     }
   };
 
@@ -390,8 +417,48 @@ function FavorisPageContent() {
                 </button>
                 
                 <span className="text-gray-600">
-                  {filteredEvents.length} événement{filteredEvents.length > 1 ? 's' : ''} favori{filteredEvents.length > 1 ? 's' : ''}
+                  {sortedEvents.length} événement{sortedEvents.length > 1 ? 's' : ''} favori{sortedEvents.length > 1 ? 's' : ''}
                 </span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {/* Tri */}
+                <div className="flex items-center gap-2 border border-gray-300 rounded-lg bg-white">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as 'date' | 'title' | 'price')}
+                    className="px-3 py-2 border-none bg-transparent text-sm focus:outline-none"
+                  >
+                    <option value="date">Date</option>
+                    <option value="title">Titre</option>
+                    <option value="price">Prix</option>
+                  </select>
+                  <button
+                    onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                    className="px-2 py-2 hover:bg-gray-100 transition-colors"
+                    title={sortOrder === 'asc' ? 'Croissant' : 'Décroissant'}
+                  >
+                    <ArrowUpDown className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Vue */}
+                <div className="flex items-center border border-gray-300 rounded-lg bg-white">
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'} transition-colors`}
+                    title="Vue grille"
+                  >
+                    <Grid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'} transition-colors`}
+                    title="Vue liste"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -497,12 +564,12 @@ function FavorisPageContent() {
                     <label className="flex items-center space-x-2">
                       <input
                         type="checkbox"
-                        checked={selectedEvents.size === filteredEvents.length}
+                        checked={selectedEvents.size === sortedEvents.length && sortedEvents.length > 0}
                         onChange={handleSelectAll}
                         className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                       />
                       <span className="text-sm font-medium text-blue-900">
-                        {selectedEvents.size === filteredEvents.length ? 'Désélectionner tout' : 'Sélectionner tout'}
+                        {selectedEvents.size === sortedEvents.length && sortedEvents.length > 0 ? 'Désélectionner tout' : 'Sélectionner tout'}
                       </span>
                     </label>
                     <span className="text-sm text-blue-700">
@@ -514,13 +581,13 @@ function FavorisPageContent() {
             )}
 
             {/* Grille des événements */}
-            {filteredEvents.length > 0 ? (
+            {sortedEvents.length > 0 ? (
               <div className={`grid gap-6 ${
                 viewMode === 'grid' 
                   ? 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3' 
                   : 'grid-cols-1'
               }`}>
-                {filteredEvents.map((event) => (
+                {sortedEvents.map((event) => (
                   <div key={event.id} className="relative">
                     {/* Checkbox de sélection */}
                     {isSelectMode && (

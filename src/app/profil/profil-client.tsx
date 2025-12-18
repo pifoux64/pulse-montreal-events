@@ -3,8 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import { CheckCircle, ExternalLink, Loader2, Music, RefreshCw, Trash2, AlertCircle, Plus, X } from 'lucide-react';
+import { CheckCircle, ExternalLink, Loader2, Music, RefreshCw, Trash2, AlertCircle, Plus, X, Users, Calendar } from 'lucide-react';
 import { GENRES, EVENT_TYPES, AMBIANCES, PUBLICS, getStylesForGenre } from '@/lib/tagging/taxonomy';
 
 type MusicConnection = {
@@ -511,7 +512,123 @@ export default function ProfilClient() {
             </>
           )}
         </section>
+
+        <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-600" />
+                Mes organisateurs suivis
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Organisateurs que vous suivez pour recevoir des notifications sur leurs nouveaux événements.
+              </p>
+            </div>
+          </div>
+
+          <FollowingOrganizersList />
+        </section>
       </main>
+    </div>
+  );
+}
+
+// Composant pour afficher la liste des organisateurs suivis
+function FollowingOrganizersList() {
+  const [organizers, setOrganizers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadFollowing() {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/user/organizers/following');
+        if (!res.ok) throw new Error('Erreur lors du chargement');
+        const data = await res.json();
+        setOrganizers(data.organizers || []);
+      } catch (e: any) {
+        setError(e.message || 'Erreur inconnue');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadFollowing();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="mt-4 flex items-center gap-2 text-gray-600">
+        <Loader2 className="w-4 h-4 animate-spin" />
+        Chargement…
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+        {error}
+      </div>
+    );
+  }
+
+  if (organizers.length === 0) {
+    return (
+      <div className="mt-4 text-center py-8">
+        <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+        <p className="text-gray-600 mb-4">Vous ne suivez aucun organisateur pour le moment.</p>
+        <Link
+          href="/"
+          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Découvrir des organisateurs
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+      {organizers.map((org) => (
+        <Link
+          key={org.id}
+          href={`/organisateur/${org.id}`}
+          className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all"
+        >
+          <div className="flex items-start gap-3">
+            {org.user?.image ? (
+              <img
+                src={org.user.image}
+                alt={org.displayName}
+                className="w-12 h-12 rounded-full"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-emerald-500 rounded-full flex items-center justify-center text-white font-semibold">
+                {org.displayName.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900 truncate">{org.displayName}</h3>
+                {org.verified && (
+                  <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                )}
+              </div>
+              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  {org.eventsCount} événement{org.eventsCount !== 1 ? 's' : ''}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-4 h-4" />
+                  {org.followersCount} follower{org.followersCount !== 1 ? 's' : ''}
+                </span>
+              </div>
+            </div>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }

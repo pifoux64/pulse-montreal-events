@@ -7,6 +7,8 @@ import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventFilters from '@/components/EventFilters';
 import EventCard from '@/components/EventCard';
+import EventCardSkeleton from '@/components/EventCardSkeleton';
+import SearchBar from '@/components/SearchBar';
 import ModernLoader from '@/components/ModernLoader';
 import { MapPin, List, Grid, Filter, Search, Calendar, Users, Star, TrendingUp, Clock, Sparkles, ArrowRight, Play, Zap, Globe, Heart, Award, Music, Palette, Trophy, Users2, Utensils } from 'lucide-react';
 import { usePersistentFilters } from '@/hooks/usePersistentFilters';
@@ -515,35 +517,23 @@ export default function OptimizedHomePage() {
               <span className="font-semibold text-emerald-200">{events.length}</span> événements en temps réel · Concerts · Festivals · Expositions · Sports
             </p>
 
-            {/* Barre de recherche moderne */}
+            {/* Barre de recherche moderne avec suggestions */}
             <div className="max-w-2xl mx-auto mb-12">
-              <div className="rounded-3xl p-2 border border-white/15 bg-white/10 backdrop-blur-xl shadow-[0_30px_80px_-40px_rgba(15,118,110,0.8)]">
-                <div className="flex items-center">
-                  <Search className="w-6 h-6 text-slate-200 ml-4" />
-                  <input
-                    type="text"
-                    placeholder="Rechercher des événements, artistes, lieux..."
-                    value={filters.searchQuery ?? ''}
-                    onChange={(e) => setFilters((prev) => ({ ...prev, searchQuery: e.target.value }))}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        const eventsSection = document.getElementById('events-section');
-                        eventsSection?.scrollIntoView({ behavior: 'smooth' });
-                      }
-                    }}
-                    className="flex-1 px-4 py-4 bg-transparent text-slate-100 placeholder-slate-400 focus:outline-none text-lg"
-                  />
-                  <button 
-                    onClick={() => {
+              <SearchBar
+                onSearch={(query) => {
+                  setFilters((prev) => ({ ...prev, searchQuery: query }));
+                  if (query.trim()) {
+                    setTimeout(() => {
                       const eventsSection = document.getElementById('events-section');
                       eventsSection?.scrollIntoView({ behavior: 'smooth' });
-                    }}
-                    className="bg-gradient-to-r from-sky-500 via-emerald-500 to-emerald-400 text-white px-8 py-4 rounded-2xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg shadow-emerald-500/40"
-                  >
-                    Explorer
-                  </button>
-                </div>
-              </div>
+                    }, 100);
+                  }
+                }}
+                placeholder="Rechercher des événements, artistes, lieux..."
+                events={events}
+                showSuggestions={true}
+                debounceMs={300}
+              />
             </div>
 
             {/* Boutons d'action avec animations */}
@@ -676,6 +666,16 @@ export default function OptimizedHomePage() {
                   Impossible de charger les événements. Veuillez réessayer.
                 </p>
               </div>
+            </div>
+          ) : loading ? (
+            <div className={`grid gap-6 ${
+              viewMode === 'grid' 
+                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                : 'grid-cols-1'
+            }`}>
+              {Array.from({ length: 8 }).map((_, index) => (
+                <EventCardSkeleton key={`skeleton-${index}`} />
+              ))}
             </div>
           ) : (
             <div className={`grid gap-6 ${
