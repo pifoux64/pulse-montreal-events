@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Loader2, Calendar, RefreshCw, Eye, Edit3 } from 'lucide-react';
+import { Loader2, Calendar, RefreshCw, Eye, Edit3, CheckCircle, XCircle, Archive, Send } from 'lucide-react';
 import Link from 'next/link';
 import { toMontrealDateString } from '@/lib/utils';
 
@@ -57,6 +57,7 @@ export default function PulsePicksAdminPage() {
     longCaption: string;
     hashtags: string;
   } | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   // Rediriger si non admin
   useEffect(() => {
@@ -154,6 +155,33 @@ export default function PulsePicksAdminPage() {
       setSocialKitError(err.message || 'Erreur inattendue');
     } finally {
       setSocialKitLoading(false);
+    }
+  }
+
+  async function updateStatus(postId: string, newStatus: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED') {
+    try {
+      setUpdatingStatus(postId);
+      const res = await fetch(`/api/editorial/pulse-picks/${postId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: newStatus,
+          ...(newStatus === 'PUBLISHED' && { publishedAt: new Date().toISOString() }),
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Erreur lors de la mise à jour du statut');
+      }
+
+      // Rafraîchir la liste
+      await fetchPosts();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Erreur inattendue');
+    } finally {
+      setUpdatingStatus(null);
     }
   }
 
@@ -288,13 +316,14 @@ export default function PulsePicksAdminPage() {
                       {post.eventsOrder?.length ? ` • ${post.eventsOrder.length} événements` : ''}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center gap-2 text-xs flex-wrap">
                     <Link
                       href={`/top-5/${post.slug}`}
+                      target="_blank"
                       className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-100"
                     >
                       <Eye className="w-4 h-4" />
-                      Voir la page
+                      Voir
                     </Link>
                     <button
                       onClick={() => openSocialKit(post.id)}
@@ -303,14 +332,52 @@ export default function PulsePicksAdminPage() {
                       <Edit3 className="w-4 h-4" />
                       Social Kit
                     </button>
-                    {/* Placeholder pour future page d'édition détaillée */}
-                    {/* <Link
-                      href={`/admin/pulse-picks/${post.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-sky-600 hover:bg-sky-500 text-white"
-                    >
-                      <Edit3 className="w-4 h-4" />
-                      Éditer
-                    </Link> */}
+                    
+                    {/* Actions selon le statut */}
+                    {post.status === 'DRAFT' && (
+                      <button
+                        onClick={() => updateStatus(post.id, 'PUBLISHED')}
+                        disabled={updatingStatus === post.id}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50"
+                      >
+                        {updatingStatus === post.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4" />
+                        )}
+                        Publier
+                      </button>
+                    )}
+                    
+                    {post.status === 'PUBLISHED' && (
+                      <button
+                        onClick={() => updateStatus(post.id, 'ARCHIVED')}
+                        disabled={updatingStatus === post.id}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-600 hover:bg-slate-500 text-white disabled:opacity-50"
+                      >
+                        {updatingStatus === post.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Archive className="w-4 h-4" />
+                        )}
+                        Archiver
+                      </button>
+                    )}
+                    
+                    {post.status === 'ARCHIVED' && (
+                      <button
+                        onClick={() => updateStatus(post.id, 'PUBLISHED')}
+                        disabled={updatingStatus === post.id}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-sky-600 hover:bg-sky-500 text-white disabled:opacity-50"
+                      >
+                        {updatingStatus === post.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="w-4 h-4" />
+                        )}
+                        Republier
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
