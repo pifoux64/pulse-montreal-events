@@ -6,24 +6,12 @@
   "outputDirectory": ".next",
   "crons": [
     {
-      "path": "/api/cron/ingest",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/cron/personalized-notifications",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/ingestion",
-      "schedule": "0 * * * *"
-    },
-    {
-      "path": "/api/cron/recompute-taste-profiles",
+      "path": "/api/cron/daily",
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/weekly-digest",
-      "schedule": "0 10 * * 1"
+      "path": "/api/cron/hourly",
+      "schedule": "0 * * * *"
     }
   ],
   "env": {
