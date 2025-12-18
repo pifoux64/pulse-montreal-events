@@ -10,6 +10,8 @@ import { checkDuplicate } from './deduplication';
 import { OpenDataConnector } from './connectors/open-data-connector';
 import { RSSConnector } from './connectors/rss-connector';
 import { ICSConnector } from './connectors/ics-connector';
+import { BandsintownConnector } from './connectors/bandsintown-connector';
+import { enrichEventWithAICached } from './ai-enrichment';
 
 export interface ImportServiceResult {
   jobId: string;
@@ -67,7 +69,7 @@ export class ImportService {
 
   try {
       // Obtenir le connecteur approprié
-      const connector = this.getConnector(source.type);
+      const connector = this.getConnector(source.type, source.eventSource);
       if (!connector.isConfigured()) {
         throw new Error(`Connecteur ${source.type} non configuré`);
       }
@@ -251,8 +253,96 @@ export class ImportService {
       },
     });
 
-    // Ajouter les tags structurés si disponibles (via EventTag)
-    // TODO: Implémenter l'enrichissement IA pour générer les tags
+    // Enrichir avec l'IA et créer les tags structurés
+    await this.enrichEventWithTags(createdEvent.id, event);
+  }
+
+  /**
+   * Enrichit un événement avec des tags structurés via IA
+   */
+  private async enrichEventWithTags(
+    eventId: string,
+    event: NormalizedEvent
+  ): Promise<void> {
+    try {
+      // Vérifier si l'enrichissement IA est activé
+      if (process.env.DISABLE_TAG_ENRICHMENT === 'true') {
+        return; // Enrichissement désactivé
+      }
+
+      // Enrichir avec l'IA (avec cache)
+      const enrichment = await enrichEventWithAICached(event);
+
+      // Créer les EventTags
+      const tagsToCreate: Array<{ eventId: string; category: string; value: string }> = [];
+
+      // Genres
+      for (const genre of enrichment.genres) {
+        tagsToCreate.push({
+          eventId,
+          category: 'genre',
+          value: genre,
+        });
+      }
+
+      // Styles
+      for (const style of enrichment.styles) {
+        tagsToCreate.push({
+          eventId,
+          category: 'style',
+          value: style,
+        });
+      }
+
+      // Type
+      if (enrichment.type) {
+        tagsToCreate.push({
+          eventId,
+          category: 'type',
+          value: enrichment.type,
+        });
+      }
+
+      // Ambiance
+      for (const ambiance of enrichment.ambiance) {
+        tagsToCreate.push({
+          eventId,
+          category: 'ambiance',
+          value: ambiance,
+        });
+      }
+
+      // Public
+      for (const publicTag of enrichment.public) {
+        tagsToCreate.push({
+          eventId,
+          category: 'public',
+          value: publicTag,
+        });
+      }
+
+      // Créer les tags en batch
+      if (tagsToCreate.length > 0) {
+        await prisma.eventTag.createMany({
+          data: tagsToCreate,
+          skipDuplicates: true, // Éviter les doublons
+        });
+      }
+
+      // Mettre à jour isFree si détecté par l'IA
+      if (enrichment.isFree !== undefined) {
+        await prisma.event.update({
+          where: { id: eventId },
+          data: {
+            priceMin: enrichment.isFree ? 0 : undefined,
+            priceMax: enrichment.isFree ? 0 : undefined,
+          },
+        });
+      }
+    } catch (error: any) {
+      // Logger l'erreur mais ne pas faire échouer l'import
+      console.error(`Erreur lors de l'enrichissement IA pour l'événement ${eventId}:`, error);
+    }
   }
 
   /**
@@ -304,7 +394,7 @@ export class ImportService {
   /**
    * Obtient le connecteur approprié selon le type de source
    */
-  private getConnector(type: string): IConnector {
+  private getConnector(type: string, eventSource?: string): IConnector {
     switch (type) {
       case 'OPEN_DATA':
         return new OpenDataConnector();
@@ -312,6 +402,13 @@ export class ImportService {
         return new RSSConnector();
       case 'ICS':
         return new ICSConnector();
+      case 'API':
+        // Pour les APIs, on vérifie le eventSource pour déterminer le connecteur
+        if (eventSource === 'BANDSINTOWN') {
+          return new BandsintownConnector();
+        }
+        // Par défaut pour API, utiliser Bandsintown (peut être étendu plus tard)
+        return new BandsintownConnector();
       default:
         throw new Error(`Type de connecteur non supporté: ${type}`);
     }
