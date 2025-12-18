@@ -55,17 +55,20 @@ const EventCard = ({
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
     const wasFavorite = isFavorite;
+    
+    // Animation immédiate pour feedback visuel
     setJustToggled(true);
     setAnimationKey(prev => prev + 1);
     
-    // Track l'action
-    await trackFavorite({
+    // Track l'action (non-bloquant)
+    trackFavorite({
       eventId: event.id,
       action: wasFavorite ? 'remove' : 'add',
       userId: session?.user?.id,
-    });
+    }).catch(() => {}); // Ignorer les erreurs de tracking
     
-    await onFavoriteToggle(event.id);
+    // Toggle favori (non-bloquant pour meilleure UX)
+    onFavoriteToggle(event.id).catch(() => {});
     
     // Si on vient d'ajouter aux favoris (pas de retrait), afficher le prompt
     if (!wasFavorite) {
@@ -218,24 +221,32 @@ const EventCard = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Image avec design simplifié et lazy loading */}
-      {showImage && event.imageUrl && !imageError && (
+      {/* Image avec design simplifié et lazy loading optimisé */}
+      {showImage && (
         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
-          <Image
-            src={
-              event.imageUrl.startsWith('http') && 
-              !event.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
-                ? `/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`
-                : event.imageUrl
-            }
-            alt={event.title}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={() => setImageError(true)}
-            loading="lazy"
-            unoptimized={false}
-          />
+          {event.imageUrl && !imageError ? (
+            <Image
+              src={
+                event.imageUrl.startsWith('http') && 
+                !event.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
+                  ? `/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`
+                  : event.imageUrl
+              }
+              alt={event.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={() => setImageError(true)}
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
+              unoptimized={false}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-300 to-slate-400">
+              <Music className="w-12 h-12 text-slate-500" />
+            </div>
+          )}
           
           {/* Overlay subtil */}
           <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
@@ -334,7 +345,7 @@ const EventCard = ({
                   <>
                     <Heart 
                       key={animationKey}
-                      className={`w-5 h-5 transition-all duration-500 ${
+                      className={`w-5 h-5 transition-all duration-500 will-change-transform ${
                         isFavorite ? 'fill-current scale-110 drop-shadow-lg' : 'group-hover/heart:scale-110'
                       } ${justToggled ? 'animate-bounce' : ''}`} 
                     />
@@ -574,11 +585,8 @@ const EventCard = ({
             </button>
             
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // TODO: Implémenter le partage
-              }}
-              className="flex items-center space-x-1 text-sm text-slate-300 hover:text-blue-400 transition-colors duration-200"
+              onClick={handleShareClick}
+              className="flex items-center space-x-1 text-sm text-slate-300 hover:text-blue-400 transition-colors duration-200 will-change-[color]"
             >
               <Share2 className="w-4 h-4" />
               <span className="hidden sm:inline text-slate-200">Partager</span>

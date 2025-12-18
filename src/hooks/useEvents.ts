@@ -217,6 +217,8 @@ export const useEvents = () => {
     },
     staleTime: 2 * 60 * 1000, // 2 minutes - cohérent avec la config globale
     gcTime: 10 * 60 * 1000, // 10 minutes en cache
+    refetchOnWindowFocus: false, // Éviter les refetch inutiles
+    refetchOnMount: false, // Utiliser le cache si disponible
   });
 };
 

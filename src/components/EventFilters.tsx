@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Filter, X, Search, MapPin, Calendar, DollarSign, Users, Accessibility, Globe, Tag, Clock, TrendingUp, ArrowUpDown } from 'lucide-react';
 import { EventFilter, EventCategory } from '@/types';
 import { EVENT_TYPES, AMBIANCES, PUBLICS } from '@/lib/tagging/taxonomy';
+import { useDebounce } from '@/hooks/useDebounce';
 
 interface EventFiltersProps {
   filters: EventFilter;
@@ -189,6 +190,11 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
     onFiltersChange(newFilters);
   };
 
+  // Debounce de la recherche pour éviter trop d'appels API
+  const debouncedSearchQuery = useDebounce(localFilters.searchQuery || '', 400);
+
+  // Appliquer le debounce à la recherche (seulement pour l'affichage, pas pour les filtres)
+  // Les filtres sont mis à jour immédiatement pour une meilleure UX
   const handleSearchChange = (value: string) => {
     handleFilterChange('searchQuery', value);
     // Réinitialiser les explications IA quand l'utilisateur modifie manuellement
