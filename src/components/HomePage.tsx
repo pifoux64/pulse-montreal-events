@@ -205,8 +205,11 @@ interface HomePageProps {
 
 export default function HomePage({ searchParams: searchParamsProp }: HomePageProps = {}) {
   const router = useRouter();
-  const searchParamsFromHook = useSearchParams();
-  const searchParams = searchParamsProp || searchParamsFromHook;
+  // Utiliser searchParams en props si fourni, sinon utiliser le hook (nécessite Suspense)
+  const searchParams = searchParamsProp;
+  if (!searchParams) {
+    throw new Error('HomePage requires searchParams prop. Use HomePageContent wrapper.');
+  }
   const searchQuery = (searchParams.get('search') || '').trim().toLowerCase();
   
   // Récupérer les paramètres de date depuis l'URL pour déterminer le mode initial
