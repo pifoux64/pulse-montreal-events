@@ -38,14 +38,6 @@ export async function GET(request: NextRequest) {
             },
             _count: {
               select: {
-                events: {
-                  where: {
-                    status: 'SCHEDULED',
-                    startAt: {
-                      gte: new Date(),
-                    },
-                  },
-                },
                 followers: true,
               },
             },
@@ -57,13 +49,36 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Récupérer les IDs des organisateurs
+    const organizerIds = follows.map((f) => f.organizer.id);
+
+    // Compter les événements à venir pour tous les organisateurs en une seule requête
+    const eventsCounts = await prisma.event.groupBy({
+      by: ['organizerId'],
+      where: {
+        organizerId: { in: organizerIds },
+        status: 'SCHEDULED',
+        startAt: {
+          gte: new Date(),
+        },
+      },
+      _count: {
+        id: true,
+      },
+    });
+
+    // Créer un map pour un accès rapide
+    const eventsCountMap = new Map(
+      eventsCounts.map((e) => [e.organizerId, e._count.id])
+    );
+
     const organizers = follows.map((follow) => ({
       id: follow.organizer.id,
       displayName: follow.organizer.displayName,
       website: follow.organizer.website,
       verified: follow.organizer.verified,
       user: follow.organizer.user,
-      eventsCount: follow.organizer._count.events,
+      eventsCount: eventsCountMap.get(follow.organizer.id) || 0,
       followersCount: follow.organizer._count.followers,
       followedAt: follow.createdAt,
     }));
@@ -72,10 +87,13 @@ export async function GET(request: NextRequest) {
       organizers,
       count: organizers.length,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors de la récupération des organisateurs suivis:', error);
     return NextResponse.json(
-      { error: 'Erreur serveur' },
+      { 
+        error: error?.message || 'Erreur lors de la récupération des organisateurs suivis',
+        details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
+      },
       { status: 500 }
     );
   }

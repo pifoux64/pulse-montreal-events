@@ -482,13 +482,21 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
                 setAiConfidence(null);
                 setAiError(null);
               }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-full border transition-colors relative group ${
                 aiEnabled
-                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/50'
                   : 'bg-white text-gray-700 border-gray-300'
               }`}
+              title={aiEnabled ? 'Recherche IA activée - Cliquez pour désactiver' : 'Recherche IA désactivée - Cliquez pour activer'}
             >
-              IA
+              <span className="flex items-center gap-1">
+                <span className="relative">
+                  IA
+                  {aiEnabled && (
+                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  )}
+                </span>
+              </span>
             </button>
             <button
               type="button"

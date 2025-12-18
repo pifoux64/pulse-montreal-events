@@ -154,14 +154,19 @@ const EventCard = ({
       {showImage && event.imageUrl && !imageError && (
         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
           <Image
-            src={event.imageUrl}
+            src={
+              event.imageUrl.startsWith('http') && 
+              !event.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
+                ? `/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`
+                : event.imageUrl
+            }
             alt={event.title}
             fill
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             className="object-cover group-hover:scale-105 transition-transform duration-500"
             onError={() => setImageError(true)}
             loading="lazy"
-            unoptimized={event.imageUrl.startsWith('http') && !event.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || '')}
+            unoptimized={false}
           />
           
           {/* Overlay subtil */}

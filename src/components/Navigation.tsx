@@ -161,6 +161,21 @@ export default function Navigation() {
                       </div>
                       <span className="font-medium">Sport</span>
                     </Link>
+                    
+                    <div className="border-t border-white/10 my-1" />
+                    
+                    <Link
+                      href="/top-5"
+                      className="group/item flex items-center gap-3 px-4 py-3 text-sm text-slate-200 hover:text-white rounded-xl transition-all duration-200 hover:bg-gradient-to-r hover:from-amber-500/20 hover:to-orange-500/20 border border-transparent hover:border-amber-500/30"
+                    >
+                      <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 group-hover/item:scale-110 transition-transform">
+                        <Trophy className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <span className="font-medium">Top 5 Pulse Picks</span>
+                      <span className="ml-auto text-xs px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                        IA
+                      </span>
+                    </Link>
                   </div>
                   
                   {/* Effet de brillance en bas */}

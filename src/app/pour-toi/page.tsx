@@ -13,7 +13,8 @@ import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Event } from '@/types';
-import { Sparkles, Music, Heart, Loader2, AlertCircle, RefreshCw, Calendar } from 'lucide-react';
+import { Sparkles, Music, Heart, Loader2, AlertCircle, RefreshCw, Calendar, Trophy, Brain, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 // Types pour l'API de recommandations
 interface RecommendationEvent {
@@ -155,6 +156,19 @@ export default function PourToiPage() {
     return null;
   }
 
+  // Récupérer un Top 5 pertinent (le plus récent avec des événements)
+  const { data: top5Data } = useQuery({
+    queryKey: ['top5-for-recommendations'],
+    queryFn: async () => {
+      const response = await fetch('/api/editorial/pulse-picks/public?limit=1');
+      if (!response.ok) return null;
+      const data = await response.json();
+      // Prendre le premier Top 5 qui a des événements
+      return data.posts?.find((p: any) => p.eventsCount > 0) || data.posts?.[0] || null;
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  });
+
   // Récupérer les recommandations
   const {
     data: recommendationsData,
@@ -208,12 +222,67 @@ export default function PourToiPage() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="w-8 h-8 text-purple-600" />
-            <h1 className="text-4xl font-bold text-gray-900">Pour toi</h1>
+            <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-2">
+              Pour toi
+              <span className="text-sm px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-600 flex items-center gap-1">
+                <Brain className="w-3 h-3" />
+                IA
+              </span>
+            </h1>
           </div>
           <p className="text-lg text-gray-600">
             Découvrez des événements faits pour vous, basés sur vos goûts musicaux et préférences.
           </p>
         </div>
+
+        {/* Section Top 5 Pulse Picks */}
+        {top5Data && (
+          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 shadow-lg">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                  <Trophy className="w-6 h-6 text-amber-600" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    {top5Data.title}
+                    <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-700 flex items-center gap-1">
+                      <Brain className="w-3 h-3" />
+                      IA
+                    </span>
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Top 5 sélectionné par notre IA • {top5Data.eventsCount} événement{top5Data.eventsCount > 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`/top-5/${top5Data.slug}`}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors text-sm"
+              >
+                Voir le Top 5
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {top5Data.description && (
+              <p className="text-sm text-gray-700 mb-4 line-clamp-2">{top5Data.description}</p>
+            )}
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              <Calendar className="w-4 h-4" />
+              <span>
+                {new Date(top5Data.periodStart).toLocaleDateString('fr-CA', {
+                  month: 'long',
+                  day: 'numeric',
+                })}
+                {' - '}
+                {new Date(top5Data.periodEnd).toLocaleDateString('fr-CA', {
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Filtres de scope */}
         <div className="mb-6 flex flex-wrap gap-3">

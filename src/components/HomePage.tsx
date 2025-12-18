@@ -18,12 +18,14 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Event } from '@/types';
-import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter } from 'lucide-react';
+import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter, Sparkles, Trophy, ArrowRight, Brain } from 'lucide-react';
 import { toMontrealDateString } from '@/lib/utils';
+import Link from 'next/link';
 import { 
   MAIN_CATEGORIES, 
   GENRES, 
@@ -865,6 +867,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Sections IA : Top 5 et Recommandations */}
+      <HomePageAISections />
+
       {/* Liste d'événements - Design moderne */}
       <section className="px-4 pb-20 relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="max-w-7xl mx-auto relative">
@@ -1054,6 +1059,196 @@ export default function HomePage() {
         </div>
       </section>
     </div>
+  );
+}
+
+/**
+ * Sections IA : Top 5 Pulse Picks et Recommandations personnalisées
+ */
+function HomePageAISections() {
+  const { data: session } = useSession();
+  
+  // Récupérer les Top 5 publiés
+  const { data: top5Data, isLoading: top5Loading } = useQuery({
+    queryKey: ['pulse-picks-public'],
+    queryFn: async () => {
+      const res = await fetch('/api/editorial/pulse-picks/public?limit=3');
+      if (!res.ok) return { posts: [] };
+      return res.json();
+    },
+  });
+
+  // Récupérer les recommandations si connecté
+  const { data: recommendationsData, isLoading: recsLoading } = useQuery({
+    queryKey: ['recommendations-home', session?.user?.id],
+    queryFn: async () => {
+      if (!session?.user?.id) return { recommendations: [] };
+      const res = await fetch('/api/recommendations?limit=6&scope=all');
+      if (!res.ok) return { recommendations: [] };
+      return res.json();
+    },
+    enabled: !!session?.user?.id,
+  });
+
+  const top5Posts = top5Data?.posts || [];
+  const recommendations = recommendationsData?.recommendations || [];
+
+  // Ne rien afficher si pas de contenu
+  if (top5Posts.length === 0 && recommendations.length === 0) {
+    return null;
+  }
+
+  return (
+    <section className="px-4 py-12 relative bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-y border-white/5">
+      <div className="max-w-7xl mx-auto space-y-12">
+        {/* Section Top 5 Pulse Picks */}
+        {top5Posts.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
+                  <Trophy className="w-5 h-5 text-amber-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+                    Pulse Picks
+                    <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 flex items-center gap-1">
+                      <Brain className="w-3 h-3" />
+                      IA
+                    </span>
+                  </h2>
+                  <p className="text-sm text-slate-400 mt-1">Top 5 sélectionnés par notre IA</p>
+                </div>
+              </div>
+              <Link
+                href="/top-5"
+                className="text-sm text-sky-400 hover:text-sky-300 flex items-center gap-1"
+              >
+                Voir tous
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {top5Loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {top5Posts.map((post: any) => (
+                  <Link
+                    key={post.id}
+                    href={`/top-5/${post.slug}`}
+                    className="group p-5 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-amber-500/30 transition-all duration-300 hover:scale-105"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-white group-hover:text-amber-300 transition-colors">
+                          {post.title}
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-1">
+                          {post.eventsCount} événement{post.eventsCount > 1 ? 's' : ''}
+                        </p>
+                      </div>
+                      <div className="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-bold">
+                        Top 5
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <Calendar className="w-3 h-3" />
+                      <span>
+                        {new Date(post.periodStart).toLocaleDateString('fr-CA', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                        {' - '}
+                        {new Date(post.periodEnd).toLocaleDateString('fr-CA', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Section Recommandations personnalisées */}
+        {session?.user && recommendations.length > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
+                  <Sparkles className="w-5 h-5 text-purple-400" />
+                </div>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+                    Pour toi
+                    <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 flex items-center gap-1">
+                      <Brain className="w-3 h-3" />
+                      IA
+                    </span>
+                  </h2>
+                  <p className="text-sm text-slate-400 mt-1">Recommandations basées sur vos goûts</p>
+                </div>
+              </div>
+              <Link
+                href="/pour-toi"
+                className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1"
+              >
+                Voir tout
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+            {recsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {recommendations.slice(0, 6).map((rec: any) => {
+                  const event = rec.event;
+                  return (
+                    <div
+                      key={event.id}
+                      className="group p-4 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-purple-500/30 transition-all duration-300 hover:scale-105"
+                    >
+                      {event.imageUrl && (
+                        <div className="relative h-32 rounded-xl overflow-hidden mb-3 bg-gradient-to-br from-purple-600 to-pink-600">
+                          <img
+                            src={`/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`}
+                            alt={event.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      <h3 className="font-semibold text-white text-sm mb-1 line-clamp-2 group-hover:text-purple-300 transition-colors">
+                        {event.title}
+                      </h3>
+                      {event.venue?.name && (
+                        <p className="text-xs text-slate-400 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {event.venue.name}
+                        </p>
+                      )}
+                      {rec.score && (
+                        <div className="mt-2 text-xs text-purple-400">
+                          Score: {(rec.score * 100).toFixed(0)}%
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 

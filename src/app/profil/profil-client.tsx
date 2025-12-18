@@ -575,21 +575,32 @@ function FollowingOrganizersList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadFollowing() {
-      try {
-        setLoading(true);
-        const res = await fetch('/api/user/organizers/following');
-        if (!res.ok) throw new Error('Erreur lors du chargement');
-        const data = await res.json();
-        setOrganizers(data.organizers || []);
-      } catch (e: any) {
-        setError(e.message || 'Erreur inconnue');
-      } finally {
-        setLoading(false);
+  const loadFollowing = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await fetch('/api/user/organizers/following');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erreur ${res.status}: ${res.statusText}`);
       }
+      const data = await res.json();
+      setOrganizers(data.organizers || []);
+    } catch (e: any) {
+      // Gérer les erreurs réseau différemment des erreurs serveur
+      if (e.name === 'TypeError' && e.message.includes('fetch')) {
+        setError('Erreur de connexion. Vérifiez votre connexion internet.');
+      } else {
+        setError(e.message || 'Erreur lors du chargement des organisateurs suivis');
+      }
+      console.error('Erreur loadFollowing:', e);
+    } finally {
+      setLoading(false);
     }
-    loadFollowing();
+  };
+
+  useEffect(() => {
+    void loadFollowing();
   }, []);
 
   if (loading) {
@@ -603,8 +614,21 @@ function FollowingOrganizersList() {
 
   if (error) {
     return (
-      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-        {error}
+      <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="flex items-start gap-2">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-red-800 font-medium">Erreur lors du chargement</p>
+            <p className="text-red-700 text-sm mt-1">{error}</p>
+            <button
+              onClick={() => void loadFollowing()}
+              className="mt-3 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Réessayer
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
