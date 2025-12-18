@@ -38,6 +38,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.ticketm.net',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.universe.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.universe.com',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
   },

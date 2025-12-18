@@ -40,11 +40,11 @@ export default function Navigation() {
   }, [isUserMenuOpen]);
 
   const navigationItems = [
-    { name: t('map'), href: '/carte', icon: Map },
-    { name: t('calendar'), href: '/calendrier', icon: Calendar },
-    { name: 'Pour toi', href: '/pour-toi', icon: Sparkles },
-    { name: t('favorites'), href: '/favoris', icon: Heart },
-    { name: t('publish'), href: '/publier', icon: Plus },
+    { name: t('map'), href: '/carte', icon: Map, shortName: 'Carte' },
+    { name: t('calendar'), href: '/calendrier', icon: Calendar, shortName: 'Cal.' },
+    { name: 'Pour toi', href: '/pour-toi', icon: Sparkles, shortName: 'Pour toi' },
+    { name: t('favorites'), href: '/favoris', icon: Heart, shortName: 'Favoris' },
+    { name: t('publish'), href: '/publier', icon: Plus, shortName: 'Publier' },
   ];
 
   return (
@@ -74,7 +74,7 @@ export default function Navigation() {
 
           {/* Navigation desktop ultra-moderne */}
           <div className="hidden lg:block">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isFavorites = item.href === '/favoris';
@@ -82,34 +82,35 @@ export default function Navigation() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="group relative px-6 py-3 rounded-2xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-3"
+                    className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap"
+                    title={item.name}
                   >
                     {/* Background gradient on hover */}
-                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                     
-                    <div className="relative z-10">
-                      <Icon className="w-5 h-5" />
+                    <div className="relative z-10 flex-shrink-0">
+                      <Icon className="w-4 h-4" />
                       {isFavorites && favoritesCount > 0 && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs font-bold rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
                           {favoritesCount > 99 ? '99+' : favoritesCount}
                         </span>
                       )}
                     </div>
-                    <span className="relative z-10">{item.name}</span>
+                    <span className="relative z-10 text-xs">{item.shortName || item.name}</span>
                   </Link>
                 );
               })}
               
               {/* Menu déroulant "Découvrir" - Amélioré */}
               <div className="relative group">
-                <button className="group relative px-6 py-3 rounded-2xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-3">
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="relative z-10">
-                    <Compass className="w-5 h-5" />
+                <button className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap" title="Découvrir">
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="relative z-10 flex-shrink-0">
+                    <Compass className="w-4 h-4" />
                   </div>
-                  <span className="relative z-10">Découvrir</span>
-                  <div className="relative z-10 ml-1">
-                    <svg className="w-4 h-4 transition-transform group-hover:rotate-180 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="relative z-10 text-xs">Découvrir</span>
+                  <div className="relative z-10 ml-0.5 flex-shrink-0">
+                    <svg className="w-3 h-3 transition-transform group-hover:rotate-180 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
@@ -384,7 +385,7 @@ export default function Navigation() {
                           </span>
                         )}
                       </div>
-                      <span className="font-semibold text-slate-100">{item.name}</span>
+                      <span className="font-semibold text-slate-100 whitespace-nowrap">{item.name}</span>
                     </Link>
                   );
                 })}
