@@ -57,7 +57,8 @@ export default function Navigation() {
               <div
                 className="relative w-16 h-16 lg:w-20 lg:h-20 group-hover:scale-105 transition-all duration-300"
                 style={{
-                  animation: 'float-gentle 4s ease-in-out infinite, heartbeat 3.2s ease-in-out infinite'
+                  animation: 'float-gentle 4s ease-in-out infinite, heartbeat 3.2s ease-in-out infinite',
+                  position: 'relative' // Explicit pour éviter l'erreur Next.js Image
                 }}
               >
                 <Image

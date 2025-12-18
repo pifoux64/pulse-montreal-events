@@ -47,6 +47,13 @@ const nextConfig: NextConfig = {
         hostname: '*.universe.com',
       },
     ],
+    // Configuration pour Next.js 16 : autoriser les query strings sur /api/image-proxy
+    localPatterns: [
+      {
+        pathname: '/api/image-proxy',
+        search: '*', // Autoriser tous les query strings
+      },
+    ],
     formats: ['image/webp', 'image/avif'],
   },
 
