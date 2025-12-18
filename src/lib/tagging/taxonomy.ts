@@ -44,6 +44,7 @@ export const GENRES = [
   'afrobeat',      // Genre principal (styles: soukous, amapiano, afrobeats, etc.)
   'experimental',  // Genre principal (styles: noise, avant_garde, etc.)
   'world',         // Genre principal (styles: folk, traditional, etc.)
+  'classique',     // Genre principal (styles: baroque, romantique, contemporain, etc.)
   'other',         // Autre (genre non spécifié)
 ] as const;
 
@@ -239,6 +240,20 @@ export const MUSIC_STYLES: Record<string, readonly string[]> = {
     'traditional',
     'ethnic',
     'tribal',
+  ] as const,
+  
+  // Styles de CLASSIQUE
+  classique: [
+    'baroque',
+    'romantique',
+    'contemporain',
+    'opera',
+    'symphonie',
+    'chamber_music',
+    'orchestre',
+    'piano',
+    'violon',
+    'violoncelle',
   ] as const,
 } as const;
 

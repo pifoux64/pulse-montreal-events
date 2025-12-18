@@ -8,15 +8,36 @@ import { upsertPulsePicksPost, PulsePicksTheme } from '../src/lib/editorial/puls
 import { MONTREAL_TIMEZONE } from '../src/lib/utils';
 
 // Genres/thèmes pour lesquels générer des Top 5
+// Tous les genres musicaux + catégories générales
 const THEMES: PulsePicksTheme[] = [
-  'rock',
-  'electro',
-  'sound-system',
+  // Catégories générales
   'musique',
   'famille',
   'culture',
   'sport',
   'gratuit',
+  // Tous les genres musicaux
+  'reggae',
+  'hip_hop',
+  'pop',
+  'rnb',
+  'rock',
+  'heavy_metal',
+  'punk',
+  'jazz',
+  'soul',
+  'funk',
+  'blues',
+  'techno',
+  'house',
+  'trance',
+  'drum_and_bass',
+  'electronic',
+  'latin',
+  'afrobeat',
+  'experimental',
+  'world',
+  'classique',
 ];
 
 async function generateTop5ForAllThemes() {

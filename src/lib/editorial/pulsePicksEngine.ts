@@ -9,14 +9,34 @@ import { prisma } from '@/lib/prisma';
 import { MONTREAL_TIMEZONE, isFreeEvent } from '@/lib/utils';
 
 export type PulsePicksTheme =
+  // Catégories générales
   | 'famille'
   | 'culture'
   | 'sport'
   | 'musique'
   | 'gratuit'
+  // Genres musicaux (tous les genres de GENRES)
+  | 'reggae'
+  | 'hip_hop'
+  | 'pop'
+  | 'rnb'
   | 'rock'
-  | 'electro'
-  | 'sound-system';
+  | 'heavy_metal'
+  | 'punk'
+  | 'jazz'
+  | 'soul'
+  | 'funk'
+  | 'blues'
+  | 'techno'
+  | 'house'
+  | 'trance'
+  | 'drum_and_bass'
+  | 'electronic'
+  | 'latin'
+  | 'afrobeat'
+  | 'experimental'
+  | 'world'
+  | 'classique';
 
 export interface GeneratePicksOptions {
   theme: PulsePicksTheme;
@@ -42,8 +62,8 @@ function buildThemeFilters(theme: PulsePicksTheme) {
       };
     case 'culture':
       return {
-        category: 'EXHIBITION',
-        extraTagFilters: [{ category: 'type', value: 'culture' }],
+        category: 'EXHIBITION', // Utiliser EXHIBITION pour la culture (peut inclure THEATRE aussi)
+        extraTagFilters: [],
       };
     case 'sport':
       return {
@@ -60,20 +80,31 @@ function buildThemeFilters(theme: PulsePicksTheme) {
         category: undefined,
         extraTagFilters: [],
       };
+    // Tous les genres musicaux
+    case 'reggae':
+    case 'hip_hop':
+    case 'pop':
+    case 'rnb':
     case 'rock':
+    case 'heavy_metal':
+    case 'punk':
+    case 'jazz':
+    case 'soul':
+    case 'funk':
+    case 'blues':
+    case 'techno':
+    case 'house':
+    case 'trance':
+    case 'drum_and_bass':
+    case 'electronic':
+    case 'latin':
+    case 'afrobeat':
+    case 'experimental':
+    case 'world':
+    case 'classique':
       return {
         category: 'MUSIC',
-        extraTagFilters: [{ category: 'genre', value: 'rock' }],
-      };
-    case 'electro':
-      return {
-        category: 'MUSIC',
-        extraTagFilters: [{ category: 'genre', value: 'electro' }],
-      };
-    case 'sound-system':
-      return {
-        category: 'MUSIC',
-        extraTagFilters: [{ category: 'style', value: 'sound system' }],
+        extraTagFilters: [{ category: 'genre', value: theme }],
       };
   }
 }
@@ -111,25 +142,20 @@ function scoreEventForTheme(theme: PulsePicksTheme, event: any): number {
     if (hasCultureTag) score += 0.4;
   }
 
-  if (theme === 'rock') {
-    const hasRock = tags.some((t: any) => t.category === 'genre' && t.value.includes('rock'));
-    if (hasRock) score += 0.4;
-  }
-
-  if (theme === 'electro') {
-    const hasElectro = tags.some(
-      (t: any) => t.category === 'genre' && (t.value.includes('electro') || t.value.includes('techno'))
-    );
-    if (hasElectro) score += 0.4;
-  }
-
-  if (theme === 'sound-system') {
-    const hasSoundSystem = tags.some(
-      (t: any) =>
-        (t.category === 'style' && t.value.toLowerCase().includes('sound system')) ||
-        (t.category === 'genre' && t.value.toLowerCase().includes('dub'))
-    );
-    if (hasSoundSystem) score += 0.4;
+  // Pour tous les genres musicaux, vérifier si l'événement a le genre correspondant
+  const musicGenres: PulsePicksTheme[] = [
+    'reggae', 'hip_hop', 'pop', 'rnb', 'rock', 'heavy_metal', 'punk', 'jazz',
+    'soul', 'funk', 'blues', 'techno', 'house', 'trance', 'drum_and_bass',
+    'electronic', 'latin', 'afrobeat', 'experimental', 'world', 'classique'
+  ];
+  
+  if (musicGenres.includes(theme)) {
+    const hasGenre = tags.some((t: any) => t.category === 'genre' && t.value === theme);
+    if (hasGenre) score += 0.4;
+    
+    // Bonus si le style correspond aussi (ex: reggae -> dub, dancehall)
+    const hasStyle = tags.some((t: any) => t.category === 'style' && t.value.toLowerCase().includes(theme.toLowerCase()));
+    if (hasStyle) score += 0.2;
   }
 
   // Légère pénalisation des événements très éloignés dans le temps
