@@ -1,10 +1,15 @@
 /**
- * CRON Job quotidien - Plan Hobby Vercel (limite: 2 cron jobs, 1x/jour)
+ * CRON Job quotidien - Plan Hobby Vercel (limite: 1 cron job, 1x/jour)
  * 
- * Ce job combine toutes les tâches quotidiennes :
+ * Ce job combine TOUTES les tâches car sur le plan Hobby :
+ * - Maximum 2 cron jobs par compte
+ * - Maximum 1 déclenchement par jour (même avec schedule horaire)
+ * 
+ * Tâches combinées :
  * - Ingestion des événements (toutes les sources)
  * - Recalcul des profils de goûts utilisateurs
  * - Envoi du digest hebdomadaire (le lundi)
+ * - Vérification des nouveaux événements et notifications
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -12,6 +17,8 @@ import { prisma } from '@/lib/prisma';
 import { ImportService } from '@/lib/ingestion/import-service';
 import { buildUserTasteProfile } from '@/lib/recommendations/tasteProfileBuilder';
 import { sendEmailViaResend } from '@/lib/email/resend';
+import { checkAndSendGenreNotifications } from '@/lib/notifications/personalizedNotifications';
+import { sendEventPostPushNotifications } from '@/lib/notifications/push';
 import { logger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
@@ -34,6 +41,7 @@ export async function POST(request: NextRequest) {
       ingestion: { success: false, eventsImported: 0, errors: [] },
       tasteProfiles: { success: false, profilesUpdated: 0, errors: [] },
       weeklyDigest: { success: false, emailsSent: 0, errors: [] },
+      notifications: { success: false, notificationsSent: 0, errors: [] },
     };
 
     // 1. Ingestion des événements
@@ -176,6 +184,57 @@ export async function POST(request: NextRequest) {
       }
     } else {
       logger.info('Pas de digest hebdomadaire (pas un lundi)');
+    }
+
+    // 4. Vérification des nouveaux événements et notifications (24h)
+    try {
+      logger.info('Début de la vérification des notifications');
+      
+      // Calculer la date d'il y a 24 heures
+      const oneDayAgo = new Date();
+      oneDayAgo.setHours(oneDayAgo.getHours() - 24);
+
+      // Récupérer les nouveaux événements créés dans les dernières 24h
+      const newEvents = await prisma.event.findMany({
+        where: {
+          status: 'SCHEDULED',
+          createdAt: {
+            gte: oneDayAgo,
+          },
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (newEvents.length > 0) {
+        logger.info(`${newEvents.length} nouveaux événements détectés dans les dernières 24h`);
+
+        let totalNotifications = 0;
+        for (const event of newEvents) {
+          try {
+            // Notifications basées sur les genres musicaux
+            const genreNotifications = await checkAndSendGenreNotifications(event.id);
+            totalNotifications += genreNotifications || 0;
+
+            // Notifications push pour les événements
+            await sendEventPostPushNotifications(event.id);
+          } catch (error) {
+            results.notifications.errors.push(`Event ${event.id}: ${error}`);
+            logger.error(`Erreur lors de l'envoi de notifications pour l'événement ${event.id}`, error);
+          }
+        }
+
+        results.notifications.success = true;
+        results.notifications.notificationsSent = totalNotifications;
+        logger.info(`Notifications envoyées: ${totalNotifications}`);
+      } else {
+        logger.info('Aucun nouvel événement dans les dernières 24h');
+        results.notifications.success = true;
+      }
+    } catch (error) {
+      results.notifications.errors.push(String(error));
+      logger.error('Erreur lors de la vérification des notifications', error);
     }
 
     return NextResponse.json({
