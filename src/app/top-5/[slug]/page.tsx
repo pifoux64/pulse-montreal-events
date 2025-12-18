@@ -14,6 +14,14 @@ interface Top5PageProps {
 export async function generateMetadata({ params }: Top5PageProps): Promise<Metadata> {
   const post = await prisma.editorialPost.findUnique({
     where: { slug: params.slug },
+    include: {
+      events: {
+        take: 1,
+        select: {
+          imageUrl: true,
+        },
+      },
+    },
   });
 
   if (!post) {
@@ -23,12 +31,43 @@ export async function generateMetadata({ params }: Top5PageProps): Promise<Metad
   }
 
   const title = post.title || `Top 5 ${post.theme} à Montréal`;
+  const description = post.description ||
+    `Découvrez la sélection Pulse des meilleurs événements ${post.theme} à Montréal pour la période du ${post.periodStart.toLocaleDateString('fr-CA')} au ${post.periodEnd.toLocaleDateString('fr-CA')}.`;
+  
+  const canonical = `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/top-5/${post.slug}`;
+  const ogImage = post.events[0]?.imageUrl 
+    ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/api/og/top5/${post.slug}`
+    : `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-top5-default.png`;
 
   return {
-    title,
-    description:
-      post.description ||
-      `Découvrez la sélection Pulse des meilleurs événements ${post.theme} à Montréal pour la période du ${post.periodStart.toDateString()} au ${post.periodEnd.toDateString()}.`,
+    title: `${title} | Pulse Montréal`,
+    description,
+    alternates: {
+      canonical,
+    },
+    openGraph: {
+      type: 'article',
+      locale: 'fr_CA',
+      url: canonical,
+      title,
+      description,
+      siteName: 'Pulse Montréal',
+      publishedTime: post.publishedAt?.toISOString(),
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
+    },
   };
 }
 

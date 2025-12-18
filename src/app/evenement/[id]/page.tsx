@@ -89,7 +89,9 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         tags: event.tags,
         images: [
           {
-            url: event.imageUrl || '/og-event-default.png',
+            url: event.imageUrl 
+              ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/api/og/event/${event.id}`
+              : `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-event-default.png`,
             width: 1200,
             height: 630,
             alt: event.title,
@@ -100,7 +102,11 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
         card: 'summary_large_image',
         title: event.title,
         description: descriptionSnippet,
-        images: [event.imageUrl || '/og-event-default.png'],
+        images: [
+          event.imageUrl 
+            ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/api/og/event/${event.id}`
+            : `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-event-default.png`
+        ],
       },
       other: {
         'event:start_time': event.startAt.toISOString(),
@@ -185,7 +191,13 @@ export default async function EventPage({ params }: { params: { id: string } }) 
 
               {/* Action Buttons */}
               <div className="absolute top-4 right-4">
-                <EventDetailActions eventId={event.id} eventTitle={event.title} />
+                <EventDetailActions 
+                  eventId={event.id} 
+                  eventTitle={event.title}
+                  eventVenue={event.venue}
+                  eventStartAt={event.startAt}
+                  eventNeighborhood={event.venue?.neighborhood || null}
+                />
               </div>
 
               {/* Event Title & Basic Info */}

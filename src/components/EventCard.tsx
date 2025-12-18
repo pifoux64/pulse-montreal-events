@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Heart, MapPin, Calendar, DollarSign, Users, Star, Share2, ExternalLink, Clock, Music, User, LogIn, Loader2 } from 'lucide-react';
+import { generateEventShareText, shareWithWebAPI, copyToClipboard, addUtmParams } from '@/lib/sharing/shareUtils';
+import { trackShareClick, trackShareSuccess, trackFavorite } from '@/lib/analytics/tracking';
+import SaveAndSharePrompt from './SaveAndSharePrompt';
 import { Event } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -44,15 +47,75 @@ const EventCard = ({
     }
   }, [justToggled]);
   
-  const handleFavoriteClick = (e: React.MouseEvent) => {
+  const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    const wasFavorite = isFavorite;
     setJustToggled(true);
     setAnimationKey(prev => prev + 1);
-    onFavoriteToggle(event.id);
+    
+    // Track l'action
+    await trackFavorite({
+      eventId: event.id,
+      action: wasFavorite ? 'remove' : 'add',
+      userId: session?.user?.id,
+    });
+    
+    await onFavoriteToggle(event.id);
+    
+    // Si on vient d'ajouter aux favoris (pas de retrait), afficher le prompt
+    if (!wasFavorite) {
+      // Attendre un court délai pour laisser le temps à l'état de se mettre à jour
+      setTimeout(() => {
+        setWasJustAddedToFavorites(true);
+        setShowSaveAndSharePrompt(true);
+        // Auto-dismiss après 5 secondes
+        setTimeout(() => {
+          setShowSaveAndSharePrompt(false);
+          setWasJustAddedToFavorites(false);
+        }, 5000);
+      }, 200);
+    }
+  };
+
+  const handleShareClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await trackShareClick('event', event.id);
+    
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+    const eventUrl = addUtmParams(`${baseUrl}/evenement/${event.id}`, 'share', 'link');
+    const shareText = generateEventShareText({
+      title: event.title,
+      venue: event.location,
+      startAt: event.startDate,
+      neighborhood: event.location.name,
+    });
+
+    const success = await shareWithWebAPI({
+      title: event.title,
+      text: shareText,
+      url: eventUrl,
+      eventId: event.id,
+      context: 'event',
+    });
+
+    if (!success) {
+      // Fallback: copier le lien
+      await copyToClipboard(eventUrl);
+    }
+
+    await trackShareSuccess({
+      context: 'event',
+      method: success ? 'web_share' : 'copy',
+      eventId: event.id,
+      success,
+      userId: session?.user?.id,
+    });
   };
   const [imageError, setImageError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [showSaveAndSharePrompt, setShowSaveAndSharePrompt] = useState(false);
+  const [wasJustAddedToFavorites, setWasJustAddedToFavorites] = useState(false);
 
   // Générer des tags enrichis avec détection musicale
   const enrichedTags = generateMusicTags({
@@ -189,8 +252,18 @@ const EventCard = ({
             )}
           </div>
           
-          {/* Favori avec effet moderne */}
-          <div className="absolute top-4 right-4">
+          {/* Actions (Favori + Partage) */}
+          <div className="absolute top-4 right-4 flex gap-2">
+            {/* Bouton Partage */}
+            <button
+              onClick={handleShareClick}
+              className="p-3 rounded-2xl transition-all duration-300 glass-effect border border-white/30 text-gray-600 hover:text-blue-500 hover:scale-110"
+              aria-label="Partager cet événement"
+            >
+              <Share2 className="w-5 h-5 transition-all duration-300" />
+            </button>
+            
+            {/* Favori avec effet moderne */}
             {!isAuthenticated && !isFavorite && (
               <div className="relative">
                 <button
@@ -501,6 +574,21 @@ const EventCard = ({
           )}
         </div>
       </div>
+
+      {/* Save & Share Prompt */}
+      {showSaveAndSharePrompt && wasJustAddedToFavorites && (
+        <SaveAndSharePrompt
+          eventId={event.id}
+          eventTitle={event.title}
+          eventVenue={event.location}
+          eventStartAt={event.startDate}
+          eventNeighborhood={event.location.name}
+          onDismiss={() => {
+            setShowSaveAndSharePrompt(false);
+            setWasJustAddedToFavorites(false);
+          }}
+        />
+      )}
     </div>
   );
 };

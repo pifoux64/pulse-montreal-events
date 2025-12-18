@@ -2,16 +2,22 @@
 
 /**
  * Modal de partage d'événement avec QR code et options de partage social
+ * Sprint V1: Amélioré avec Web Share API, deep links WhatsApp/Messenger/SMS, et tracking
  */
 
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
-import { X, Copy, Share2, Facebook, Twitter, Linkedin, QrCode, Check } from 'lucide-react';
+import { X, Copy, Share2, Facebook, Twitter, Linkedin, QrCode, Check, MessageCircle, MessageSquare, Phone } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { generateEventShareText, generateDeepLinks, shareWithWebAPI, copyToClipboard, addUtmParams } from '@/lib/sharing/shareUtils';
+import { trackShareClick, trackShareSuccess } from '@/lib/analytics/tracking';
 
 interface EventShareModalProps {
   eventId: string;
   eventTitle: string;
+  eventVenue?: { name: string } | null;
+  eventStartAt?: Date;
+  eventNeighborhood?: string | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -19,6 +25,9 @@ interface EventShareModalProps {
 export default function EventShareModal({
   eventId,
   eventTitle,
+  eventVenue,
+  eventStartAt,
+  eventNeighborhood,
   isOpen,
   onClose,
 }: EventShareModalProps) {
@@ -28,56 +37,88 @@ export default function EventShareModal({
 
   if (!isOpen) return null;
 
-  const eventUrl = typeof window !== 'undefined' 
-    ? `${window.location.origin}/evenement/${eventId}`
-    : '';
-  const shareText = `Découvrez cet événement : ${eventTitle}`;
+  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+  const eventUrl = addUtmParams(`${baseUrl}/evenement/${eventId}`, 'share', 'link');
+  
+  // Générer un texte de partage intelligent basé sur la date
+  const shareText = eventStartAt
+    ? generateEventShareText({
+        title: eventTitle,
+        venue: eventVenue,
+        startAt: eventStartAt,
+        neighborhood: eventNeighborhood,
+      })
+    : `Découvrez cet événement : ${eventTitle}`;
+
+  const deepLinks = generateDeepLinks(eventUrl, shareText);
 
   const handleCopyLink = async () => {
-    try {
-      await navigator.clipboard.writeText(eventUrl);
+    await trackShareClick('event', eventId);
+    const success = await copyToClipboard(eventUrl);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      console.error('Erreur lors de la copie:', error);
+      await trackShareSuccess({
+        context: 'event',
+        method: 'copy',
+        eventId,
+        success: true,
+        userId: session?.user?.id,
+      });
     }
   };
 
-  const handleShare = async (platform: 'native' | 'facebook' | 'twitter' | 'linkedin') => {
-    // SPRINT 2: Tracker l'interaction SHARE
-    if (session?.user?.id) {
-      fetch('/api/user/interactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId, type: 'SHARE' }),
-      }).catch(() => {
-        // Ignorer les erreurs de tracking
-      });
-    }
+  const handleShare = async (method: 'web_share' | 'whatsapp' | 'messenger' | 'sms' | 'facebook' | 'twitter' | 'linkedin') => {
+    await trackShareClick('event', eventId);
 
-    if (platform === 'native') {
-      try {
-        if (navigator.share) {
-          await navigator.share({
-            title: eventTitle,
-            text: shareText,
-            url: eventUrl,
-          });
-        } else {
-          await handleCopyLink();
-        }
-      } catch (error: any) {
-        if (error.name !== 'AbortError') {
-          await handleCopyLink();
-        }
+    let success = false;
+
+    if (method === 'web_share') {
+      success = await shareWithWebAPI({
+        title: eventTitle,
+        text: shareText,
+        url: eventUrl,
+        eventId,
+        context: 'event',
+      });
+      if (!success) {
+        // Fallback vers copie si Web Share API n'est pas disponible
+        await handleCopyLink();
+        return;
+      }
+    } else if (method === 'whatsapp' || method === 'messenger' || method === 'sms') {
+      const link = deepLinks[method];
+      if (link) {
+        window.open(link, '_blank');
+        success = true;
       }
     } else {
+      // Facebook, Twitter, LinkedIn
       const urls: Record<string, string> = {
         facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`,
         twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(eventUrl)}`,
         linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(eventUrl)}`,
       };
-      window.open(urls[platform], '_blank', 'width=600,height=400');
+      window.open(urls[method], '_blank', 'width=600,height=400');
+      success = true;
+    }
+
+    // Track le succès
+    await trackShareSuccess({
+      context: 'event',
+      method,
+      eventId,
+      success,
+      userId: session?.user?.id,
+    });
+
+    // Track aussi dans l'ancien système pour compatibilité
+    if (session?.user?.id) {
+      fetch('/api/user/interactions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ eventId, type: 'SHARE' }),
+      }).catch(() => {});
     }
   };
 
@@ -159,13 +200,45 @@ export default function EventShareModal({
                   Partager sur
                 </label>
                 <div className="grid grid-cols-2 gap-3">
+                  {/* Web Share API (mobile) */}
+                  {typeof navigator !== 'undefined' && navigator.share && (
+                    <button
+                      onClick={() => handleShare('web_share')}
+                      className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Share2 className="w-5 h-5 text-gray-600" />
+                      <span className="text-sm font-medium text-gray-700">Partager</span>
+                    </button>
+                  )}
+                  
+                  {/* WhatsApp (desktop) */}
                   <button
-                    onClick={() => handleShare('native')}
+                    onClick={() => handleShare('whatsapp')}
+                    className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-green-50 transition-colors"
+                  >
+                    <MessageCircle className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-gray-700">WhatsApp</span>
+                  </button>
+                  
+                  {/* Messenger */}
+                  <button
+                    onClick={() => handleShare('messenger')}
+                    className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    <MessageSquare className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-gray-700">Messenger</span>
+                  </button>
+                  
+                  {/* SMS */}
+                  <button
+                    onClick={() => handleShare('sms')}
                     className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <Share2 className="w-5 h-5 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">Partager</span>
+                    <Phone className="w-5 h-5 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">SMS</span>
                   </button>
+                  
+                  {/* QR Code */}
                   <button
                     onClick={() => setShowQR(true)}
                     className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -173,6 +246,8 @@ export default function EventShareModal({
                     <QrCode className="w-5 h-5 text-gray-600" />
                     <span className="text-sm font-medium text-gray-700">QR Code</span>
                   </button>
+                  
+                  {/* Facebook */}
                   <button
                     onClick={() => handleShare('facebook')}
                     className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-blue-50 transition-colors"
@@ -180,12 +255,23 @@ export default function EventShareModal({
                     <Facebook className="w-5 h-5 text-blue-600" />
                     <span className="text-sm font-medium text-gray-700">Facebook</span>
                   </button>
+                  
+                  {/* Twitter */}
                   <button
                     onClick={() => handleShare('twitter')}
                     className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-sky-50 transition-colors"
                   >
                     <Twitter className="w-5 h-5 text-sky-500" />
                     <span className="text-sm font-medium text-gray-700">Twitter</span>
+                  </button>
+                  
+                  {/* LinkedIn */}
+                  <button
+                    onClick={() => handleShare('linkedin')}
+                    className="flex items-center gap-2 px-4 py-3 border border-gray-300 rounded-lg hover:bg-blue-50 transition-colors"
+                  >
+                    <Linkedin className="w-5 h-5 text-blue-700" />
+                    <span className="text-sm font-medium text-gray-700">LinkedIn</span>
                   </button>
                 </div>
               </div>

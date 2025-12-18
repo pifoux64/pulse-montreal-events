@@ -11,9 +11,18 @@ import EventShareModal from './EventShareModal';
 interface EventDetailActionsProps {
   eventId: string;
   eventTitle: string;
+  eventVenue?: { name: string } | null;
+  eventStartAt?: Date;
+  eventNeighborhood?: string | null;
 }
 
-export default function EventDetailActions({ eventId, eventTitle }: EventDetailActionsProps) {
+export default function EventDetailActions({ 
+  eventId, 
+  eventTitle,
+  eventVenue,
+  eventStartAt,
+  eventNeighborhood,
+}: EventDetailActionsProps) {
   const { data: session, status } = useSession();
   const pathname = usePathname();
   const isAuthenticated = status === 'authenticated';
@@ -129,6 +138,9 @@ export default function EventDetailActions({ eventId, eventTitle }: EventDetailA
       <EventShareModal
         eventId={eventId}
         eventTitle={eventTitle}
+        eventVenue={eventVenue}
+        eventStartAt={eventStartAt}
+        eventNeighborhood={eventNeighborhood}
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
       />

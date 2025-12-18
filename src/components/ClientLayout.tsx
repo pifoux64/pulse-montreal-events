@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppWrapper from './AppWrapper';
+import LandingViewTracker from './LandingViewTracker';
 
 interface ClientLayoutProps {
   children: React.ReactNode;
@@ -104,6 +105,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
   // Afficher le contenu immédiatement
   return (
     <AppWrapper>
+      <LandingViewTracker />
       {children}
     </AppWrapper>
   );
