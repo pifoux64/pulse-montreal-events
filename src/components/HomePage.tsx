@@ -17,7 +17,8 @@
 
 import { useState, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
+import type { ReadonlyURLSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
@@ -26,6 +27,7 @@ import { Event } from '@/types';
 import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter, Sparkles, Trophy, ArrowRight, Brain, TrendingUp, Flame } from 'lucide-react';
 import { toMontrealDateString } from '@/lib/utils';
 import Link from 'next/link';
+import Image from 'next/image';
 import { 
   MAIN_CATEGORIES, 
   GENRES, 
@@ -197,9 +199,14 @@ const transformApiEvent = (event: ApiEvent): Event => {
 
 type Mode = 'today' | 'weekend' | 'custom';
 
-export default function HomePage() {
+interface HomePageProps {
+  searchParams?: ReadonlyURLSearchParams;
+}
+
+export default function HomePage({ searchParams: searchParamsProp }: HomePageProps = {}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParamsFromHook = useSearchParams();
+  const searchParams = searchParamsProp || searchParamsFromHook;
   const searchQuery = (searchParams.get('search') || '').trim().toLowerCase();
   
   // Récupérer les paramètres de date depuis l'URL pour déterminer le mode initial
