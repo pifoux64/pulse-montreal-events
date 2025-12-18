@@ -22,13 +22,6 @@ export async function GET(request: NextRequest) {
         { periodStart: 'desc' },  // Puis par période
       ],
       take: limit,
-      include: {
-        _count: {
-          select: {
-            // Pas de relation directe, mais on peut compter les eventsOrder
-          },
-        },
-      },
     });
 
     // Enrichir avec le nombre d'événements

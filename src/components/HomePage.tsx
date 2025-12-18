@@ -1083,6 +1083,9 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
  * Sprint V2: Social proof + trending
  */
 function HomePageTrendingSections() {
+  // IMPORTANT: Tous les hooks doivent être appelés AVANT tout return conditionnel
+  // pour respecter les règles des hooks React
+  
   // Récupérer les événements trending pour aujourd'hui
   const { data: trendingTodayData, isLoading: trendingTodayLoading } = useQuery({
     queryKey: ['trending-today'],
@@ -1107,6 +1110,9 @@ function HomePageTrendingSections() {
     refetchOnMount: true,
   });
 
+  // Appeler useFavorites AVANT le return conditionnel
+  const { favorites, isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites();
+
   const trendingToday = trendingTodayData?.events || [];
   const trendingWeekend = trendingWeekendData?.events || [];
 
@@ -1114,8 +1120,6 @@ function HomePageTrendingSections() {
   if (trendingToday.length === 0 && trendingWeekend.length === 0) {
     return null;
   }
-
-  const { favorites, isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites();
 
   // Transformer les événements trending en format Event
   const transformTrendingEvent = (trendingEvent: any): Event => {
