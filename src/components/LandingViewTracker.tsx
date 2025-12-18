@@ -5,11 +5,11 @@
  * Sprint V1: Instrumentation
  */
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { trackLandingView } from '@/lib/analytics/tracking';
 
-export default function LandingViewTracker() {
+function LandingViewTrackerContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
@@ -31,5 +31,13 @@ export default function LandingViewTracker() {
   }, [pathname, searchParams]);
 
   return null; // Ce composant ne rend rien
+}
+
+export default function LandingViewTracker() {
+  return (
+    <Suspense fallback={null}>
+      <LandingViewTrackerContent />
+    </Suspense>
+  );
 }
 

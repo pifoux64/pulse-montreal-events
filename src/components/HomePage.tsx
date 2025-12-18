@@ -15,7 +15,7 @@
  * - Responsive
  */
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';

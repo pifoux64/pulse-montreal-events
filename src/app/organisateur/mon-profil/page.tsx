@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { User, Globe, Facebook, Instagram, Twitter, Linkedin, Save, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+
+export const dynamic = 'force-dynamic';
 
 interface OrganizerProfile {
   id: string;

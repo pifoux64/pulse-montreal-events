@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
-import { notFound } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import EventCard from '@/components/EventCard';
+import CeSoirPageClient from './CeSoirPageClient';
 import { prisma } from '@/lib/prisma';
 import { Event } from '@/types';
 
@@ -149,25 +148,7 @@ export default async function CeSoirPage() {
           </p>
         </div>
 
-        {events.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center">
-            <p className="text-gray-600">
-              Aucun événement prévu ce soir. Découvrez les événements de demain ou ce week-end.
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                onFavoriteToggle={async () => {}}
-                isFavorite={false}
-                isFavoriteLoading={false}
-              />
-            ))}
-          </div>
-        )}
+        <CeSoirPageClient events={events} />
       </main>
     </div>
   );
