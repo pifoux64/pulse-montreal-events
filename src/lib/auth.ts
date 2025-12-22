@@ -64,6 +64,15 @@ if (
             port,
             auth,
             secure: false, // STARTTLS
+            // Options de timeout pour éviter "Greeting never received"
+            connectionTimeout: 10000, // 10 secondes pour établir la connexion
+            greetingTimeout: 10000, // 10 secondes pour recevoir le greeting
+            socketTimeout: 10000, // 10 secondes pour les opérations socket
+            // Options de retry
+            pool: false, // Désactiver le pool pour éviter les connexions persistantes qui timeout
+            // Options de debug (désactivé en production)
+            debug: process.env.NODE_ENV === 'development',
+            logger: process.env.NODE_ENV === 'development',
           });
 
           const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca';
