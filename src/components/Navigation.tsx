@@ -347,9 +347,9 @@ export default function Navigation() {
       {/* Menu mobile moderne !*/}
       {isMenuOpen && (
         <>
-          {/* Overlay pour fermer le menu */}
+          {/* Overlay pour fermer le menu - commence sous la nav */}
           <div 
-            className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[55] top-20"
+            className="lg:hidden fixed top-20 left-0 right-0 bottom-0 bg-black/50 backdrop-blur-sm z-[55]"
             onClick={() => setIsMenuOpen(false)}
           />
           {/* Menu mobile */}
