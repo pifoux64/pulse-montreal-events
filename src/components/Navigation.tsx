@@ -48,7 +48,7 @@ export default function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-slate-950/70 backdrop-blur-2xl border-b border-white/10 shadow-[0_20px_60px_-40px_rgba(15,118,110,0.8)]">
+    <nav className="fixed top-0 left-0 right-0 z-[50] bg-slate-950/70 backdrop-blur-2xl border-b border-white/10 shadow-[0_20px_60px_-40px_rgba(15,118,110,0.8)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20 text-slate-100">
           {/* Logo avec animation float ajustée */}
@@ -346,8 +346,15 @@ export default function Navigation() {
 
       {/* Menu mobile moderne !*/}
       {isMenuOpen && (
-        <div className="lg:hidden border-t border-white/10 bg-slate-950/90 backdrop-blur-xl shadow-xl fixed top-20 left-0 right-0 bottom-0 overflow-y-auto overscroll-contain z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-8">
+        <>
+          {/* Overlay pour fermer le menu */}
+          <div 
+            className="lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[55] top-20"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          {/* Menu mobile */}
+          <div className="lg:hidden border-t border-white/10 bg-slate-950/90 backdrop-blur-xl shadow-xl fixed top-20 left-0 right-0 bottom-0 overflow-y-auto overscroll-contain z-[60]">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-8">
             <div className="space-y-4">
               {/* Barre de recherche mobile */}
               <div className="relative">
@@ -561,7 +568,8 @@ export default function Navigation() {
               </div>
             </div>
           </div>
-        </div>
+          </div>
+        </>
       )}
     </nav>
   );
