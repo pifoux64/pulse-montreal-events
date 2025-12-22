@@ -154,9 +154,9 @@ const transformApiEvent = (event: ApiEvent): Event => {
       new Set([...(event.tags || []), ...normalizedStructured]),
     ),
     price: { 
-      amount: (event.priceMin ?? 0) / 100, // Convertir de cents en dollars si nécessaire
+      amount: event.priceMin != null ? event.priceMin / 100 : 0, // Convertir de cents en dollars si nécessaire
       currency: event.currency || 'CAD', 
-      isFree: (event.priceMin ?? 0) === 0
+      isFree: event.priceMin === 0 && event.priceMin != null // Gratuit seulement si explicitement 0
     },
     imageUrl: event.imageUrl || null,
     ticketUrl: event.url || '#',

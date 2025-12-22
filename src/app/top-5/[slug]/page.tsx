@@ -34,7 +34,9 @@ export async function generateMetadata({ params }: Top5PageProps): Promise<Metad
     `Découvrez la sélection Pulse des meilleurs événements ${post.theme} à Montréal pour la période du ${post.periodStart.toLocaleDateString('fr-CA')} au ${post.periodEnd.toLocaleDateString('fr-CA')}.`;
   
   const canonical = `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/top-5/${post.slug}`;
-  const ogImage = post.events[0]?.imageUrl 
+  // Récupérer l'image du premier événement si disponible
+  const firstEventImage = post.events && post.events.length > 0 ? post.events[0]?.imageUrl : null;
+  const ogImage = firstEventImage
     ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/api/og/top5/${post.slug}`
     : `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-top5-default.png`;
 
@@ -79,11 +81,13 @@ export default async function Top5Page({ params }: Top5PageProps) {
     notFound();
   }
 
-  const events = post.eventsOrder.length
+  // Vérifier que eventsOrder existe et n'est pas vide
+  const eventsOrder = post.eventsOrder || [];
+  const events = eventsOrder.length > 0
     ? await prisma.event.findMany({
         where: {
           id: {
-            in: post.eventsOrder,
+            in: eventsOrder,
           },
         },
         include: {
@@ -100,7 +104,7 @@ export default async function Top5Page({ params }: Top5PageProps) {
 
   // Réordonner les événements selon eventsOrder
   const eventMap = new Map(events.map((e) => [e.id, e]));
-  const orderedEvents = post.eventsOrder
+  const orderedEvents = eventsOrder
     .map((id) => eventMap.get(id))
     .filter((e): e is NonNullable<typeof e> => !!e);
 
@@ -120,10 +124,10 @@ export default async function Top5Page({ params }: Top5PageProps) {
             title: post.title || `Top 5 ${post.theme}`,
             theme: post.theme,
             description: post.description,
-            periodStart: post.periodStart,
-            periodEnd: post.periodEnd,
+            periodStart: post.periodStart.toISOString(),
+            periodEnd: post.periodEnd.toISOString(),
           }}
-          eventIds={post.eventsOrder}
+          eventIds={eventsOrder}
         />
 
         {orderedEvents.length === 0 ? (

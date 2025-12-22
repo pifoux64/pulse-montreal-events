@@ -309,7 +309,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                           <div className="font-medium">Prix</div>
                           <div className="text-sm text-gray-600">
                             {event.priceMin == null && event.priceMax == null ? (
-                              event.url
+                              event.url && event.url.trim() !== ''
                                 ? 'Voir les prix sur le site de billetterie'
                                 : 'Prix non communiqué'
                             ) : event.priceMin === 0 ? (

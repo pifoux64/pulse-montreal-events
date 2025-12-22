@@ -87,7 +87,7 @@ export default async function Top5ListPage() {
                 </div>
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="text-xs text-slate-500">
-                    {post.eventsOrder.length} événement{post.eventsOrder.length > 1 ? 's' : ''}
+                    {(post.eventsOrder || []).length} événement{(post.eventsOrder || []).length > 1 ? 's' : ''}
                   </div>
                 </div>
               </Link>

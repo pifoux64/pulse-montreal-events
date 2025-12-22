@@ -112,9 +112,9 @@ const transformRecommendationEvent = (rec: RecommendationResult): Event => {
     subCategory: genreTags[0]?.replace(/_/g, ' ') || event.tags?.[0] || '',
     tags: Array.from(new Set([...(event.tags || []), ...normalizedStructured])),
     price: {
-      amount: (event.priceMin ?? 0) / 100,
+      amount: event.priceMin != null ? event.priceMin / 100 : 0,
       currency: event.currency || 'CAD',
-      isFree: (event.priceMin ?? 0) === 0,
+      isFree: event.priceMin === 0 && event.priceMin != null, // Gratuit seulement si explicitement 0
     },
     imageUrl: event.imageUrl || null,
     ticketUrl: event.url || '#',

@@ -103,9 +103,9 @@ async function getTonightEvents(): Promise<Event[]> {
     subCategory: e.subcategory || '',
     tags: e.tags,
     price: {
-      amount: (e.priceMin ?? 0) / 100,
+      amount: e.priceMin != null ? e.priceMin / 100 : 0,
       currency: e.currency || 'CAD',
-      isFree: (e.priceMin ?? 0) === 0,
+      isFree: e.priceMin === 0 && e.priceMin != null, // Gratuit seulement si explicitement 0
     },
     imageUrl: e.imageUrl,
     ticketUrl: e.url || '#',

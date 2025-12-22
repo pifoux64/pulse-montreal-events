@@ -38,9 +38,9 @@ export default function Top5EventCardWrapper({ event }: Top5EventCardWrapperProp
         subCategory: event.eventTags?.find((t: any) => t.category === 'genre')?.value || '',
         tags: event.tags || [],
         price: {
-          amount: (event.priceMin ?? 0) / 100,
+          amount: event.priceMin != null ? event.priceMin / 100 : 0,
           currency: event.currency || 'CAD',
-          isFree: (event.priceMin ?? 0) === 0,
+          isFree: event.priceMin === 0 && event.priceMin != null, // Gratuit seulement si explicitement 0
         },
         imageUrl: event.imageUrl,
         ticketUrl: event.url || '#',

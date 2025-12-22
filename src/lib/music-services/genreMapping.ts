@@ -10,8 +10,16 @@ import { GENRES, getStylesForGenre } from '@/lib/tagging/taxonomy';
 export type PulseMusicGenre = (typeof GENRES)[number];
 
 const KEYWORD_TO_GENRE: Array<{ keyword: string; genre: PulseMusicGenre }> = [
-  { keyword: 'reggae', genre: 'reggae' },
+  // IMPORTANT: Les keywords plus longs doivent être en premier pour éviter les faux positifs
+  // Ex: "rocksteady" doit être traité avant "rock" pour éviter de matcher "rock"
+  { keyword: 'rocksteady', genre: 'reggae' }, // Style de reggae, pas de rock !
   { keyword: 'dancehall', genre: 'reggae' }, // style mais genre parent = reggae
+  { keyword: 'drum and bass', genre: 'electronic' },
+  { keyword: 'hip hop', genre: 'hip_hop' },
+  { keyword: 'hip-hop', genre: 'hip_hop' },
+  
+  // Genres reggae (après rocksteady pour éviter conflit)
+  { keyword: 'reggae', genre: 'reggae' },
   { keyword: 'dub', genre: 'reggae' },
   { keyword: 'ska', genre: 'reggae' },
 
@@ -19,17 +27,15 @@ const KEYWORD_TO_GENRE: Array<{ keyword: string; genre: PulseMusicGenre }> = [
   { keyword: 'house', genre: 'house' },
   { keyword: 'electro', genre: 'electronic' },
   { keyword: 'edm', genre: 'electronic' },
-  { keyword: 'drum and bass', genre: 'electronic' },
   { keyword: 'dnb', genre: 'electronic' },
 
-  { keyword: 'hip hop', genre: 'hip_hop' },
-  { keyword: 'hip-hop', genre: 'hip_hop' },
   { keyword: 'rap', genre: 'rap' },
   { keyword: 'trap', genre: 'rap' },
 
   { keyword: 'jazz', genre: 'jazz' },
   { keyword: 'blues', genre: 'blues' },
 
+  // Rock doit être après rocksteady pour éviter les faux positifs
   { keyword: 'rock', genre: 'rock' },
   { keyword: 'metal', genre: 'metal' },
   { keyword: 'punk', genre: 'rock' },
@@ -41,8 +47,8 @@ const KEYWORD_TO_GENRE: Array<{ keyword: string; genre: PulseMusicGenre }> = [
 
   { keyword: 'latin', genre: 'latin' },
   { keyword: 'salsa', genre: 'latin' },
-  { keyword: 'afro', genre: 'world_music' },
   { keyword: 'afrobeats', genre: 'world_music' },
+  { keyword: 'afro', genre: 'world_music' }, // Après afrobeats pour éviter conflit
 
   { keyword: 'classical', genre: 'classical' },
   { keyword: 'orchestra', genre: 'classical' },
@@ -51,18 +57,40 @@ const KEYWORD_TO_GENRE: Array<{ keyword: string; genre: PulseMusicGenre }> = [
 
 export function mapSpotifyGenresToPulseGenres(spotifyGenres: string[]): PulseMusicGenre[] {
   const found = new Set<PulseMusicGenre>();
-  const normalized = spotifyGenres.map((g) => g.toLowerCase());
+  const normalized = spotifyGenres.map((g) => g.toLowerCase().trim());
+
+  // Trier les keywords par longueur décroissante pour éviter les faux positifs
+  // (ex: "rocksteady" doit être traité avant "rock" pour éviter de matcher "rock")
+  const sortedKeywords = [...KEYWORD_TO_GENRE].sort((a, b) => b.keyword.length - a.keyword.length);
 
   for (const g of normalized) {
-    for (const { keyword, genre } of KEYWORD_TO_GENRE) {
-      if (g.includes(keyword)) found.add(genre);
+    let matched = false;
+    
+    // Essayer d'abord les correspondances exactes ou avec séparateurs
+    for (const { keyword, genre } of sortedKeywords) {
+      // Correspondance exacte
+      if (g === keyword) {
+        found.add(genre);
+        matched = true;
+        break;
+      }
+      
+      // Correspondance avec séparateurs (espace, tiret, underscore)
+      const regex = new RegExp(`(^|[-_\\s])${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([-_\\s]|$)`, 'i');
+      if (regex.test(g)) {
+        found.add(genre);
+        matched = true;
+        break;
+      }
     }
-  }
-
-  // Fallback: si Spotify renvoie exactement un genre déjà dans la taxonomie
-  for (const g of normalized) {
-    const candidate = g.replace(/\s+/g, '_') as PulseMusicGenre;
-    if ((GENRES as readonly string[]).includes(candidate)) found.add(candidate);
+    
+    // Si pas de match avec keywords, essayer le fallback
+    if (!matched) {
+      const candidate = g.replace(/\s+/g, '_') as PulseMusicGenre;
+      if ((GENRES as readonly string[]).includes(candidate)) {
+        found.add(candidate);
+      }
+    }
   }
 
   return Array.from(found);

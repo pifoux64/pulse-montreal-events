@@ -20,8 +20,8 @@ interface Top5PageClientProps {
     title: string;
     theme: string;
     description?: string | null;
-    periodStart: Date;
-    periodEnd: Date;
+    periodStart: string; // ISO string
+    periodEnd: string; // ISO string
   };
   eventIds: string[];
 }

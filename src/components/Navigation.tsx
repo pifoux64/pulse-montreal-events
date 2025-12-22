@@ -346,8 +346,8 @@ export default function Navigation() {
 
       {/* Menu mobile moderne !*/}
       {isMenuOpen && (
-        <div className="lg:hidden border-t border-white/10 bg-slate-950/90 backdrop-blur-xl shadow-xl">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="lg:hidden border-t border-white/10 bg-slate-950/90 backdrop-blur-xl shadow-xl fixed top-20 left-0 right-0 bottom-0 overflow-y-auto overscroll-contain z-40">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-8">
             <div className="space-y-4">
               {/* Barre de recherche mobile */}
               <div className="relative">

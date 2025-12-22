@@ -95,7 +95,7 @@ const EventCard = ({
       title: event.title,
       venue: event.location,
       startAt: event.startDate,
-      neighborhood: event.location.name,
+      neighborhood: event.location?.name || null,
     });
 
     const success = await shareWithWebAPI({
@@ -161,8 +161,10 @@ const EventCard = ({
   };
 
   const formatPrice = (price: Event['price']) => {
+    if (!price) return 'Prix non communiqué';
     if (price.isFree) return 'Gratuit';
-    return `${price.amount} ${price.currency}`;
+    if (price.amount === 0 && !price.isFree) return 'Prix non communiqué';
+    return `${price.amount.toFixed(2)} ${price.currency}`;
   };
 
   const getTimeAgo = (date: Date) => {
@@ -270,13 +272,15 @@ const EventCard = ({
 
           {/* Prix avec glassmorphism */}
           <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2`}>
-            <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
-              event.price.isFree 
-                ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' 
-                : 'glass-effect text-gray-900 border border-white/30'
-            } ${isHovered ? 'scale-105' : ''}`}>
-              {formatPrice(event.price)}
-            </span>
+            {event.price && (
+              <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
+                event.price.isFree 
+                  ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' 
+                  : 'glass-effect text-gray-900 border border-white/30'
+              } ${isHovered ? 'scale-105' : ''}`}>
+                {formatPrice(event.price)}
+              </span>
+            )}
             {/* Badge promotion */}
             {event.promotions && event.promotions.length > 0 && (
               <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white shadow-lg backdrop-blur-md border border-white/30 animate-pulse">
@@ -442,10 +446,18 @@ const EventCard = ({
           </div>
           
           {/* Lieu */}
-          <div className="flex items-center text-sm text-slate-200">
-            <MapPin className="w-4 h-4 mr-2 text-green-400" />
-            <span className="font-medium truncate">{event.location.name}</span>
-          </div>
+          {event.location?.name && (
+            <div className="flex items-center text-sm text-slate-200">
+              <MapPin className="w-4 h-4 mr-2 text-green-400" />
+              <span className="font-medium truncate">{event.location.name}</span>
+            </div>
+          )}
+          {(!event.location || !event.location.name) && (
+            <div className="flex items-center text-sm text-slate-200">
+              <MapPin className="w-4 h-4 mr-2 text-slate-500" />
+              <span className="font-medium truncate text-slate-500">Lieu à confirmer</span>
+            </div>
+          )}
 
           {/* Organisateur */}
           {event.organizer && (
@@ -612,7 +624,7 @@ const EventCard = ({
           eventTitle={event.title}
           eventVenue={event.location}
           eventStartAt={event.startDate}
-          eventNeighborhood={event.location.name}
+          eventNeighborhood={event.location?.name || null}
           onDismiss={() => {
             setShowSaveAndSharePrompt(false);
             setWasJustAddedToFavorites(false);

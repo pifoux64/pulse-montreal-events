@@ -324,9 +324,6 @@ export default function ProfilClient() {
               >
                 Connecter Spotify
               </button>
-              <p className="text-xs text-gray-500 mt-2">
-                Nécessite: <code>SPOTIFY_CLIENT_ID</code> et <code>SPOTIFY_CLIENT_SECRET</code> dans l’environnement.
-              </p>
             </div>
           )}
         </section>

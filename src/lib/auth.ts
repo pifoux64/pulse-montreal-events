@@ -7,6 +7,7 @@ import { NextAuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import EmailProvider from 'next-auth/providers/email';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { createTransport } from 'nodemailer';
 import { prisma } from './prisma';
 import { UserRole } from '@prisma/client';
 
@@ -33,6 +34,15 @@ if (
   process.env.EMAIL_SERVER_USER &&
   process.env.EMAIL_SERVER_PASSWORD
 ) {
+  const emailFrom = process.env.EMAIL_FROM || 'noreply@pulse-montreal.com';
+  const isSandboxDomain = emailFrom.includes('@resend.dev');
+  
+  if (isSandboxDomain) {
+    console.warn('⚠️ Utilisation du Sandbox Domain de Resend.');
+    console.warn('   Les emails ne peuvent être envoyés qu\'aux adresses dans la whitelist.');
+    console.warn('   Pour la production, configure un domaine vérifié.');
+  }
+  
   providers.push(
     EmailProvider({
       server: {
@@ -43,7 +53,121 @@ if (
           pass: process.env.EMAIL_SERVER_PASSWORD,
         },
       },
-      from: process.env.EMAIL_FROM || 'noreply@pulse-montreal.com',
+      from: emailFrom,
+      // Améliorer le logging des erreurs d'envoi
+      sendVerificationRequest: async ({ identifier: email, url, provider }) => {
+        try {
+          // Utiliser le transport SMTP par défaut de NextAuth
+          const { host, port, auth } = provider.server;
+          const transport = createTransport({
+            host,
+            port,
+            auth,
+            secure: false, // STARTTLS
+          });
+
+          const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca';
+          const textVersion = `Bonjour,
+
+Vous avez demandé à vous connecter à votre compte Pulse Montréal.
+
+Cliquez sur ce lien pour vous connecter :
+${url}
+
+Ce lien expire dans 24 heures.
+
+Si vous n'avez pas demandé cette connexion, ignorez cet email.
+
+---
+Pulse Montréal - Votre guide des événements à Montréal
+${appUrl}
+
+Si cet email est dans vos indésirables, merci de le marquer comme "Non spam" pour garantir la réception de nos futurs emails.`;
+
+          const htmlVersion = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #10b981; font-size: 24px; margin-bottom: 16px;">Connexion à Pulse Montréal</h1>
+              
+              <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+                Bonjour,
+              </p>
+              
+              <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 16px;">
+                Vous avez demandé à vous connecter à votre compte Pulse Montréal.
+              </p>
+              
+              <p style="color: #374151; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+                Cliquez sur le bouton ci-dessous pour vous connecter :
+              </p>
+              
+              <div style="text-align: center; margin: 32px 0;">
+                <a href="${url}" style="display: inline-block; padding: 14px 28px; background-color: #10b981; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                  Se connecter
+                </a>
+              </div>
+              
+              <p style="color: #6b7280; font-size: 14px; margin-bottom: 8px;">
+                Ou copiez ce lien dans votre navigateur :
+              </p>
+              <p style="color: #6b7280; font-size: 12px; word-break: break-all; background-color: #f3f4f6; padding: 12px; border-radius: 4px; margin-bottom: 24px;">
+                ${url}
+              </p>
+              
+              <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 8px;">
+                Ce lien expire dans 24 heures.
+              </p>
+              
+              <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 32px;">
+                Si vous n'avez pas demandé cette connexion, ignorez cet email.
+              </p>
+              
+              <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;">
+              
+              <p style="color: #9ca3af; font-size: 12px; line-height: 1.6; margin-bottom: 8px;">
+                <strong>Pulse Montréal</strong> - Votre guide des événements à Montréal<br>
+                <a href="${appUrl}" style="color: #10b981; text-decoration: none;">${appUrl}</a>
+              </p>
+              
+              <p style="color: #9ca3af; font-size: 11px; line-height: 1.6; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                💡 <strong>Astuce</strong> : Si cet email est dans vos indésirables, merci de le marquer comme "Non spam" pour garantir la réception de nos futurs emails.
+              </p>
+            </div>
+          `;
+
+          const result = await transport.sendMail({
+            to: email,
+            from: provider.from,
+            subject: 'Connexion à Pulse Montréal',
+            text: textVersion,
+            html: htmlVersion,
+          });
+
+          console.log(`✅ Email de connexion envoyé à ${email}`, {
+            messageId: result.messageId,
+            response: result.response,
+          });
+        } catch (error: any) {
+          console.error(`❌ Erreur lors de l'envoi de l'email à ${email}:`, {
+            error: error.message,
+            code: error.code,
+            command: error.command,
+            response: error.response,
+            responseCode: error.responseCode,
+          });
+          
+          // Si c'est une erreur de whitelist/sandbox, donner un message plus clair
+          if (
+            error.response?.includes('not allowed') ||
+            error.response?.includes('sandbox') ||
+            error.response?.includes('recipient')
+          ) {
+            console.error('💡 Cette adresse n\'est probablement pas dans la whitelist du Sandbox Domain.');
+            console.error('   Ajoute-la dans Resend > Domains > Sandbox Domain > Allowed Recipients');
+          }
+          
+          throw error;
+        }
+      },
     })
   );
 }

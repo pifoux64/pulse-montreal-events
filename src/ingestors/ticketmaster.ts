@@ -143,6 +143,37 @@ export class TicketmasterConnector extends BaseConnector {
     return futureEvents.slice(0, limit);
   }
 
+  /**
+   * Récupère les détails d'un événement depuis l'API Ticketmaster pour obtenir les prix
+   * si ils ne sont pas disponibles dans la liste
+   */
+  private async fetchEventDetails(eventId: string): Promise<any | null> {
+    try {
+      const params = new URLSearchParams({
+        apikey: this.apiKey as string,
+        locale: '*',
+      });
+
+      const url = `${this.baseUrl}/events/${eventId}.json?${params.toString()}`;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Pulse-Montreal/1.0',
+        },
+      });
+
+      if (!response.ok) {
+        // Si l'endpoint de détails échoue, on retourne null et on continue sans prix
+        return null;
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.warn(`⚠️ Erreur lors de la récupération des détails de l'événement ${eventId}:`, error);
+      return null;
+    }
+  }
+
   async mapToUnifiedEvent(rawEvent: any): Promise<UnifiedEvent> {
     const startIso = rawEvent?.dates?.start?.dateTime
       || (rawEvent?.dates?.start?.localDate
@@ -162,7 +193,17 @@ export class TicketmasterConnector extends BaseConnector {
     const status = statusCode === 'cancelled' ? EventStatus.CANCELLED : undefined;
 
     const venue = rawEvent?._embedded?.venues?.[0];
-    const priceRange = rawEvent?.priceRanges?.[0];
+    let priceRange = rawEvent?.priceRanges?.[0];
+
+    // Si les prix ne sont pas disponibles dans la liste, essayer de les récupérer depuis l'endpoint de détails
+    if (!priceRange && rawEvent?.id) {
+      const eventDetails = await this.fetchEventDetails(rawEvent.id);
+      if (eventDetails?.priceRanges?.[0]) {
+        priceRange = eventDetails.priceRanges[0];
+      }
+      // Respecter le rate limit après l'appel supplémentaire
+      await this.rateLimit();
+    }
 
     let venueLat = venue?.location?.latitude ? parseFloat(venue.location.latitude) : undefined;
     let venueLon = venue?.location?.longitude ? parseFloat(venue.location.longitude) : undefined;

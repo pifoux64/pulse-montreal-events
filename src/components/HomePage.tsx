@@ -165,9 +165,9 @@ const transformApiEvent = (event: ApiEvent): Event => {
         new Set([...(event.tags || []), ...normalizedStructured]),
       ),
       price: {
-        amount: (event.priceMin ?? 0) / 100, // Convertir de cents en dollars
+        amount: event.priceMin != null ? event.priceMin / 100 : 0, // Convertir de cents en dollars
         currency: event.currency || 'CAD',
-        isFree: (event.priceMin ?? 0) === 0,
+        isFree: event.priceMin === 0 && event.priceMin != null, // Gratuit seulement si explicitement 0
       },
       imageUrl: event.imageUrl || null, // Pas de fallback Unsplash (bloqué par CSP)
       ticketUrl: event.url || '#',
@@ -1151,9 +1151,9 @@ function HomePageTrendingSections() {
       subCategory: '',
       tags: trendingEvent.tags || [],
       price: {
-        amount: (trendingEvent.priceMin || 0) / 100,
+        amount: trendingEvent.priceMin != null ? trendingEvent.priceMin / 100 : 0,
         currency: trendingEvent.currency || 'CAD',
-        isFree: (trendingEvent.priceMin || 0) === 0,
+        isFree: trendingEvent.priceMin === 0 && trendingEvent.priceMin != null, // Gratuit seulement si explicitement 0
       },
       imageUrl: trendingEvent.imageUrl,
       ticketUrl: trendingEvent.url || '#',
