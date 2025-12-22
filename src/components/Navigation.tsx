@@ -356,7 +356,7 @@ export default function Navigation() {
         />
         {/* Menu mobile */}
         <div className="lg:hidden border-t border-white/20 bg-slate-950 shadow-2xl fixed top-20 left-0 right-0 bottom-0 overflow-y-auto overscroll-contain z-[110]" style={{ backgroundColor: 'rgba(15, 23, 42, 0.98)' }}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-12">
               <div className="space-y-4">
               {/* Barre de recherche mobile */}
               <div className="relative">
