@@ -145,7 +145,7 @@ function SignInContent() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900">
         <Navigation />
-        <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] px-4">
+        <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] px-4 pt-24">
           <div className="max-w-md w-full bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/15 shadow-2xl">
             <div className="text-center">
               <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -177,7 +177,7 @@ function SignInContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900">
       <Navigation />
-      <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] px-4">
+      <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] px-4 pt-24">
         <div className="max-w-md w-full bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/15 shadow-2xl">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-white mb-2">Connexion</h1>
