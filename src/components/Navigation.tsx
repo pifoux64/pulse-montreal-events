@@ -186,7 +186,7 @@ export default function Navigation() {
             </div>
           </div>
 
-          {/* Actions utilisateur ultra-modernes */}
+          {/* Actions utilisateur ultra-modernes - Desktop uniquement */}
           <div className="hidden lg:flex items-center space-x-4">
             {/* Barre de recherche avec glassmorphism */}
               <div className="relative group">
@@ -327,13 +327,13 @@ export default function Navigation() {
             )}
           </div>
 
-          {/* Bouton menu mobile moderne */}
-          <div className="lg:hidden">
+          {/* Bouton menu mobile moderne - Toujours visible sur mobile */}
+          <div className="lg:hidden flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-3 rounded-2xl border border-white/15 bg-white/10 text-slate-100 transition-all duration-300 hover:bg-white/20"
+              className="p-3 rounded-2xl border border-white/15 bg-white/10 text-slate-100 transition-all duration-300 hover:bg-white/20 relative z-[60]"
+              aria-label="Toggle menu"
             >
-              <span className="sr-only">Open main menu</span>
               {isMenuOpen ? (
                 <X className="block h-6 w-6" />
               ) : (
