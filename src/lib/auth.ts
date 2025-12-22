@@ -162,7 +162,18 @@ Si cet email est dans vos indésirables, merci de le marquer comme "Non spam" po
             command: error.command,
             response: error.response,
             responseCode: error.responseCode,
+            host: provider.server.host,
+            port: provider.server.port,
           });
+          
+          // Messages d'erreur plus explicites
+          if (error.code === 'ETIMEDOUT' || error.message.includes('Greeting never received')) {
+            console.error('💡 Timeout SMTP - Vérifie :');
+            console.error('   1. Que smtp.resend.com est accessible depuis Vercel');
+            console.error('   2. Que le port 587 n\'est pas bloqué');
+            console.error('   3. Que les credentials SMTP sont corrects');
+            console.error('   4. Que Resend SMTP est activé pour ton compte');
+          }
           
           // Si c'est une erreur de whitelist/sandbox, donner un message plus clair
           if (
