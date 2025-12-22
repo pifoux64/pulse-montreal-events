@@ -48,6 +48,7 @@ export default function Navigation() {
   ];
 
   return (
+    <>
     <nav className="fixed top-0 left-0 right-0 z-[50] bg-slate-950/70 backdrop-blur-2xl border-b border-white/10 shadow-[0_20px_60px_-40px_rgba(15,118,110,0.8)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20 text-slate-100">
@@ -349,13 +350,13 @@ export default function Navigation() {
         <>
           {/* Overlay pour fermer le menu - commence sous la nav */}
           <div 
-            className="lg:hidden fixed top-20 left-0 right-0 bottom-0 bg-black/50 backdrop-blur-sm z-[55]"
+            className="lg:hidden fixed top-20 left-0 right-0 bottom-0 bg-black/50 backdrop-blur-sm z-[100]"
             onClick={() => setIsMenuOpen(false)}
           />
           {/* Menu mobile */}
-          <div className="lg:hidden border-t border-white/10 bg-slate-950/90 backdrop-blur-xl shadow-xl fixed top-20 left-0 right-0 bottom-0 overflow-y-auto overscroll-contain z-[60]">
+          <div className="lg:hidden border-t border-white/10 bg-slate-950/95 backdrop-blur-xl shadow-2xl fixed top-20 left-0 right-0 bottom-0 overflow-y-auto overscroll-contain z-[110]">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-8">
-            <div className="space-y-4">
+              <div className="space-y-4">
               {/* Barre de recherche mobile */}
               <div className="relative">
                 <div className="relative bg-white/10 border border-white/15 rounded-2xl px-4 py-3 flex items-center space-x-3 text-slate-100">
@@ -566,11 +567,12 @@ export default function Navigation() {
                   </button>
                 )}
               </div>
+              </div>
             </div>
-          </div>
           </div>
         </>
       )}
     </nav>
+    </>
   );
 }
