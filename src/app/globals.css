@@ -368,9 +368,17 @@
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+    padding-top: 80px; /* Espace pour la navigation fixe (h-20 = 80px) */
     /* Grille de points subtile */
     background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0);
     background-size: 20px 20px;
+  }
+  
+  /* Sur mobile, ajuster le padding si nécessaire */
+  @media (max-width: 768px) {
+    body {
+      padding-top: 80px; /* Navigation mobile aussi h-20 */
+    }
   }
 
   /* Formes flottantes animées */
