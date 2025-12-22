@@ -372,16 +372,6 @@
     background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.1) 1px, transparent 0);
     background-size: 20px 20px;
   }
-  
-  /* Espace pour la navigation fixe - appliqué au main ou au conteneur principal */
-  main, [role="main"], .main-content {
-    padding-top: 80px; /* Navigation fixe h-20 = 80px */
-  }
-  
-  /* Si une page a déjà un padding-top, on le respecte */
-  main.pt-0, [role="main"].pt-0, .main-content.pt-0 {
-    padding-top: 0;
-  }
 
   /* Formes flottantes animées */
   body::before {
