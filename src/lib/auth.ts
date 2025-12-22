@@ -59,15 +59,20 @@ if (
         try {
           // Utiliser le transport SMTP par défaut de NextAuth
           const { host, port, auth } = provider.server;
+          
+          // Le port 465 nécessite SSL/TLS direct (secure: true)
+          // Le port 587 utilise STARTTLS (secure: false)
+          const isSecurePort = port === 465 || port === 994;
+          
           const transport = createTransport({
             host,
             port,
             auth,
-            secure: false, // STARTTLS
+            secure: isSecurePort, // SSL/TLS direct pour 465, STARTTLS pour 587
             // Options de timeout pour éviter "Greeting never received"
-            connectionTimeout: 10000, // 10 secondes pour établir la connexion
-            greetingTimeout: 10000, // 10 secondes pour recevoir le greeting
-            socketTimeout: 10000, // 10 secondes pour les opérations socket
+            connectionTimeout: 15000, // 15 secondes pour établir la connexion
+            greetingTimeout: 15000, // 15 secondes pour recevoir le greeting
+            socketTimeout: 15000, // 15 secondes pour les opérations socket
             // Options de retry
             pool: false, // Désactiver le pool pour éviter les connexions persistantes qui timeout
             // Options de debug (désactivé en production)
