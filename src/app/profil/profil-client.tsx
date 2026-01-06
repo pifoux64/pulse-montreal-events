@@ -143,13 +143,24 @@ export default function ProfilClient() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ service: 'spotify' }),
       });
+      
+      // Vérifier si la réponse est vide ou non-JSON
+      const contentType = res.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await res.text();
+        throw new Error(`Réponse invalide du serveur: ${text || 'Réponse vide'}`);
+      }
+      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur de synchronisation');
+      if (!res.ok) {
+        throw new Error(data.error || `Erreur de synchronisation (${res.status})`);
+      }
       setSuccess(`Synchronisation terminée: ${data.pulseGenres?.length || 0} genre(s) détecté(s).`);
       await refreshConnections();
       await refreshInterests();
     } catch (e: any) {
-      setError(e.message || 'Erreur inconnue');
+      console.error('Erreur syncSpotify:', e);
+      setError(e.message || 'Erreur inconnue lors de la synchronisation');
     } finally {
       setSyncing(false);
     }
