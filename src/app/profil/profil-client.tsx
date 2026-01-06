@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import { CheckCircle, ExternalLink, Loader2, Music, RefreshCw, Trash2, AlertCircle, Plus, X, Users, Calendar, Settings } from 'lucide-react';
+import { CheckCircle, ExternalLink, Loader2, AlertCircle, Plus, X, Users, Calendar, Settings } from 'lucide-react';
 import { GENRES, EVENT_TYPES, AMBIANCES, PUBLICS, getStylesForGenre } from '@/lib/tagging/taxonomy';
 
 type MusicConnection = {
@@ -148,74 +148,6 @@ export default function ProfilClient() {
     }
   };
 
-  const connectSpotify = async () => {
-    try {
-      setError(null);
-      // Utiliser la nouvelle route standardisée
-      window.location.href = '/api/integrations/spotify/auth';
-    } catch (e: any) {
-      setError(e.message || 'Erreur inconnue');
-    }
-  };
-
-  const syncSpotify = async () => {
-    try {
-      setError(null);
-      setSuccess(null);
-      setSyncing(true);
-      const res = await fetch('/api/user/music-taste/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ service: 'spotify' }),
-      });
-      
-      // Vérifier si la réponse est vide ou non-JSON
-      const contentType = res.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await res.text();
-        throw new Error(`Réponse invalide du serveur: ${text || 'Réponse vide'}`);
-      }
-      
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || `Erreur de synchronisation (${res.status})`);
-      }
-      setSuccess(`Synchronisation terminée: ${data.pulseGenres?.length || 0} genre(s) détecté(s).`);
-      await refreshConnections();
-      await refreshInterests();
-    } catch (e: any) {
-      console.error('Erreur syncSpotify:', e);
-      setError(e.message || 'Erreur inconnue lors de la synchronisation');
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const disconnectSpotify = async (deleteData: boolean) => {
-    try {
-      setError(null);
-      setDisconnecting(true);
-      const res = await fetch('/api/integrations/spotify/disconnect', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deleteData }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur de déconnexion');
-      setSuccess(
-        deleteData
-          ? 'Spotify déconnecté et toutes les données supprimées.'
-          : 'Spotify déconnecté. Vos genres détectés sont conservés.'
-      );
-      setShowDisconnectModal(false);
-      await refreshConnections();
-      await refreshInterests();
-    } catch (e: any) {
-      setError(e.message || 'Erreur inconnue');
-    } finally {
-      setDisconnecting(false);
-    }
-  };
 
   const addManualInterest = async () => {
     if (!selectedValue) return;

@@ -162,35 +162,37 @@ export default function PourToiPage() {
     return null;
   }
 
-  // Récupérer le genre le plus écouté sur Spotify
-  const { data: mostListenedGenre } = useQuery({
-    queryKey: ['most-listened-genre', session?.user?.id],
+  // Récupérer les préférences utilisateur pour afficher un Top 5 du genre préféré
+  const { data: userPreferences } = useQuery({
+    queryKey: ['user-preferences', session?.user?.id],
     queryFn: async () => {
-      const response = await fetch('/api/user/most-listened-genre');
+      const response = await fetch('/api/user/preferences');
       if (!response.ok) return null;
       const data = await response.json();
-      return data.genre;
+      return data.preferences;
     },
     enabled: status === 'authenticated',
     staleTime: 10 * 60 * 1000, // 10 minutes
   });
 
-  // Récupérer le Top 5 du genre le plus écouté
+  const favoriteGenre = userPreferences?.musicPreferences?.[0];
+
+  // Récupérer le Top 5 du genre préféré
   const { data: top5GenreData } = useQuery({
-    queryKey: ['top5-genre', mostListenedGenre],
+    queryKey: ['top5-genre', favoriteGenre],
     queryFn: async () => {
-      if (!mostListenedGenre) return null;
-      const response = await fetch(`/api/editorial/pulse-picks/genre/${mostListenedGenre}?_t=${Date.now()}`);
+      if (!favoriteGenre) return null;
+      const response = await fetch(`/api/editorial/top5/genre/${favoriteGenre}?period=week`);
       if (!response.ok) return null;
       const data = await response.json();
-      return data.post;
+      return data;
     },
-    enabled: !!mostListenedGenre,
+    enabled: !!favoriteGenre,
     staleTime: 2 * 60 * 1000, // 2 minutes
     refetchOnMount: true,
   });
 
-  // Récupérer un Top 5 général (fallback si pas de genre Spotify)
+  // Récupérer un Top 5 général (fallback si pas de genre préféré)
   const { data: top5Data } = useQuery({
     queryKey: ['top5-for-recommendations'],
     queryFn: async () => {
@@ -200,7 +202,7 @@ export default function PourToiPage() {
       // Prendre le premier Top 5 qui a des événements
       return data.posts?.find((p: any) => p.eventsCount > 0) || data.posts?.[0] || null;
     },
-    enabled: !mostListenedGenre || !top5GenreData, // Seulement si pas de genre Spotify ou pas de Top 5 pour ce genre
+    enabled: !favoriteGenre || !top5GenreData, // Seulement si pas de genre préféré ou pas de Top 5 pour ce genre
     staleTime: 2 * 60 * 1000, // 2 minutes au lieu de 10
     refetchOnMount: true,
   });
@@ -267,12 +269,12 @@ export default function PourToiPage() {
             </h1>
           </div>
           <p className="text-lg text-gray-600">
-            Découvrez des événements faits pour vous, basés sur vos goûts musicaux et préférences.
+            Découvrez des événements faits pour vous, basés sur vos préférences (genres musicaux, catégories, ambiances).
           </p>
         </div>
 
-        {/* Section Top 5 du genre le plus écouté sur Spotify */}
-        {top5GenreData && mostListenedGenre && (
+        {/* Section Top 5 du genre préféré */}
+        {top5GenreData && favoriteGenre && top5GenreData.events.length > 0 && (
           <div className="mb-8 p-6 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 shadow-lg">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -281,41 +283,44 @@ export default function PourToiPage() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    Top 5 {mostListenedGenre.charAt(0).toUpperCase() + mostListenedGenre.slice(1).replace(/_/g, ' ')}
+                    Top 5 {favoriteGenre.charAt(0).toUpperCase() + favoriteGenre.slice(1).replace(/_/g, ' ')}
                     <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 text-green-700 flex items-center gap-1">
                       <Brain className="w-3 h-3" />
-                      Basé sur Spotify
+                      Basé sur vos préférences
                     </span>
                   </h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    Votre genre le plus écouté • {top5GenreData.eventsCount} événement{top5GenreData.eventsCount > 1 ? 's' : ''}
+                    Votre genre préféré • {top5GenreData.events.length} événement{top5GenreData.events.length > 1 ? 's' : ''}
                   </p>
                 </div>
               </div>
-              <Link
-                href={`/top-5/${top5GenreData.slug}`}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium transition-colors text-sm"
-              >
-                Voir le Top 5
-                <ArrowRight className="w-4 h-4" />
-              </Link>
             </div>
-            {top5GenreData.description && (
-              <p className="text-sm text-gray-700 mb-4 line-clamp-2">{top5GenreData.description}</p>
-            )}
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
               <Calendar className="w-4 h-4" />
               <span>
-                {new Date(top5GenreData.periodStart).toLocaleDateString('fr-CA', {
+                {new Date(top5GenreData.events[0]?.startAt).toLocaleDateString('fr-CA', {
                   month: 'long',
                   day: 'numeric',
                 })}
                 {' - '}
-                {new Date(top5GenreData.periodEnd).toLocaleDateString('fr-CA', {
+                {new Date(top5GenreData.events[top5GenreData.events.length - 1]?.startAt).toLocaleDateString('fr-CA', {
                   month: 'long',
                   day: 'numeric',
                 })}
               </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {top5GenreData.events.slice(0, 5).map((event: any, index: number) => (
+                <Link
+                  key={event.id}
+                  href={`/evenement/${event.id}`}
+                  className="p-3 rounded-lg bg-white border border-green-200 hover:border-green-300 hover:shadow-md transition-all"
+                >
+                  <div className="text-xs font-semibold text-green-600 mb-1">#{index + 1}</div>
+                  <div className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">{event.title}</div>
+                  <div className="text-xs text-gray-600">{event.venue?.name}</div>
+                </Link>
+              ))}
             </div>
           </div>
         )}
@@ -441,15 +446,23 @@ export default function PourToiPage() {
                   Aucune recommandation pour le moment
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Connectez Spotify ou ajoutez des préférences dans votre profil pour recevoir des
+                  Configurez vos préférences (genres musicaux, catégories, ambiances) dans votre profil pour recevoir des
                   recommandations personnalisées.
                 </p>
-                <button
-                  onClick={() => router.push('/profil')}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
-                >
-                  Aller au profil
-                </button>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => router.push('/onboarding')}
+                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                  >
+                    Configurer mes préférences
+                  </button>
+                  <button
+                    onClick={() => router.push('/profil')}
+                    className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
+                  >
+                    Aller au profil
+                  </button>
+                </div>
               </div>
             ) : (
               <>
