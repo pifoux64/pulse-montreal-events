@@ -56,15 +56,26 @@ export async function buildUserMusicProfile(userId: string): Promise<UserMusicPr
   };
 
   // Traiter les tags d'intérêt
+  // Les tags Spotify ont des scores basés sur la fréquence d'écoute
+  // Les tags manuels ont un score de 1 (priorité)
   for (const tag of interestTags) {
-    const weight = normalizeScore(tag.score);
+    let weight = normalizeScore(tag.score);
     
-    if (tag.source === 'spotify') sources.spotify = true;
-    if (tag.source === 'apple_music') sources.appleMusic = true;
-    if (tag.source === 'manual') sources.manual = true;
+    // Priorité : tags manuels > tags Spotify/Apple Music
+    // Si c'est un tag manuel, donner un poids plus élevé
+    if (tag.source === 'manual') {
+      weight = Math.max(weight, 0.8); // Poids minimum pour tags manuels
+      sources.manual = true;
+    } else if (tag.source === 'spotify') {
+      sources.spotify = true;
+      // Les scores Spotify sont déjà normalisés (0-1), on les utilise tels quels
+    } else if (tag.source === 'apple_music') {
+      sources.appleMusic = true;
+    }
 
     switch (tag.category) {
       case 'genre':
+        // Utiliser le max pour garder le poids le plus élevé (manuel > auto)
         genres.set(tag.value, Math.max(genres.get(tag.value) || 0, weight));
         break;
       case 'style':

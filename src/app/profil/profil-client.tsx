@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import { CheckCircle, ExternalLink, Loader2, Music, RefreshCw, Trash2, AlertCircle, Plus, X, Users, Calendar } from 'lucide-react';
+import { CheckCircle, ExternalLink, Loader2, Music, RefreshCw, Trash2, AlertCircle, Plus, X, Users, Calendar, Settings } from 'lucide-react';
 import { GENRES, EVENT_TYPES, AMBIANCES, PUBLICS, getStylesForGenre } from '@/lib/tagging/taxonomy';
 
 type MusicConnection = {
@@ -45,6 +45,9 @@ export default function ProfilClient() {
   const [selectedCategory, setSelectedCategory] = useState<'genre' | 'style' | 'type' | 'ambiance'>('genre');
   const [selectedGenreForStyles, setSelectedGenreForStyles] = useState<string>('reggae');
   const [selectedValue, setSelectedValue] = useState<string>('');
+  const [personalizationEnabled, setPersonalizationEnabled] = useState<boolean>(true);
+  const [loadingPersonalization, setLoadingPersonalization] = useState(false);
+  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
 
   const spotifyConnection = useMemo(
     () => connections.find((c) => c.service === 'spotify') ?? null,
@@ -70,8 +73,41 @@ export default function ProfilClient() {
     if (status !== 'authenticated') return;
     refreshConnections();
     refreshInterests();
+    refreshPersonalizationPrefs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
+
+  const refreshPersonalizationPrefs = async () => {
+    try {
+      const res = await fetch('/api/user/preferences/personalization');
+      if (res.ok) {
+        const data = await res.json();
+        setPersonalizationEnabled(data.enabled ?? true);
+      }
+    } catch (e) {
+      console.error('Erreur refreshPersonalizationPrefs:', e);
+    }
+  };
+
+  const togglePersonalization = async (enabled: boolean) => {
+    try {
+      setLoadingPersonalization(true);
+      setError(null);
+      const res = await fetch('/api/user/preferences/personalization', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur lors de la mise à jour');
+      setPersonalizationEnabled(enabled);
+      setSuccess(enabled ? 'Recommandations personnalisées activées.' : 'Recommandations personnalisées désactivées.');
+    } catch (e: any) {
+      setError(e.message || 'Erreur inconnue');
+    } finally {
+      setLoadingPersonalization(false);
+    }
+  };
 
   const refreshConnections = async () => {
     try {
@@ -164,15 +200,23 @@ export default function ProfilClient() {
     }
   };
 
-  const disconnectSpotify = async () => {
-    if (!confirm('Déconnecter Spotify ? (les tags Spotify seront supprimés)')) return;
+  const disconnectSpotify = async (deleteData: boolean) => {
     try {
       setError(null);
       setDisconnecting(true);
-      const res = await fetch('/api/user/music-services/spotify', { method: 'DELETE' });
+      const res = await fetch('/api/integrations/spotify/disconnect', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ deleteData }),
+      });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur de déconnexion');
-      setSuccess('Spotify déconnecté.');
+      setSuccess(
+        deleteData
+          ? 'Spotify déconnecté et toutes les données supprimées.'
+          : 'Spotify déconnecté. Vos genres détectés sont conservés.'
+      );
+      setShowDisconnectModal(false);
       await refreshConnections();
       await refreshInterests();
     } catch (e: any) {
@@ -328,14 +372,51 @@ export default function ProfilClient() {
                 </button>
 
                 <button
-                  onClick={disconnectSpotify}
+                  onClick={() => setShowDisconnectModal(true)}
                   disabled={disconnecting}
                   className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
                 >
-                  {disconnecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  <Trash2 className="w-4 h-4" />
                   Déconnecter
                 </button>
               </div>
+
+              {/* Modal de déconnexion */}
+              {showDisconnectModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-white rounded-xl p-6 max-w-md w-full">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Déconnecter Spotify</h3>
+                    <p className="text-sm text-gray-600 mb-6">
+                      Choisissez une option :
+                    </p>
+                    <div className="space-y-3">
+                      <button
+                        onClick={() => disconnectSpotify(false)}
+                        disabled={disconnecting}
+                        className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 flex items-center justify-between"
+                      >
+                        <span>Déconnecter uniquement</span>
+                        <span className="text-xs text-gray-500">(garde les genres détectés)</span>
+                      </button>
+                      <button
+                        onClick={() => disconnectSpotify(true)}
+                        disabled={disconnecting}
+                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-between"
+                      >
+                        <span>Déconnecter et supprimer les données</span>
+                        <span className="text-xs text-red-200">(supprime tout)</span>
+                      </button>
+                      <button
+                        onClick={() => setShowDisconnectModal(false)}
+                        disabled={disconnecting}
+                        className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="mt-4">
@@ -356,6 +437,31 @@ export default function ProfilClient() {
               <p className="text-sm text-gray-600 mt-1">
                 Ces préférences servent aux recommandations et notifications. Vous pouvez compléter/ajuster ce que Spotify a détecté.
               </p>
+            </div>
+          </div>
+
+          {/* Toggle personnalisation */}
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                  <Settings className="w-4 h-4" />
+                  Recommandations personnalisées
+                </h3>
+                <p className="text-xs text-gray-600 mt-1">
+                  Utiliser vos goûts musicaux pour des recommandations personnalisées
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={personalizationEnabled}
+                  onChange={(e) => togglePersonalization(e.target.checked)}
+                  disabled={loadingPersonalization}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              </label>
             </div>
           </div>
 

@@ -109,6 +109,9 @@ export async function POST(request: NextRequest) {
       data: { lastSyncAt: new Date() },
     });
 
+    // Log success (optionnel : créer table SpotifySyncLog si nécessaire)
+    console.log(`[Spotify Sync] Success for user ${session.user.id}: ${pulseGenres.length} genres, ${pulseStyles.length} styles`);
+
     return NextResponse.json({
       success: true,
       service: 'spotify',

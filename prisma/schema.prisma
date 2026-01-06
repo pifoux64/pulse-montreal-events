@@ -570,6 +570,7 @@ model UserPreferences {
   notificationsEmail     Boolean  @default(true) @map("notifications_email")
   notificationsPush      Boolean  @default(true) @map("notifications_push")
   notificationsFavorites Boolean  @default(true) @map("notifications_favorites")
+  personalizationEnabled Boolean  @default(true) @map("personalization_enabled") // Activer/désactiver recommandations personnalisées
   language               String   @default("fr") @db.VarChar(2)
   timezone               String   @default("America/Montreal")
   defaultRadius          Int      @default(10) @map("default_radius") // en km

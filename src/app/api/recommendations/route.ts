@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 import { getPersonalizedRecommendations } from '@/lib/recommendations/recommendationEngine';
 
 /**
@@ -28,6 +29,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Vérifier si la personnalisation est activée
+    const userPrefs = await prisma.userPreferences.findUnique({
+      where: { userId: session.user.id },
+      select: { personalizationEnabled: true },
+    });
+
+    const personalizationEnabled = userPrefs?.personalizationEnabled ?? true;
+
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
     const genre = searchParams.get('genre') || undefined;
@@ -36,7 +45,19 @@ export async function GET(request: NextRequest) {
     // Réduire le minScore pour permettre plus de recommandations
     const minScore = parseFloat(searchParams.get('minScore') || '0.05');
 
-    console.log(`[Recommendations] User ${session.user.id}, scope: ${scope}, limit: ${limit}, minScore: ${minScore}`);
+    console.log(`[Recommendations] User ${session.user.id}, scope: ${scope}, limit: ${limit}, minScore: ${minScore}, personalizationEnabled: ${personalizationEnabled}`);
+
+    // Si personnalisation désactivée, retourner des événements populaires uniquement
+    if (!personalizationEnabled) {
+      console.log(`[Recommendations] Personalization disabled for user ${session.user.id}, returning popular events`);
+      const { getPopularEvents } = await import('@/lib/recommendations/recommendationEngine');
+      const popularEvents = await getPopularEvents(limit, scope);
+      return NextResponse.json({
+        recommendations: popularEvents,
+        count: popularEvents.length,
+        personalizationEnabled: false,
+      });
+    }
 
     const recommendations = await getPersonalizedRecommendations(session.user.id, {
       limit,
