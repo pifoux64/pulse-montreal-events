@@ -33,12 +33,8 @@ export default function ProfilClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [connections, setConnections] = useState<MusicConnection[]>([]);
-  const [loadingConnections, setLoadingConnections] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [syncing, setSyncing] = useState(false);
-  const [disconnecting, setDisconnecting] = useState(false);
   const [interestTags, setInterestTags] = useState<InterestTag[]>([]);
   const [loadingInterests, setLoadingInterests] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -47,12 +43,7 @@ export default function ProfilClient() {
   const [selectedValue, setSelectedValue] = useState<string>('');
   const [personalizationEnabled, setPersonalizationEnabled] = useState<boolean>(true);
   const [loadingPersonalization, setLoadingPersonalization] = useState(false);
-  const [showDisconnectModal, setShowDisconnectModal] = useState(false);
-
-  const spotifyConnection = useMemo(
-    () => connections.find((c) => c.service === 'spotify') ?? null,
-    [connections],
-  );
+  const [userPreferences, setUserPreferences] = useState<any>(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -66,14 +57,14 @@ export default function ProfilClient() {
     const urlErr = searchParams.get('error');
     const urlSuccess = searchParams.get('success');
     if (urlErr) setError(urlErr);
-    if (urlSuccess === 'spotify_connected') setSuccess('Spotify connecté avec succès.');
+    if (urlSuccess === 'preferences_updated') setSuccess('Préférences mises à jour avec succès.');
   }, [status, searchParams]);
 
   useEffect(() => {
     if (status !== 'authenticated') return;
-    refreshConnections();
     refreshInterests();
     refreshPersonalizationPrefs();
+    refreshUserPreferences();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -287,7 +278,7 @@ export default function ProfilClient() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Profil</h1>
           <p className="text-gray-600">
-            Connectez Spotify pour obtenir des recommandations basées sur vos goûts (ex: musique classique, electro, musées, sorties en famille etc..).
+            Gérez vos préférences pour recevoir des recommandations personnalisées d'événements à Montréal.
           </p>
         </div>
 
@@ -315,117 +306,71 @@ export default function ProfilClient() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                <Music className="w-5 h-5 text-green-600" />
-                Connexion Spotify
+                <Settings className="w-5 h-5 text-sky-600" />
+                Mes préférences
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Connectez votre compte Spotify pour obtenir des recommandations personnalisées d'événements basées sur vos goûts musicaux.
+                Configurez vos genres musicaux, catégories d'événements et ambiances préférés pour recevoir des recommandations personnalisées.
               </p>
-              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-800 font-medium mb-1">🔒 Données utilisées :</p>
-                <ul className="text-xs text-blue-700 list-disc list-inside space-y-0.5">
-                  <li>Top artists (via API Spotify)</li>
-                  <li>Genres musicaux dérivés</li>
-                </ul>
-                <p className="text-xs text-blue-800 font-medium mt-2 mb-1">🎯 Utilisation :</p>
-                <p className="text-xs text-blue-700">
-                  Ces données sont utilisées exclusivement pour générer des recommandations personnalisées d'événements. 
-                  Elles ne sont jamais partagées avec des tiers.
-                </p>
-              </div>
             </div>
-
-            {spotifyConnection ? (
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-700 border border-green-200 text-sm">
-                <CheckCircle className="w-4 h-4" />
-                Connecté
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gray-50 text-gray-700 border border-gray-200 text-sm">
-                Non connecté
-              </span>
-            )}
+            <Link
+              href="/onboarding"
+              className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 flex items-center gap-2"
+            >
+              <Settings className="w-4 h-4" />
+              Modifier mes préférences
+            </Link>
           </div>
 
-          {spotifyConnection ? (
-            <div className="mt-4 space-y-3">
-              <div className="text-sm text-gray-600">
+          {userPreferences && (
+            <div className="mt-4 space-y-4">
+              {userPreferences.musicPreferences && userPreferences.musicPreferences.length > 0 && (
                 <div>
-                  <span className="font-medium text-gray-900">Spotify user id:</span> {spotifyConnection.externalUserId}
-                </div>
-                <div>
-                  <span className="font-medium text-gray-900">Dernière sync:</span>{' '}
-                  {spotifyConnection.lastSyncAt
-                    ? new Date(spotifyConnection.lastSyncAt).toLocaleString('fr-CA')
-                    : 'Jamais'}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={syncSpotify}
-                  disabled={syncing}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {syncing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-                  Synchroniser mes goûts
-                </button>
-
-                <button
-                  onClick={() => setShowDisconnectModal(true)}
-                  disabled={disconnecting}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Déconnecter
-                </button>
-              </div>
-
-              {/* Modal de déconnexion */}
-              {showDisconnectModal && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-xl p-6 max-w-md w-full">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Déconnecter Spotify</h3>
-                    <p className="text-sm text-gray-600 mb-6">
-                      Choisissez une option :
-                    </p>
-                    <div className="space-y-3">
-                      <button
-                        onClick={() => disconnectSpotify(false)}
-                        disabled={disconnecting}
-                        className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 flex items-center justify-between"
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Genres musicaux</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userPreferences.musicPreferences.map((genre: string) => (
+                      <span
+                        key={genre}
+                        className="inline-flex items-center px-3 py-1 rounded-full bg-sky-50 text-sky-800 border border-sky-200 text-sm"
                       >
-                        <span>Déconnecter uniquement</span>
-                        <span className="text-xs text-gray-500">(garde les genres détectés)</span>
-                      </button>
-                      <button
-                        onClick={() => disconnectSpotify(true)}
-                        disabled={disconnecting}
-                        className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-between"
-                      >
-                        <span>Déconnecter et supprimer les données</span>
-                        <span className="text-xs text-red-200">(supprime tout)</span>
-                      </button>
-                      <button
-                        onClick={() => setShowDisconnectModal(false)}
-                        disabled={disconnecting}
-                        className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50"
-                      >
-                        Annuler
-                      </button>
-                    </div>
+                        {genre}
+                      </span>
+                    ))}
                   </div>
                 </div>
               )}
-            </div>
-          ) : (
-            <div className="mt-4">
-              <button
-                onClick={connectSpotify}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Connecter Spotify
-              </button>
+
+              {userPreferences.categoryPreferences && userPreferences.categoryPreferences.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Catégories d'événements</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userPreferences.categoryPreferences.map((category: string) => (
+                      <span
+                        key={category}
+                        className="inline-flex items-center px-3 py-1 rounded-full bg-purple-50 text-purple-800 border border-purple-200 text-sm"
+                      >
+                        {category}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {userPreferences.vibePreferences && userPreferences.vibePreferences.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Ambiances</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userPreferences.vibePreferences.map((vibe: string) => (
+                      <span
+                        key={vibe}
+                        className="inline-flex items-center px-3 py-1 rounded-full bg-pink-50 text-pink-800 border border-pink-200 text-sm"
+                      >
+                        {vibe}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
@@ -435,7 +380,7 @@ export default function ProfilClient() {
             <div>
               <h2 className="text-xl font-semibold text-gray-900">Mes goûts & préférences</h2>
               <p className="text-sm text-gray-600 mt-1">
-                Ces préférences servent aux recommandations et notifications. Vous pouvez compléter/ajuster ce que Spotify a détecté.
+                Ajoutez manuellement des genres, styles, types ou ambiances pour affiner vos recommandations.
               </p>
             </div>
           </div>
@@ -472,63 +417,8 @@ export default function ProfilClient() {
             </div>
           ) : (
             <>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Détecté depuis Spotify</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {interestTags
-                      .filter((t) => t.source === 'spotify' && t.category === 'genre')
-                      .map((t) => (
-                        <span
-                          key={t.id}
-                          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-sm"
-                        >
-                          {t.value}
-                          <button
-                            type="button"
-                            onClick={() => removeInterest(t)}
-                            className="text-green-700 hover:text-green-900"
-                            title="Retirer"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      ))}
-                    {interestTags.filter((t) => t.source === 'spotify' && t.category === 'genre').length === 0 && (
-                      <p className="text-sm text-gray-500">Aucun genre Spotify enregistré (sync non faite ou vide).</p>
-                    )}
-                  </div>
-
-                  <div className="mt-3">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Styles détectés</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {interestTags
-                        .filter((t) => t.source === 'spotify' && t.category === 'style')
-                        .map((t) => (
-                          <span
-                            key={t.id}
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm"
-                          >
-                            {t.value}
-                            <button
-                              type="button"
-                              onClick={() => removeInterest(t)}
-                              className="text-emerald-700 hover:text-emerald-900"
-                              title="Retirer"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </span>
-                        ))}
-                      {interestTags.filter((t) => t.source === 'spotify' && t.category === 'style').length === 0 && (
-                        <p className="text-sm text-gray-500">Aucun style détecté pour l’instant.</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Mes préférences manuelles</h3>
+              <div className="mt-4">
+                <h3 className="font-semibold text-gray-900 mb-2">Mes préférences manuelles</h3>
                   <div className="flex flex-wrap gap-2">
                     {interestTags
                       .filter((t) => t.source === 'manual')

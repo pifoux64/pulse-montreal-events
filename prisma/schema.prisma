@@ -574,6 +574,13 @@ model UserPreferences {
   language               String   @default("fr") @db.VarChar(2)
   timezone               String   @default("America/Montreal")
   defaultRadius          Int      @default(10) @map("default_radius") // en km
+  // Nouveaux champs pour onboarding direct
+  musicPreferences       String[] @default([]) @map("music_preferences") // Genres musicaux sélectionnés
+  categoryPreferences    String[] @default([]) @map("category_preferences") // Catégories d'événements sélectionnées
+  vibePreferences        String[] @default([]) @map("vibe_preferences") // Ambiances/vibes sélectionnées
+  preferredDays          String[] @default([]) @map("preferred_days") // weekday, weekend
+  preferredTimes         String[] @default([]) @map("preferred_times") // day, evening, night
+  onboardingCompleted    Boolean  @default(false) @map("onboarding_completed") // Si l'onboarding a été complété
   createdAt              DateTime @default(now()) @map("created_at")
   updatedAt              DateTime @updatedAt @map("updated_at")
 

@@ -177,10 +177,11 @@ export async function getPersonalizedRecommendations(
 
 /**
  * Calcule un score de pertinence pour un événement (0-1)
- * Algorithme :
- * - Score de genre (40%) : Correspondance avec les genres préférés
- * - Score de style (30%) : Correspondance avec les styles préférés
- * - Score d'historique (20%) : Basé sur les favoris similaires
+ * Algorithme mis à jour pour utiliser les préférences directes :
+ * - Score de genre (30%) : Correspondance avec les genres préférés
+ * - Score de catégorie (30%) : Correspondance avec les catégories préférées
+ * - Score d'ambiance (20%) : Correspondance avec les vibes préférées
+ * - Score temporel (10%) : Correspondance avec jours/horaires préférés
  * - Score de popularité (10%) : Nombre de favoris
  */
 export function calculateEventScore(
@@ -191,19 +192,17 @@ export function calculateEventScore(
   userProfile: UserMusicProfile
 ): number {
   let genreScore = 0;
-  let styleScore = 0;
-  let typeScore = 0;
+  let categoryScore = 0;
   let ambianceScore = 0;
-  let historyScore = 0;
+  let temporalScore = 0;
   let popularityScore = 0;
 
   // Extraire les tags de l'événement
   const eventGenres = event.eventTags.filter((t) => t.category === 'genre').map((t) => t.value);
-  const eventStyles = event.eventTags.filter((t) => t.category === 'style').map((t) => t.value);
-  const eventTypes = event.eventTags.filter((t) => t.category === 'type').map((t) => t.value);
+  const eventCategories = event.eventTags.filter((t) => t.category === 'category').map((t) => t.value);
   const eventAmbiances = event.eventTags.filter((t) => t.category === 'ambiance').map((t) => t.value);
 
-  // Score de genre (40%)
+  // Score de genre (30%)
   if (eventGenres.length > 0 && userProfile.genres.size > 0) {
     let maxGenreMatch = 0;
     for (const genre of eventGenres) {
@@ -213,60 +212,74 @@ export function calculateEventScore(
     genreScore = maxGenreMatch;
   }
 
-  // Score de style (30%)
-  if (eventStyles.length > 0 && userProfile.styles.size > 0) {
-    let maxStyleMatch = 0;
-    for (const style of eventStyles) {
-      const weight = userProfile.styles.get(style) || 0;
-      maxStyleMatch = Math.max(maxStyleMatch, weight);
+  // Score de catégorie (30%)
+  if (eventCategories.length > 0 && userProfile.categories.size > 0) {
+    let maxCategoryMatch = 0;
+    for (const category of eventCategories) {
+      const weight = userProfile.categories.get(category) || 0;
+      maxCategoryMatch = Math.max(maxCategoryMatch, weight);
     }
-    styleScore = maxStyleMatch;
+    categoryScore = maxCategoryMatch;
+  } else if (userProfile.categories.size === 0) {
+    // Si l'utilisateur n'a pas de préférences de catégorie, ne pas pénaliser
+    categoryScore = 0.5; // Score neutre
   }
 
-  // Score de type (10% - bonus)
-  if (eventTypes.length > 0 && userProfile.types.size > 0) {
-    let maxTypeMatch = 0;
-    for (const type of eventTypes) {
-      const weight = userProfile.types.get(type) || 0;
-      maxTypeMatch = Math.max(maxTypeMatch, weight);
-    }
-    typeScore = maxTypeMatch * 0.1; // Bonus de 10%
-  }
-
-  // Score d'ambiance (10% - bonus)
+  // Score d'ambiance (20%)
   if (eventAmbiances.length > 0 && userProfile.ambiances.size > 0) {
     let maxAmbianceMatch = 0;
     for (const ambiance of eventAmbiances) {
       const weight = userProfile.ambiances.get(ambiance) || 0;
       maxAmbianceMatch = Math.max(maxAmbianceMatch, weight);
     }
-    ambianceScore = maxAmbianceMatch * 0.1; // Bonus de 10%
+    ambianceScore = maxAmbianceMatch;
   }
 
-  // Score d'historique (20%) : basé sur les favoris similaires
-  if (userProfile.favoriteEventIds.length > 0) {
-    // Si l'utilisateur a des favoris avec des genres/styles similaires
-    const matchingGenres = eventGenres.filter((g) => userProfile.favoriteGenres.includes(g));
-    const matchingStyles = eventStyles.filter((s) => userProfile.favoriteStyles.includes(s));
+  // Score temporel (10%) : correspondance avec jours/horaires préférés
+  if (event.startAt) {
+    const eventDate = new Date(event.startAt);
+    const dayOfWeek = eventDate.getDay(); // 0 = dimanche, 6 = samedi
+    const hour = eventDate.getHours();
+
+    // Vérifier correspondance avec jours préférés
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+    const isWeekday = !isWeekend;
     
-    if (matchingGenres.length > 0 || matchingStyles.length > 0) {
-      historyScore = 0.2; // Bonus fixe si correspondance avec favoris
+    if (userProfile.preferredDays.includes('weekend') && isWeekend) {
+      temporalScore += 0.05;
+    }
+    if (userProfile.preferredDays.includes('weekday') && isWeekday) {
+      temporalScore += 0.05;
+    }
+
+    // Vérifier correspondance avec horaires préférés
+    const isDay = hour >= 8 && hour < 17;
+    const isEvening = hour >= 17 && hour < 22;
+    const isNight = hour >= 22 || hour < 2;
+
+    if (userProfile.preferredTimes.includes('day') && isDay) {
+      temporalScore += 0.033;
+    }
+    if (userProfile.preferredTimes.includes('evening') && isEvening) {
+      temporalScore += 0.033;
+    }
+    if (userProfile.preferredTimes.includes('night') && isNight) {
+      temporalScore += 0.034;
     }
   }
 
   // Score de popularité (10%)
   const favoriteCount = event._count?.favorites || 0;
   // Normaliser : 0 favoris = 0, 10+ favoris = 1
-  popularityScore = Math.min(1, favoriteCount / 10) * 0.1;
+  popularityScore = Math.min(1, favoriteCount / 10);
 
   // Score final pondéré
   const finalScore =
-    genreScore * 0.4 +
-    styleScore * 0.3 +
-    typeScore +
-    ambianceScore +
-    historyScore +
-    popularityScore;
+    genreScore * 0.3 +
+    categoryScore * 0.3 +
+    ambianceScore * 0.2 +
+    temporalScore +
+    popularityScore * 0.1;
 
   return Math.min(1, finalScore); // S'assurer que le score est entre 0 et 1
 }
