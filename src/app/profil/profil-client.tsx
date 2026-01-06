@@ -124,10 +124,8 @@ export default function ProfilClient() {
   const connectSpotify = async () => {
     try {
       setError(null);
-      const res = await fetch('/api/user/music-services/spotify/connect', { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur de connexion Spotify');
-      window.location.href = data.authUrl;
+      // Utiliser la nouvelle route standardisée
+      window.location.href = '/api/integrations/spotify/auth';
     } catch (e: any) {
       setError(e.message || 'Erreur inconnue');
     }
@@ -277,8 +275,20 @@ export default function ProfilClient() {
                 Connexion Spotify
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Autorisez Pulse à lire vos top artistes pour déduire vos genres préférés.
+                Connectez votre compte Spotify pour obtenir des recommandations personnalisées d'événements basées sur vos goûts musicaux.
               </p>
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-800 font-medium mb-1">🔒 Données utilisées :</p>
+                <ul className="text-xs text-blue-700 list-disc list-inside space-y-0.5">
+                  <li>Top artists (via API Spotify)</li>
+                  <li>Genres musicaux dérivés</li>
+                </ul>
+                <p className="text-xs text-blue-800 font-medium mt-2 mb-1">🎯 Utilisation :</p>
+                <p className="text-xs text-blue-700">
+                  Ces données sont utilisées exclusivement pour générer des recommandations personnalisées d'événements. 
+                  Elles ne sont jamais partagées avec des tiers.
+                </p>
+              </div>
             </div>
 
             {spotifyConnection ? (

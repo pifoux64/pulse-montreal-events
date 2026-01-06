@@ -723,7 +723,7 @@ model MusicServiceConnection {
   refreshToken   String?   @map("refresh_token") @db.Text
   expiresAt      DateTime  @map("expires_at")
   externalUserId String    @map("external_user_id")
-  scopes         String?   // Scopes accordés lors de l'OAuth (ex: "user-top-read")
+  scopes         String? // Scopes accordés lors de l'OAuth (ex: "user-top-read")
   lastSyncAt     DateTime? @map("last_sync_at")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
