@@ -191,7 +191,7 @@ export default function ProfilClient() {
     }
   };
 
-  if (status === 'loading' || loadingConnections) {
+  if (status === 'loading' || loadingInterests) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
