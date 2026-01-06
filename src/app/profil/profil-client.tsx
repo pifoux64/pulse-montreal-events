@@ -371,11 +371,10 @@ export default function ProfilClient() {
                         </span>
                       ))}
                     {interestTags.filter((t) => t.source === 'manual').length === 0 && (
-                      <p className="text-sm text-gray-500">Aucune préférence manuelle pour l’instant.</p>
+                      <p className="text-sm text-gray-500">Aucune préférence manuelle pour l'instant.</p>
                     )}
                   </div>
                 </div>
-              </div>
 
               <div className="mt-6 border-t border-gray-200 pt-6">
                 <h3 className="font-semibold text-gray-900 mb-3">Ajouter une préférence</h3>
