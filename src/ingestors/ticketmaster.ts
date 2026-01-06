@@ -233,7 +233,6 @@ export class TicketmasterConnector extends BaseConnector {
     const description = (infoPieces.find(Boolean) as string | undefined) || `Événement listé par Ticketmaster: ${title}`;
 
     const tags = [
-      'ticketmaster',
       ...(rawEvent?.classifications?.map((c: any) => c?.segment?.name?.toLowerCase?.()).filter(Boolean) ?? []),
       ...(rawEvent?.classifications?.map((c: any) => c?.genre?.name?.toLowerCase?.()).filter(Boolean) ?? []),
     ].filter(Boolean);

@@ -941,7 +941,6 @@ export async function GET(request: NextRequest) {
             tags: [
               event.classifications?.[0]?.genre?.name?.toLowerCase(),
               event.classifications?.[0]?.segment?.name?.toLowerCase(),
-              event.source || 'ticketmaster'
             ].filter(Boolean)
           }),
           city: venue?.city?.name || 'Montreal',
