@@ -100,27 +100,15 @@ export default function ProfilClient() {
     }
   };
 
-  const refreshConnections = async () => {
+  const refreshUserPreferences = async () => {
     try {
-      setLoadingConnections(true);
-      setError(null); // Réinitialiser l'erreur avant le fetch
-      const res = await fetch('/api/user/music-services');
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `Erreur ${res.status}: ${res.statusText}`);
+      const res = await fetch('/api/user/preferences');
+      if (res.ok) {
+        const data = await res.json();
+        setUserPreferences(data.preferences || null);
       }
-      const data = await res.json();
-      setConnections(data.connections || []);
-    } catch (e: any) {
-      // Gérer les erreurs réseau différemment des erreurs serveur
-      if (e.name === 'TypeError' && e.message.includes('fetch')) {
-        setError('Erreur de connexion. Vérifiez votre connexion internet.');
-      } else {
-        setError(e.message || 'Erreur lors du chargement des connexions');
-      }
-      console.error('Erreur refreshConnections:', e);
-    } finally {
-      setLoadingConnections(false);
+    } catch (e) {
+      console.error('Erreur refreshUserPreferences:', e);
     }
   };
 
