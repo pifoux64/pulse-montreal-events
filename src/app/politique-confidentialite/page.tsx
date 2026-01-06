@@ -36,12 +36,52 @@ export default function PolitiqueConfidentialitePage() {
           </section>
 
           <section>
+            <h2 className="text-2xl font-semibold text-white mb-4">2.1. Intégration Spotify</h2>
+            <p className="mb-3">
+              Si vous choisissez de connecter votre compte Spotify, nous collectons les données suivantes :
+            </p>
+            <ul className="list-disc list-inside mt-2 space-y-1 ml-4 mb-4">
+              <li><strong>Top artists</strong> : Vos artistes les plus écoutés (via l'API Spotify)</li>
+              <li><strong>Genres musicaux dérivés</strong> : Genres musicaux détectés automatiquement à partir de vos top artists</li>
+            </ul>
+            <p className="mb-3">
+              <strong>Utilisation de ces données :</strong>
+            </p>
+            <ul className="list-disc list-inside mt-2 space-y-1 ml-4 mb-4">
+              <li>Détecter vos genres musicaux préférés</li>
+              <li>Générer des recommandations personnalisées d'événements correspondant à vos goûts</li>
+              <li>Améliorer votre expérience de découverte d'événements</li>
+            </ul>
+            <p className="mb-3">
+              <strong>Conservation :</strong>
+            </p>
+            <ul className="list-disc list-inside mt-2 space-y-1 ml-4 mb-4">
+              <li>Les données Spotify sont conservées tant que votre compte Spotify est connecté à Pulse</li>
+              <li>Vous pouvez supprimer ces données à tout moment en vous déconnectant de Spotify et en choisissant l'option "Supprimer les données"</li>
+            </ul>
+            <p className="mb-3">
+              <strong>Partage :</strong>
+            </p>
+            <p className="ml-4 mb-4">
+              Les données Spotify ne sont <strong>jamais</strong> partagées avec des tiers. Elles sont utilisées exclusivement dans le cadre de Pulse Montréal pour améliorer vos recommandations d'événements.
+            </p>
+            <p className="mb-3">
+              <strong>Vos droits :</strong>
+            </p>
+            <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
+              <li>Vous pouvez vous déconnecter de Spotify à tout moment depuis votre profil</li>
+              <li>Vous pouvez supprimer toutes les données Spotify dérivées lors de la déconnexion</li>
+              <li>Vous pouvez désactiver les recommandations personnalisées sans déconnecter Spotify</li>
+            </ul>
+          </section>
+
+          <section>
             <h2 className="text-2xl font-semibold text-white mb-4">3. Utilisation des données</h2>
             <p>Vos données sont utilisées pour :</p>
             <ul className="list-disc list-inside mt-2 space-y-1 ml-4">
               <li>Fournir et améliorer nos services</li>
               <li>Gérer votre compte organisateur</li>
-              <li>Personnaliser votre expérience</li>
+              <li>Personnaliser votre expérience (y compris les recommandations basées sur vos goûts musicaux si vous connectez Spotify)</li>
               <li>Analyser l'utilisation du site (avec consentement)</li>
               <li>Respecter nos obligations légales</li>
             </ul>
