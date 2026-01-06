@@ -10,6 +10,7 @@ import { EventbriteConnector } from '../ingestors/eventbrite';
 import { QuartierSpectaclesConnector } from '../ingestors/quartier-spectacles';
 import { TourismeMontrealaConnector } from '../ingestors/tourisme-montreal';
 import { TicketmasterConnector } from '../ingestors/ticketmaster';
+import { BandsintownConnector } from '../ingestors/bandsintown';
 import { MeetupConnector } from '../ingestors/meetup';
 import { LaVitrineConnector } from '../ingestors/lavitrine';
 import { AllEventsConnector } from '../ingestors/allevents';
@@ -97,13 +98,12 @@ export class IngestionOrchestrator {
         enabled: !!process.env.OPEN_DATA_MONTREAL_URL, // S'active si l'URL est configurée
         batchSize: 100,
       },
-      // TODO: Ajouter d'autres connecteurs
-      // {
-      //   source: EventSource.BANDSINTOWN,
-      //   enabled: !!process.env.BANDSINTOWN_TOKEN,
-      //   apiKey: process.env.BANDSINTOWN_TOKEN,
-      //   batchSize: 50,
-      // },
+      {
+        source: EventSource.BANDSINTOWN,
+        enabled: true, // Toujours activé (app_id par défaut si non configuré)
+        apiKey: process.env.BANDSINTOWN_APP_ID, // Optionnel, utilise "pulse-montreal" par défaut
+        batchSize: 100,
+      },
     ];
 
     // Initialiser les connecteurs activés
@@ -125,6 +125,10 @@ export class IngestionOrchestrator {
             if (config.apiKey) {
               this.connectors.set(config.source, new TicketmasterConnector(config.apiKey));
             }
+            break;
+          case EventSource.BANDSINTOWN:
+            // Bandsintown peut fonctionner sans clé API (utilise app_id par défaut)
+            this.connectors.set(config.source, new BandsintownConnector(config.apiKey));
             break;
           case EventSource.MEETUP:
             this.connectors.set(config.source, new MeetupConnector(process.env.MEETUP_TOKEN));
