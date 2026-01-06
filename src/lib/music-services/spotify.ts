@@ -156,7 +156,24 @@ export async function spotifyGetTopArtists(
   });
   if (!resp.ok) {
     const txt = await resp.text();
-    throw new Error(`Spotify top artists failed: ${resp.status} ${txt}`);
+    let errorMessage = `Spotify top artists failed: ${resp.status}`;
+    
+    if (resp.status === 403) {
+      errorMessage = `Accès refusé (403). L'utilisateur doit être enregistré dans le dashboard Spotify Developer. Vérifiez les paramètres sur developer.spotify.com/dashboard et assurez-vous que l'utilisateur est ajouté aux utilisateurs de test de l'application.`;
+    } else if (resp.status === 401) {
+      errorMessage = `Token invalide ou expiré (401). Veuillez reconnecter votre compte Spotify.`;
+    } else {
+      try {
+        const errorData = JSON.parse(txt);
+        if (errorData.error?.message) {
+          errorMessage += ` - ${errorData.error.message}`;
+        }
+      } catch {
+        errorMessage += ` - ${txt.substring(0, 200)}`;
+      }
+    }
+    
+    throw new Error(errorMessage);
   }
   return (await resp.json()) as SpotifyTopArtistsResponse;
 }
