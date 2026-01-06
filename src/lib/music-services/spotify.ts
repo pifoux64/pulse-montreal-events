@@ -34,9 +34,9 @@ export function getSpotifyEnv() {
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
   const redirectBase = process.env.NEXTAUTH_URL;
 
-  if (!clientId || !clientSecret || !redirectBase) {
+  if (!clientId || !clientSecret) {
     throw new Error(
-      "Configuration Spotify manquante: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, NEXTAUTH_URL",
+      "Configuration Spotify manquante: SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET",
     );
   }
 
@@ -44,8 +44,18 @@ export function getSpotifyEnv() {
 }
 
 export function buildSpotifyRedirectUri() {
+  // Priorité: SPOTIFY_REDIRECT_URI > NEXTAUTH_URL + path
+  if (process.env.SPOTIFY_REDIRECT_URI) {
+    return process.env.SPOTIFY_REDIRECT_URI;
+  }
+  
   const { redirectBase } = getSpotifyEnv();
-  return `${redirectBase}/api/user/music-services/spotify/callback`;
+  if (!redirectBase) {
+    throw new Error('SPOTIFY_REDIRECT_URI or NEXTAUTH_URL must be configured');
+  }
+  
+  // Utiliser le nouveau chemin par défaut
+  return `${redirectBase}/api/integrations/spotify/callback`;
 }
 
 export function generateOAuthState() {
@@ -56,12 +66,10 @@ export function buildSpotifyAuthorizeUrl(state: string) {
   const { clientId } = getSpotifyEnv();
   const redirectUri = buildSpotifyRedirectUri();
 
+  // Scopes minimaux pour faciliter l'approbation Spotify
+  // user-top-read est suffisant pour récupérer les top artists et dériver les genres
   const scopes = [
     'user-top-read',
-    'user-read-email',
-    'user-read-private',
-    // Optionnel plus tard:
-    // 'user-read-recently-played',
   ].join(' ');
 
   const params = new URLSearchParams({
@@ -80,14 +88,14 @@ function basicAuthHeader(clientId: string, clientSecret: string) {
   return `Basic ${token}`;
 }
 
-export async function exchangeSpotifyCodeForTokens(code: string): Promise<SpotifyTokens> {
+export async function exchangeSpotifyCodeForTokens(code: string, redirectUri?: string): Promise<SpotifyTokens> {
   const { clientId, clientSecret } = getSpotifyEnv();
-  const redirectUri = buildSpotifyRedirectUri();
+  const finalRedirectUri = redirectUri || buildSpotifyRedirectUri();
 
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
     code,
-    redirect_uri: redirectUri,
+    redirect_uri: finalRedirectUri,
   });
 
   const resp = await fetch('https://accounts.spotify.com/api/token', {
@@ -141,6 +149,64 @@ export async function spotifyGetMe(accessToken: string): Promise<SpotifyMe> {
     throw new Error(`Spotify /me failed: ${resp.status} ${txt}`);
   }
   return (await resp.json()) as SpotifyMe;
+}
+
+/**
+ * Gets a valid access token for a user, refreshing if necessary
+ * This function should be used instead of directly accessing the token from DB
+ */
+export async function getValidAccessToken(userId: string): Promise<string> {
+  const { prisma } = await import('@/lib/prisma');
+  const { decrypt, encrypt } = await import('@/lib/encryption');
+  
+  const conn = await prisma.musicServiceConnection.findUnique({
+    where: { unique_user_music_service: { userId, service: 'spotify' } },
+  });
+  
+  if (!conn) {
+    throw new Error('Spotify not connected');
+  }
+  
+  // Déchiffrer token
+  let accessToken: string;
+  try {
+    accessToken = decrypt(conn.accessToken);
+  } catch (error) {
+    // Si le déchiffrement échoue, peut-être que le token n'est pas chiffré (ancien format)
+    // Essayer de l'utiliser tel quel
+    accessToken = conn.accessToken;
+  }
+  
+  // Vérifier expiration (refresh si < 5 min restantes)
+  if (conn.expiresAt.getTime() < Date.now() + 5 * 60 * 1000) {
+    if (!conn.refreshToken) {
+      throw new Error('Refresh token missing. Please reconnect Spotify.');
+    }
+    
+    let refreshTokenValue: string;
+    try {
+      refreshTokenValue = decrypt(conn.refreshToken);
+    } catch (error) {
+      refreshTokenValue = conn.refreshToken;
+    }
+    
+    const refreshed = await refreshSpotifyToken(refreshTokenValue);
+    const newExpiresAt = new Date(Date.now() + refreshed.expires_in * 1000);
+    
+    // Chiffrer et sauvegarder
+    await prisma.musicServiceConnection.update({
+      where: { id: conn.id },
+      data: {
+        accessToken: encrypt(refreshed.access_token),
+        refreshToken: refreshed.refresh_token ? encrypt(refreshed.refresh_token) : undefined,
+        expiresAt: newExpiresAt,
+      },
+    });
+    
+    return refreshed.access_token;
+  }
+  
+  return accessToken;
 }
 
 export async function spotifyGetTopArtists(

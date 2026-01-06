@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-import { refreshSpotifyToken, spotifyGetTopArtists } from '@/lib/music-services/spotify';
+import { getValidAccessToken, spotifyGetTopArtists } from '@/lib/music-services/spotify';
 import { mapSpotifyGenresToPulseGenres, mapSpotifyGenresToPulseStyles } from '@/lib/music-services/genreMapping';
 
 export async function POST(request: NextRequest) {
@@ -32,36 +32,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Spotify non connecté' }, { status: 400 });
     }
 
-    let accessToken = conn.accessToken;
-    let refreshToken = conn.refreshToken ?? null;
-    let expiresAt = conn.expiresAt;
-
-    // Refresh si expiré (ou presque)
-    if (expiresAt.getTime() < Date.now() + 60_000) {
-      if (!refreshToken) {
-        return NextResponse.json({ error: 'Token Spotify expiré, veuillez reconnecter.' }, { status: 400 });
-      }
-      try {
-        const refreshed = await refreshSpotifyToken(refreshToken);
-        accessToken = refreshed.access_token;
-        expiresAt = new Date(Date.now() + refreshed.expires_in * 1000);
-        if (refreshed.refresh_token) refreshToken = refreshed.refresh_token;
-
-        await prisma.musicServiceConnection.update({
-          where: { id: conn.id },
-          data: {
-            accessToken,
-            refreshToken: refreshToken ?? undefined,
-            expiresAt,
-          },
-        });
-      } catch (error: any) {
-        console.error('[Spotify Sync] Erreur lors du refresh token:', error);
-        return NextResponse.json(
-          { error: `Erreur lors du rafraîchissement du token Spotify: ${error.message || 'Erreur inconnue'}` },
-          { status: 500 }
-        );
-      }
+    // Utiliser getValidAccessToken qui gère automatiquement le refresh
+    let accessToken: string;
+    try {
+      accessToken = await getValidAccessToken(session.user.id);
+    } catch (error: any) {
+      console.error('[Spotify Sync] Erreur lors de la récupération du token:', error);
+      return NextResponse.json(
+        { error: `Erreur lors de la récupération du token Spotify: ${error.message || 'Erreur inconnue'}` },
+        { status: 500 }
+      );
     }
 
     let topArtists;
