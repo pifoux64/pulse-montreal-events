@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const service = body?.service ?? 'spotify';
     if (service !== 'spotify') {
-      return NextResponse.json({ error: 'Service non supporté pour l'instant' }, { status: 400 });
+      return NextResponse.json({ error: "Service non supporté pour l'instant" }, { status: 400 });
     }
 
     const conn = await prisma.musicServiceConnection.findUnique({
