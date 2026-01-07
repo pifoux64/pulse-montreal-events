@@ -10,6 +10,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Share2, Heart, Loader2, Check, LogIn } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Top5ShareModal from '@/components/Top5ShareModal';
 import { trackLandingView } from '@/lib/analytics/tracking';
 
@@ -27,6 +28,7 @@ interface Top5PageClientProps {
 }
 
 export default function Top5PageClient({ post, eventIds }: Top5PageClientProps) {
+  const t = useTranslations('top5');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [showShareModal, setShowShareModal] = useState(false);
@@ -74,7 +76,7 @@ export default function Top5PageClient({ post, eventIds }: Top5PageClientProps) 
       });
 
       if (!response.ok) {
-        throw new Error('Erreur lors de l\'ajout aux favoris');
+        throw new Error(t('errorAddingFavorites'));
       }
 
       setSavedAll(true);
@@ -94,10 +96,13 @@ export default function Top5PageClient({ post, eventIds }: Top5PageClientProps) 
           <div className="flex-1">
             <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
             <p className="text-slate-300 text-sm mb-2">
-              Top 5 {post.theme} à Montréal
+              {t('top5Theme', { theme: post.theme })}
             </p>
             <p className="text-slate-400 text-xs mb-4">
-              Période du {new Date(post.periodStart).toLocaleDateString('fr-CA')} au {new Date(post.periodEnd).toLocaleDateString('fr-CA')}
+              {t('period', {
+                start: new Date(post.periodStart).toLocaleDateString('fr-CA'),
+                end: new Date(post.periodEnd).toLocaleDateString('fr-CA'),
+              })}
             </p>
           </div>
           
@@ -108,7 +113,7 @@ export default function Top5PageClient({ post, eventIds }: Top5PageClientProps) 
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium"
             >
               <Share2 className="w-4 h-4" />
-              Partager
+              {t('share')}
             </button>
             <button
               onClick={handleSaveAll}
@@ -124,17 +129,17 @@ export default function Top5PageClient({ post, eventIds }: Top5PageClientProps) 
               {isSavingAll ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Ajout...
+                  {t('saving')}
                 </>
               ) : savedAll ? (
                 <>
                   <Check className="w-4 h-4" />
-                  Sauvegardé
+                  {t('saved')}
                 </>
               ) : (
                 <>
                   <Heart className="w-4 h-4" />
-                  Sauvegarder les 5
+                  {t('saveAll')}
                 </>
               )}
             </button>
@@ -154,7 +159,7 @@ export default function Top5PageClient({ post, eventIds }: Top5PageClientProps) 
           <div className="bg-white rounded-xl shadow-2xl border border-gray-200 p-4 flex items-center gap-3">
             <div className="flex-1">
               <p className="text-sm font-medium text-gray-900">
-                Envoie cette liste à quelqu'un?
+                {t('sharePrompt')}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -166,7 +171,7 @@ export default function Top5PageClient({ post, eventIds }: Top5PageClientProps) 
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center gap-2"
               >
                 <Share2 className="w-4 h-4" />
-                Partager
+                {t('share')}
               </button>
               <button
                 onClick={() => setShowSharePrompt(false)}

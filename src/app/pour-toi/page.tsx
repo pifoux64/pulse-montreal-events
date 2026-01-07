@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -38,6 +39,15 @@ interface RecommendationEvent {
   imageUrl?: string;
   url?: string;
   source: string;
+  organizerId?: string | null;
+  organizer?: {
+    id: string;
+    displayName: string;
+    verified: boolean;
+    user?: {
+      name: string | null;
+    };
+  } | null;
   _count?: {
     favorites: number;
   };
@@ -118,15 +128,15 @@ const transformRecommendationEvent = (rec: RecommendationResult): Event => {
     },
     imageUrl: event.imageUrl || null,
     ticketUrl: event.url || '#',
-    organizerId: 'default',
-    organizer: {
-      id: 'default',
+    organizerId: event.organizerId || null,
+    organizer: event.organizer ? {
+      id: event.organizer.id,
       email: 'api@pulse.com',
-      name: event.source,
+      name: event.organizer.displayName,
       role: 'organizer' as const,
       createdAt: new Date(),
       updatedAt: new Date(),
-    },
+    } : null,
     customFilters: [],
     accessibility: [],
     status: 'published' as const,
@@ -146,6 +156,8 @@ const transformRecommendationEvent = (rec: RecommendationResult): Event => {
 type Scope = 'today' | 'weekend' | 'all';
 
 export default function PourToiPage() {
+  const t = useTranslations('pourToi');
+  const tCommon = useTranslations('common');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [scope, setScope] = useState<Scope>('all');
@@ -261,7 +273,7 @@ export default function PourToiPage() {
           <div className="flex items-center gap-3 mb-4">
             <Sparkles className="w-8 h-8 text-purple-600" />
             <h1 className="text-4xl font-bold text-gray-900 flex items-center gap-2">
-              Pour toi
+              {t('title')}
               <span className="text-sm px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-600 flex items-center gap-1">
                 <Brain className="w-3 h-3" />
                 IA
@@ -269,7 +281,7 @@ export default function PourToiPage() {
             </h1>
           </div>
           <p className="text-lg text-gray-600">
-            Découvrez des événements faits pour vous, basés sur vos préférences (genres musicaux, catégories, ambiances).
+            {t('subtitle')}
           </p>
         </div>
 
@@ -283,14 +295,14 @@ export default function PourToiPage() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    Top 5 {favoriteGenre.charAt(0).toUpperCase() + favoriteGenre.slice(1).replace(/_/g, ' ')}
+                    {t('top5Genre', { genre: favoriteGenre.charAt(0).toUpperCase() + favoriteGenre.slice(1).replace(/_/g, ' ') })}
                     <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 text-green-700 flex items-center gap-1">
                       <Brain className="w-3 h-3" />
-                      Basé sur vos préférences
+                      {t('basedOnPreferences')}
                     </span>
                   </h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    Votre genre préféré • {top5GenreData.events.length} événement{top5GenreData.events.length > 1 ? 's' : ''}
+                    {t('yourFavoriteGenre')} • {t('eventsCount', { count: top5GenreData.events.length })}
                   </p>
                 </div>
               </div>
@@ -342,7 +354,7 @@ export default function PourToiPage() {
                     </span>
                   </h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    Top 5 sélectionné par notre IA • {top5Data.eventsCount} événement{top5Data.eventsCount > 1 ? 's' : ''}
+                    {t('top5Selected')} • {t('eventsCount', { count: top5Data.eventsCount })}
                   </p>
                 </div>
               </div>
@@ -350,7 +362,7 @@ export default function PourToiPage() {
                 href={`/top-5/${top5Data.slug}`}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium transition-colors text-sm"
               >
-                Voir le Top 5
+                {t('seeTop5')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -385,7 +397,7 @@ export default function PourToiPage() {
             }`}
           >
             <Calendar className="w-4 h-4 inline mr-2" />
-            Aujourd'hui
+            {t('today')}
           </button>
           <button
             onClick={() => setScope('weekend')}
@@ -396,7 +408,7 @@ export default function PourToiPage() {
             }`}
           >
             <Calendar className="w-4 h-4 inline mr-2" />
-            Ce week-end
+            {t('weekend')}
           </button>
           <button
             onClick={() => setScope('all')}
@@ -406,7 +418,7 @@ export default function PourToiPage() {
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
           >
-            Tous les événements
+            {t('allEvents')}
           </button>
           <button
             onClick={() => refetch()}
@@ -414,7 +426,7 @@ export default function PourToiPage() {
             className="px-4 py-2 rounded-lg font-medium bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 flex items-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-            Actualiser
+            {t('refresh')}
           </button>
         </div>
 
@@ -423,7 +435,7 @@ export default function PourToiPage() {
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-red-600" />
             <span className="text-red-800">
-              Erreur lors du chargement des recommandations. Vérifiez votre connexion.
+              {t('errorLoading')}
             </span>
           </div>
         )}
@@ -432,7 +444,7 @@ export default function PourToiPage() {
         {isLoading && (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <span className="ml-3 text-gray-600">Chargement de vos recommandations...</span>
+            <span className="ml-3 text-gray-600">{t('loadingRecommendations')}</span>
           </div>
         )}
 
@@ -443,32 +455,30 @@ export default function PourToiPage() {
               <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center">
                 <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h2 className="text-2xl font-semibold text-gray-900 mb-2">
-                  Aucune recommandation pour le moment
+                  {t('noRecommendations')}
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Configurez vos préférences (genres musicaux, catégories, ambiances) dans votre profil pour recevoir des
-                  recommandations personnalisées.
+                  {t('configurePreferences')}
                 </p>
                 <div className="flex gap-3 justify-center">
                   <button
                     onClick={() => router.push('/onboarding')}
                     className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                   >
-                    Configurer mes préférences
+                    {t('configureButton')}
                   </button>
                   <button
                     onClick={() => router.push('/profil')}
                     className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium"
                   >
-                    Aller au profil
+                    {t('goToProfile')}
                   </button>
                 </div>
               </div>
             ) : (
               <>
                 <div className="mb-4 text-sm text-gray-600">
-                  {recommendations.length} événement{recommendations.length > 1 ? 's' : ''}{' '}
-                  recommandé{recommendations.length > 1 ? 's' : ''} pour vous
+                  {t('eventsRecommended', { count: recommendations.length })}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {recommendations.map((event) => (
@@ -485,7 +495,7 @@ export default function PourToiPage() {
                         <div className="absolute top-2 right-2 z-10">
                           <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 shadow-lg">
                             <Sparkles className="w-3 h-3" />
-                            Recommandé
+                            {t('recommended')}
                           </div>
                         </div>
                       )}

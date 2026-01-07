@@ -460,7 +460,7 @@ const EventCard = ({
           )}
 
           {/* Organisateur */}
-          {event.organizer && (
+          {event.organizer && event.organizerId && event.organizerId !== 'default' && (
             <Link
               href={`/organisateur/${event.organizerId}`}
               onClick={(e) => e.stopPropagation()}

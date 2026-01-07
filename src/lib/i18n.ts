@@ -1,13 +1,13 @@
 /**
  * Configuration i18n pour Pulse Montreal
- * Support du français et de l'anglais
+ * Support du français, anglais et espagnol
  */
 
 import { notFound } from 'next/navigation';
 import { getRequestConfig } from 'next-intl/server';
 
 // Langues supportées
-export const locales = ['fr', 'en'] as const;
+export const locales = ['fr', 'en', 'es'] as const;
 export type Locale = (typeof locales)[number];
 
 // Langue par défaut

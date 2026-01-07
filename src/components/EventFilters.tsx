@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { Filter, X, Search, MapPin, Calendar, DollarSign, Users, Accessibility, Globe, Tag, Clock, TrendingUp, ArrowUpDown } from 'lucide-react';
 import { EventFilter, EventCategory } from '@/types';
 import { EVENT_TYPES, AMBIANCES, PUBLICS } from '@/lib/tagging/taxonomy';
@@ -91,35 +92,7 @@ const getNextMonthRange = () => {
   return { start, end };
 };
 
-const DATE_PRESETS: Record<DatePresetKey, { label: string; compute: () => { start: Date; end: Date } }> = {
-  today: {
-    label: "Aujourd'hui",
-    compute: () => {
-      const now = new Date();
-      return { start: startOfDay(now), end: endOfDay(now) };
-    },
-  },
-  tonight: {
-    label: 'Ce soir',
-    compute: getTonightRange,
-  },
-  weekend: {
-    label: 'Week-end',
-    compute: getWeekendRange,
-  },
-  thisWeek: {
-    label: 'Cette semaine',
-    compute: getThisWeekRange,
-  },
-  thisMonth: {
-    label: 'Ce mois',
-    compute: getThisMonthRange,
-  },
-  nextMonth: {
-    label: 'Mois prochain',
-    compute: getNextMonthRange,
-  },
-};
+// DATE_PRESETS sera créé dans le composant pour utiliser les traductions
 
 // Sources d'événements disponibles
 const EVENT_SOURCES = [
@@ -129,16 +102,7 @@ const EVENT_SOURCES = [
   { id: 'internal', label: 'Pulse Montréal' },
 ];
 
-// Options de tri
-const SORT_OPTIONS = [
-  { value: 'date', label: 'Date (plus proche)', icon: Clock },
-  { value: 'price', label: 'Prix (croissant)', icon: DollarSign },
-  { value: 'popularity', label: 'Popularité', icon: TrendingUp },
-  { value: 'distance', label: 'Distance', icon: MapPin },
-];
-
-// Restrictions d'âge
-const AGE_RESTRICTIONS = ['Tous', '18+', '21+', '16+', '13+'];
+// SORT_OPTIONS et AGE_RESTRICTIONS seront créés dans le composant pour utiliser les traductions
 
 const isSameRange = (rangeA?: { start?: Date; end?: Date }, rangeB?: { start?: Date; end?: Date }) => {
   if (!rangeA?.start || !rangeA?.end || !rangeB?.start || !rangeB?.end) return false;
@@ -150,10 +114,54 @@ const isSameRange = (rangeA?: { start?: Date; end?: Date }, rangeB?: { start?: D
 };
 
 const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, neighborhoods = [] }: EventFiltersProps) => {
+  const t = useTranslations('filters');
+  const tCommon = useTranslations('common');
   const [isExpanded, setIsExpanded] = useState(true);
   const [localFilters, setLocalFilters] = useState<EventFilter>(filters);
   const [activePreset, setActivePreset] = useState<DatePresetKey | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // DATE_PRESETS avec traductions
+  const DATE_PRESETS: Record<DatePresetKey, { label: string; compute: () => { start: Date; end: Date } }> = {
+    today: {
+      label: t('today'),
+      compute: () => {
+        const now = new Date();
+        return { start: startOfDay(now), end: endOfDay(now) };
+      },
+    },
+    tonight: {
+      label: t('tonight'),
+      compute: getTonightRange,
+    },
+    weekend: {
+      label: t('weekend'),
+      compute: getWeekendRange,
+    },
+    thisWeek: {
+      label: t('thisWeek'),
+      compute: getThisWeekRange,
+    },
+    thisMonth: {
+      label: t('thisMonth'),
+      compute: getThisMonthRange,
+    },
+    nextMonth: {
+      label: t('nextMonth'),
+      compute: getNextMonthRange,
+    },
+  };
+
+  // Options de tri avec traductions
+  const SORT_OPTIONS = [
+    { value: 'date', label: t('sortByDate'), icon: Clock },
+    { value: 'price', label: t('sortByPrice'), icon: DollarSign },
+    { value: 'popularity', label: t('sortByPopularity'), icon: TrendingUp },
+    { value: 'distance', label: t('sortByDistance'), icon: MapPin },
+  ];
+
+  // Restrictions d'âge avec traductions
+  const AGE_RESTRICTIONS = [t('all'), '18+', '21+', '16+', '13+'];
 
   // SPRINT 1: Recherche intelligente (IA)
   const [aiEnabled, setAiEnabled] = useState(true);
@@ -228,7 +236,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Erreur lors de la recherche intelligente');
+        throw new Error(data.error || t('aiSearchError'));
       }
 
       const aiFilters = data.filters as {
@@ -347,7 +355,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
       setAiConfidence(aiFilters.confidence ?? null);
     } catch (error: any) {
       console.error('Erreur recherche IA:', error);
-      setAiError(error.message || 'Erreur lors de la recherche intelligente');
+      setAiError(error.message || t('aiSearchError'));
     } finally {
       setAiLoading(false);
     }
@@ -436,7 +444,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Filter className="w-4 h-4 text-indigo-600" />
-            <h3 className="text-base font-semibold text-gray-900">Filtres</h3>
+            <h3 className="text-base font-semibold text-gray-900">{tCommon('filter')}</h3>
             {getActiveFiltersCount() > 0 && (
               <span className="bg-indigo-600 text-white text-xs px-2 py-1 rounded-full">
                 {getActiveFiltersCount()}
@@ -468,7 +476,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <input
                 type="text"
-                placeholder="Rechercher un événement (ex: reggae gratuit ce soir)..."
+                placeholder={t('searchPlaceholder')}
                 value={localFilters.searchQuery || ''}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 onKeyDown={(e) => {
@@ -493,7 +501,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
                   ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/50'
                   : 'bg-white text-gray-700 border-gray-300'
               }`}
-              title={aiEnabled ? 'Recherche IA activée - Cliquez pour désactiver' : 'Recherche IA désactivée - Cliquez pour activer'}
+              title={aiEnabled ? t('aiEnabled') : t('aiDisabled')}
             >
               <span className="flex items-center gap-1">
                 <span className="relative">
@@ -510,7 +518,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
               disabled={aiLoading || !localFilters.searchQuery?.trim()}
               className="px-3 py-1.5 text-xs font-medium rounded-full border border-indigo-500 text-indigo-600 hover:bg-indigo-50 disabled:opacity-50"
             >
-              {aiLoading ? 'Analyse…' : 'Interpréter'}
+              {aiLoading ? t('analyzing') : t('interpret')}
             </button>
           </div>
           {(aiExplanation || aiError) && (
@@ -546,7 +554,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
                   className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-indigo-100 text-indigo-700 rounded-full hover:bg-indigo-200 transition-colors"
                   title="Cliquer pour retirer"
                 >
-                  {activePreset ? DATE_PRESETS[activePreset].label : 'Période'}
+                  {activePreset ? DATE_PRESETS[activePreset].label : t('period')}
                   <X className="w-2.5 h-2.5" />
                 </button>
               )}
@@ -561,7 +569,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
                   className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded-full hover:bg-green-200 transition-colors"
                   title="Cliquer pour retirer"
                 >
-                  Gratuit
+                  {tCommon('free')}
                   <X className="w-2.5 h-2.5" />
                 </button>
               )}
@@ -576,7 +584,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
                   className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 transition-colors"
                   title="Cliquer pour retirer"
                 >
-                  {localFilters.language === 'FR' ? 'Français' : localFilters.language === 'EN' ? 'English' : localFilters.language}
+                  {localFilters.language === 'FR' ? tCommon('french') : localFilters.language === 'EN' ? tCommon('english') : localFilters.language}
                   <X className="w-2.5 h-2.5" />
                 </button>
               )}
@@ -652,7 +660,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
       <div className="p-3 space-y-3">
         {/* Catégories */}
         <div>
-          <h4 className="font-medium text-gray-900 mb-2 text-sm">Catégories</h4>
+          <h4 className="font-medium text-gray-900 mb-2 text-sm">{tCommon('categories')}</h4>
           <div className="grid grid-cols-1 gap-1">
             {categories.map((category) => (
               <label key={category.id} className="flex items-center space-x-2">
@@ -671,7 +679,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
         {/* Sous-catégories (si des catégories sont sélectionnées) */}
         {localFilters.categories && localFilters.categories.length > 0 && (
           <div>
-            <h4 className="font-medium text-gray-900 mb-3">Sous-catégories</h4>
+            <h4 className="font-medium text-gray-900 mb-3">{t('subCategories')}</h4>
             <div className="grid grid-cols-2 gap-2">
               {categories
                 .filter(cat => localFilters.categories?.includes(cat.name))
@@ -695,7 +703,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
         <div>
           <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
             <Calendar className="w-4 h-4" />
-            <span>Période</span>
+            <span>{t('period')}</span>
           </h4>
           <div className="flex flex-wrap gap-2 mb-3">
             {(Object.keys(DATE_PRESETS) as DatePresetKey[]).map((presetKey) => (
@@ -715,7 +723,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Début</label>
+              <label className="block text-xs text-gray-600 mb-1">{t('start')}</label>
               <input
                 type="date"
                 value={localFilters.dateRange?.start?.toISOString().split('T')[0] || ''}
@@ -724,7 +732,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-600 mb-1">Fin</label>
+              <label className="block text-xs text-gray-600 mb-1">{t('end')}</label>
               <input
                 type="date"
                 value={localFilters.dateRange?.end?.toISOString().split('T')[0] || ''}
@@ -739,7 +747,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
         <div>
           <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
             <DollarSign className="w-4 h-4" />
-            <span>Prix</span>
+            <span>{tCommon('price')}</span>
           </h4>
           <div className="space-y-2">
             <label className="flex items-center space-x-2">
@@ -749,12 +757,12 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
                 onChange={(e) => handleFilterChange('freeOnly', e.target.checked)}
                 className="rounded border-gray-300 text-sky-600 focus:ring-sky-500"
               />
-              <span className="text-sm text-gray-700">Gratuit uniquement</span>
+              <span className="text-sm text-gray-700">{t('freeOnly')}</span>
             </label>
             {!localFilters.freeOnly && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Min</label>
+                  <label className="block text-xs text-gray-600 mb-1">{t('min')}</label>
                   <input
                     type="number"
                     placeholder="0"
@@ -764,7 +772,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Max</label>
+                  <label className="block text-xs text-gray-600 mb-1">{t('max')}</label>
                   <input
                     type="number"
                     placeholder="100"
@@ -782,7 +790,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
         <div>
           <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
             <ArrowUpDown className="w-4 h-4" />
-            <span>Trier par</span>
+            <span>{tCommon('sort')}</span>
           </h4>
           <select
             value={localFilters.sortBy || 'date'}
@@ -804,13 +812,13 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
         <div>
           <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
             <Globe className="w-4 h-4" />
-            <span>Langue</span>
+            <span>{tCommon('language')}</span>
           </h4>
           <div className="space-y-2">
             {[
-              { value: 'FR', label: 'Français' },
-              { value: 'EN', label: 'Anglais' },
-              { value: 'BOTH', label: 'Les deux' },
+              { value: 'FR', label: tCommon('french') },
+              { value: 'EN', label: tCommon('english') },
+              { value: 'BOTH', label: tCommon('both') },
             ].map((lang) => (
               <label key={lang.value} className="flex items-center space-x-2">
                 <input
@@ -831,7 +839,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
         <div>
           <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
             <MapPin className="w-4 h-4" />
-            <span>Localisation</span>
+            <span>{tCommon('location')}</span>
           </h4>
           <div className="space-y-3">
             <button
@@ -839,13 +847,13 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
               className="btn-primary w-full flex items-center justify-center space-x-2"
             >
               <MapPin className="w-4 h-4" />
-              <span>Autour de moi</span>
+              <span>{t('aroundMe')}</span>
             </button>
             
             {localFilters.location && (
               <div>
                 <label className="block text-xs text-gray-600 mb-2">
-                  Rayon: <span className="font-semibold text-sky-600">{localFilters.location.radius || 5} km</span>
+                  {t('radius')}: <span className="font-semibold text-sky-600">{localFilters.location.radius || 5} km</span>
                 </label>
                 <div className="space-y-2">
                   <input
@@ -912,7 +920,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
           className="w-full py-2 text-sm font-medium text-sky-600 hover:text-sky-700 border-t border-gray-200 flex items-center justify-center gap-2"
         >
           <Filter className="w-4 h-4" />
-          {showAdvanced ? 'Masquer les filtres avancés' : 'Afficher les filtres avancés'}
+          {showAdvanced ? t('hideAdvanced') : t('showAdvanced')}
         </button>
 
         {/* Filtres avancés */}
@@ -923,7 +931,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
               <div>
                 <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
                   <MapPin className="w-4 h-4" />
-                  <span>Quartiers</span>
+                  <span>{t('neighborhoods')}</span>
                 </h4>
                 <div className="max-h-32 overflow-y-auto space-y-1">
                   {neighborhoods.map((neighborhood) => (
@@ -951,7 +959,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
             <div>
               <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
                 <Tag className="w-4 h-4" />
-                <span>Sources</span>
+                <span>{t('sources')}</span>
               </h4>
               <div className="space-y-1">
                 {EVENT_SOURCES.map((source) => (
@@ -976,7 +984,7 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
 
             {/* Restriction d'âge */}
             <div>
-              <h4 className="font-medium text-gray-900 mb-3">Restriction d'âge</h4>
+              <h4 className="font-medium text-gray-900 mb-3">{t('ageRestriction')}</h4>
               <select
                 value={localFilters.ageRestriction || 'Tous'}
                 onChange={(e) => handleFilterChange('ageRestriction', e.target.value === 'Tous' ? undefined : e.target.value)}
@@ -994,10 +1002,10 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
             <div>
               <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
                 <Users className="w-4 h-4" />
-                <span>Public cible</span>
+                <span>{t('targetAudience')}</span>
               </h4>
               <div className="grid grid-cols-2 gap-2">
-                {['Adulte', 'Famille', 'Étudiant', 'Senior', 'Enfant'].map((audience) => (
+                {[t('adult'), t('family'), t('student'), t('senior'), t('child')].map((audience) => (
                   <label key={audience} className="flex items-center space-x-2">
                     <input
                       type="checkbox"
@@ -1021,14 +1029,14 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
             <div>
               <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
                 <Accessibility className="w-4 h-4" />
-                <span>Accessibilité</span>
+                <span>{t('accessibility')}</span>
               </h4>
               <div className="space-y-2">
                 {[
-                  { key: 'wheelchairAccessible', label: 'Accessible en fauteuil roulant' },
-                  { key: 'hearingAssistance', label: 'Assistance auditive' },
-                  { key: 'visualAssistance', label: 'Assistance visuelle' },
-                  { key: 'quietSpace', label: 'Espace calme disponible' },
+                  { key: 'wheelchairAccessible', label: t('wheelchairAccessible') },
+                  { key: 'hearingAssistance', label: t('hearingAssistance') },
+                  { key: 'visualAssistance', label: t('visualAssistance') },
+                  { key: 'quietSpace', label: t('quietSpace') },
                 ].map((item) => (
                   <label key={item.key} className="flex items-center space-x-2">
                     <input
@@ -1054,14 +1062,14 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
             <div>
               <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
                 <Tag className="w-4 h-4" />
-                <span>Type d'événement</span>
+                <span>{t('eventType')}</span>
               </h4>
               <select
                 value={localFilters.type || ''}
                 onChange={(e) => handleFilterChange('type', e.target.value || undefined)}
                 className="w-full form-input"
               >
-                <option value="">Tous les types</option>
+                <option value="">{t('allTypes')}</option>
                 {EVENT_TYPES.map((type) => (
                   <option key={type} value={type}>
                     {type.replace(/_/g, ' ')}
@@ -1074,14 +1082,14 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
             <div>
               <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
                 <Globe className="w-4 h-4" />
-                <span>Ambiance</span>
+                <span>{t('ambiance')}</span>
               </h4>
               <select
                 value={localFilters.ambiance || ''}
                 onChange={(e) => handleFilterChange('ambiance', e.target.value || undefined)}
                 className="w-full form-input"
               >
-                <option value="">Toutes les ambiances</option>
+                <option value="">{t('allAmbiances')}</option>
                 {AMBIANCES.map((ambiance) => (
                   <option key={ambiance} value={ambiance}>
                     {ambiance.replace(/_/g, ' ')}
@@ -1094,17 +1102,17 @@ const EventFilters = ({ filters, onFiltersChange, categories, onLocationDetect, 
             <div>
               <h4 className="font-medium text-gray-900 mb-3 flex items-center space-x-2">
                 <Users className="w-4 h-4" />
-                <span>Public (tags structurés)</span>
+                <span>{t('publicStructured')}</span>
               </h4>
               <select
                 value={localFilters.public || ''}
                 onChange={(e) => handleFilterChange('public', e.target.value || undefined)}
                 className="w-full form-input"
               >
-                <option value="">Tous les publics</option>
+                <option value="">{t('allPublics')}</option>
                 {PUBLICS.map((publicType) => (
                   <option key={publicType} value={publicType}>
-                    {publicType === 'tout_public' ? 'Tout public' : 
+                    {publicType === 'tout_public' ? t('allPublic') : 
                      publicType === '18_plus' ? '18+' : 
                      publicType.replace(/_/g, ' ')}
                   </option>

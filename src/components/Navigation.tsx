@@ -9,6 +9,7 @@ import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut
 import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
 import NotificationBell from './NotificationBell';
+import LanguageSelector from './LanguageSelector';
 
 export default function Navigation() {
   const t = useTranslations('navigation');
@@ -40,11 +41,11 @@ export default function Navigation() {
   }, [isUserMenuOpen]);
 
   const navigationItems = [
-    { name: t('map'), href: '/carte', icon: Map, shortName: 'Carte' },
-    { name: t('calendar'), href: '/calendrier', icon: Calendar, shortName: 'Cal.' },
-    { name: 'Pour toi', href: '/pour-toi', icon: Sparkles, shortName: 'Pour toi' },
-    { name: t('favorites'), href: '/favoris', icon: Heart, shortName: 'Favoris' },
-    { name: t('publish'), href: '/publier', icon: Plus, shortName: 'Publier' },
+    { name: t('map'), href: '/carte', icon: Map, shortName: t('mapShort') },
+    { name: t('calendar'), href: '/calendrier', icon: Calendar, shortName: t('calendarShort') },
+    { name: t('pourToi'), href: '/pour-toi', icon: Sparkles, shortName: t('pourToiShort') },
+    { name: t('favorites'), href: '/favoris', icon: Heart, shortName: t('favoritesShort') },
+    { name: t('publish'), href: '/publier', icon: Plus, shortName: t('publishShort') },
   ];
 
   return (
@@ -105,12 +106,12 @@ export default function Navigation() {
               
               {/* Menu déroulant "Découvrir" - Amélioré */}
               <div className="relative group">
-                <button className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap" title="Découvrir">
+                <button className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap" title={t('discover')}>
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="relative z-10 flex-shrink-0">
                     <Compass className="w-4 h-4" />
                   </div>
-                  <span className="relative z-10 text-xs">Découvrir</span>
+                  <span className="relative z-10 text-xs">{t('discover')}</span>
                   <div className="relative z-10 ml-0.5 flex-shrink-0">
                     <svg className="w-3 h-3 transition-transform group-hover:rotate-180 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -131,7 +132,7 @@ export default function Navigation() {
                       <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500/20 to-purple-500/20 group-hover/item:scale-110 transition-transform">
                         <Music className="w-4 h-4 text-pink-400" />
                       </div>
-                      <span className="font-medium">Musique</span>
+                      <span className="font-medium">{t('music')}</span>
                     </Link>
                     
                     <Link
@@ -141,7 +142,7 @@ export default function Navigation() {
                       <div className="p-2 rounded-lg bg-gradient-to-br from-orange-500/20 to-pink-500/20 group-hover/item:scale-110 transition-transform">
                         <Users className="w-4 h-4 text-orange-400" />
                       </div>
-                      <span className="font-medium">Famille</span>
+                      <span className="font-medium">{t('family')}</span>
                     </Link>
                     
                     <Link
@@ -151,7 +152,7 @@ export default function Navigation() {
                       <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 group-hover/item:scale-110 transition-transform">
                         <Palette className="w-4 h-4 text-purple-400" />
                       </div>
-                      <span className="font-medium">Culture</span>
+                      <span className="font-medium">{t('culture')}</span>
                     </Link>
                     
                     <Link
@@ -161,7 +162,7 @@ export default function Navigation() {
                       <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 group-hover/item:scale-110 transition-transform">
                         <Trophy className="w-4 h-4 text-blue-400" />
                       </div>
-                      <span className="font-medium">Sport</span>
+                      <span className="font-medium">{t('sport')}</span>
                     </Link>
                     
                     <div className="border-t border-white/10 my-1" />
@@ -173,7 +174,7 @@ export default function Navigation() {
                       <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 group-hover/item:scale-110 transition-transform">
                         <Trophy className="w-4 h-4 text-amber-400" />
                       </div>
-                      <span className="font-medium">Top 5 Pulse Picks</span>
+                      <span className="font-medium">{t('top5')}</span>
                       <span className="ml-auto text-xs px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
                         IA
                       </span>
@@ -195,7 +196,7 @@ export default function Navigation() {
                 <Search className="w-4 h-4 text-slate-300 group-focus-within:text-sky-300 transition-colors duration-300" />
                 <input
                   type="text"
-                  placeholder="Recherche rapide..."
+                  placeholder={t('searchPlaceholder')}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       const query = (e.target as HTMLInputElement).value;
@@ -212,6 +213,9 @@ export default function Navigation() {
 
             {/* Notifications */}
             <NotificationBell />
+
+            {/* Sélecteur de langue */}
+            <LanguageSelector />
 
             {/* Profil utilisateur avec menu déroulant */}
             {status === 'loading' ? (
@@ -242,14 +246,14 @@ export default function Navigation() {
                     <div className="p-2">
                       {/* En-tête utilisateur */}
                       <div className="px-3 py-3 text-sm border-b border-white/10 mb-1">
-                        <div className="font-semibold text-white">{session.user.name || 'Utilisateur'}</div>
+                        <div className="font-semibold text-white">{session.user.name || t('myAccount')}</div>
                         <div className="text-xs text-slate-400 mt-0.5">{session.user.email}</div>
                       </div>
                       
                       {/* Section Mon compte */}
                       <div className="px-3 py-1.5 mb-1">
                         <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          Mon compte
+                          {t('myAccount')}
                         </div>
                       </div>
                       <Link
@@ -258,7 +262,7 @@ export default function Navigation() {
                         className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
                       >
                         <User className="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-colors" />
-                        <span>Mon profil</span>
+                        <span>{t('profile')}</span>
                       </Link>
                       <Link
                         href="/favoris"
@@ -266,7 +270,7 @@ export default function Navigation() {
                         className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
                       >
                         <Heart className="w-4 h-4 text-slate-400 group-hover:text-red-400 transition-colors" />
-                        <span>Mes favoris</span>
+                        <span>{t('favorites')}</span>
                         {favoritesCount > 0 && (
                           <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
                             {favoritesCount > 99 ? '99+' : favoritesCount}
@@ -280,7 +284,7 @@ export default function Navigation() {
                           <div className="border-t border-white/10 my-2" />
                           <div className="px-3 py-1.5 mb-1">
                             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                              Organisateur
+                              {t('organizer')}
                             </div>
                           </div>
                           <Link
@@ -289,7 +293,7 @@ export default function Navigation() {
                             className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
                           >
                             <BarChart3 className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
-                            <span>Tableau de bord</span>
+                            <span>{t('organizer.dashboard')}</span>
                           </Link>
                           <Link
                             href="/organisateur/mon-profil"
@@ -297,7 +301,7 @@ export default function Navigation() {
                             className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
                           >
                             <User className="w-4 h-4 text-slate-400 group-hover:text-sky-400 transition-colors" />
-                            <span>Mon profil organisateur</span>
+                            <span>{t('organizer.profile')}</span>
                           </Link>
                         </>
                       )}
@@ -312,7 +316,7 @@ export default function Navigation() {
                         className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors group"
                       >
                         <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        <span>Déconnexion</span>
+                        <span>{t('signOut')}</span>
                       </button>
                     </div>
                   </div>
@@ -323,7 +327,7 @@ export default function Navigation() {
                 href="/auth/signin"
                 className="px-4 py-2 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-sky-600 to-emerald-600 hover:from-sky-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
               >
-                Connexion
+                {t('login')}
               </Link>
             )}
           </div>
@@ -410,7 +414,7 @@ export default function Navigation() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Music className="w-6 h-6 text-slate-200 group-hover:text-pink-300 group-hover:scale-105 transition-transform duration-300" />
-                  <span className="font-semibold text-slate-100">Musique</span>
+                  <span className="font-semibold text-slate-100">{t('music')}</span>
                 </Link>
                 <Link
                   href="/famille"
@@ -418,7 +422,7 @@ export default function Navigation() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Users className="w-6 h-6 text-slate-200 group-hover:text-orange-300 group-hover:scale-105 transition-transform duration-300" />
-                  <span className="font-semibold text-slate-100">Famille</span>
+                  <span className="font-semibold text-slate-100">{t('family')}</span>
                 </Link>
                 <Link
                   href="/culture"
@@ -426,7 +430,7 @@ export default function Navigation() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Palette className="w-6 h-6 text-slate-200 group-hover:text-purple-300 group-hover:scale-105 transition-transform duration-300" />
-                  <span className="font-semibold text-slate-100">Culture</span>
+                  <span className="font-semibold text-slate-100">{t('culture')}</span>
                 </Link>
                 <Link
                   href="/sport"
@@ -434,7 +438,7 @@ export default function Navigation() {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   <Trophy className="w-6 h-6 text-slate-200 group-hover:text-blue-300 group-hover:scale-105 transition-transform duration-300" />
-                  <span className="font-semibold text-slate-100">Sport</span>
+                  <span className="font-semibold text-slate-100">{t('sport')}</span>
                 </Link>
               </div>
 
@@ -443,9 +447,17 @@ export default function Navigation() {
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-white/10 border border-white/15">
                   <div className="flex items-center space-x-3">
                     <Bell className="w-5 h-5 text-slate-200" />
-                    <span className="font-medium text-slate-100">Notifications</span>
+                    <span className="font-medium text-slate-100">{t('notifications')}</span>
                   </div>
                   <NotificationBell />
+                </div>
+
+                {/* Sélecteur de langue mobile */}
+                <div className="p-3 rounded-2xl bg-white/10 border border-white/15">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-slate-100">{tCommon('language')}</span>
+                    <LanguageSelector />
+                  </div>
                 </div>
 
                 {status === 'loading' ? (
@@ -472,7 +484,7 @@ export default function Navigation() {
                         )}
                         <div className="text-left flex-1">
                           <div className="font-semibold text-slate-100">
-                            {session.user.name || 'Mon compte'}
+                            {session.user.name || t('myAccount')}
                           </div>
                           <p className="text-xs text-slate-400">{session.user.email}</p>
                         </div>
@@ -482,7 +494,7 @@ export default function Navigation() {
                     {/* Section Mon compte mobile */}
                     <div className="px-3 py-1">
                       <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                        Mon compte
+                        {t('myAccount')}
                       </div>
                     </div>
                     <button
@@ -493,7 +505,7 @@ export default function Navigation() {
                       className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
                     >
                       <User className="w-5 h-5 text-slate-200" />
-                      <span className="font-medium text-slate-100">Mon profil</span>
+                      <span className="font-medium text-slate-100">{t('profile')}</span>
                     </button>
                     <button
                       onClick={() => {
@@ -503,7 +515,7 @@ export default function Navigation() {
                       className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100 relative"
                     >
                       <Heart className="w-5 h-5 text-slate-200" />
-                      <span className="font-medium text-slate-100">Mes favoris</span>
+                      <span className="font-medium text-slate-100">{t('favorites')}</span>
                       {favoritesCount > 0 && (
                         <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5">
                           {favoritesCount > 99 ? '99+' : favoritesCount}
@@ -517,7 +529,7 @@ export default function Navigation() {
                         <div className="border-t border-white/10 my-2" />
                         <div className="px-3 py-1">
                           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                            Organisateur
+                            {t('organizer')}
                           </div>
                         </div>
                         <button
@@ -528,7 +540,7 @@ export default function Navigation() {
                           className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
                         >
                           <BarChart3 className="w-5 h-5 text-slate-200" />
-                          <span className="font-medium text-slate-100">Tableau de bord</span>
+                          <span className="font-medium text-slate-100">{t('organizer.dashboard')}</span>
                         </button>
                         <button
                           onClick={() => {
@@ -538,7 +550,7 @@ export default function Navigation() {
                           className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
                         >
                           <User className="w-5 h-5 text-slate-200" />
-                          <span className="font-medium text-slate-100">Mon profil organisateur</span>
+                          <span className="font-medium text-slate-100">{t('organizer.profile')}</span>
                         </button>
                       </>
                     )}
@@ -553,7 +565,7 @@ export default function Navigation() {
                       className="w-full flex items-center justify-center space-x-2 p-3 rounded-2xl border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-all duration-300 font-semibold"
                     >
                       <LogOut className="w-4 h-4" />
-                      <span>Déconnexion</span>
+                      <span>{t('signOut')}</span>
                     </button>
                   </div>
                 ) : (
@@ -564,7 +576,7 @@ export default function Navigation() {
                     }}
                     className="text-center p-3 rounded-2xl bg-gradient-to-r from-sky-600 to-emerald-600 font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-300"
                   >
-                    Connexion
+                    {t('login')}
                   </button>
                 )}
               </div>

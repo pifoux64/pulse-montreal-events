@@ -3,58 +3,61 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Loader2, ChevronRight, ChevronLeft, Music, Calendar, Heart, MapPin, Clock, X } from 'lucide-react';
 
-// Options pour chaque étape
+// Options pour chaque étape - Les labels seront traduits dans le composant
 const MUSIC_GENRES = [
-  { id: 'rock', label: 'Rock' },
-  { id: 'indie', label: 'Indie' },
-  { id: 'hip_hop', label: 'Hip-hop' },
-  { id: 'reggae', label: 'Reggae / Dub' },
-  { id: 'electronic', label: 'Electronic' },
-  { id: 'techno', label: 'Techno' },
-  { id: 'jazz', label: 'Jazz' },
-  { id: 'afro', label: 'Afro / Caribbean' },
-  { id: 'pop', label: 'Pop' },
-  { id: 'metal', label: 'Metal' },
-  { id: 'latin', label: 'Latin' },
-  { id: 'funk_soul', label: 'Funk / Soul' },
+  { id: 'rock' },
+  { id: 'indie' },
+  { id: 'hip_hop' },
+  { id: 'reggae' },
+  { id: 'electronic' },
+  { id: 'techno' },
+  { id: 'jazz' },
+  { id: 'afro' },
+  { id: 'pop' },
+  { id: 'metal' },
+  { id: 'latin' },
+  { id: 'funk_soul' },
 ];
 
 const EVENT_CATEGORIES = [
-  { id: 'culture', label: 'Culture' },
-  { id: 'family', label: 'Family' },
-  { id: 'sport', label: 'Sport' },
-  { id: 'nightlife', label: 'Nightlife' },
-  { id: 'festivals', label: 'Festivals' },
-  { id: 'community', label: 'Community' },
-  { id: 'wellness', label: 'Wellness' },
-  { id: 'talks', label: 'Talks / Conferences' },
+  { id: 'culture' },
+  { id: 'family' },
+  { id: 'sport' },
+  { id: 'nightlife' },
+  { id: 'festivals' },
+  { id: 'community' },
+  { id: 'wellness' },
+  { id: 'talks' },
 ];
 
 const VIBES = [
-  { id: 'chill', label: 'Chill' },
-  { id: 'dancing', label: 'Dancing' },
-  { id: 'underground', label: 'Underground' },
-  { id: 'festive', label: 'Festive' },
-  { id: 'intimate', label: 'Intimate' },
-  { id: 'political', label: 'Political / Engaged' },
-  { id: 'alternative', label: 'Alternative' },
-  { id: 'mainstream', label: 'Mainstream' },
+  { id: 'chill' },
+  { id: 'dancing' },
+  { id: 'underground' },
+  { id: 'festive' },
+  { id: 'intimate' },
+  { id: 'political' },
+  { id: 'alternative' },
+  { id: 'mainstream' },
 ];
 
 const PREFERRED_DAYS = [
-  { id: 'weekday', label: 'Semaine' },
-  { id: 'weekend', label: 'Weekend' },
+  { id: 'weekday' },
+  { id: 'weekend' },
 ];
 
 const PREFERRED_TIMES = [
-  { id: 'day', label: 'Jour' },
-  { id: 'evening', label: 'Soir' },
-  { id: 'night', label: 'Nuit' },
+  { id: 'day' },
+  { id: 'evening' },
+  { id: 'night' },
 ];
 
 export default function OnboardingClient() {
+  const t = useTranslations('onboarding');
+  const tCommon = useTranslations('common');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
@@ -128,7 +131,7 @@ export default function OnboardingClient() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Erreur lors de la sauvegarde');
+        throw new Error(data.error || tCommon('error'));
       }
 
       router.push('/pour-toi');
@@ -160,9 +163,9 @@ export default function OnboardingClient() {
       {/* Progress bar */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl font-bold text-white">Configurez vos préférences</h1>
+          <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
           <span className="text-sm text-slate-400">
-            Étape {currentStep} sur {totalSteps}
+            {t('step', { current: currentStep, total: totalSteps })}
           </span>
         </div>
         <div className="w-full bg-slate-700 rounded-full h-2">
@@ -184,10 +187,10 @@ export default function OnboardingClient() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-4">
             <Music className="w-6 h-6 text-sky-400" />
-            <h2 className="text-xl font-semibold text-white">Quels genres musicaux vous intéressent ?</h2>
+            <h2 className="text-xl font-semibold text-white">{t('step1.title')}</h2>
           </div>
           <p className="text-slate-400 mb-6">
-            Sélectionnez un ou plusieurs genres pour recevoir des recommandations personnalisées.
+            {t('step1.description')}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {MUSIC_GENRES.map((genre) => (
@@ -200,7 +203,7 @@ export default function OnboardingClient() {
                     : 'border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500'
                 }`}
               >
-                {genre.label}
+                {t(`genres.${genre.id}`)}
               </button>
             ))}
           </div>
@@ -212,10 +215,10 @@ export default function OnboardingClient() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-4">
             <Calendar className="w-6 h-6 text-sky-400" />
-            <h2 className="text-xl font-semibold text-white">Quels types d'événements vous intéressent ?</h2>
+            <h2 className="text-xl font-semibold text-white">{t('step2.title')}</h2>
           </div>
           <p className="text-slate-400 mb-6">
-            Choisissez les catégories d'événements que vous souhaitez découvrir.
+            {t('step2.description')}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {EVENT_CATEGORIES.map((category) => (
@@ -228,7 +231,7 @@ export default function OnboardingClient() {
                     : 'border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500'
                 }`}
               >
-                {category.label}
+                {t(`categories.${category.id}`)}
               </button>
             ))}
           </div>
@@ -240,10 +243,10 @@ export default function OnboardingClient() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-4">
             <Heart className="w-6 h-6 text-sky-400" />
-            <h2 className="text-xl font-semibold text-white">Quelles ambiances vous plaisent ?</h2>
+            <h2 className="text-xl font-semibold text-white">{t('step3.title')}</h2>
           </div>
           <p className="text-slate-400 mb-6">
-            Sélectionnez les vibes qui correspondent à vos préférences.
+            {t('step3.description')}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {VIBES.map((vibe) => (
@@ -256,7 +259,7 @@ export default function OnboardingClient() {
                     : 'border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500'
                 }`}
               >
-                {vibe.label}
+                {t(`vibes.${vibe.id}`)}
               </button>
             ))}
           </div>
@@ -268,15 +271,15 @@ export default function OnboardingClient() {
         <div className="space-y-6">
           <div className="flex items-center gap-3 mb-4">
             <Clock className="w-6 h-6 text-sky-400" />
-            <h2 className="text-xl font-semibold text-white">Préférences optionnelles</h2>
+            <h2 className="text-xl font-semibold text-white">{t('step4.title')}</h2>
           </div>
           <p className="text-slate-400 mb-6">
-            Ces informations nous aident à affiner vos recommandations. Vous pouvez passer cette étape.
+            {t('step4.description')}
           </p>
 
           <div className="space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-white mb-3">Jours préférés</h3>
+              <h3 className="text-sm font-semibold text-white mb-3">{t('step4.preferredDays')}</h3>
               <div className="flex gap-3">
                 {PREFERRED_DAYS.map((day) => (
                   <button
@@ -288,14 +291,14 @@ export default function OnboardingClient() {
                         : 'border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500'
                     }`}
                   >
-                    {day.label}
+                    {t(`step4.${day.id}`)}
                   </button>
                 ))}
               </div>
             </div>
 
             <div>
-              <h3 className="text-sm font-semibold text-white mb-3">Horaires préférés</h3>
+              <h3 className="text-sm font-semibold text-white mb-3">{t('step4.preferredTimes')}</h3>
               <div className="flex gap-3">
                 {PREFERRED_TIMES.map((time) => (
                   <button
@@ -307,7 +310,7 @@ export default function OnboardingClient() {
                         : 'border-slate-600 bg-slate-700/50 text-slate-300 hover:border-slate-500'
                     }`}
                   >
-                    {time.label}
+                    {t(`step4.${time.id}`)}
                   </button>
                 ))}
               </div>
@@ -326,7 +329,7 @@ export default function OnboardingClient() {
               className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 disabled:opacity-50 flex items-center gap-2"
             >
               <ChevronLeft className="w-4 h-4" />
-              Précédent
+              {t('previous')}
             </button>
           )}
         </div>
@@ -337,7 +340,7 @@ export default function OnboardingClient() {
             disabled={loading}
             className="px-4 py-2 text-slate-400 hover:text-slate-300 disabled:opacity-50"
           >
-            Passer
+            {t('skip')}
           </button>
           {currentStep < totalSteps ? (
             <button
@@ -345,7 +348,7 @@ export default function OnboardingClient() {
               disabled={loading}
               className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 disabled:opacity-50 flex items-center gap-2"
             >
-              Suivant
+              {t('next')}
               <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
@@ -357,11 +360,11 @@ export default function OnboardingClient() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Enregistrement...
+                  {t('saving')}
                 </>
               ) : (
                 <>
-                  Terminer
+                  {t('finish')}
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}

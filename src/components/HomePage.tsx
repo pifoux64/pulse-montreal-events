@@ -20,6 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import type { ReadonlyURLSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -61,6 +62,15 @@ interface ApiEvent {
   imageUrl?: string;
   url?: string;
   source: string;
+  organizerId?: string | null;
+  organizer?: {
+    id: string;
+    displayName: string;
+    verified: boolean;
+    user?: {
+      name: string | null;
+    };
+  } | null;
   _count?: {
     favorites: number;
   };
@@ -171,15 +181,15 @@ const transformApiEvent = (event: ApiEvent): Event => {
       },
       imageUrl: event.imageUrl || null, // Pas de fallback Unsplash (bloqué par CSP)
       ticketUrl: event.url || '#',
-      organizerId: 'default',
-      organizer: {
-        id: 'default',
+      organizerId: event.organizerId || null,
+      organizer: event.organizer ? {
+        id: event.organizer.id,
         email: 'api@pulse.com',
-        name: event.source,
+        name: event.organizer.displayName,
         role: 'organizer' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
-      },
+      } : null,
       customFilters: [],
       accessibility: [],
       status: 'published' as const,
@@ -204,6 +214,8 @@ interface HomePageProps {
 }
 
 export default function HomePage({ searchParams: searchParamsProp }: HomePageProps = {}) {
+  const t = useTranslations('home');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   // Utiliser searchParams en props si fourni, sinon utiliser le hook (nécessite Suspense)
   const searchParams = searchParamsProp;
@@ -428,16 +440,16 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
           {/* Titre principal avec gradient animé */}
           <div className="mb-6">
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 via-cyan-200 to-purple-200 animate-gradient">
-              Trouver quoi faire
+              {t('heroTitle')}
             </h1>
             <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
-              à Montréal
+              {t('heroSubtitle')}
             </h2>
           </div>
 
           {/* Sous-titre élégant */}
           <p className="text-lg md:text-xl text-slate-400 mb-12 font-light max-w-2xl mx-auto">
-            Découvrez les meilleurs événements de la métropole
+            {t('heroDescription')}
           </p>
 
           {/* Boutons CTA modernes */}
@@ -455,7 +467,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               )}
               <span className="relative z-10 flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Que faire aujourd'hui ?
+                {t('whatToDoToday')}
               </span>
             </button>
             <button
@@ -471,7 +483,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               )}
               <span className="relative z-10 flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Que faire ce week-end ?
+                {t('whatToDoWeekend')}
               </span>
             </button>
           </div>
@@ -482,13 +494,13 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Calendar className="w-5 h-5 text-slate-300" />
                 <label className="text-base font-semibold text-slate-200">
-                  Ou choisir une date précise ou une plage de dates
+                  {t('chooseDate')}
                 </label>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Date de début
+                    {t('startDate')}
                   </label>
                   <input
                     type="date"
@@ -526,7 +538,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Date de fin <span className="text-xs text-slate-400">(optionnel)</span>
+                    {t('endDateOptional')}
                   </label>
                   <input
                     type="date"
@@ -575,7 +587,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                     }}
                     className="text-sm text-slate-300 hover:text-white underline transition-colors"
                   >
-                    Réinitialiser les dates
+                    {t('resetDates')}
                   </button>
                 </div>
               )}
@@ -603,7 +615,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                   <div className="absolute inset-0 bg-gradient-to-r from-slate-500 to-slate-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                 )}
                 <span className="relative z-10">🌐</span>
-                <span className="relative z-10">Tout</span>
+                <span className="relative z-10">{t('all')}</span>
                 {!selectedCategory && (
                   <span className="relative z-10 ml-2 text-xs opacity-80">✓</span>
                 )}
@@ -641,7 +653,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               <div className="animate-fade-in">
                 <div className="mb-3 text-center">
                   <span className="text-sm text-slate-400 font-medium">
-                    {CATEGORY_LABELS[selectedCategory].fr} • Choisissez un genre
+                    {CATEGORY_LABELS[selectedCategory].fr} • {t('chooseGenre')}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
@@ -657,7 +669,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                         : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
                     }`}
                   >
-                    Tout
+                    {t('all')}
                   </button>
                   
                   {getGenresForCategory(selectedCategory).slice(0, 15).map((genre, index) => {
@@ -687,7 +699,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               <div className="animate-fade-in">
                 <div className="mb-3 text-center">
                   <span className="text-xs text-slate-500 font-medium">
-                    Styles de {selectedGenre.replace(/_/g, ' ')} • Affinez votre recherche
+                    {t('stylesOf')} {selectedGenre.replace(/_/g, ' ')} • {t('refineSearch')}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center max-w-3xl mx-auto">
@@ -870,7 +882,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/30 text-slate-200 hover:text-white transition-all duration-300 hover:scale-105"
             >
               <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-              <span className="font-medium">Voir sur la carte</span>
+              <span className="font-medium">{t('viewOnMap')}</span>
               <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </a>
           </div>
@@ -889,11 +901,11 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
             <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 mb-4">
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
               <span className="text-sm text-slate-400 font-medium">
-                {events.length} événement{events.length > 1 ? 's' : ''} disponible{events.length > 1 ? 's' : ''}
+                {t('eventsAvailable', { count: events.length })}
               </span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
-              {mode === 'today' ? "Aujourd'hui" : 'Ce week-end'}
+              {mode === 'today' ? t('today') : t('thisWeekend')}
               {displayedFilterLabel && (
                 <span className="ml-3 text-2xl md:text-3xl bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                   · {displayedFilterLabel}
@@ -902,12 +914,12 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
             </h2>
             {(displayedFilterLabel || selectedType || selectedAmbiance || selectedPublic) && (
               <p className="text-slate-400 text-sm">
-                Filtres actifs : {selectedCategory && CATEGORY_LABELS[selectedCategory]?.fr}
+                {t('activeFilters')}: {selectedCategory && CATEGORY_LABELS[selectedCategory]?.fr}
                 {selectedGenre && ` → ${selectedGenre.replace(/_/g, ' ')}`}
                 {selectedStyle && ` → ${selectedStyle.replace(/_/g, ' ')}`}
-                {selectedType && ` • Type: ${selectedType.replace(/_/g, ' ')}`}
-                {selectedAmbiance && ` • Ambiance: ${selectedAmbiance.replace(/_/g, ' ')}`}
-                {selectedPublic && ` • Public: ${selectedPublic === 'tout_public' ? 'Tout public' : selectedPublic === '18_plus' ? '18+' : selectedPublic.replace(/_/g, ' ')}`}
+                {selectedType && ` • ${t('type')}: ${selectedType.replace(/_/g, ' ')}`}
+                {selectedAmbiance && ` • ${t('ambiance')}: ${selectedAmbiance.replace(/_/g, ' ')}`}
+                {selectedPublic && ` • ${t('public')}: ${selectedPublic === 'tout_public' ? t('allPublic') : selectedPublic === '18_plus' ? '18+' : selectedPublic.replace(/_/g, ' ')}`}
               </p>
             )}
           </div>
@@ -916,22 +928,22 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
           {isLoading && (
             <div className="text-center py-16">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-              <p className="text-slate-300 mt-4">Chargement des événements...</p>
+              <p className="text-slate-300 mt-4">{t('loadingEvents')}</p>
             </div>
           )}
 
           {/* Error */}
           {error && (
             <div className="text-center py-16">
-              <p className="text-red-400 text-lg mb-2">Erreur de chargement</p>
+              <p className="text-red-400 text-lg mb-2">{t('loadingError')}</p>
               <p className="text-slate-400 mb-4">
-                {error instanceof Error ? error.message : 'Impossible de charger les événements. Veuillez réessayer.'}
+                {error instanceof Error ? error.message : t('loadingErrorMessage')}
               </p>
               <button
                 onClick={() => window.location.reload()}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
               >
-                Recharger la page
+                {t('reloadPage')}
               </button>
             </div>
           )}
@@ -943,7 +955,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                 <div className="text-center py-16">
                   <Calendar className="w-16 h-16 text-slate-500 mx-auto mb-4" />
                   <p className="text-slate-400 text-lg">
-                    Aucun événement trouvé pour {mode === 'today' ? "aujourd'hui" : 'ce week-end'}.
+                    {t('noEventsForPeriod', { period: mode === 'today' ? t('today').toLowerCase() : t('thisWeekend').toLowerCase() })}
                   </p>
                 </div>
               ) : (
@@ -1082,6 +1094,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
  * Sprint V2: Social proof + trending
  */
 function HomePageTrendingSections() {
+  const t = useTranslations('home');
   // IMPORTANT: Tous les hooks doivent être appelés AVANT tout return conditionnel
   // pour respecter les règles des hooks React
   
@@ -1192,16 +1205,16 @@ function HomePageTrendingSections() {
                 </div>
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
-                    Trending tonight
+                    {t('trendingTonight')}
                   </h2>
-                  <p className="text-sm text-slate-400 mt-1">Les événements les plus populaires ce soir</p>
+                  <p className="text-sm text-slate-400 mt-1">{t('mostPopularTonight')}</p>
                 </div>
               </div>
               <Link
                 href="/ce-soir"
                 className="text-sm text-red-400 hover:text-red-300 flex items-center gap-1"
               >
-                Voir tout
+                {t('seeAll')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -1225,14 +1238,14 @@ function HomePageTrendingSections() {
                       <div className="absolute top-2 left-2 z-10">
                         <span className="px-2 py-1 rounded-lg bg-red-500/90 text-white text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
                           <TrendingUp className="w-3 h-3" />
-                          Trending
+                          {t('trending')}
                         </span>
                       </div>
                       {/* Social proof */}
                       {trendingEvent.favoritesToday > 0 && (
                         <div className="absolute top-2 right-2 z-10">
                           <span className="px-2 py-1 rounded-lg bg-black/60 text-white text-xs backdrop-blur-sm">
-                            {trendingEvent.favoritesToday} sauvegardé{trendingEvent.favoritesToday > 1 ? 's' : ''} aujourd'hui
+                            {t('savedToday', { count: trendingEvent.favoritesToday })}
                           </span>
                         </div>
                       )}
@@ -1254,16 +1267,16 @@ function HomePageTrendingSections() {
                 </div>
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
-                    Popular this weekend
+                    {t('popularThisWeekend')}
                   </h2>
-                  <p className="text-sm text-slate-400 mt-1">Les événements les plus populaires ce week-end</p>
+                  <p className="text-sm text-slate-400 mt-1">{t('mostPopularWeekend')}</p>
                 </div>
               </div>
               <Link
                 href="/ce-weekend"
                 className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
               >
-                Voir tout
+                {t('seeAll')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -1299,6 +1312,7 @@ function HomePageTrendingSections() {
  * Sections IA : Top 5 Pulse Picks et Recommandations personnalisées
  */
 function HomePageAISections() {
+  const t = useTranslations('home');
   const { data: session } = useSession();
   
   // Récupérer les Top 5 publiés
@@ -1346,20 +1360,20 @@ function HomePageAISections() {
                 </div>
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
-                    Pulse Picks
+                    {t('pulsePicks')}
                     <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 flex items-center gap-1">
                       <Brain className="w-3 h-3" />
                       IA
                     </span>
                   </h2>
-                  <p className="text-sm text-slate-400 mt-1">Top 5 sélectionnés par notre IA</p>
+                  <p className="text-sm text-slate-400 mt-1">{t('top5Selected')}</p>
                 </div>
               </div>
               <Link
                 href="/top-5"
                 className="text-sm text-sky-400 hover:text-sky-300 flex items-center gap-1"
               >
-                Voir tous
+                {t('seeAll')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>
@@ -1381,7 +1395,7 @@ function HomePageAISections() {
                           {post.title}
                         </h3>
                         <p className="text-xs text-slate-400 mt-1">
-                          {post.eventsCount} événement{post.eventsCount > 1 ? 's' : ''}
+                          {t('eventsAvailable', { count: post.eventsCount })}
                         </p>
                       </div>
                       <div className="px-2 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-xs font-bold">
@@ -1419,20 +1433,20 @@ function HomePageAISections() {
                 </div>
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
-                    Pour toi
+                    {t('forYou')}
                     <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 flex items-center gap-1">
                       <Brain className="w-3 h-3" />
                       IA
                     </span>
                   </h2>
-                  <p className="text-sm text-slate-400 mt-1">Recommandations basées sur vos goûts</p>
+                  <p className="text-sm text-slate-400 mt-1">{t('recommendationsBasedOnTastes')}</p>
                 </div>
               </div>
               <Link
                 href="/pour-toi"
                 className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1"
               >
-                Voir tout
+                {t('seeAll')}
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Navigation from '@/components/Navigation';
-import { CheckCircle, ExternalLink, Loader2, AlertCircle, Plus, X, Users, Calendar, Settings } from 'lucide-react';
+import { CheckCircle, ExternalLink, Loader2, AlertCircle, Plus, X, Users, Calendar, Settings, RefreshCw } from 'lucide-react';
 import { GENRES, EVENT_TYPES, AMBIANCES, PUBLICS, getStylesForGenre } from '@/lib/tagging/taxonomy';
 
 type MusicConnection = {
@@ -29,6 +30,8 @@ type InterestTag = {
 };
 
 export default function ProfilClient() {
+  const t = useTranslations('profile');
+  const tCommon = useTranslations('common');
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,7 +60,7 @@ export default function ProfilClient() {
     const urlErr = searchParams.get('error');
     const urlSuccess = searchParams.get('success');
     if (urlErr) setError(urlErr);
-    if (urlSuccess === 'preferences_updated') setSuccess('Préférences mises à jour avec succès.');
+    if (urlSuccess === 'preferences_updated') setSuccess(t('preferencesUpdated'));
   }, [status, searchParams]);
 
   useEffect(() => {
@@ -90,11 +93,11 @@ export default function ProfilClient() {
         body: JSON.stringify({ enabled }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur lors de la mise à jour');
+      if (!res.ok) throw new Error(data.error || t('updateError'));
       setPersonalizationEnabled(enabled);
-      setSuccess(enabled ? 'Recommandations personnalisées activées.' : 'Recommandations personnalisées désactivées.');
+      setSuccess(enabled ? t('enabled') : t('disabled'));
     } catch (e: any) {
-      setError(e.message || 'Erreur inconnue');
+      setError(e.message || t('unknownError'));
     } finally {
       setLoadingPersonalization(false);
     }
@@ -126,9 +129,9 @@ export default function ProfilClient() {
     } catch (e: any) {
       // Gérer les erreurs réseau différemment des erreurs serveur
       if (e.name === 'TypeError' && e.message.includes('fetch')) {
-        setError('Erreur de connexion. Vérifiez votre connexion internet.');
+        setError(t('networkError'));
       } else {
-        setError(e.message || 'Erreur lors du chargement des goûts');
+        setError(e.message || t('errorLoading'));
       }
       console.error('Erreur refreshInterests:', e);
     } finally {
@@ -153,11 +156,11 @@ export default function ProfilClient() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur lors de l’ajout');
-      setSuccess('Préférence ajoutée.');
+      if (!res.ok) throw new Error(data.error || t('updateError'));
+      setSuccess(t('preferenceAdded'));
       await refreshInterests();
     } catch (e: any) {
-      setError(e.message || 'Erreur inconnue');
+      setError(e.message || t('unknownError'));
     } finally {
       setAdding(false);
     }
@@ -172,10 +175,10 @@ export default function ProfilClient() {
         body: JSON.stringify({ category: tag.category, value: tag.value, source: tag.source }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur lors de la suppression');
+      if (!res.ok) throw new Error(data.error || t('updateError'));
       await refreshInterests();
     } catch (e: any) {
-      setError(e.message || 'Erreur inconnue');
+      setError(e.message || t('unknownError'));
     }
   };
 
@@ -196,9 +199,9 @@ export default function ProfilClient() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Profil</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
           <p className="text-gray-600">
-            Gérez vos préférences pour recevoir des recommandations personnalisées d'événements à Montréal.
+            {t('description')}
           </p>
         </div>
 
@@ -227,10 +230,13 @@ export default function ProfilClient() {
             <div>
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <Settings className="w-5 h-5 text-sky-600" />
-                Mes préférences
+                {t('tastesPreferences')}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Configurez vos genres musicaux, catégories d'événements et ambiances préférés pour recevoir des recommandations personnalisées.
+                {t('tastesDescription')}{' '}
+                <Link href="/onboarding" className="text-blue-600 hover:underline">
+                  {t('editOnboarding')}
+                </Link>
               </p>
             </div>
             <Link
@@ -238,7 +244,7 @@ export default function ProfilClient() {
               className="px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 flex items-center gap-2"
             >
               <Settings className="w-4 h-4" />
-              Modifier mes préférences
+              {t('editOnboarding')}
             </Link>
           </div>
 
@@ -246,7 +252,7 @@ export default function ProfilClient() {
             <div className="mt-4 space-y-4">
               {userPreferences.musicPreferences && userPreferences.musicPreferences.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Genres musicaux</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('musicGenres')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {userPreferences.musicPreferences.map((genre: string) => (
                       <span
@@ -262,7 +268,7 @@ export default function ProfilClient() {
 
               {userPreferences.categoryPreferences && userPreferences.categoryPreferences.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Catégories d'événements</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('categories')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {userPreferences.categoryPreferences.map((category: string) => (
                       <span
@@ -278,7 +284,7 @@ export default function ProfilClient() {
 
               {userPreferences.vibePreferences && userPreferences.vibePreferences.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900 mb-2">Ambiances</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('ambiances')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {userPreferences.vibePreferences.map((vibe: string) => (
                       <span
@@ -298,9 +304,12 @@ export default function ProfilClient() {
         <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Mes goûts & préférences</h2>
+              <h2 className="text-xl font-semibold text-gray-900">{t('tastesPreferences')}</h2>
               <p className="text-sm text-gray-600 mt-1">
-                Ajoutez manuellement des genres, styles, types ou ambiances pour affiner vos recommandations.
+                {t('tastesDescription')}{' '}
+                <Link href="/onboarding" className="text-blue-600 hover:underline">
+                  {t('editOnboarding')}
+                </Link>
               </p>
             </div>
           </div>
@@ -311,10 +320,10 @@ export default function ProfilClient() {
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
                   <Settings className="w-4 h-4" />
-                  Recommandations personnalisées
+                  {t('personalization')}
                 </h3>
                 <p className="text-xs text-gray-600 mt-1">
-                  Utiliser vos goûts musicaux pour des recommandations personnalisées
+                  {t('personalizationDescription')}
                 </p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -333,42 +342,42 @@ export default function ProfilClient() {
           {loadingInterests ? (
             <div className="mt-4 flex items-center gap-2 text-gray-600">
               <Loader2 className="w-4 h-4 animate-spin" />
-              Chargement…
+              {t('loading')}
             </div>
           ) : (
             <>
               <div className="mt-4">
-                <h3 className="font-semibold text-gray-900 mb-2">Mes préférences manuelles</h3>
+                <h3 className="font-semibold text-gray-900 mb-2">{t('manualPreferences')}</h3>
                   <div className="flex flex-wrap gap-2">
                     {interestTags
-                      .filter((t) => t.source === 'manual')
-                      .map((t) => (
+                      .filter((tag) => tag.source === 'manual')
+                      .map((tag) => (
                         <span
-                          key={t.id}
+                          key={tag.id}
                           className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 text-sm"
                         >
-                          {t.category}:{t.value}
+                          {tag.category}:{tag.value}
                           <button
                             type="button"
-                            onClick={() => removeInterest(t)}
+                            onClick={() => removeInterest(tag)}
                             className="text-blue-700 hover:text-blue-900"
-                            title="Retirer"
+                            title={t('remove')}
                           >
                             <X className="w-3 h-3" />
                           </button>
                         </span>
                       ))}
-                    {interestTags.filter((t) => t.source === 'manual').length === 0 && (
-                      <p className="text-sm text-gray-500">Aucune préférence manuelle pour l'instant.</p>
+                    {interestTags.filter((tag) => tag.source === 'manual').length === 0 && (
+                      <p className="text-sm text-gray-500">{t('noManualPreferences')}</p>
                     )}
                   </div>
                 </div>
 
               <div className="mt-6 border-t border-gray-200 pt-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Ajouter une préférence</h3>
+                <h3 className="font-semibold text-gray-900 mb-3">{t('addPreference')}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-sm text-gray-700 mb-1">Catégorie</label>
+                    <label className="block text-sm text-gray-700 mb-1">{t('category')}</label>
                     <select
                       value={selectedCategory}
                       onChange={(e) => {
@@ -378,16 +387,16 @@ export default function ProfilClient() {
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     >
-                      <option value="genre">Genre</option>
-                      <option value="style">Style</option>
-                      <option value="type">Type</option>
-                      <option value="ambiance">Ambiance</option>
+                      <option value="genre">{t('genre')}</option>
+                      <option value="style">{t('style')}</option>
+                      <option value="type">{t('type')}</option>
+                      <option value="ambiance">{t('ambiance')}</option>
                     </select>
                   </div>
 
                   {selectedCategory === 'style' && (
                     <div>
-                      <label className="block text-sm text-gray-700 mb-1">Genre (pour styles)</label>
+                      <label className="block text-sm text-gray-700 mb-1">{t('genreForStyles')}</label>
                       <select
                         value={selectedGenreForStyles}
                         onChange={(e) => {
@@ -406,13 +415,13 @@ export default function ProfilClient() {
                   )}
 
                   <div className={selectedCategory === 'style' ? '' : 'md:col-span-2'}>
-                    <label className="block text-sm text-gray-700 mb-1">Valeur</label>
+                    <label className="block text-sm text-gray-700 mb-1">{t('value')}</label>
                     <select
                       value={selectedValue}
                       onChange={(e) => setSelectedValue(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                     >
-                      <option value="">Sélectionner…</option>
+                      <option value="">{t('select')}</option>
                       {selectedCategory === 'genre' &&
                         GENRES.map((g) => (
                           <option key={g} value={g}>
@@ -448,7 +457,7 @@ export default function ProfilClient() {
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2"
                   >
                     {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                    Ajouter
+                    {t('add')}
                   </button>
                 </div>
               </div>
@@ -462,10 +471,10 @@ export default function ProfilClient() {
               <div>
                 <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                   <ExternalLink className="w-5 h-5 text-indigo-600" />
-                  Intégrations organisateur
+                  {t('organizerIntegrations')}
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Publiez vos événements sur Facebook, Eventbrite et d'autres plateformes.
+                  {t('organizerDescription')}
                 </p>
               </div>
             </div>
@@ -476,7 +485,7 @@ export default function ProfilClient() {
                 className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 transition-colors"
               >
                 <ExternalLink className="w-4 h-4" />
-                Gérer les intégrations (Facebook/Eventbrite)
+                {t('manageIntegrations')}
               </a>
             </div>
           </section>
@@ -487,10 +496,10 @@ export default function ProfilClient() {
             <div>
               <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-600" />
-                Mes organisateurs suivis
+                {t('followedOrganizers')}
               </h2>
               <p className="text-sm text-gray-600 mt-1">
-                Organisateurs que vous suivez pour recevoir des notifications sur leurs nouveaux événements.
+                {t('followedDescription')}
               </p>
             </div>
           </div>
@@ -504,6 +513,8 @@ export default function ProfilClient() {
 
 // Composant pour afficher la liste des organisateurs suivis
 function FollowingOrganizersList() {
+  const t = useTranslations('profile');
+  const tCommon = useTranslations('common');
   const [organizers, setOrganizers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -540,7 +551,7 @@ function FollowingOrganizersList() {
     return (
       <div className="mt-4 flex items-center gap-2 text-gray-600">
         <Loader2 className="w-4 h-4 animate-spin" />
-        Chargement…
+        {t('loading')}
       </div>
     );
   }
@@ -551,14 +562,14 @@ function FollowingOrganizersList() {
         <div className="flex items-start gap-2">
           <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-red-800 font-medium">Erreur lors du chargement</p>
+            <p className="text-red-800 font-medium">{t('errorLoading')}</p>
             <p className="text-red-700 text-sm mt-1">{error}</p>
             <button
               onClick={() => void loadFollowing()}
               className="mt-3 px-3 py-1.5 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
             >
               <RefreshCw className="w-4 h-4" />
-              Réessayer
+              {t('retry')}
             </button>
           </div>
         </div>
@@ -570,12 +581,12 @@ function FollowingOrganizersList() {
     return (
       <div className="mt-4 text-center py-8">
         <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-        <p className="text-gray-600 mb-4">Vous ne suivez aucun organisateur pour le moment.</p>
+        <p className="text-gray-600 mb-4">{t('noOrganizers')}</p>
         <Link
           href="/"
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Découvrir des organisateurs
+          {t('discoverOrganizers')}
         </Link>
       </div>
     );
@@ -611,11 +622,11 @@ function FollowingOrganizersList() {
               <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-4 h-4" />
-                  {org.eventsCount} événement{org.eventsCount !== 1 ? 's' : ''}
+                  {org.eventsCount} {tCommon('events')}
                 </span>
                 <span className="flex items-center gap-1">
                   <Users className="w-4 h-4" />
-                  {org.followersCount} follower{org.followersCount !== 1 ? 's' : ''}
+                  {org.followersCount} {tCommon('followers')}
                 </span>
               </div>
             </div>

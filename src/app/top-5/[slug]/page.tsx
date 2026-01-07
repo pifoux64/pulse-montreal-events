@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/prisma';
 import { formatEventDate } from '@/lib/utils';
 import Top5EventCardWrapper from '@/components/Top5EventCardWrapper';
@@ -73,6 +74,7 @@ export async function generateMetadata({ params }: Top5PageProps): Promise<Metad
 }
 
 export default async function Top5Page({ params }: Top5PageProps) {
+  const t = await getTranslations('top5');
   const post = await prisma.editorialPost.findUnique({
     where: { slug: params.slug },
   });
@@ -113,7 +115,7 @@ export default async function Top5Page({ params }: Top5PageProps) {
       <div className="max-w-5xl mx-auto px-4 py-10">
         <div className="mb-6">
           <Link href="/" className="text-sm text-sky-400 hover:text-sky-300">
-            ← Retour à l'accueil
+            {t('backToHome')}
           </Link>
         </div>
 
@@ -131,7 +133,7 @@ export default async function Top5Page({ params }: Top5PageProps) {
         />
 
         {orderedEvents.length === 0 ? (
-          <p className="text-slate-400 text-sm">Aucun événement sélectionné pour ce Top 5 pour le moment.</p>
+          <p className="text-slate-400 text-sm">{t('noEventsSelected')}</p>
         ) : (
           <div className="space-y-4">
             {orderedEvents.map((event, index) => (

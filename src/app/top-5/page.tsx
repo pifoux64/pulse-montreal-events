@@ -2,8 +2,14 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { Trophy, Calendar, ArrowRight, Brain } from 'lucide-react';
 import Navigation from '@/components/Navigation';
+import { getTranslations } from 'next-intl/server';
+
+// Marquer la page comme dynamique pour éviter les erreurs de build
+export const dynamic = 'force-dynamic';
 
 export default async function Top5ListPage() {
+  const t = await getTranslations('home');
+  const tCommon = await getTranslations('common');
   const posts = await prisma.editorialPost.findMany({
     where: {
       status: 'PUBLISHED',
@@ -25,13 +31,13 @@ export default async function Top5ListPage() {
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-2">
-                Pulse Picks
+                {t('pulsePicks')}
                 <span className="text-sm px-2 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 flex items-center gap-1">
                   <Brain className="w-3 h-3" />
                   IA
                 </span>
               </h1>
-              <p className="text-slate-400 mt-1">Top 5 événements sélectionnés par notre IA</p>
+              <p className="text-slate-400 mt-1">{t('top5AI')}</p>
             </div>
           </div>
         </div>
@@ -39,9 +45,9 @@ export default async function Top5ListPage() {
         {posts.length === 0 ? (
           <div className="text-center py-16">
             <Trophy className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-            <p className="text-slate-400 text-lg">Aucun Top 5 publié pour le moment.</p>
+            <p className="text-slate-400 text-lg">{t('noTop5Published')}</p>
             <p className="text-slate-500 text-sm mt-2">
-              Les Top 5 sont générés automatiquement chaque semaine par notre IA.
+              {t('top5GeneratedWeekly')}
             </p>
           </div>
         ) : (
@@ -58,11 +64,11 @@ export default async function Top5ListPage() {
                       {post.title}
                     </h2>
                     <p className="text-sm text-slate-400 mb-3">
-                      {post.description || `Découvrez les meilleurs événements ${post.theme} à Montréal`}
+                      {post.description || t('discoverBestEvents', { theme: post.theme })}
                     </p>
                   </div>
                   <div className="px-3 py-1 rounded-lg bg-amber-500/20 text-amber-300 text-sm font-bold">
-                    Top 5
+                    {t('top5')}
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-slate-400">
@@ -81,13 +87,13 @@ export default async function Top5ListPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-1 text-amber-400 group-hover:text-amber-300">
-                    Voir
+                    {tCommon('view')}
                     <ArrowRight className="w-4 h-4" />
                   </div>
                 </div>
                 <div className="mt-3 pt-3 border-t border-white/10">
                   <div className="text-xs text-slate-500">
-                    {(post.eventsOrder || []).length} événement{(post.eventsOrder || []).length > 1 ? 's' : ''}
+                    {t('eventCount', { count: (post.eventsOrder || []).length })}
                   </div>
                 </div>
               </Link>
