@@ -284,7 +284,7 @@ export default function Navigation() {
                           <div className="border-t border-white/10 my-2" />
                           <div className="px-3 py-1.5 mb-1">
                             <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                              {t('organizer')}
+                              {t('organizerLabel')}
                             </div>
                           </div>
                           <Link
@@ -529,7 +529,7 @@ export default function Navigation() {
                         <div className="border-t border-white/10 my-2" />
                         <div className="px-3 py-1">
                           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                            {t('organizer')}
+                            {t('organizerLabel')}
                           </div>
                         </div>
                         <button

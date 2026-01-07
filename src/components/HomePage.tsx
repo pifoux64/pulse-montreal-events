@@ -20,7 +20,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import type { ReadonlyURLSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -216,6 +216,7 @@ interface HomePageProps {
 export default function HomePage({ searchParams: searchParamsProp }: HomePageProps = {}) {
   const t = useTranslations('home');
   const tCommon = useTranslations('common');
+  const locale = useLocale() as 'fr' | 'en' | 'es';
   const router = useRouter();
   // Utiliser searchParams en props si fourni, sinon utiliser le hook (nécessite Suspense)
   const searchParams = searchParamsProp;
@@ -639,7 +640,9 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                       <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     )}
                     <span className="relative z-10 text-2xl">{label.icon}</span>
-                    <span className="relative z-10">{label.fr}</span>
+                    <span className="relative z-10">
+                      {locale === 'fr' ? label.fr : locale === 'en' ? label.en : label.fr}
+                    </span>
                     {isActive && (
                       <span className="relative z-10 ml-2 text-xs opacity-80">✓</span>
                     )}
@@ -712,7 +715,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                         : 'bg-white/5 text-slate-300 border-slate-400/20 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
                     }`}
                   >
-                    Tout
+                    {t('all')}
                   </button>
                   
                   {getStylesForGenre(selectedGenre).map((style, index) => {
@@ -745,7 +748,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
                 >
                   <Filter className="w-4 h-4" />
-                  {showAdvanced ? 'Masquer les filtres avancés' : 'Afficher les filtres avancés'}
+                  {showAdvanced ? t('hideAdvanced') : t('showAdvanced')}
                 </button>
               </div>
               
@@ -756,7 +759,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               <div className="mb-6">
                 <div className="mb-2 text-center">
                   <span className="text-xs text-slate-500 font-medium">
-                    Type d'événement
+                    {t('eventType')}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
@@ -768,7 +771,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                         : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
                     }`}
                   >
-                    Tout
+                    {t('all')}
                   </button>
                   {EVENT_TYPES.slice(0, 10).map((type, index) => {
                     const isActive = selectedType === type;
@@ -795,7 +798,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               <div className="mb-6">
                 <div className="mb-2 text-center">
                   <span className="text-xs text-slate-500 font-medium">
-                    Ambiance
+                    {t('ambiance')}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center max-w-4xl mx-auto">
@@ -807,7 +810,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                         : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
                     }`}
                   >
-                    Tout
+                    {t('all')}
                   </button>
                   {AMBIANCES.map((ambiance, index) => {
                     const isActive = selectedAmbiance === ambiance;
@@ -834,7 +837,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
               <div className="mb-4">
                 <div className="mb-2 text-center">
                   <span className="text-xs text-slate-500 font-medium">
-                    Public cible
+                    {t('targetAudience')}
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-2 justify-center max-w-2xl mx-auto">
@@ -846,11 +849,11 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                         : 'bg-white/5 text-slate-200 border-slate-500/30 hover:border-slate-400/50 hover:text-white hover:bg-white/10 backdrop-blur-sm'
                     }`}
                   >
-                    Tout
+                    {t('all')}
                   </button>
                   {PUBLICS.map((publicType, index) => {
                     const isActive = selectedPublic === publicType;
-                    const label = publicType === 'tout_public' ? 'Tout public' : 
+                    const label = publicType === 'tout_public' ? t('allPublic') : 
                                  publicType === '18_plus' ? '18+' : 
                                  publicType.replace(/_/g, ' ');
                     return (

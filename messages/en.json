@@ -52,7 +52,31 @@
     "admin": "Admin",
     "login": "Login",
     "logout": "Logout",
-    "signup": "Sign Up"
+    "signup": "Sign Up",
+    "mapShort": "Map",
+    "calendarShort": "Cal.",
+    "pourToi": "For You",
+    "pourToiShort": "For You",
+    "favoritesShort": "Favorites",
+    "publishShort": "Publish",
+    "discover": "Discover",
+    "music": "Music",
+    "family": "Family",
+    "culture": "Culture",
+    "sport": "Sport",
+    "top5": "Top 5 Pulse Picks",
+    "searchPlaceholder": "Quick search...",
+    "notifications": "Notifications",
+    "myAccount": "My Account",
+    "organizerLabel": "Organizer",
+    "organizerDashboard": "Organizer Dashboard",
+    "organizerProfile": "My Organizer Profile",
+    "adminDashboard": "Admin",
+    "signOut": "Sign Out",
+    "organizer": {
+      "dashboard": "Dashboard",
+      "profile": "My Organizer Profile"
+    }
   },
   "home": {
     "title": "Discover Montreal Events",
@@ -472,22 +496,6 @@
     "french": "French",
     "english": "English",
     "spanish": "Spanish"
-  },
-  "navigation": {
-    "discover": "Discover",
-    "music": "Music",
-    "family": "Family",
-    "culture": "Culture",
-    "sport": "Sport",
-    "top5": "Top 5 Pulse Picks",
-    "pourToi": "For You",
-    "searchPlaceholder": "Quick search...",
-    "notifications": "Notifications",
-    "myAccount": "My Account",
-    "profile": "Profile",
-    "organizer": "Organizer",
-    "admin": "Admin",
-    "signOut": "Sign Out"
   },
   "pourToi": {
     "today": "Today",

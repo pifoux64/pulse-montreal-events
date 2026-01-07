@@ -68,11 +68,15 @@
     "searchPlaceholder": "Recherche rapide...",
     "notifications": "Notifications",
     "myAccount": "Mon compte",
-    "organizer": "Organisateur",
+    "organizerLabel": "Organisateur",
     "organizerDashboard": "Tableau de bord organisateur",
     "organizerProfile": "Mon profil organisateur",
     "adminDashboard": "Administration",
-    "signOut": "Déconnexion"
+    "signOut": "Déconnexion",
+    "organizer": {
+      "dashboard": "Tableau de bord",
+      "profile": "Mon profil organisateur"
+    }
   },
   "home": {
     "title": "Découvrez les événements de Montréal",

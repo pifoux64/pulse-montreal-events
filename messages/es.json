@@ -53,7 +53,31 @@
     "admin": "Administración",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
-    "signup": "Registrarse"
+    "signup": "Registrarse",
+    "mapShort": "Mapa",
+    "calendarShort": "Cal.",
+    "pourToi": "Para ti",
+    "pourToiShort": "Para ti",
+    "favoritesShort": "Favoritos",
+    "publishShort": "Publicar",
+    "discover": "Descubrir",
+    "music": "Música",
+    "family": "Familiar",
+    "culture": "Cultura",
+    "sport": "Deportes",
+    "top5": "Top 5 Pulse Picks",
+    "searchPlaceholder": "Búsqueda rápida...",
+    "notifications": "Notificaciones",
+    "myAccount": "Mi cuenta",
+    "organizerLabel": "Organizador",
+    "organizerDashboard": "Panel del organizador",
+    "organizerProfile": "Mi perfil de organizador",
+    "adminDashboard": "Administración",
+    "signOut": "Cerrar sesión",
+    "organizer": {
+      "dashboard": "Panel",
+      "profile": "Mi perfil de organizador"
+    }
   },
   "home": {
     "title": "Descubre eventos en Montreal",
@@ -433,22 +457,6 @@
     "necessary": "Cookies necesarias",
     "analytics": "Cookies analíticas",
     "marketing": "Cookies de marketing"
-  },
-  "navigation": {
-    "discover": "Descubrir",
-    "music": "Música",
-    "family": "Familiar",
-    "culture": "Cultura",
-    "sport": "Deportes",
-    "top5": "Top 5 Pulse Picks",
-    "pourToi": "Para ti",
-    "searchPlaceholder": "Búsqueda rápida...",
-    "notifications": "Notificaciones",
-    "myAccount": "Mi cuenta",
-    "profile": "Perfil",
-    "organizer": "Organizador",
-    "admin": "Administración",
-    "signOut": "Cerrar sesión"
   },
   "pourToi": {
     "today": "Hoy",
