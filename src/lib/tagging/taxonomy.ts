@@ -417,12 +417,14 @@ export const CATEGORY_LABELS: Record<string, { fr: string; en: string; icon: str
 export function filterToAllowedTags(input: {
   type?: string | null;
   genres?: string[];
+  styles?: string[];
   ambiance?: string[];
   public?: string[];
 }) {
   const allowed = {
     type: null as string | null,
     genres: [] as string[],
+    styles: [] as string[],
     ambiance: [] as string[],
     public: [] as string[],
   };
@@ -434,6 +436,22 @@ export function filterToAllowedTags(input: {
   if (input.genres?.length) {
     const allowedGenres = new Set(TAG_TAXONOMY.genre);
     allowed.genres = input.genres.filter((g) => allowedGenres.has(g as any));
+  }
+
+  // Filtrer les styles : vérifier qu'ils appartiennent aux genres détectés
+  if (input.styles?.length && allowed.genres.length > 0) {
+    const validStyles: string[] = [];
+    for (const style of input.styles) {
+      // Vérifier si le style appartient à l'un des genres détectés
+      for (const genre of allowed.genres) {
+        const genreStyles = MUSIC_STYLES[genre] || [];
+        if (genreStyles.includes(style as any)) {
+          validStyles.push(style);
+          break;
+        }
+      }
+    }
+    allowed.styles = validStyles;
   }
 
   if (input.ambiance?.length) {

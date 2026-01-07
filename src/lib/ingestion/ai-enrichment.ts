@@ -44,15 +44,12 @@ export async function enrichEventWithAI(
       title: event.title,
       description: event.description,
       venueName: event.venueName,
-      category: event.category,
-      tags: event.tags || [],
-      lineup: event.lineup || [],
     };
 
     // Appeler le classificateur IA existant
     const aiResult = await classifyEventWithAI(input);
 
-    // Extraire les genres et styles depuis les tags
+    // Extraire les genres et styles depuis l'IA
     const genres: string[] = [];
     const styles: string[] = [];
 
@@ -61,12 +58,9 @@ export async function enrichEventWithAI(
       genres.push(...aiResult.genres);
     }
 
-    // Les styles peuvent être extraits depuis le lineup, les tags ou la description
-    if (event.lineup && event.lineup.length > 0) {
-      // Analyser le lineup pour détecter des styles musicaux
-      const lineupText = event.lineup.join(' ').toLowerCase();
-      const detectedStyles = detectStylesFromText(lineupText + ' ' + event.description);
-      styles.push(...detectedStyles);
+    // Les styles viennent directement de l'IA
+    if (Array.isArray(aiResult.styles)) {
+      styles.push(...aiResult.styles);
     }
 
     // Inférer si l'événement est gratuit

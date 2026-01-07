@@ -1,4 +1,4 @@
-import { EVENT_TYPES, GENRES, AMBIANCES, PUBLICS } from './taxonomy';
+import { EVENT_TYPES, GENRES, AMBIANCES, PUBLICS, MUSIC_STYLES, getStylesForGenre } from './taxonomy';
 
 export type AIClassificationInput = {
   title: string;
@@ -9,6 +9,7 @@ export type AIClassificationInput = {
 export type AIClassificationOutput = {
   type: string | null;
   genres: string[];
+  styles: string[]; // Styles musicaux (sous-genres)
   ambiance: string[];
   public: string[];
 };
@@ -61,11 +62,11 @@ async function classifyWithRetry(
           error?.message || error,
         );
       }
-      return { type: null, genres: [], ambiance: [], public: [] };
+      return { type: null, genres: [], styles: [], ambiance: [], public: [] };
     }
   }
 
-  return { type: null, genres: [], ambiance: [], public: [] };
+  return { type: null, genres: [], styles: [], ambiance: [], public: [] };
 }
 
 /**
@@ -76,7 +77,7 @@ async function classifyEventWithAIInternal(
 ): Promise<AIClassificationOutput> {
   if (!process.env.OPENAI_API_KEY) {
     // Sécurité : si aucune clé n'est configurée, on ne retourne rien
-    return { type: null, genres: [], ambiance: [], public: [] };
+    return { type: null, genres: [], styles: [], ambiance: [], public: [] };
   }
 
   const systemPrompt = [
@@ -86,43 +87,58 @@ async function classifyEventWithAIInternal(
     '',
     `Types d’événements (type): ${JSON.stringify(EVENT_TYPES)}`,
     `Genres musicaux PRINCIPAUX (genres): ${JSON.stringify(GENRES)}`,
-    'IMPORTANT: Les genres doivent être des GENRES PRINCIPAUX uniquement.',
-    'Exemples de genres principaux: reggae, hip_hop, pop, techno, rock, jazz, etc.',
-    'NE PAS utiliser de styles comme genres (ex: "dub" est un STYLE de "reggae", pas un genre principal).',
-    'Si un événement mentionne un style (ex: "dub", "trap", "jungle"), choisis le genre principal parent (ex: "reggae", "hip_hop", "drum_and_bass").',
+    '',
+    'Styles musicaux (styles): Les styles sont des sous-genres qui appartiennent à un genre principal.',
+    'Exemples de styles par genre:',
+    '- reggae → ["dub", "dancehall", "roots_reggae", "lovers_rock", "rocksteady", "ska", "reggaeton", "dubwise"]',
+    '- hip_hop → ["rap", "trap", "drill", "grime", "conscious_hip_hop", "gangsta_rap", "mumble_rap", "old_school_hip_hop"]',
+    '- jazz → ["bebop", "fusion", "smooth_jazz", "free_jazz", "latin_jazz", "acid_jazz"]',
+    '- rnb → ["neo_soul", "contemporary_rnb", "soul"]',
+    '- rock → ["indie_rock", "alternative_rock", "garage_rock", "psych_rock", "post_rock", "hard_rock", "classic_rock", "arena_rock"]',
+    '- techno → ["minimal_techno", "industrial_techno", "acid_techno", "detroit_techno", "berlin_techno", "dub_techno"]',
+    '- house → ["deep_house", "tech_house", "progressive_house", "disco_house", "vocal_house", "acid_house"]',
+    '- drum_and_bass → ["jungle", "liquid_dnb", "neurofunk", "jump_up", "darkstep"]',
+    '- electronic → ["ambient", "idm", "glitch", "synthwave", "vaporwave", "chillwave"]',
+    '- Et ainsi de suite pour tous les genres principaux.',
+    '',
+    'IMPORTANT:',
+    '- genres doit contenir UNIQUEMENT des genres principaux (ex: "reggae", "jazz", "techno").',
+    '- styles doit contenir les styles/sous-genres pertinents (ex: "dub", "fusion", "minimal_techno").',
+    '- Si un événement mentionne un style, ajoute-le dans "styles" ET le genre principal parent dans "genres".',
+    '- Exemple: "dub" → genres: ["reggae"], styles: ["dub"]',
+    '- Exemple: "jazz fusion" → genres: ["jazz"], styles: ["fusion"]',
+    '- Exemple: "neo-soul" → genres: ["rnb"] ou ["soul"], styles: ["neo_soul"]',
+    '- Si plusieurs genres sont pertinents, renvoie-les tous (ex: ["jazz", "rnb"]).',
     '',
     `Ambiance (ambiance): ${JSON.stringify(AMBIANCES)}`,
     `Public (public): ${JSON.stringify(PUBLICS)}`,
     '',
     'Règles strictes :',
     '- Ne JAMAIS inventer de valeur en dehors de ces listes.',
-    '- type peut être null si tu n’es pas sûr.',
+    '- type peut être null si tu n\'es pas sûr.',
     '- genres doit contenir UNIQUEMENT des genres principaux (pas de styles).',
-    '- genres, ambiance et public doivent être des tableaux, éventuellement vides.',
+    '- styles doit contenir les styles/sous-genres pertinents (peut être vide si aucun style spécifique).',
+    '- genres, styles, ambiance et public doivent être des tableaux, éventuellement vides.',
     '- Si plusieurs genres principaux sont pertinents, renvoie-les tous (ex: ["pop", "hip_hop"]).',
     '- Réponds UNIQUEMENT avec un objet JSON valide, sans texte autour.',
     '',
     'Exemples (à imiter STRICTEMENT, sans ajouter de champ ni de texte autour) :',
     '',
-    '1) Concert rap/pop (type Berlam) :',
+    '1) Concert rap/pop :',
     'input:',
     '{',
-    '  "title": "Berlam – Lancement de l\'album",',
-    '  "description": "Lancement officiel du deuxième album de Berlam. Portes: 20h00, Spectacle: 21h00, Tous âges.",',
+    '  "title": "Lancement d\'album rap/pop",',
+    '  "description": "Lancement officiel d\'un album mélangeant rap et pop. Portes: 20h00, Spectacle: 21h00, Tous âges.",',
     '  "venueName": "Club Soda"',
     '}',
     'output:',
     '{',
     '  "type": "concert",',
     '  "genres": ["pop","hip_hop"],',
+    '  "styles": ["rap"],',
     '  "ambiance": ["salle_de_concert"],',
     '  "public": ["tout_public"]',
     '}',
-    'Note IMPORTANTE:',
-    '- Les "lancements d\'album" de rap francophone montréalais sont généralement un mélange pop + hip_hop.',
-    '- Les artistes rap/pop montréalais (Berlam, Loud, etc.) doivent avoir ["pop", "hip_hop"].',
-    '- Si un événement mentionne "rap" ou "hip-hop" sans autre précision, mais que c\'est un lancement d\'album ou un concert d\'artiste connu pour mélanger les styles, renvoie ["pop", "hip_hop"].',
-    '- Si un événement mélange plusieurs genres principaux, renvoie TOUS les genres pertinents.',
     '',
     '2) Soirée techno en warehouse :',
     'input:',
@@ -135,6 +151,7 @@ async function classifyEventWithAIInternal(
     '{',
     '  "type": "dj_set",',
     '  "genres": ["techno"],',
+    '  "styles": ["industrial_techno"],',
     '  "ambiance": ["underground","warehouse"],',
     '  "public": ["18_plus"]',
     '}',
@@ -150,6 +167,7 @@ async function classifyEventWithAIInternal(
     '{',
     '  "type": "exposition",',
     '  "genres": ["other"],',
+    '  "styles": [],',
     '  "ambiance": ["exterieur"],',
     '  "public": ["famille"]',
     '}',
@@ -165,10 +183,11 @@ async function classifyEventWithAIInternal(
     '{',
     '  "type": "soiree_club",',
     '  "genres": ["reggae"],',
+    '  "styles": ["dub", "dancehall"],',
     '  "ambiance": ["underground","salle_de_concert"],',
     '  "public": ["18_plus"]',
     '}',
-    'Note: "dub" est un STYLE de "reggae", donc on utilise uniquement le genre principal "reggae".',
+    'Note: "dub" et "dancehall" sont des STYLES de "reggae", donc genres: ["reggae"] et styles: ["dub", "dancehall"].',
     '',
     '5) Atelier créatif pour enfants :',
     'input:',
@@ -181,8 +200,57 @@ async function classifyEventWithAIInternal(
     '{',
     '  "type": "atelier",',
     '  "genres": ["other"],',
+    '  "styles": [],',
     '  "ambiance": ["intime"],',
     '  "public": ["famille"]',
+    '}',
+    '',
+    '6) Concert jazz fusion / neo-soul :',
+    'input:',
+    '{',
+    '  "title": "Concert jazz contemporain",',
+    '  "description": "Concert de jazz fusion et neo-soul avec influences R&B moderne. Musiciens de la scène jazz contemporaine.",',
+    '  "venueName": "Newspeak"',
+    '}',
+    'output:',
+    '{',
+    '  "type": "concert",',
+    '  "genres": ["jazz", "rnb"],',
+    '  "styles": ["fusion", "neo_soul"],',
+    '  "ambiance": ["salle_de_concert"],',
+    '  "public": ["tout_public"]',
+    '}',
+    '',
+    '7) Concert rock alternatif :',
+    'input:',
+    '{',
+    '  "title": "Soirée rock indie",',
+    '  "description": "Concert de rock alternatif et indie rock avec plusieurs groupes locaux. Ambiance décontractée.",',
+    '  "venueName": "Bar Le Ritz"',
+    '}',
+    'output:',
+    '{',
+    '  "type": "concert",',
+    '  "genres": ["rock", "indie"],',
+    '  "styles": ["indie_rock", "alternative_rock"],',
+    '  "ambiance": ["bar"],',
+    '  "public": ["18_plus"]',
+    '}',
+    '',
+    '8) Festival de musique électronique :',
+    'input:',
+    '{',
+    '  "title": "Festival électronique en plein air",',
+    '  "description": "Festival de musique électronique avec plusieurs scènes, DJs internationaux, techno, house et trance.",',
+    '  "venueName": "Parc Jean-Drapeau"',
+    '}',
+    'output:',
+    '{',
+    '  "type": "festival",',
+    '  "genres": ["techno", "house", "trance"],',
+    '  "styles": ["progressive_house", "uplifting_trance"],',
+    '  "ambiance": ["exterieur", "festival_site"],',
+    '  "public": ["18_plus"]',
     '}',
   ].join('\n');
 
@@ -242,6 +310,7 @@ async function classifyEventWithAIInternal(
     return {
       type: typeof parsed.type === 'string' ? parsed.type : null,
       genres: Array.isArray(parsed.genres) ? parsed.genres.filter((g) => typeof g === 'string') : [],
+      styles: Array.isArray(parsed.styles) ? parsed.styles.filter((s) => typeof s === 'string') : [],
       ambiance: Array.isArray(parsed.ambiance)
         ? parsed.ambiance.filter((a) => typeof a === 'string')
         : [],

@@ -136,7 +136,12 @@
     "top5GeneratedWeekly": "Top 5 lists are automatically generated every week by our AI.",
     "discoverBestEvents": "Discover the best {theme} events in Montreal",
     "eventCount": "{count} event",
-    "eventCount_plural": "{count} events"
+    "eventCount_plural": "{count} events",
+    "showAdvanced": "Show advanced filters",
+    "hideAdvanced": "Hide advanced filters",
+    "eventType": "Event type",
+    "targetAudience": "Target audience",
+    "ambiance": "Ambiance"
   },
   "filters": {
     "title": "Filters",

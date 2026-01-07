@@ -46,6 +46,9 @@ export async function enrichEventWithTags(eventId: string): Promise<void> {
   for (const g of filtered.genres) {
     tagsToCreate.push({ category: 'genre', value: g });
   }
+  for (const s of filtered.styles) {
+    tagsToCreate.push({ category: 'style', value: s });
+  }
   for (const a of filtered.ambiance) {
     tagsToCreate.push({ category: 'ambiance', value: a });
   }

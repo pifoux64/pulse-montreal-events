@@ -5,8 +5,10 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Loader2, ChevronRight, ChevronLeft, Music, Calendar, Heart, MapPin, Clock, X } from 'lucide-react';
+import { GENRES, MAIN_CATEGORIES, AMBIANCES } from '@/lib/tagging/taxonomy';
 
-// Options pour chaque étape - Les labels seront traduits dans le composant
+// Options pour chaque étape - Utilisation de la taxonomie uniforme
+// Genres musicaux principaux (sélection des plus populaires pour l'onboarding)
 const MUSIC_GENRES = [
   { id: 'rock' },
   { id: 'indie' },
@@ -15,12 +17,14 @@ const MUSIC_GENRES = [
   { id: 'electronic' },
   { id: 'techno' },
   { id: 'jazz' },
-  { id: 'afro' },
+  { id: 'afrobeat' },
   { id: 'pop' },
-  { id: 'metal' },
+  { id: 'heavy_metal' },
   { id: 'latin' },
-  { id: 'funk_soul' },
-];
+  { id: 'funk' },
+  { id: 'soul' },
+  { id: 'rnb' },
+] as const;
 
 const EVENT_CATEGORIES = [
   { id: 'culture' },
