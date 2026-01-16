@@ -576,10 +576,10 @@ const EventCard = ({
             <button
               onClick={handleFavoriteClick}
               disabled={isFavoriteLoading}
-              className={`flex items-center space-x-1 text-sm transition-colors duration-200 ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                 isFavorite
-                  ? 'text-red-400'
-                  : 'text-slate-300 hover:text-red-400'
+                  ? 'bg-red-500/20 text-red-400 border border-red-400/30 hover:bg-red-500/30'
+                  : 'bg-slate-700/60 text-slate-100 border border-slate-600/50 hover:bg-red-500/20 hover:text-red-400 hover:border-red-400/30'
               } ${isFavoriteLoading ? 'opacity-50 cursor-wait' : ''} ${justToggled ? 'animate-pulse' : ''}`}
               aria-label={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
             >
@@ -591,15 +591,15 @@ const EventCard = ({
                   className={`w-4 h-4 transition-all duration-200 ${isFavorite ? 'fill-current' : ''} ${justToggled ? 'animate-bounce' : ''}`} 
                 />
               )}
-              <span className="hidden sm:inline text-slate-200">{isFavorite ? 'Aimé' : 'Aimer'}</span>
+              <span className="hidden sm:inline">{isFavorite ? 'Aimé' : 'Aimer'}</span>
             </button>
             
             <button
               onClick={handleShareClick}
-              className="flex items-center space-x-1 text-sm text-slate-300 hover:text-blue-400 transition-colors duration-200 will-change-[color]"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-700/60 text-slate-100 border border-slate-600/50 hover:bg-blue-500/20 hover:text-blue-400 hover:border-blue-400/30 transition-all duration-200 will-change-[color]"
             >
               <Share2 className="w-4 h-4" />
-              <span className="hidden sm:inline text-slate-200">Partager</span>
+              <span className="hidden sm:inline">Partager</span>
             </button>
           </div>
           
@@ -609,7 +609,7 @@ const EventCard = ({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm font-medium hover:bg-blue-600 transition-colors duration-200 shadow-lg"
+              className="px-5 py-2 bg-blue-500 text-white rounded-full text-sm font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-lg hover:shadow-xl"
             >
               Billets
             </a>
