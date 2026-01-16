@@ -90,6 +90,13 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           }, 60 * 60 * 1000);
         })
         .catch((error) => {
+          // Ignorer les erreurs 404 (fichier non trouvé) - c'est normal en développement
+          // ou si le Service Worker n'est pas encore déployé
+          if (error?.message?.includes('404') || error?.message?.includes('bad HTTP response code')) {
+            // Service Worker non disponible, ce n'est pas une erreur critique
+            return;
+          }
+          // Afficher uniquement les autres erreurs
           console.error('Erreur lors de l\'enregistrement du Service Worker:', error);
         });
     }
