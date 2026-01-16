@@ -9,30 +9,13 @@ const intlMiddleware = createMiddleware({
   locales,
   defaultLocale,
   localePrefix: 'never', // Ne pas utiliser de préfixe dans l'URL (on utilise le cookie)
-  localeDetection: true, // Activer la détection
-  // Fonction personnalisée pour détecter la locale depuis le cookie
+  localeDetection: false, // Désactiver la détection automatique
   alternateLinks: false, // Désactiver les liens alternatifs
 });
 
 export async function middleware(request: NextRequest) {
-  // Détecter la locale depuis le cookie NEXT_LOCALE
-  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
-  const locale = (cookieLocale && locales.includes(cookieLocale as any)) 
-    ? cookieLocale 
-    : defaultLocale;
-
-  // Créer une requête modifiée avec la locale dans les headers pour next-intl
-  const requestWithLocale = new NextRequest(request.url, {
-    ...request,
-    headers: {
-      ...request.headers,
-      'x-next-intl-locale': locale,
-    },
-  });
-
   // Exécuter le middleware next-intl d'abord
-  // Il va configurer la locale pour que getRequestConfig puisse la lire
-  const intlResponse = intlMiddleware(requestWithLocale);
+  const intlResponse = intlMiddleware(request);
   
   // Si next-intl a retourné une redirection, on la retourne directement
   if (intlResponse && intlResponse.status === 307) {
