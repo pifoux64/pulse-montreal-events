@@ -27,6 +27,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Exclure les fichiers statiques (Service Worker, manifest, etc.)
+  if (pathname === '/sw.js' || pathname.startsWith('/manifest') || pathname.startsWith('/icons/')) {
+    return NextResponse.next();
+  }
+
   // Exécuter le middleware next-intl pour les routes non-API
   const intlResponse = intlMiddleware(request);
   
@@ -80,8 +85,10 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
+     * - sw.js (service worker)
+     * - manifest files
+     * - public folder assets
      */
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|sw.js|manifest|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
