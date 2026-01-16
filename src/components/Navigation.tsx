@@ -13,6 +13,7 @@ import LanguageSelector from './LanguageSelector';
 
 export default function Navigation() {
   const t = useTranslations('navigation');
+  const tCommon = useTranslations('common');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
