@@ -7,6 +7,8 @@ import { formatEventDate } from '@/lib/utils';
 import Top5EventCardWrapper from '@/components/Top5EventCardWrapper';
 import Top5PageClient from './Top5PageClient';
 
+export const dynamic = 'force-dynamic';
+
 interface Top5PageProps {
   params: { slug: string };
 }
@@ -31,8 +33,12 @@ export async function generateMetadata({ params }: Top5PageProps): Promise<Metad
   }
 
   const title = post.title || `Top 5 ${post.theme} à Montréal`;
+  const periodStartStr = post.periodStart ? new Date(post.periodStart).toLocaleDateString('fr-CA') : '';
+  const periodEndStr = post.periodEnd ? new Date(post.periodEnd).toLocaleDateString('fr-CA') : '';
   const description = post.description ||
-    `Découvrez la sélection Pulse des meilleurs événements ${post.theme} à Montréal pour la période du ${post.periodStart.toLocaleDateString('fr-CA')} au ${post.periodEnd.toLocaleDateString('fr-CA')}.`;
+    (periodStartStr && periodEndStr
+      ? `Découvrez la sélection Pulse des meilleurs événements ${post.theme} à Montréal pour la période du ${periodStartStr} au ${periodEndStr}.`
+      : `Découvrez la sélection Pulse des meilleurs événements ${post.theme} à Montréal.`);
   
   const canonical = `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/top-5/${post.slug}`;
   // Récupérer l'image du premier événement si disponible
@@ -126,8 +132,8 @@ export default async function Top5Page({ params }: Top5PageProps) {
             title: post.title || `Top 5 ${post.theme}`,
             theme: post.theme,
             description: post.description,
-            periodStart: post.periodStart.toISOString(),
-            periodEnd: post.periodEnd.toISOString(),
+            periodStart: post.periodStart ? post.periodStart.toISOString() : new Date().toISOString(),
+            periodEnd: post.periodEnd ? post.periodEnd.toISOString() : new Date().toISOString(),
           }}
           eventIds={eventsOrder}
         />

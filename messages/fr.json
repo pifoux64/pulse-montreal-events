@@ -458,10 +458,15 @@
       "techno": "Techno",
       "jazz": "Jazz",
       "afro": "Afro / Caribbean",
+      "afrobeat": "Afrobeat",
       "pop": "Pop",
       "metal": "Metal",
+      "heavy_metal": "Heavy Metal",
       "latin": "Latin",
-      "funk_soul": "Funk / Soul"
+      "funk": "Funk",
+      "soul": "Soul",
+      "funk_soul": "Funk / Soul",
+      "rnb": "R&B"
     },
     "categories": {
       "culture": "Culture",
@@ -494,7 +499,21 @@
     "goToProfile": "Aller au profil",
     "recommended": "Recommandé",
     "eventsRecommended": "{count} événement recommandé",
-    "eventsRecommended_plural": "{count} événements recommandés"
+    "eventsRecommended_plural": "{count} événements recommandés",
+    "today": "Aujourd'hui",
+    "weekend": "Ce week-end",
+    "allEvents": "Tous les événements",
+    "refresh": "Actualiser",
+    "loadingRecommendations": "Chargement de vos recommandations...",
+    "errorLoading": "Erreur lors du chargement des recommandations. Vérifiez votre connexion.",
+    "top5Genre": "Top 5 {genre}",
+    "yourFavoriteGenre": "Votre genre préféré",
+    "eventsCount": "{count} événement",
+    "eventsCount_plural": "{count} événements",
+    "seeTop5": "Voir le Top 5",
+    "top5Selected": "Top 5 sélectionné par notre IA",
+    "recommendedEvents": "{count} événement recommandé",
+    "recommendedEvents_plural": "{count} événements recommandés"
   },
   "profile": {
     "title": "Profil",
@@ -543,23 +562,6 @@
     "french": "Français",
     "english": "Anglais",
     "spanish": "Espagnol"
-  },
-  "pourToi": {
-    "today": "Aujourd'hui",
-    "weekend": "Ce week-end",
-    "allEvents": "Tous les événements",
-    "refresh": "Actualiser",
-    "loadingRecommendations": "Chargement de vos recommandations...",
-    "errorLoading": "Erreur lors du chargement des recommandations. Vérifiez votre connexion.",
-    "top5Genre": "Top 5 {genre}",
-    "basedOnPreferences": "Basé sur vos préférences",
-    "yourFavoriteGenre": "Votre genre préféré",
-    "eventsCount": "{count} événement",
-    "eventsCount_plural": "{count} événements",
-    "seeTop5": "Voir le Top 5",
-    "top5Selected": "Top 5 sélectionné par notre IA",
-    "recommendedEvents": "{count} événement recommandé",
-    "recommendedEvents_plural": "{count} événements recommandés"
   },
   "top5": {
     "share": "Partager",

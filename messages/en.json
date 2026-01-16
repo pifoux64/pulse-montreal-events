@@ -458,10 +458,15 @@
       "techno": "Techno",
       "jazz": "Jazz",
       "afro": "Afro / Caribbean",
+      "afrobeat": "Afrobeat",
       "pop": "Pop",
       "metal": "Metal",
+      "heavy_metal": "Heavy Metal",
       "latin": "Latin",
-      "funk_soul": "Funk / Soul"
+      "funk": "Funk",
+      "soul": "Soul",
+      "funk_soul": "Funk / Soul",
+      "rnb": "R&B"
     },
     "categories": {
       "culture": "Culture",
@@ -494,15 +499,7 @@
     "goToProfile": "Go to profile",
     "recommended": "Recommended",
     "eventsRecommended": "{count} recommended event",
-    "eventsRecommended_plural": "{count} recommended events"
-  },
-  "language": {
-    "select": "Select language",
-    "french": "French",
-    "english": "English",
-    "spanish": "Spanish"
-  },
-  "pourToi": {
+    "eventsRecommended_plural": "{count} recommended events",
     "today": "Today",
     "weekend": "This Weekend",
     "allEvents": "All Events",
@@ -510,16 +507,19 @@
     "loadingRecommendations": "Loading your recommendations...",
     "errorLoading": "Error loading recommendations. Check your connection.",
     "top5Genre": "Top 5 {genre}",
-    "basedOnPreferences": "Based on your preferences",
     "yourFavoriteGenre": "Your favorite genre",
     "eventsCount": "{count} event",
     "eventsCount_plural": "{count} events",
     "seeTop5": "See Top 5",
     "top5Selected": "Top 5 selected by our AI",
     "recommendedEvents": "{count} recommended event",
-    "recommendedEvents_plural": "{count} recommended events",
-    "eventsRecommended": "{count} recommended event",
-    "eventsRecommended_plural": "{count} recommended events"
+    "recommendedEvents_plural": "{count} recommended events"
+  },
+  "language": {
+    "select": "Select language",
+    "french": "French",
+    "english": "English",
+    "spanish": "Spanish"
   },
   "top5": {
     "share": "Share",

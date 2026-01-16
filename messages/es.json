@@ -437,7 +437,46 @@
       "evening": "Noche",
       "night": "Noche"
     },
-    "saving": "Guardando..."
+    "saving": "Guardando...",
+    "genres": {
+      "rock": "Rock",
+      "indie": "Indie",
+      "hip_hop": "Hip-hop",
+      "reggae": "Reggae / Dub",
+      "electronic": "Electrónica",
+      "techno": "Techno",
+      "jazz": "Jazz",
+      "afro": "Afro / Caribeña",
+      "afrobeat": "Afrobeat",
+      "pop": "Pop",
+      "metal": "Metal",
+      "heavy_metal": "Heavy Metal",
+      "latin": "Latina",
+      "funk": "Funk",
+      "soul": "Soul",
+      "funk_soul": "Funk / Soul",
+      "rnb": "R&B"
+    },
+    "categories": {
+      "culture": "Cultura",
+      "family": "Familia",
+      "sport": "Deporte",
+      "nightlife": "Vida nocturna",
+      "festivals": "Festivales",
+      "community": "Comunidad",
+      "wellness": "Bienestar",
+      "talks": "Conferencias"
+    },
+    "vibes": {
+      "chill": "Relajado",
+      "dancing": "Bailable",
+      "underground": "Underground",
+      "festive": "Festivo",
+      "intimate": "Íntimo",
+      "political": "Político / Comprometido",
+      "alternative": "Alternativo",
+      "mainstream": "Mainstream"
+    }
   },
   "pourToi": {
     "title": "Para ti",
@@ -449,7 +488,21 @@
     "goToProfile": "Ir al perfil",
     "recommended": "Recomendado",
     "eventsRecommended": "{count} evento recomendado",
-    "eventsRecommended_plural": "{count} eventos recomendados"
+    "eventsRecommended_plural": "{count} eventos recomendados",
+    "today": "Hoy",
+    "weekend": "Este fin de semana",
+    "allEvents": "Todos los eventos",
+    "refresh": "Actualizar",
+    "loadingRecommendations": "Cargando tus recomendaciones...",
+    "errorLoading": "Error al cargar recomendaciones. Verifica tu conexión.",
+    "top5Genre": "Top 5 {genre}",
+    "yourFavoriteGenre": "Tu género favorito",
+    "eventsCount": "{count} evento",
+    "eventsCount_plural": "{count} eventos",
+    "seeTop5": "Ver Top 5",
+    "top5Selected": "Top 5 seleccionado por nuestra IA",
+    "recommendedEvents": "{count} evento recomendado",
+    "recommendedEvents_plural": "{count} eventos recomendados"
   },
   "cookies": {
     "title": "Gestión de cookies",
@@ -462,23 +515,6 @@
     "necessary": "Cookies necesarias",
     "analytics": "Cookies analíticas",
     "marketing": "Cookies de marketing"
-  },
-  "pourToi": {
-    "today": "Hoy",
-    "weekend": "Este fin de semana",
-    "allEvents": "Todos los eventos",
-    "refresh": "Actualizar",
-    "loadingRecommendations": "Cargando tus recomendaciones...",
-    "errorLoading": "Error al cargar recomendaciones. Verifica tu conexión.",
-    "top5Genre": "Top 5 {genre}",
-    "basedOnPreferences": "Basado en tus preferencias",
-    "yourFavoriteGenre": "Tu género favorito",
-    "eventsCount": "{count} evento",
-    "eventsCount_plural": "{count} eventos",
-    "seeTop5": "Ver Top 5",
-    "top5Selected": "Top 5 seleccionado por nuestra IA",
-    "recommendedEvents": "{count} evento recomendado",
-    "recommendedEvents_plural": "{count} eventos recomendados"
   },
   "profile": {
     "title": "Perfil",
