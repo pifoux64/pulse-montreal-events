@@ -14,7 +14,20 @@ const intlMiddleware = createMiddleware({
 });
 
 export async function middleware(request: NextRequest) {
-  // Exécuter le middleware next-intl d'abord
+  const pathname = request.nextUrl.pathname;
+
+  // Exclure les routes API du traitement next-intl
+  // Les routes API doivent passer directement sans traitement i18n
+  if (pathname.startsWith('/api/')) {
+    // Pour les routes API, on ne fait que la vérification d'onboarding si nécessaire
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    
+    // Pour les routes API, on ne fait pas de redirection d'onboarding
+    // On laisse passer directement
+    return NextResponse.next();
+  }
+
+  // Exécuter le middleware next-intl pour les routes non-API
   const intlResponse = intlMiddleware(request);
   
   // Si next-intl a retourné une redirection, on la retourne directement
@@ -43,9 +56,9 @@ export async function middleware(request: NextRequest) {
         // Si l'onboarding n'est pas complété et que l'utilisateur n'est pas déjà sur /onboarding
         if (
           !preferences?.onboardingCompleted &&
-          !request.nextUrl.pathname.startsWith('/onboarding') &&
-          !request.nextUrl.pathname.startsWith('/auth') &&
-          !request.nextUrl.pathname.startsWith('/api')
+          !pathname.startsWith('/onboarding') &&
+          !pathname.startsWith('/auth') &&
+          !pathname.startsWith('/api')
         ) {
           return NextResponse.redirect(new URL('/onboarding', request.url));
         }
