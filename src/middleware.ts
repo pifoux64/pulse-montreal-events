@@ -1,44 +1,33 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import createMiddleware from 'next-intl/middleware';
-import { locales, defaultLocale } from './lib/i18n';
-
-// Créer le middleware next-intl avec détection de locale depuis le cookie
-const intlMiddleware = createMiddleware({
-  locales,
-  defaultLocale,
-  localePrefix: 'never', // Ne pas utiliser de préfixe dans l'URL (on utilise le cookie)
-  localeDetection: false, // Désactiver la détection automatique
-  alternateLinks: false, // Désactiver les liens alternatifs
-});
+import { locales, defaultLocale } from '@/lib/i18n';
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
-
-  // Exclure les routes API du traitement next-intl
-  // Les routes API doivent passer directement sans traitement i18n
-  if (pathname.startsWith('/api/')) {
-    // Pour les routes API, on ne fait que la vérification d'onboarding si nécessaire
-    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-    
-    // Pour les routes API, on ne fait pas de redirection d'onboarding
-    // On laisse passer directement
+  // Exclure les routes API
+  if (request.nextUrl.pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
 
-  // Exclure les fichiers statiques (Service Worker, manifest, etc.)
-  if (pathname === '/sw.js' || pathname.startsWith('/manifest') || pathname.startsWith('/icons/')) {
-    return NextResponse.next();
-  }
-
-  // Exécuter le middleware next-intl pour les routes non-API
-  const intlResponse = intlMiddleware(request);
+  // Gérer la locale manuellement (sans middleware next-intl)
+  // S'assurer qu'un cookie NEXT_LOCALE existe
+  const cookieLocale = request.cookies.get('NEXT_LOCALE')?.value;
+  const locale = (cookieLocale && locales.includes(cookieLocale as any)) ? cookieLocale : defaultLocale;
   
-  // Si next-intl a retourné une redirection, on la retourne directement
-  if (intlResponse && intlResponse.status === 307) {
-    return intlResponse;
+  // Créer la réponse
+  const response = NextResponse.next();
+  
+  // Définir le cookie si nécessaire
+  if (!cookieLocale || !locales.includes(cookieLocale as any)) {
+    response.cookies.set('NEXT_LOCALE', locale, {
+      path: '/',
+      maxAge: 60 * 60 * 24 * 365, // 1 an
+      sameSite: 'lax',
+    });
   }
+  
+  // Définir le header x-next-intl-locale pour que getRequestConfig puisse le détecter
+  response.headers.set('x-next-intl-locale', locale);
 
   // Ensuite, gérer la logique d'onboarding
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
@@ -48,22 +37,22 @@ export async function middleware(request: NextRequest) {
     // Vérifier si l'utilisateur a complété l'onboarding
     // On fait une requête à l'API pour vérifier (on pourrait optimiser avec un cache)
     try {
-      const response = await fetch(`${request.nextUrl.origin}/api/user/preferences`, {
+      const onboardingResponse = await fetch(`${request.nextUrl.origin}/api/user/preferences`, {
         headers: {
           cookie: request.headers.get('cookie') || '',
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
+      if (onboardingResponse.ok) {
+        const data = await onboardingResponse.json();
         const preferences = data.preferences;
 
         // Si l'onboarding n'est pas complété et que l'utilisateur n'est pas déjà sur /onboarding
         if (
           !preferences?.onboardingCompleted &&
-          !pathname.startsWith('/onboarding') &&
-          !pathname.startsWith('/auth') &&
-          !pathname.startsWith('/api')
+          !request.nextUrl.pathname.startsWith('/onboarding') &&
+          !request.nextUrl.pathname.startsWith('/auth') &&
+          !request.nextUrl.pathname.startsWith('/api')
         ) {
           return NextResponse.redirect(new URL('/onboarding', request.url));
         }
@@ -74,21 +63,19 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Retourner la réponse de next-intl ou créer une nouvelle réponse
-  return intlResponse || NextResponse.next();
+  return response;
 }
 
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (API routes - handled separately)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - sw.js (service worker)
-     * - manifest files
-     * - public folder assets
+     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|sw.js|manifest|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
