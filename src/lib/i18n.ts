@@ -14,10 +14,15 @@ export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = 'fr';
 
 export default getRequestConfig(async ({ locale }) => {
+  // Si la locale n'est pas fournie par le middleware, utiliser la locale par défaut
+  let detectedLocale = locale || defaultLocale;
+
   // Valider que la locale est supportée
-  if (!locales.includes(locale as Locale)) notFound();
+  if (!locales.includes(detectedLocale as Locale)) {
+    detectedLocale = defaultLocale;
+  }
 
   return {
-    messages: (await import(`../../messages/${locale}.json`)).default,
+    messages: (await import(`../../messages/${detectedLocale}.json`)).default,
   };
 });
