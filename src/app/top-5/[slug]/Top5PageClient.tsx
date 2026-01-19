@@ -98,12 +98,14 @@ export default function Top5PageClient({ post, eventIds }: Top5PageClientProps) 
             <p className="text-slate-300 text-sm mb-2">
               {t('top5Theme', { theme: post.theme })}
             </p>
-            <p className="text-slate-400 text-xs mb-4">
-              {t('period', {
-                start: new Date(post.periodStart).toLocaleDateString('fr-CA'),
-                end: new Date(post.periodEnd).toLocaleDateString('fr-CA'),
-              })}
-            </p>
+            {post.periodStart && post.periodEnd && !isNaN(new Date(post.periodStart).getTime()) && !isNaN(new Date(post.periodEnd).getTime()) && (
+              <p className="text-slate-400 text-xs mb-4">
+                {t('period', {
+                  start: new Date(post.periodStart).toLocaleDateString('fr-CA'),
+                  end: new Date(post.periodEnd).toLocaleDateString('fr-CA'),
+                })}
+              </p>
+            )}
           </div>
           
           {/* CTAs */}

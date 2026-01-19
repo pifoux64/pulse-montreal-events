@@ -72,20 +72,27 @@ export default async function Top5ListPage() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>
-                      {new Date(post.periodStart).toLocaleDateString('fr-CA', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                      {' - '}
-                      {new Date(post.periodEnd).toLocaleDateString('fr-CA', {
-                        month: 'short',
-                        day: 'numeric',
-                      })}
-                    </span>
-                  </div>
+                  {post.periodStart && post.periodEnd ? (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <span>
+                        {new Date(post.periodStart).toLocaleDateString('fr-CA', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                        {' - '}
+                        {new Date(post.periodEnd).toLocaleDateString('fr-CA', {
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      <span className="text-slate-500">Date non disponible</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1 text-amber-400 group-hover:text-amber-300">
                     {tCommon('view')}
                     <ArrowRight className="w-4 h-4" />
