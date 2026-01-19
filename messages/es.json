@@ -295,21 +295,6 @@
     "removed": "Eliminado de favoritos",
     "added": "Agregado a favoritos"
   },
-  "profile": {
-    "title": "Mi perfil",
-    "personalInfo": "Información personal",
-    "preferences": "Preferencias",
-    "notifications": "Notificaciones",
-    "privacy": "Privacidad",
-    "account": "Cuenta",
-    "organizer": "Organizador",
-    "becomeOrganizer": "Convertirse en organizador",
-    "organizerProfile": "Perfil de organizador",
-    "myEvents": "Mis eventos",
-    "analytics": "Estadísticas",
-    "promotions": "Promociones",
-    "subscription": "Suscripción"
-  },
   "auth": {
     "signIn": "Iniciar sesión",
     "signUp": "Registrarse",
@@ -517,8 +502,20 @@
     "marketing": "Cookies de marketing"
   },
   "profile": {
-    "title": "Perfil",
+    "title": "Mi perfil",
     "description": "Gestiona tus preferencias para recibir recomendaciones personalizadas de eventos en Montreal.",
+    "personalInfo": "Información personal",
+    "preferences": "Preferencias",
+    "notifications": "Notificaciones",
+    "privacy": "Privacidad",
+    "account": "Cuenta",
+    "organizer": "Organizador",
+    "becomeOrganizer": "Convertirse en organizador",
+    "organizerProfile": "Perfil de organizador",
+    "myEvents": "Mis eventos",
+    "analytics": "Estadísticas",
+    "promotions": "Promociones",
+    "subscription": "Suscripción",
     "tastesPreferences": "Mis gustos y preferencias",
     "tastesDescription": "Estas preferencias se utilizan para recomendaciones y notificaciones.",
     "editOnboarding": "Editar mis preferencias de onboarding.",
