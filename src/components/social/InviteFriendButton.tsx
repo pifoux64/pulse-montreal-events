@@ -220,112 +220,112 @@ export default function InviteFriendButton({ eventId, eventTitle, eventUrl }: In
             ) : (
               /* Tab Invitation Pulse */
               <>
-            {isLoading ? (
-              <div className="text-center py-8">
-                <Loader2 className="w-8 h-8 animate-spin text-sky-400 mx-auto" />
-              </div>
-            ) : users.length === 0 ? (
-              <div className="text-center py-8 text-slate-400">
-                <p>Vous ne suivez personne pour le moment</p>
-                <p className="text-sm mt-2">Suivez des utilisateurs pour les inviter</p>
-              </div>
-            ) : (
-              <>
-                <div className="mb-4">
-                  <p className="text-slate-300 text-sm mb-2">Sélectionnez des amis :</p>
-                  <div className="max-h-48 overflow-y-auto space-y-2">
-                    {users.map((user) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center justify-between p-2 bg-white/5 rounded-lg hover:bg-white/10"
-                      >
-                        <label className="flex items-center gap-3 flex-1 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={selectedUsers.includes(user.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedUsers([...selectedUsers, user.id]);
-                              } else {
-                                setSelectedUsers(selectedUsers.filter((id) => id !== user.id));
-                              }
-                            }}
-                            className="w-4 h-4 rounded"
-                          />
-                          <div className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center text-white text-sm">
-                            {user.name?.[0] || '?'}
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="w-8 h-8 animate-spin text-sky-400 mx-auto" />
+                  </div>
+                ) : users.length === 0 ? (
+                  <div className="text-center py-8 text-slate-400">
+                    <p>Vous ne suivez personne pour le moment</p>
+                    <p className="text-sm mt-2">Suivez des utilisateurs pour les inviter</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-4">
+                      <p className="text-slate-300 text-sm mb-2">Sélectionnez des amis :</p>
+                      <div className="max-h-48 overflow-y-auto space-y-2">
+                        {users.map((user) => (
+                          <div
+                            key={user.id}
+                            className="flex items-center justify-between p-2 bg-white/5 rounded-lg hover:bg-white/10"
+                          >
+                            <label className="flex items-center gap-3 flex-1 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={selectedUsers.includes(user.id)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSelectedUsers([...selectedUsers, user.id]);
+                                  } else {
+                                    setSelectedUsers(selectedUsers.filter((id) => id !== user.id));
+                                  }
+                                }}
+                                className="w-4 h-4 rounded"
+                              />
+                              <div className="w-8 h-8 rounded-full bg-sky-600 flex items-center justify-center text-white text-sm">
+                                {user.name?.[0] || '?'}
+                              </div>
+                              <span className="text-white">{user.name || 'Utilisateur'}</span>
+                            </label>
+                            <button
+                              onClick={() => handleSendMessage(user.id)}
+                              className="p-2 text-sky-400 hover:text-sky-300 hover:bg-white/5 rounded-lg transition-colors"
+                              title="Envoyer un message direct"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </button>
                           </div>
-                          <span className="text-white">{user.name || 'Utilisateur'}</span>
-                        </label>
-                        <button
-                          onClick={() => handleSendMessage(user.id)}
-                          className="p-2 text-sky-400 hover:text-sky-300 hover:bg-white/5 rounded-lg transition-colors"
-                          title="Envoyer un message direct"
-                        >
-                          <MessageCircle className="w-4 h-4" />
-                        </button>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
-                    Message (optionnel)
-                  </label>
-                  <textarea
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    rows={2}
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
-                    placeholder="Viens à cet événement avec moi !"
-                  />
-                </div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Message (optionnel)
+                      </label>
+                      <textarea
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        rows={2}
+                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                        placeholder="Viens à cet événement avec moi !"
+                      />
+                    </div>
 
-                {error && (
-                  <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
-                    {error}
-                  </div>
-                )}
-
-                {success && (
-                  <div className="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4" />
-                    Invitations envoyées !
-                  </div>
-                )}
-
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleSendInvitations}
-                    disabled={isSending || selectedUsers.length === 0}
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {isSending ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Envoi...
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4" />
-                        Envoyer ({selectedUsers.length})
-                      </>
+                    {error && (
+                      <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm">
+                        {error}
+                      </div>
                     )}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowModal(false);
-                      setSelectedUsers([]);
-                      setMessage('');
-                    }}
-                    className="px-4 py-2 bg-white/10 text-slate-300 rounded-lg hover:bg-white/20 transition-colors"
-                  >
-                    Annuler
-                  </button>
-                </div>
-              </>
-            )}
+
+                    {success && (
+                      <div className="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-200 text-sm flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4" />
+                        Invitations envoyées !
+                      </div>
+                    )}
+
+                    <div className="flex gap-4">
+                      <button
+                        onClick={handleSendInvitations}
+                        disabled={isSending || selectedUsers.length === 0}
+                        className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isSending ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Envoi...
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-4 h-4" />
+                            Envoyer ({selectedUsers.length})
+                          </>
+                        )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowModal(false);
+                          setSelectedUsers([]);
+                          setMessage('');
+                        }}
+                        className="px-4 py-2 bg-white/10 text-slate-300 rounded-lg hover:bg-white/20 transition-colors"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  </>
+                )}
               </>
             )}
           </div>
