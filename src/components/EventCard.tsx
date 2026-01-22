@@ -68,7 +68,11 @@ const EventCard = ({
     }).catch(() => {}); // Ignorer les erreurs de tracking
     
     // Toggle favori (non-bloquant pour meilleure UX)
-    Promise.resolve(onFavoriteToggle(event.id)).catch(() => {});
+    try {
+      onFavoriteToggle(event.id);
+    } catch (error) {
+      // Ignorer les erreurs silencieusement
+    }
     
     // Si on vient d'ajouter aux favoris (pas de retrait), afficher le prompt
     if (!wasFavorite) {
