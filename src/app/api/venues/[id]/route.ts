@@ -60,7 +60,9 @@ export async function GET(
         },
         events: {
           where: {
-            status: 'SCHEDULED',
+            status: {
+              in: ['SCHEDULED', 'UPDATED'], // Inclure SCHEDULED et UPDATED
+            },
             startAt: {
               gte: new Date(),
             },

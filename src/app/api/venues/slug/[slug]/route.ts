@@ -26,7 +26,9 @@ export async function GET(
         },
         events: {
           where: {
-            status: 'SCHEDULED',
+            status: {
+              in: ['SCHEDULED', 'UPDATED'], // Inclure SCHEDULED et UPDATED
+            },
             startAt: {
               gte: new Date(),
             },
@@ -83,7 +85,9 @@ export async function GET(
     const pastEvents = await prisma.event.findMany({
       where: {
         venueId: venue.id,
-        status: 'SCHEDULED',
+        status: {
+          in: ['SCHEDULED', 'UPDATED'], // Inclure SCHEDULED et UPDATED
+        },
         startAt: {
           lt: now,
         },

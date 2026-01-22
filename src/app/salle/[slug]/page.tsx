@@ -27,7 +27,9 @@ async function fetchVenue(slug: string) {
       },
       events: {
         where: {
-          status: 'SCHEDULED',
+          status: {
+            in: ['SCHEDULED', 'UPDATED'], // Inclure SCHEDULED et UPDATED
+          },
           startAt: {
             gte: new Date(),
           },
@@ -141,7 +143,9 @@ export default async function VenuePage({ params }: { params: { slug: string } }
     const pastEvents = await prisma.event.findMany({
       where: {
         venueId: venue.id,
-        status: 'SCHEDULED',
+        status: {
+          in: ['SCHEDULED', 'UPDATED'], // Inclure SCHEDULED et UPDATED
+        },
         startAt: {
           lt: now,
         },
