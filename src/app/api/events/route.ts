@@ -1070,8 +1070,8 @@ export async function POST(request: NextRequest) {
         // Envoyer les emails aux followers qui ont activé les notifications email
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-mtl.vercel.app';
         const eventUrl = `${appUrl}/evenement/${event.id}`;
-        const organizerUrl = event.organizer?.slug 
-          ? `${appUrl}/organisateur/${event.organizer.slug}`
+        const organizerUrl = organizer.slug 
+          ? `${appUrl}/organisateur/${organizer.slug}`
           : `${appUrl}/organisateur/${organizer.id}`;
 
         // Formater la date
@@ -1251,8 +1251,9 @@ ${appUrl}
     console.error('Erreur lors de la création de l\'événement:', error);
     
     if (error instanceof z.ZodError) {
+      const zodError = error as z.ZodError;
       return NextResponse.json(
-        { error: 'Données invalides', details: (error as z.ZodError).issues },
+        { error: 'Données invalides', details: zodError.issues },
         { status: 400 }
       );
     }
