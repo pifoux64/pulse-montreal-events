@@ -51,15 +51,14 @@ async function calculateSimilarity(
   const currentInteractions = await prisma.userEventInteraction.findMany({
     where: { userId: currentUserId },
     select: { eventId: true },
-    distinct: ['eventId'],
   });
 
   const otherInteractions = await prisma.userEventInteraction.findMany({
     where: { userId: otherUserId },
     select: { eventId: true },
-    distinct: ['eventId'],
   });
 
+  // Utiliser Set pour dédupliquer automatiquement
   const currentEventIds = new Set(currentInteractions.map(i => i.eventId));
   const otherEventIds = new Set(otherInteractions.map(i => i.eventId));
 
