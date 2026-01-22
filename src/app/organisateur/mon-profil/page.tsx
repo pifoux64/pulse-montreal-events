@@ -48,15 +48,40 @@ export default function MonProfilOrganisateurPage() {
     linkedin: '',
   });
 
-const normalizeUrl = (value: string) => {
-  if (!value) return '';
-  const trimmed = value.trim();
-  if (!trimmed) return '';
-  if (/^https?:\/\//i.test(trimmed)) {
-    return trimmed;
-  }
-  return `https://${trimmed}`;
-};
+  // Normalise une URL pour accepter différents formats (version client)
+  const normalizeUrl = (value: string) => {
+    if (!value) return '';
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    
+    // Si c'est déjà une URL complète, la retourner
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+    
+    // Supprimer www. si présent (on l'ajoutera après si nécessaire)
+    let hasWww = false;
+    let normalized = trimmed;
+    if (normalized.startsWith('www.')) {
+      hasWww = true;
+      normalized = normalized.substring(4);
+    }
+    
+    // Si le domaine ne contient pas de point, ce n'est probablement pas une URL valide
+    if (!normalized.includes('.')) {
+      return trimmed; // Retourner l'original si invalide
+    }
+    
+    // Pour les domaines connus, ajouter www. automatiquement si absent
+    const knownDomains = ['facebook.com', 'eventbrite.com', 'eventbrite.ca', 'instagram.com', 'twitter.com', 'linkedin.com'];
+    const domain = normalized.split('/')[0];
+    const path = normalized.includes('/') ? normalized.substring(normalized.indexOf('/')) : '';
+    
+    const shouldAddWww = !hasWww && knownDomains.some(d => domain.includes(d));
+    const finalDomain = shouldAddWww ? `www.${domain}` : (hasWww ? `www.${domain}` : domain);
+    
+    return `https://${finalDomain}${path}`;
+  };
 
   useEffect(() => {
     if (status === 'unauthenticated') {
