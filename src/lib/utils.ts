@@ -264,3 +264,84 @@ export function slugify(text: string): string {
     .replace(/-+/g, '-') // Supprimer tirets multiples
     .trim();
 }
+
+/**
+ * Normalise une URL pour accepter différents formats
+ * Accepte : facebook.com/events/123, www.facebook.com/events/123, http://facebook.com/events/123, https://www.facebook.com/events/123
+ * Retourne toujours une URL complète avec https://
+ */
+export function normalizeUrl(url: string | null | undefined): string | null {
+  if (!url || typeof url !== 'string') {
+    return null;
+  }
+
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  // Si c'est déjà une URL complète valide, la retourner telle quelle
+  try {
+    const urlObj = new URL(trimmed);
+    return urlObj.toString();
+  } catch {
+    // Ce n'est pas une URL complète, on doit la normaliser
+  }
+
+  // Supprimer les espaces et caractères de fin
+  let normalized = trimmed.replace(/[\s\n\r]+/g, '');
+
+  // Si ça commence par http:// ou https://, on garde le protocole
+  let protocol = 'https://';
+  if (normalized.startsWith('http://')) {
+    protocol = 'http://';
+    normalized = normalized.substring(7);
+  } else if (normalized.startsWith('https://')) {
+    protocol = 'https://';
+    normalized = normalized.substring(8);
+  }
+
+  // Supprimer www. si présent (on l'ajoutera après si nécessaire)
+  let hasWww = false;
+  if (normalized.startsWith('www.')) {
+    hasWww = true;
+    normalized = normalized.substring(4);
+  }
+
+  // Si le domaine ne contient pas de point, ce n'est probablement pas une URL valide
+  if (!normalized.includes('.')) {
+    return null;
+  }
+
+  // Reconstruire l'URL
+  // Pour les domaines connus, on peut ajouter www. automatiquement
+  const knownDomains = ['facebook.com', 'eventbrite.com', 'eventbrite.ca', 'instagram.com', 'twitter.com', 'linkedin.com'];
+  const domain = normalized.split('/')[0];
+  const path = normalized.includes('/') ? normalized.substring(normalized.indexOf('/')) : '';
+  
+  // Si c'est un domaine connu et qu'on n'a pas de www, on peut l'ajouter pour certains
+  const shouldAddWww = !hasWww && (domain === 'facebook.com' || domain === 'eventbrite.com' || domain === 'eventbrite.ca');
+  
+  const finalDomain = shouldAddWww ? `www.${domain}` : (hasWww ? `www.${domain}` : domain);
+  
+  return `${protocol}${finalDomain}${path}`;
+}
+
+/**
+ * Valide et normalise une URL
+ * Retourne l'URL normalisée ou null si invalide
+ */
+export function validateAndNormalizeUrl(url: string | null | undefined): string | null {
+  const normalized = normalizeUrl(url);
+  if (!normalized) {
+    return null;
+  }
+
+  // Vérifier que c'est une URL valide après normalisation
+  try {
+    new URL(normalized);
+    return normalized;
+  } catch {
+    return null;
+  }
+}

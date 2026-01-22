@@ -99,14 +99,23 @@ const CreateEventSchema = z.object({
     lon: z.number().optional(),
     neighborhood: z.string().optional(),
     phone: z.string().optional(),
-    website: z.string().url().optional(),
+    website: z.string()
+      .transform((val) => val ? normalizeUrl(val) || val : val)
+      .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
+      .optional(),
   }).optional(),
-  url: z.string().url().optional(),
+  url: z.string()
+    .transform((val) => val ? normalizeUrl(val) || val : val)
+    .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
+    .optional(),
   priceMin: z.number().int().min(0).optional(),
   priceMax: z.number().int().min(0).optional(),
   currency: z.string().length(3).default('CAD'),
   language: z.nativeEnum(EventLanguage).default(EventLanguage.FR),
-  imageUrl: z.string().url().optional(),
+  imageUrl: z.string()
+    .transform((val) => val ? normalizeUrl(val) || val : val)
+    .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
+    .optional(),
   tags: z.array(z.string()).default([]),
   category: z.nativeEnum(EventCategory),
   subcategory: z.string().optional(),

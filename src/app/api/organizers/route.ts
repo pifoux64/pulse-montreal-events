@@ -9,17 +9,34 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { normalizeUrl } from '@/lib/utils';
 
 const autoVerifyOrganizers = process.env.AUTO_VERIFY_ORGANIZERS !== 'false';
 
 const CreateOrganizerSchema = z.object({
   displayName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères'),
-  website: z.string().url('URL invalide').optional().or(z.literal('')),
+  website: z.string()
+    .transform((val) => val ? normalizeUrl(val) || val : val)
+    .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), 'URL invalide')
+    .optional()
+    .or(z.literal('')),
   socials: z.object({
-    facebook: z.string().url().optional(),
-    instagram: z.string().url().optional(),
-    twitter: z.string().url().optional(),
-    linkedin: z.string().url().optional(),
+    facebook: z.string()
+      .transform((val) => val ? normalizeUrl(val) || val : val)
+      .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
+      .optional(),
+    instagram: z.string()
+      .transform((val) => val ? normalizeUrl(val) || val : val)
+      .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
+      .optional(),
+    twitter: z.string()
+      .transform((val) => val ? normalizeUrl(val) || val : val)
+      .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
+      .optional(),
+    linkedin: z.string()
+      .transform((val) => val ? normalizeUrl(val) || val : val)
+      .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
+      .optional(),
   }).optional(),
 });
 

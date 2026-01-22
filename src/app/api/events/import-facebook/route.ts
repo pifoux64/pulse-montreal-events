@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import { normalizeUrl } from '@/lib/utils';
 
 interface FacebookEventData {
   title?: string;
@@ -151,16 +152,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier que c'est une URL Facebook Events
-    if (!url.includes('facebook.com/events/')) {
+    // Normaliser l'URL
+    const normalizedUrl = normalizeUrl(url);
+    if (!normalizedUrl) {
       return NextResponse.json(
-        { error: 'URL Facebook Events invalide. Format attendu: https://www.facebook.com/events/...' },
+        { error: 'URL invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier que c'est une URL Facebook Events
+    if (!normalizedUrl.includes('facebook.com/events/')) {
+      return NextResponse.json(
+        { error: 'URL Facebook Events invalide. Format attendu: https://www.facebook.com/events/... ou facebook.com/events/...' },
         { status: 400 }
       );
     }
 
     // Extraire l'ID de l'événement
-    const eventId = extractEventIdFromUrl(url);
+    const eventId = extractEventIdFromUrl(normalizedUrl);
     if (!eventId) {
       return NextResponse.json(
         { error: 'Impossible d\'extraire l\'ID de l\'événement depuis l\'URL' },
@@ -206,7 +216,7 @@ export async function POST(request: NextRequest) {
     if (!eventData.title) {
       try {
         // Utiliser la version mobile pour un HTML plus simple
-        const mobileUrl = url.replace('www.facebook.com', 'm.facebook.com');
+        const mobileUrl = normalizedUrl.replace('www.facebook.com', 'm.facebook.com');
         const response = await fetch(mobileUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',

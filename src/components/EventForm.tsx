@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image as ImageIcon, Facebook, Loader2, Ticket } from 'lucide-react';
 import { EventFormData, EventCategory, CustomFilter } from '@/types';
+import { normalizeUrl } from '@/lib/utils';
 
 // Schéma de validation avec Zod
 const eventFormSchema = z.object({
@@ -29,8 +30,16 @@ const eventFormSchema = z.object({
     currency: z.string().min(1, 'La devise est requise'),
     isFree: z.boolean(),
   }),
-  imageUrl: z.string().url('URL d\'image invalide').optional().or(z.literal('')),
-  ticketUrl: z.string().url('URL de billetterie invalide').optional().or(z.literal('')),
+  imageUrl: z.string()
+    .transform((val) => val ? normalizeUrl(val) || val : val)
+    .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), 'URL d\'image invalide')
+    .optional()
+    .or(z.literal('')),
+  ticketUrl: z.string()
+    .transform((val) => val ? normalizeUrl(val) || val : val)
+    .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), 'URL de billetterie invalide')
+    .optional()
+    .or(z.literal('')),
   customFilters: z.array(z.object({
     name: z.string().min(1, 'Le nom du filtre est requis'),
     value: z.string().min(1, 'La valeur du filtre est requise'),

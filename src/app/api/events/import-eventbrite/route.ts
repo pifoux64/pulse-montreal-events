@@ -8,6 +8,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import { normalizeUrl } from '@/lib/utils';
 
 interface EventbriteEventData {
   title?: string;
@@ -221,16 +222,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier que c'est une URL Eventbrite
-    if (!url.includes('eventbrite.com/e/') && !url.includes('eventbrite.ca/e/')) {
+    // Normaliser l'URL
+    const normalizedUrl = normalizeUrl(url);
+    if (!normalizedUrl) {
       return NextResponse.json(
-        { error: 'URL Eventbrite invalide. Format attendu: https://www.eventbrite.com/e/...' },
+        { error: 'URL invalide' },
+        { status: 400 }
+      );
+    }
+
+    // Vérifier que c'est une URL Eventbrite
+    if (!normalizedUrl.includes('eventbrite.com/e/') && !normalizedUrl.includes('eventbrite.ca/e/')) {
+      return NextResponse.json(
+        { error: 'URL Eventbrite invalide. Format attendu: https://www.eventbrite.com/e/... ou eventbrite.com/e/...' },
         { status: 400 }
       );
     }
 
     // Extraire l'ID de l'événement
-    const eventId = extractEventIdFromUrl(url);
+    const eventId = extractEventIdFromUrl(normalizedUrl);
     if (!eventId) {
       return NextResponse.json(
         { error: 'Impossible d\'extraire l\'ID de l\'événement depuis l\'URL' },
@@ -260,7 +270,7 @@ export async function POST(request: NextRequest) {
             startDate: ebData.start?.utc || ebData.start?.local,
             endDate: ebData.end?.utc || ebData.end?.local,
             imageUrl: ebData.logo?.url,
-            ticketUrl: ebData.url || url,
+            ticketUrl: ebData.url || normalizedUrl,
             location: ebData.venue ? {
               name: ebData.venue.name || '',
               address: ebData.venue.address?.address_1 || '',
@@ -282,7 +292,7 @@ export async function POST(request: NextRequest) {
     // Option 2: Scraping HTML (fallback ou si pas de token)
     if (!eventData.title) {
       try {
-        const response = await fetch(url, {
+        const response = await fetch(normalizedUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -325,7 +335,7 @@ export async function POST(request: NextRequest) {
           postalCode: '',
         },
         imageUrl: eventData.imageUrl || '',
-        ticketUrl: eventData.ticketUrl || url,
+        ticketUrl: eventData.ticketUrl || normalizedUrl,
         price: eventData.price || {
           amount: 0,
           currency: 'CAD',
