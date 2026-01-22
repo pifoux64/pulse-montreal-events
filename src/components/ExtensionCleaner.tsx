@@ -8,6 +8,27 @@ export default function ExtensionCleaner() {
   useEffect(() => {
     // Marquer que nous sommes côté client pour éviter l'hydratation mismatch
     setIsClient(true);
+    
+    // Nettoyage IMMÉDIAT avant même que React ne s'hydrate
+    const immediateClean = () => {
+      // Supprimer les éléments Keeper
+      const keeperLocks = document.querySelectorAll('keeper-lock');
+      keeperLocks.forEach(el => el.remove());
+      
+      // Supprimer les attributs Keeper des inputs
+      const inputs = document.querySelectorAll('input[data-keeper-lock-id]');
+      inputs.forEach(input => {
+        input.removeAttribute('data-keeper-lock-id');
+      });
+    };
+    
+    // Nettoyer immédiatement
+    immediateClean();
+    
+    // Nettoyer aussi après un court délai pour capturer les ajouts tardifs
+    setTimeout(immediateClean, 0);
+    setTimeout(immediateClean, 50);
+    setTimeout(immediateClean, 100);
 
     // Installer le gestionnaire d'erreurs global AVANT tout pour capturer les erreurs d'extensions
     const originalError = console.error;
@@ -53,6 +74,15 @@ export default function ExtensionCleaner() {
 
     // Suppression immédiate et continue des attributs d'extensions
     const cleanAttributes = () => {
+      // Supprimer les éléments Keeper ajoutés dynamiquement
+      const keeperLocks = document.querySelectorAll('keeper-lock');
+      keeperLocks.forEach(el => el.remove());
+      
+      // Supprimer les attributs Keeper des inputs
+      const inputs = document.querySelectorAll('input[data-keeper-lock-id]');
+      inputs.forEach(input => {
+        input.removeAttribute('data-keeper-lock-id');
+      });
       if (typeof document !== 'undefined') {
         const body = document.body;
         if (body) {
@@ -65,7 +95,8 @@ export default function ExtensionCleaner() {
             'data-gramm_editor',
             'data-enable-grammarly',
             'data-lt-installed',
-            'spellcheck'
+            'spellcheck',
+            'data-keeper-lock-id'
           ];
           
           extensionAttributes.forEach(attr => {
@@ -110,41 +141,65 @@ export default function ExtensionCleaner() {
       }
     };
 
-    // Nettoyage immédiat
-    cleanAttributes();
+    // Nettoyage immédiat AVANT l'hydratation React
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        cleanAttributes();
+      });
+    } else {
+      cleanAttributes();
+    }
+    
     preventCryptoErrors();
 
     // Nettoyage périodique moins agressif
     const interval = setInterval(cleanAttributes, 500);
 
-    // Nettoyage agressif pendant les 3 premières secondes seulement
+    // Nettoyage agressif pendant les 5 premières secondes (pour Keeper)
     const aggressiveInterval = setInterval(cleanAttributes, 100);
-    setTimeout(() => clearInterval(aggressiveInterval), 3000);
+    setTimeout(() => clearInterval(aggressiveInterval), 5000);
 
     // Observer pour les mutations DOM
     let observer: MutationObserver | null = null;
     
     if (typeof window !== 'undefined' && 'MutationObserver' in window) {
       observer = new MutationObserver((mutations) => {
+        let shouldClean = false;
         mutations.forEach((mutation) => {
           if (mutation.type === 'attributes') {
             const target = mutation.target as HTMLElement;
-            if (target.tagName === 'BODY') {
-              cleanAttributes();
+            if (target.tagName === 'BODY' || target.hasAttribute('data-keeper-lock-id')) {
+              shouldClean = true;
             }
+          } else if (mutation.type === 'childList') {
+            // Vérifier si des éléments Keeper ont été ajoutés
+            mutation.addedNodes.forEach((node) => {
+              if (node.nodeType === Node.ELEMENT_NODE) {
+                const el = node as HTMLElement;
+                if (el.tagName === 'KEEPER-LOCK' || el.querySelector('keeper-lock')) {
+                  shouldClean = true;
+                }
+              }
+            });
           }
         });
+        if (shouldClean) {
+          cleanAttributes();
+        }
       });
 
       if (document.body) {
         observer.observe(document.body, {
           attributes: true,
+          childList: true,
+          subtree: true,
           attributeFilter: [
             'cz-shortcut-listen', 
             'data-new-gr-c-s-check-loaded', 
             'data-gr-ext-installed',
             'data-gramm',
-            'data-lt-installed'
+            'data-lt-installed',
+            'data-keeper-lock-id'
           ]
         });
       }

@@ -69,8 +69,12 @@ enum PromotionStatus {
 }
 
 enum SubscriptionPlan {
-  PRO
-  BASIC
+  // Plans organisateurs
+  ORGANIZER_BASIC  // Gratuit - limité
+  ORGANIZER_PRO    // Payant - illimité + stats + support
+  // Plans salles
+  VENUE_BASIC      // Gratuit - limité
+  VENUE_PRO        // Payant - demandes illimitées + visibilité premium + stats
 }
 
 enum EventPostType {
@@ -144,6 +148,11 @@ model User {
   eventInteractions         UserEventInteraction[]
   tasteProfile              UserTasteProfile?
   EditorialPost             EditorialPost[]
+  ownedVenues               Venue[]                   @relation("VenueOwner")
+  following                 UserFollow[]              @relation("UserFollowing")
+  followers                 UserFollow[]              @relation("UserFollowers")
+  sentInvitations           EventInvitation[]          @relation("InvitationSender")
+  receivedInvitations      EventInvitation[]          @relation("InvitationReceiver")
 
   @@map("users")
 }
@@ -203,10 +212,11 @@ model Organizer {
   // Relations
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   events              Event[]
-  subscriptions       Subscription[]
+  subscriptions       Subscription[]       @relation("OrganizerSubscriptions")
   platformConnections PlatformConnection[]
   publicationLogs     PublicationLog[]
   followers           OrganizerFollow[]
+  venueRequests       VenueRequest[]
 
   @@map("organizers")
 }
@@ -229,25 +239,69 @@ model OrganizerFollow {
 }
 
 model Venue {
-  id           String   @id @default(uuid()) @db.Uuid
-  name         String
-  address      String
-  city         String
-  postalCode   String   @map("postal_code")
-  lat          Float
-  lon          Float
-  neighborhood String?
-  phone        String?
-  website      String?
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id            String   @id @default(uuid()) @db.Uuid
+  name          String
+  slug          String?  @unique // Slug pour URL SEO-friendly (optionnel pour migration)
+  description   String?  @db.Text
+  capacity      Int? // Capacité maximale de la salle
+  address       String
+  city          String
+  postalCode    String   @map("postal_code")
+  lat           Float
+  lon           Float
+  neighborhood  String?
+  phone         String?
+  website       String?
+  contactEmail  String?  @map("contact_email")
+  types         String[] @default([]) // ["bar", "club", "salle", "centre_culturel"]
+  tags          String[] @default([]) // Tags pour recherche et filtrage
+  ownerUserId   String?  @map("owner_user_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
   // Relations
-  events Event[]
+  events        Event[]
+  owner         User?         @relation("VenueOwner", fields: [ownerUserId], references: [id], onDelete: SetNull)
+  requests      VenueRequest[]
+  subscriptions Subscription[] @relation("VenueSubscriptions")
 
-  // Index pour recherche géospatiale
+  // Index pour recherche géospatiale et SEO
   @@index([lat, lon], name: "idx_venue_coordinates")
+  @@index([slug], name: "idx_venue_slug")
+  @@index([ownerUserId], name: "idx_venue_owner")
+  @@index([types], name: "idx_venue_types")
   @@map("venues")
+}
+
+enum VenueRequestStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+model VenueRequest {
+  id               String              @id @default(uuid()) @db.Uuid
+  venueId          String              @map("venue_id") @db.Uuid
+  organizerId      String              @map("organizer_id") @db.Uuid
+  concept          String              @db.Text // Description du concept d'événement
+  dateStart        DateTime            @map("date_start")
+  dateEnd          DateTime?           @map("date_end")
+  expectedAttendance Int?              @map("expected_attendance") // Nombre de personnes attendues
+  budget           Int? // Budget en cents (CAD)
+  status           VenueRequestStatus  @default(PENDING)
+  comments         String?             @db.Text // Commentaires de la salle ou de l'organisateur
+  createdAt        DateTime            @default(now()) @map("created_at")
+  updatedAt        DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  venue     Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+
+  @@index([venueId], name: "idx_venue_request_venue")
+  @@index([organizerId], name: "idx_venue_request_organizer")
+  @@index([status], name: "idx_venue_request_status")
+  @@index([dateStart], name: "idx_venue_request_date_start")
+  @@map("venue_requests")
 }
 
 model Event {
@@ -287,6 +341,7 @@ model Event {
   eventTags        EventTag[]
   eventSources     EventSourceLink[] // SPRINT A: Plusieurs sources pour un même événement
   userInteractions UserEventInteraction[]
+  invitations      EventInvitation[]
 
   @@unique([sourceId, source], name: "unique_source_event")
   // Index pour performance
@@ -403,15 +458,26 @@ model Promotion {
 
 model Subscription {
   id             String           @id @default(uuid()) @db.Uuid
-  organizerId    String           @map("organizer_id") @db.Uuid
+  organizerId    String?          @map("organizer_id") @db.Uuid // Nullable pour supporter les salles
+  venueId        String?          @map("venue_id") @db.Uuid // Nullable pour supporter les organisateurs
   plan           SubscriptionPlan
   billingMonthly Int              @map("billing_monthly") // prix mensuel en cents
   active         Boolean          @default(true)
+  stripeSubscriptionId String?     @map("stripe_subscription_id") // ID de l'abonnement Stripe
+  stripeCustomerId    String?     @map("stripe_customer_id") // ID du client Stripe
+  currentPeriodStart  DateTime?   @map("current_period_start")
+  currentPeriodEnd    DateTime?   @map("current_period_end")
+  cancelAtPeriodEnd   Boolean     @default(false) @map("cancel_at_period_end")
   createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  organizer Organizer @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  organizer Organizer? @relation("OrganizerSubscriptions", fields: [organizerId], references: [id], onDelete: Cascade)
+  venue     Venue?     @relation("VenueSubscriptions", fields: [venueId], references: [id], onDelete: Cascade)
 
+  @@index([organizerId], name: "idx_subscription_organizer")
+  @@index([venueId], name: "idx_subscription_venue")
+  @@index([active], name: "idx_subscription_active")
   @@map("subscriptions")
 }
 
@@ -829,4 +895,43 @@ model PublicationLog {
   @@index([platform], name: "idx_publication_log_platform")
   @@index([status], name: "idx_publication_log_status")
   @@map("publication_logs")
+}
+
+// SPRINT 6: Suivre des amis (User → User)
+model UserFollow {
+  id         String   @id @default(uuid()) @db.Uuid
+  followerId String   @map("follower_id") @db.Uuid // Celui qui suit
+  followingId String  @map("following_id") @db.Uuid // Celui qui est suivi
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Relations
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId], name: "unique_user_follow")
+  @@index([followerId], name: "idx_user_follow_follower")
+  @@index([followingId], name: "idx_user_follow_following")
+  @@map("user_follows")
+}
+
+// SPRINT 6: Invitations Pulse → Pulse
+model EventInvitation {
+  id          String   @id @default(uuid()) @db.Uuid
+  eventId     String   @map("event_id") @db.Uuid
+  senderId    String   @map("sender_id") @db.Uuid
+  receiverId  String   @map("receiver_id") @db.Uuid
+  message     String?  @db.Text // Message personnalisé
+  status      String   @default("PENDING") // PENDING | ACCEPTED | DECLINED
+  createdAt   DateTime @default(now()) @map("created_at")
+  respondedAt DateTime? @map("responded_at")
+
+  // Relations
+  event    Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sender   User  @relation("InvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User  @relation("InvitationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, senderId, receiverId], name: "unique_event_invitation")
+  @@index([receiverId, status], name: "idx_invitation_receiver_status")
+  @@index([eventId], name: "idx_invitation_event")
+  @@map("event_invitations")
 }

@@ -48,20 +48,40 @@ export const PRICING_PLANS = {
   },
   
   // Abonnements organisateur
-  PRO_MONTHLY: {
-    id: 'pro_monthly',
-    name: 'Abonnement Pro',
-    description: 'Visibilité illimitée + statistiques avancées + support prioritaire',
+  ORGANIZER_PRO_MONTHLY: {
+    id: 'organizer_pro_monthly',
+    name: 'Organisateur Pro',
+    description: 'Événements illimités + statistiques avancées + notifications ciblées + mises en avant',
     price: 2999, // 29.99 CAD en cents
     currency: 'cad',
     interval: 'month',
     type: 'subscription' as const,
+    plan: 'ORGANIZER_PRO' as const,
     features: [
       'Événements illimités',
-      'Statistiques détaillées',
+      'Statistiques avancées',
+      'Notifications ciblées',
+      'Mises en avant automatiques',
       'Support prioritaire',
-      'Badge organisateur vérifié',
-      'Promotion automatique dans votre catégorie',
+    ],
+  },
+  
+  // Abonnements salle
+  VENUE_PRO_MONTHLY: {
+    id: 'venue_pro_monthly',
+    name: 'Salle Pro',
+    description: 'Demandes de réservation illimitées + visibilité premium + statistiques détaillées',
+    price: 3999, // 39.99 CAD en cents
+    currency: 'cad',
+    interval: 'month',
+    type: 'subscription' as const,
+    plan: 'VENUE_PRO' as const,
+    features: [
+      'Demandes de réservation illimitées',
+      'Visibilité premium',
+      'Statistiques détaillées',
+      'Badge salle vérifiée',
+      'Support prioritaire',
     ],
   },
   
@@ -164,7 +184,7 @@ export async function createSubscriptionCheckoutSession({
   userEmail: string;
   successUrl: string;
   cancelUrl: string;
-}) {
+}, extraPlanData?: any) {
   const plan = PRICING_PLANS[planId];
   
   if (plan.type !== 'subscription') {
@@ -225,6 +245,7 @@ export async function createSubscriptionCheckoutSession({
       type: 'subscription',
       userId,
       planId,
+      ...(extraPlanData?.venueId && { venueId: extraPlanData.venueId }),
     },
     success_url: successUrl,
     cancel_url: cancelUrl,

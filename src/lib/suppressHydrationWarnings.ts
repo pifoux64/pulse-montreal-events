@@ -28,7 +28,11 @@ export function suppressHydrationWarnings() {
         'Could not establish connection',
         'Receiving end does not exist',
         'chrome-extension',
-        'Extension context'
+        'Extension context',
+        'keeper-lock',
+        'data-keeper-lock-id',
+        'Keeper Popup',
+        'keeper-lock-disabled'
       ];
 
       // Ne pas afficher l'erreur si elle correspond à un pattern à supprimer

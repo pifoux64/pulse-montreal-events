@@ -24,6 +24,10 @@ import {
   Sparkles,
   Lock
 } from 'lucide-react';
+import EventAssistant from '@/components/ai/EventAssistant';
+import ContentGenerator from '@/components/ai/ContentGenerator';
+import BudgetCalculator from '@/components/ai/BudgetCalculator';
+import SubscriptionManager from '@/components/subscription/SubscriptionManager';
 import Link from 'next/link';
 import { format, subDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -68,6 +72,8 @@ export default function OrganisateurDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [showImportICS, setShowImportICS] = useState(false);
   const [icsPreview, setIcsPreview] = useState<any[]>([]);
+  const [showAITools, setShowAITools] = useState(false);
+  const [activeAITool, setActiveAITool] = useState<'assistant' | 'content' | 'budget'>('assistant');
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -347,6 +353,73 @@ export default function OrganisateurDashboard() {
           </div>
         )}
 
+        {/* Outils IA */}
+        <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 mb-8 border border-white/10">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <Sparkles className="w-5 h-5" />
+              Outils IA pour Organisateurs
+            </h2>
+            <button
+              onClick={() => setShowAITools(!showAITools)}
+              className="text-sky-400 hover:text-sky-300 text-sm"
+            >
+              {showAITools ? 'Masquer' : 'Afficher'}
+            </button>
+          </div>
+
+          {showAITools && (
+            <div className="space-y-4">
+              {/* Tabs */}
+              <div className="flex gap-2 border-b border-white/10">
+                <button
+                  onClick={() => setActiveAITool('assistant')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    activeAITool === 'assistant'
+                      ? 'text-sky-400 border-b-2 border-sky-400'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Assistant Création
+                </button>
+                <button
+                  onClick={() => setActiveAITool('content')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    activeAITool === 'content'
+                      ? 'text-sky-400 border-b-2 border-sky-400'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Générateur Contenu
+                </button>
+                <button
+                  onClick={() => setActiveAITool('budget')}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    activeAITool === 'budget'
+                      ? 'text-sky-400 border-b-2 border-sky-400'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  Calculateur Budget
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="pt-4">
+                {activeAITool === 'assistant' && (
+                  <EventAssistant />
+                )}
+                {activeAITool === 'content' && (
+                  <ContentGenerator />
+                )}
+                {activeAITool === 'budget' && (
+                  <BudgetCalculator />
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Import ICS */}
         <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 mb-8 border border-white/10 relative">
           {subscription?.plan === 'BASIC' && (
@@ -521,6 +594,11 @@ export default function OrganisateurDashboard() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Gestion d'abonnement */}
+        <div className="mb-8">
+          <SubscriptionManager type="organizer" />
         </div>
       </main>
     </div>

@@ -25,7 +25,7 @@ import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Event } from '@/types';
-import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter, Sparkles, Trophy, ArrowRight, Brain, TrendingUp, Flame } from 'lucide-react';
+import { MapPin, Calendar, Heart, ExternalLink, Clock, Loader2, Filter, Sparkles, Trophy, ArrowRight, Brain, TrendingUp, Flame, AlertCircle } from 'lucide-react';
 import { toMontrealDateString } from '@/lib/utils';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -346,13 +346,27 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
           pageSize: allEvents.length,
           totalPages: 1,
         };
-      } catch (err) {
+      } catch (err: any) {
         console.error('Erreur lors de la récupération des événements:', err);
+        // Améliorer le message d'erreur
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          throw new Error('Erreur de connexion. Vérifiez que le serveur est lancé.');
+        }
+        if (err.message?.includes('503')) {
+          throw new Error('Service temporairement indisponible. Veuillez réessayer dans quelques instants.');
+        }
         throw err;
       }
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
-    retry: 1,
+    retry: (failureCount, error: any) => {
+      // Ne pas retry sur les erreurs réseau ou 503
+      if (error?.message?.includes('connexion') || error?.message?.includes('503')) {
+        return false;
+      }
+      return failureCount < 1;
+    },
+    retryDelay: 1000,
   });
 
   const events: Event[] = (apiData?.items || [])
@@ -937,17 +951,32 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
 
           {/* Error */}
           {error && (
-            <div className="text-center py-16">
-              <p className="text-red-400 text-lg mb-2">{t('loadingError')}</p>
-              <p className="text-slate-400 mb-4">
-                {error instanceof Error ? error.message : t('loadingErrorMessage')}
-              </p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg"
-              >
-                {t('reloadPage')}
-              </button>
+            <div className="max-w-4xl mx-auto mb-8">
+              <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-6 text-center">
+                <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-red-200 mb-2">
+                  {t('loadingError')}
+                </h3>
+                <p className="text-red-300 mb-4">
+                  {error instanceof Error 
+                    ? error.message 
+                    : t('loadingErrorMessage')}
+                </p>
+                <div className="text-sm text-red-400 space-y-2 mb-4">
+                  <p>Vérifications à faire :</p>
+                  <ul className="list-disc list-inside space-y-1 text-left max-w-md mx-auto">
+                    <li>Le serveur de développement est-il lancé ? (npm run dev)</li>
+                    <li>La base de données est-elle accessible ?</li>
+                    <li>Y a-t-il des erreurs dans la console du serveur ?</li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+                >
+                  {t('reloadPage')}
+                </button>
+              </div>
             </div>
           )}
 
@@ -1105,24 +1134,42 @@ function HomePageTrendingSections() {
   const { data: trendingTodayData, isLoading: trendingTodayLoading } = useQuery({
     queryKey: ['trending-today'],
     queryFn: async () => {
-      const res = await fetch('/api/trending?scope=today&limit=6');
-      if (!res.ok) return { events: [] };
-      return res.json();
+      try {
+        const res = await fetch('/api/trending?scope=today&limit=6');
+        if (!res.ok) {
+          console.warn('Erreur API trending today:', res.status);
+          return { events: [] };
+        }
+        return res.json();
+      } catch (err) {
+        console.warn('Erreur réseau trending today:', err);
+        return { events: [] };
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: true,
+    retry: false, // Ne pas retry pour les sections optionnelles
   });
 
   // Récupérer les événements trending pour le week-end
   const { data: trendingWeekendData, isLoading: trendingWeekendLoading } = useQuery({
     queryKey: ['trending-weekend'],
     queryFn: async () => {
-      const res = await fetch('/api/trending?scope=weekend&limit=6');
-      if (!res.ok) return { events: [] };
-      return res.json();
+      try {
+        const res = await fetch('/api/trending?scope=weekend&limit=6');
+        if (!res.ok) {
+          console.warn('Erreur API trending weekend:', res.status);
+          return { events: [] };
+        }
+        return res.json();
+      } catch (err) {
+        console.warn('Erreur réseau trending weekend:', err);
+        return { events: [] };
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnMount: true,
+    retry: false, // Ne pas retry pour les sections optionnelles
   });
 
   // Appeler useFavorites AVANT le return conditionnel
@@ -1322,12 +1369,21 @@ function HomePageAISections() {
   const { data: top5Data, isLoading: top5Loading } = useQuery({
     queryKey: ['pulse-picks-public'],
     queryFn: async () => {
-      const res = await fetch(`/api/editorial/pulse-picks/public?limit=3&_t=${Date.now()}`);
-      if (!res.ok) return { posts: [] };
-      return res.json();
+      try {
+        const res = await fetch(`/api/editorial/pulse-picks/public?limit=3&_t=${Date.now()}`);
+        if (!res.ok) {
+          console.warn('Erreur API pulse-picks:', res.status);
+          return { posts: [] };
+        }
+        return res.json();
+      } catch (err) {
+        console.warn('Erreur réseau pulse-picks:', err);
+        return { posts: [] };
+      }
     },
     staleTime: 2 * 60 * 1000, // 2 minutes au lieu de 10
     refetchOnMount: true,
+    retry: false, // Ne pas retry pour les sections optionnelles
   });
 
   // Récupérer les recommandations si connecté
@@ -1335,11 +1391,20 @@ function HomePageAISections() {
     queryKey: ['recommendations-home', session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) return { recommendations: [] };
-      const res = await fetch('/api/recommendations?limit=6&scope=all');
-      if (!res.ok) return { recommendations: [] };
-      return res.json();
+      try {
+        const res = await fetch('/api/recommendations?limit=6&scope=all');
+        if (!res.ok) {
+          console.warn('Erreur API recommendations:', res.status);
+          return { recommendations: [] };
+        }
+        return res.json();
+      } catch (err) {
+        console.warn('Erreur réseau recommendations:', err);
+        return { recommendations: [] };
+      }
     },
     enabled: !!session?.user?.id,
+    retry: false, // Ne pas retry pour les sections optionnelles
   });
 
   const top5Posts = top5Data?.posts || [];

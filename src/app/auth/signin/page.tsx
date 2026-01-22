@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { Mail, Loader2, Facebook, Instagram } from 'lucide-react';
+import EmailInput from './EmailInput';
 
 function SignInContent() {
   const router = useRouter();
@@ -195,15 +196,11 @@ function SignInContent() {
               <label htmlFor="email" className="block text-sm font-medium text-slate-200 mb-2">
                 Adresse email
               </label>
-              <input
-                id="email"
-                type="email"
+              <EmailInput
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="votre@email.com"
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                 disabled={isLoading}
+                placeholder="votre@email.com"
               />
             </div>
 

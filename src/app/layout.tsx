@@ -144,6 +144,69 @@ export default function RootLayout({
             crossOrigin="anonymous"
           />
         )}
+        {/* Script pour nettoyer les extensions avant l'hydratation React */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                // Nettoyer les éléments Keeper immédiatement
+                function cleanKeeper() {
+                  // Supprimer les éléments keeper-lock
+                  var keeperLocks = document.querySelectorAll('keeper-lock');
+                  keeperLocks.forEach(function(el) { el.remove(); });
+                  
+                  // Supprimer les attributs data-keeper-lock-id des inputs
+                  var inputs = document.querySelectorAll('input[data-keeper-lock-id]');
+                  inputs.forEach(function(input) {
+                    input.removeAttribute('data-keeper-lock-id');
+                  });
+                }
+                
+                // Nettoyer immédiatement
+                if (document.readyState === 'loading') {
+                  document.addEventListener('DOMContentLoaded', cleanKeeper);
+                } else {
+                  cleanKeeper();
+                }
+                
+                // Nettoyer aussi après un court délai
+                setTimeout(cleanKeeper, 0);
+                setTimeout(cleanKeeper, 50);
+                setTimeout(cleanKeeper, 100);
+                
+                // Observer pour nettoyer les ajouts futurs
+                if (window.MutationObserver) {
+                  var observer = new MutationObserver(function(mutations) {
+                    var shouldClean = false;
+                    mutations.forEach(function(mutation) {
+                      if (mutation.type === 'childList') {
+                        mutation.addedNodes.forEach(function(node) {
+                          if (node.nodeType === 1 && (node.tagName === 'KEEPER-LOCK' || node.querySelector && node.querySelector('keeper-lock'))) {
+                            shouldClean = true;
+                          }
+                        });
+                      } else if (mutation.type === 'attributes' && mutation.target.hasAttribute && mutation.target.hasAttribute('data-keeper-lock-id')) {
+                        shouldClean = true;
+                      }
+                    });
+                    if (shouldClean) {
+                      cleanKeeper();
+                    }
+                  });
+                  
+                  if (document.body) {
+                    observer.observe(document.body, {
+                      childList: true,
+                      subtree: true,
+                      attributes: true,
+                      attributeFilter: ['data-keeper-lock-id']
+                    });
+                  }
+                }
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="font-poppins antialiased" suppressHydrationWarning>
         {process.env.NODE_ENV === 'development' && <DevErrorSuppressor />}

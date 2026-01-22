@@ -5,6 +5,11 @@ interface EventWithRelations extends Event {
   venue?: Venue | null;
 }
 
+interface VenueWithRelations extends Venue {
+  owner?: { id: string; name: string | null } | null;
+  _count?: { events: number } | null;
+}
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL
   || (process.env.NODE_ENV === 'production' ? 'https://pulse-mtl.vercel.app' : 'http://localhost:3000');
 
@@ -86,6 +91,48 @@ export const buildEventJsonLd = (event: EventWithRelations) => {
 
   if (event.tags?.length) {
     baseJson.keywords = event.tags.join(', ');
+  }
+
+  return baseJson;
+};
+
+export const buildVenueJsonLd = (venue: VenueWithRelations) => {
+  const baseJson: Record<string, any> = {
+    '@context': 'https://schema.org',
+    '@type': 'Place',
+    '@id': `${SITE_URL}/salle/${venue.slug}#venue`,
+    name: venue.name,
+    description: venue.description,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: venue.address,
+      addressLocality: venue.city,
+      postalCode: venue.postalCode,
+      addressCountry: 'CA',
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: venue.lat,
+      longitude: venue.lon,
+    },
+  };
+
+  if (venue.phone) {
+    baseJson.telephone = venue.phone;
+  }
+
+  if (venue.website) {
+    baseJson.url = venue.website;
+  }
+
+  if (venue.types && venue.types.length > 0) {
+    baseJson.additionalType = venue.types.map(
+      (type) => `https://schema.org/${type.charAt(0).toUpperCase() + type.slice(1)}`
+    );
+  }
+
+  if (venue.capacity) {
+    baseJson.maximumAttendeeCapacity = venue.capacity;
   }
 
   return baseJson;

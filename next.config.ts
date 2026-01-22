@@ -145,9 +145,9 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
 
-  // Configuration Turbopack (maintenant stable)
-  // Note: Les fichiers icon.svg, apple-icon.svg sont gérés automatiquement par Next.js comme metadata
-  // On ne configure pas de règles pour les SVG car Next.js les gère nativement
+  // Configuration Turbopack (maintenant stable, remplace experimental.turbo)
+  // Note: Turbopack est activé via --turbopack dans package.json (script dev)
+  // Pas besoin de configuration turbopack dans next.config.ts si utilisé en ligne de commande
 
   // Configuration pour le développement
   // Note: On utilise Turbopack (--turbopack), donc pas de config webpack personnalisée

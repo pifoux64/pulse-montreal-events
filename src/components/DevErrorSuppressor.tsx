@@ -37,7 +37,10 @@ export default function DevErrorSuppressor() {
           'runtime.lastError',
           'Could not establish connection',
           'Receiving end does not exist',
-          'Extension context invalidated'
+          'Extension context invalidated',
+          'keeper-lock',
+          'data-keeper-lock-id',
+          'Keeper Popup'
         ];
 
         if (criticalSuppressedErrors.some(error => message.includes(error))) {

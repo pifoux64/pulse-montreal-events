@@ -16,6 +16,7 @@ import EventDetailActions from '@/components/EventDetailActions';
 import EventTagsDisplay from '@/components/EventTagsDisplay';
 import EventPublishSection from '@/components/EventPublishSection';
 import SimilarEvents from '@/components/SimilarEvents';
+import InviteFriendButton from '@/components/social/InviteFriendButton';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -191,7 +192,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
               </div>
 
               {/* Action Buttons */}
-              <div className="absolute top-4 right-4">
+              <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
                 <EventDetailActions 
                   eventId={event.id} 
                   eventTitle={event.title}
@@ -199,6 +200,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                   eventStartAt={event.startAt}
                   eventNeighborhood={event.venue?.neighborhood || null}
                 />
+                <InviteFriendButton eventId={event.id} eventTitle={event.title} />
               </div>
 
               {/* Event Title & Basic Info */}
@@ -396,10 +398,27 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                     </h2>
                     <div className="space-y-3">
                       <div>
-                        <div className="font-medium">{event.venue?.name ?? 'Lieu à confirmer'}</div>
+                        {event.venue?.slug ? (
+                          <Link
+                            href={`/salle/${event.venue.slug}`}
+                            className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                          >
+                            {event.venue.name}
+                          </Link>
+                        ) : (
+                          <div className="font-medium">{event.venue?.name ?? 'Lieu à confirmer'}</div>
+                        )}
                         <div className="text-sm text-gray-600">
                           {event.venue ? `${event.venue.address}, ${event.venue.city}` : 'À déterminer'}
                         </div>
+                        {event.venue?.slug && (
+                          <Link
+                            href={`/salle/${event.venue.slug}`}
+                            className="text-sm text-blue-600 hover:text-blue-800 mt-1 inline-block"
+                          >
+                            Voir la fiche de la salle →
+                          </Link>
+                        )}
                       </div>
 
                       <div className="aspect-video rounded-lg overflow-hidden bg-gray-200">
