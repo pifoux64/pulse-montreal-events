@@ -221,28 +221,27 @@ const EventCard = ({
     }
   };
 
-  const handleCardClick = (e: React.MouseEvent) => {
+  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Ne déclencher que si le clic n'est pas sur un élément interactif
     const target = e.target as HTMLElement;
     
     // Vérifier si le clic est directement sur un élément interactif ou dans un élément interactif
-    const isInteractive = target.tagName === 'BUTTON' ||
-                          target.tagName === 'A' ||
-                          target.tagName === 'INPUT' ||
-                          target.tagName === 'SELECT' ||
-                          target.tagName === 'TEXTAREA' ||
-                          target.closest('button') !== null || 
-                          target.closest('a') !== null || 
-                          target.closest('input') !== null ||
-                          target.closest('select') !== null ||
-                          target.closest('textarea') !== null ||
-                          target.closest('[role="button"]') !== null ||
-                          target.closest('[onclick]') !== null ||
-                          target.hasAttribute('onclick');
+    // Vérifier d'abord le tagName directement (plus rapide)
+    const tagName = target.tagName.toUpperCase();
+    const isDirectInteractive = tagName === 'BUTTON' ||
+                                tagName === 'A' ||
+                                tagName === 'INPUT' ||
+                                tagName === 'SELECT' ||
+                                tagName === 'TEXTAREA';
     
-    if (isInteractive) {
-      // Laisser les éléments interactifs gérer leur propre clic
-      return;
+    if (isDirectInteractive) {
+      return; // Laisser l'élément gérer son propre clic
+    }
+    
+    // Vérifier si on est dans un élément interactif (plus lent, donc en second)
+    const closestInteractive = target.closest('button, a, input, select, textarea, [role="button"]');
+    if (closestInteractive) {
+      return; // Laisser l'élément interactif gérer son propre clic
     }
     
     // Déclencher le clic sur l'événement
