@@ -449,7 +449,17 @@ const EventCard = ({
           {event.location?.name && (
             <div className="flex items-center text-sm text-slate-200">
               <MapPin className="w-4 h-4 mr-2 text-green-400" />
-              <span className="font-medium truncate">{event.location.name}</span>
+              {event.venueSlug ? (
+                <Link
+                  href={`/salle/${event.venueSlug}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-medium truncate hover:text-green-400 transition-colors duration-200 group"
+                >
+                  <span className="group-hover:underline">{event.location.name}</span>
+                </Link>
+              ) : (
+                <span className="font-medium truncate">{event.location.name}</span>
+              )}
             </div>
           )}
           {(!event.location || !event.location.name) && (

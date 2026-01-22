@@ -148,6 +148,7 @@ const transformApiEvent = (event: ApiEvent): Event => {
         lng: event.venue?.lon || event.lon || -73.5542 
       }
     },
+    venueSlug: event.venue?.slug || null,
     category: categoryDisplayMap[mainCategory] || mainCategory,
     subCategory: genreTags[0]?.replace(/_/g, ' ') || event.tags?.[0] || '',
     tags: Array.from(

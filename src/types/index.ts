@@ -40,6 +40,7 @@ export interface Event {
   ticketUrl?: string | null;
   organizerId: string;
   organizer: User;
+  venueSlug?: string | null; // Slug de la salle pour les liens
   customFilters: CustomFilter[];
   accessibility: AccessibilityInfo;
   targetAudience: string[];
