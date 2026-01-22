@@ -32,7 +32,9 @@ export async function GET(request: NextRequest) {
         },
         events: {
           where: {
-            status: 'SCHEDULED',
+            status: {
+              in: ['SCHEDULED', 'UPDATED'], // Inclure SCHEDULED et UPDATED
+            },
             startAt: {
               gte: new Date(),
             },
