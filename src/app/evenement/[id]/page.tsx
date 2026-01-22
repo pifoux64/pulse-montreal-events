@@ -200,7 +200,11 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                   eventStartAt={event.startAt}
                   eventNeighborhood={event.venue?.neighborhood || null}
                 />
-                <InviteFriendButton eventId={event.id} eventTitle={event.title} />
+                <InviteFriendButton 
+                  eventId={event.id} 
+                  eventTitle={event.title}
+                  eventUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-mtl.vercel.app'}/evenement/${event.id}`}
+                />
               </div>
 
               {/* Event Title & Basic Info */}

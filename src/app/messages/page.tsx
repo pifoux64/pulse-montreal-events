@@ -63,9 +63,19 @@ function MessagesPageContent() {
       loadConversations();
       if (selectedUserId) {
         loadMessages(selectedUserId);
+        
+        // Si on vient d'une invitation d'événement, pré-remplir le message
+        const eventId = searchParams.get('eventId');
+        const eventTitle = searchParams.get('eventTitle');
+        if (eventId && eventTitle) {
+          const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+          const eventUrl = `${baseUrl}/evenement/${eventId}`;
+          const defaultMessage = `Viens à cet événement avec moi ! ${decodeURIComponent(eventTitle)}\n\n${eventUrl}`;
+          setMessageContent(defaultMessage);
+        }
       }
     }
-  }, [status, router, selectedUserId]);
+  }, [status, router, selectedUserId, searchParams]);
 
   useEffect(() => {
     // Auto-scroll vers le bas quand de nouveaux messages arrivent
