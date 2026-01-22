@@ -689,15 +689,13 @@ export default function OptimizedHomePage() {
                   className="animate-slide-up hover-lift group"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="glass rounded-2xl overflow-hidden border border-white/20 shadow-xl group-hover:shadow-2xl transition-all duration-300">
-                    <EventCard
-                      event={event}
-                      onFavoriteToggle={handleFavoriteToggle}
-                      isFavorite={isFavorite(event.id)}
-                      isFavoriteLoading={isFavoriteLoading(event.id)}
-                      showImage={true}
-                    />
-                  </div>
+                  <EventCard
+                    event={event}
+                    onFavoriteToggle={handleFavoriteToggle}
+                    isFavorite={isFavorite(event.id)}
+                    isFavoriteLoading={isFavoriteLoading(event.id)}
+                    showImage={true}
+                  />
                 </div>
               ))}
             </div>
