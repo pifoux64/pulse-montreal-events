@@ -6,24 +6,29 @@ import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import ModernLoader from '@/components/ModernLoader';
 import FollowUserButton from '@/components/social/FollowUserButton';
-import { Users, MessageCircle, Heart, Calendar, TrendingUp, Search } from 'lucide-react';
+import FollowOrganizerButton from '@/components/FollowOrganizerButton';
+import { Users, MessageCircle, Heart, Calendar, TrendingUp, Search, Building2, UserCheck, CheckCircle } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
-interface RecommendedUser {
-  userId: string;
+interface Pulser {
+  id: string;
+  type: 'user' | 'venue' | 'organizer';
   name: string | null;
   image: string | null;
-  similarityScore: number;
-  commonFavorites: number;
-  commonEvents: number;
+  slug?: string | null;
+  similarityScore?: number;
+  commonFavorites?: number;
+  commonEvents?: number;
   isFollowing: boolean;
+  eventsCount?: number;
+  verified?: boolean;
 }
 
 export default function PulsersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [users, setUsers] = useState<RecommendedUser[]>([]);
+  const [pulsers, setPulsers] = useState<Pulser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,10 +53,10 @@ export default function PulsersPage() {
       }
 
       const data = await response.json();
-      setUsers(data.users || []);
+      setPulsers(data.pulsers || []);
       
-      // Si aucun utilisateur mais pas d'erreur, c'est normal (pas encore d'activité)
-      if (data.users && data.users.length === 0) {
+      // Si aucun pulser mais pas d'erreur, c'est normal (pas encore d'activité)
+      if (data.pulsers && data.pulsers.length === 0) {
         setError(null); // Pas d'erreur, juste pas de recommandations
       }
     } catch (err: any) {
@@ -62,16 +67,16 @@ export default function PulsersPage() {
     }
   };
 
-  const handleFollowToggle = (userId: string, newState: boolean) => {
-    setUsers(prevUsers =>
-      prevUsers.map(user =>
-        user.userId === userId ? { ...user, isFollowing: newState } : user
+  const handleFollowToggle = (id: string, type: 'user' | 'organizer', newState: boolean) => {
+    setPulsers(prevPulsers =>
+      prevPulsers.map(pulser =>
+        pulser.id === id && pulser.type === type ? { ...pulser, isFollowing: newState } : pulser
       )
     );
   };
 
-  const filteredUsers = users.filter(user =>
-    user.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredPulsers = pulsers.filter(pulser =>
+    pulser.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const formatSimilarityScore = (score: number) => {
@@ -133,12 +138,12 @@ export default function PulsersPage() {
             </div>
           )}
 
-          {/* Users Grid */}
-          {!error && filteredUsers.length === 0 ? (
+          {/* Pulsers Grid */}
+          {!error && filteredPulsers.length === 0 ? (
             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-12 text-center border border-white/10">
               <Users className="w-16 h-16 text-slate-500 mx-auto mb-4" />
               <p className="text-slate-400 text-lg mb-2">
-                {searchQuery ? 'Aucun utilisateur trouvé' : 'Aucun utilisateur recommandé pour le moment'}
+                {searchQuery ? 'Aucun pulser trouvé' : 'Aucun pulser recommandé pour le moment'}
               </p>
               {!searchQuery && (
                 <p className="text-slate-500 text-sm">
@@ -148,71 +153,134 @@ export default function PulsersPage() {
             </div>
           ) : !error && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredUsers.map((user) => (
+              {filteredPulsers.map((pulser) => (
                 <div
-                  key={user.userId}
+                  key={`${pulser.type}-${pulser.id}`}
                   className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 hover:border-blue-500/50 transition-all duration-300"
                 >
-                  {/* User Header */}
+                  {/* Pulser Header */}
                   <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-12 h-12 rounded-full overflow-hidden bg-slate-700">
-                        {user.image ? (
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="relative w-12 h-12 rounded-full overflow-hidden bg-slate-700 flex-shrink-0">
+                        {pulser.image ? (
                           <Image
-                            src={user.image}
-                            alt={user.name || 'User'}
+                            src={pulser.image}
+                            alt={pulser.name || 'Pulser'}
                             fill
                             className="object-cover"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-400">
-                            <Users className="w-6 h-6" />
+                            {pulser.type === 'venue' ? (
+                              <Building2 className="w-6 h-6" />
+                            ) : pulser.type === 'organizer' ? (
+                              <UserCheck className="w-6 h-6" />
+                            ) : (
+                              <Users className="w-6 h-6" />
+                            )}
                           </div>
                         )}
                       </div>
-                      <div>
-                        <h3 className="font-semibold text-white">
-                          {user.name || 'Utilisateur anonyme'}
-                        </h3>
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                          <TrendingUp className="w-3 h-3" />
-                          <span>{formatSimilarityScore(user.similarityScore)} de similarité</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-white truncate">
+                            {pulser.name || (pulser.type === 'venue' ? 'Salle' : pulser.type === 'organizer' ? 'Organisateur' : 'Utilisateur anonyme')}
+                          </h3>
+                          {pulser.verified && (
+                            <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" title="Vérifié" />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {/* Badge type */}
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                            pulser.type === 'venue' 
+                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                              : pulser.type === 'organizer'
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                          }`}>
+                            {pulser.type === 'venue' ? (
+                              <>
+                                <Building2 className="w-3 h-3" />
+                                Salle
+                              </>
+                            ) : pulser.type === 'organizer' ? (
+                              <>
+                                <UserCheck className="w-3 h-3" />
+                                Organisateur
+                              </>
+                            ) : (
+                              <>
+                                <Users className="w-3 h-3" />
+                                Pulser
+                              </>
+                            )}
+                          </span>
+                          {pulser.type === 'user' && pulser.similarityScore !== undefined && (
+                            <div className="flex items-center gap-1 text-xs text-slate-400">
+                              <TrendingUp className="w-3 h-3" />
+                              <span>{formatSimilarityScore(pulser.similarityScore)}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Similarity Stats */}
+                  {/* Stats */}
                   <div className="space-y-2 mb-4">
-                    {user.commonFavorites > 0 && (
+                    {pulser.type === 'user' && pulser.commonFavorites !== undefined && pulser.commonFavorites > 0 && (
                       <div className="flex items-center gap-2 text-sm text-slate-300">
                         <Heart className="w-4 h-4 text-red-400" />
-                        <span>{user.commonFavorites} favori{user.commonFavorites > 1 ? 's' : ''} en commun</span>
+                        <span>{pulser.commonFavorites} favori{pulser.commonFavorites > 1 ? 's' : ''} en commun</span>
                       </div>
                     )}
-                    {user.commonEvents > 0 && (
+                    {pulser.type === 'user' && pulser.commonEvents !== undefined && pulser.commonEvents > 0 && (
                       <div className="flex items-center gap-2 text-sm text-slate-300">
                         <Calendar className="w-4 h-4 text-blue-400" />
-                        <span>{user.commonEvents} événement{user.commonEvents > 1 ? 's' : ''} en commun</span>
+                        <span>{pulser.commonEvents} événement{pulser.commonEvents > 1 ? 's' : ''} en commun</span>
+                      </div>
+                    )}
+                    {(pulser.type === 'venue' || pulser.type === 'organizer') && pulser.eventsCount !== undefined && (
+                      <div className="flex items-center gap-2 text-sm text-slate-300">
+                        <Calendar className="w-4 h-4 text-blue-400" />
+                        <span>{pulser.eventsCount} événement{pulser.eventsCount > 1 ? 's' : ''}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Actions */}
                   <div className="flex gap-2">
-                    <FollowUserButton
-                      userId={user.userId}
-                      isFollowing={user.isFollowing}
-                      onToggle={(newState) => handleFollowToggle(user.userId, newState)}
-                      className="flex-1"
-                    />
-                    <Link
-                      href={`/messages?userId=${user.userId}`}
-                      className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-600 transition-colors"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Message
-                    </Link>
+                    {pulser.type === 'user' ? (
+                      <>
+                        <FollowUserButton
+                          userId={pulser.id}
+                          isFollowing={pulser.isFollowing}
+                          onToggle={(newState) => handleFollowToggle(pulser.id, 'user', newState)}
+                          className="flex-1"
+                        />
+                        <Link
+                          href={`/messages?userId=${pulser.id}`}
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-600 transition-colors"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          Message
+                        </Link>
+                      </>
+                    ) : pulser.type === 'organizer' ? (
+                      <FollowOrganizerButton
+                        organizerId={pulser.id}
+                        className="flex-1"
+                      />
+                    ) : pulser.type === 'venue' ? (
+                      <Link
+                        href={pulser.slug ? `/salle/${pulser.slug}` : `/salle/${pulser.id}`}
+                        className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+                      >
+                        <Building2 className="w-4 h-4" />
+                        Voir la salle
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
               ))}

@@ -8,14 +8,19 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
-interface UserSimilarity {
-  userId: string;
+interface PulserSimilarity {
+  id: string;
+  type: 'user' | 'venue' | 'organizer';
   name: string | null;
   image: string | null;
-  similarityScore: number;
-  commonFavorites: number;
-  commonEvents: number;
+  slug?: string | null;
+  similarityScore?: number;
+  commonFavorites?: number;
+  commonEvents?: number;
   isFollowing: boolean;
+  // Pour venues/organizers
+  eventsCount?: number;
+  verified?: boolean;
 }
 
 /**
@@ -128,8 +133,10 @@ export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '20', 10);
 
-    // Récupérer tous les utilisateurs (sauf soi-même et les organisateurs)
-    // Si l'utilisateur n'a pas encore de favoris/interactions, retourner des utilisateurs populaires
+    // Récupérer tous les pulsers : utilisateurs, venues et organisateurs
+    const results: PulserSimilarity[] = [];
+
+    // 1. Récupérer les utilisateurs
     const userHasActivity = await prisma.favorite.count({
       where: { userId: session.user.id },
     }) > 0 || await prisma.userEventInteraction.count({
@@ -139,36 +146,75 @@ export async function GET(request: NextRequest) {
     const allUsers = await prisma.user.findMany({
       where: {
         id: { not: session.user.id },
-        role: 'USER', // Seulement les utilisateurs normaux
+        role: 'USER',
       },
       select: {
         id: true,
         name: true,
         image: true,
       },
-      take: userHasActivity ? 50 : 20, // Moins d'utilisateurs si pas d'activité
+      take: userHasActivity ? 30 : 15,
       orderBy: {
-        createdAt: 'desc', // Utilisateurs récents en premier si pas d'activité
+        createdAt: 'desc',
       },
     });
 
-    // Récupérer les utilisateurs déjà suivis
-    const following = await prisma.userFollow.findMany({
+    // 2. Récupérer les venues
+    const venues = await prisma.venue.findMany({
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+        _count: {
+          select: {
+            events: true,
+          },
+        },
+      },
+      take: 15,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // 3. Récupérer les organisateurs
+    const organizers = await prisma.organizer.findMany({
+      include: {
+        user: {
+          select: {
+            image: true,
+          },
+        },
+        _count: {
+          select: {
+            events: true,
+          },
+        },
+      },
+      take: 15,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Récupérer les suivis existants
+    const followingUsers = await prisma.userFollow.findMany({
       where: { followerId: session.user.id },
       select: { followingId: true },
     });
 
-    const followingIds = new Set(following.map(f => f.followingId));
+    const followingOrganizers = await prisma.organizerFollow.findMany({
+      where: { userId: session.user.id },
+      select: { organizerId: true },
+    });
 
-    // Calculer la similarité pour chaque utilisateur (limiter à 20 pour performance)
-    const similarities: UserSimilarity[] = [];
-    const usersToProcess = allUsers.slice(0, 20); // Limiter pour éviter trop de calculs
+    const followingUserIds = new Set(followingUsers.map(f => f.followingId));
+    const followingOrganizerIds = new Set(followingOrganizers.map(f => f.organizerId));
 
+    // Traiter les utilisateurs avec similarité
+    const usersToProcess = allUsers.slice(0, 20);
     for (const user of usersToProcess) {
-      // Ignorer si déjà suivi
-      if (followingIds.has(user.id)) {
-        continue;
-      }
+      if (followingUserIds.has(user.id)) continue;
 
       try {
         const { score, commonFavorites, commonEvents } = await calculateSimilarity(
@@ -176,10 +222,10 @@ export async function GET(request: NextRequest) {
           user.id
         );
 
-        // Ne garder que les utilisateurs avec un score > 0 OU qui ont au moins un favori/événement en commun
         if (score > 0 || commonFavorites > 0 || commonEvents > 0) {
-          similarities.push({
-            userId: user.id,
+          results.push({
+            id: user.id,
+            type: 'user',
             name: user.name,
             image: user.image,
             similarityScore: score,
@@ -189,19 +235,53 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch (error) {
-        // Ignorer les erreurs pour un utilisateur spécifique et continuer
-        console.warn(`Erreur lors du calcul de similarité pour ${user.id}:`, error);
-        continue;
+        console.warn(`Erreur similarité pour ${user.id}:`, error);
       }
     }
 
-    // Trier par score de similarité décroissant
-    similarities.sort((a, b) => b.similarityScore - a.similarityScore);
+    // Ajouter les venues
+    for (const venue of venues) {
+      results.push({
+        id: venue.id,
+        type: 'venue',
+        name: venue.name,
+        image: null,
+        slug: venue.slug,
+        isFollowing: false, // Pas de follow pour venues pour le moment
+        eventsCount: venue._count.events,
+      });
+    }
 
-    // Retourner les top N
+    // Ajouter les organisateurs
+    for (const organizer of organizers) {
+      // Ignorer si déjà suivi
+      if (followingOrganizerIds.has(organizer.id)) continue;
+
+      results.push({
+        id: organizer.id,
+        type: 'organizer',
+        name: organizer.displayName,
+        image: organizer.user?.image || null,
+        slug: organizer.slug,
+        isFollowing: followingOrganizerIds.has(organizer.id),
+        eventsCount: organizer._count.events,
+        verified: organizer.verified,
+      });
+    }
+
+    // Trier : utilisateurs avec score en premier, puis venues/organisateurs
+    results.sort((a, b) => {
+      if (a.type === 'user' && b.type === 'user') {
+        return (b.similarityScore || 0) - (a.similarityScore || 0);
+      }
+      if (a.type === 'user') return -1;
+      if (b.type === 'user') return 1;
+      return (b.eventsCount || 0) - (a.eventsCount || 0);
+    });
+
     return NextResponse.json({
-      users: similarities.slice(0, limit),
-      total: similarities.length,
+      pulsers: results.slice(0, limit),
+      total: results.length,
     });
 
   } catch (error: any) {
