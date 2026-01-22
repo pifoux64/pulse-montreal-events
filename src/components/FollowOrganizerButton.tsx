@@ -104,9 +104,9 @@ export default function FollowOrganizerButton({
     <button
       onClick={handleToggleFollow}
       disabled={isToggling}
-      className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
         isFollowing
-          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
+          ? 'bg-slate-700 text-slate-200 hover:bg-slate-600'
           : 'bg-blue-600 text-white hover:bg-blue-700'
       } ${isToggling ? 'opacity-50 cursor-wait' : ''} ${className}`}
     >
