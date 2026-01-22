@@ -323,7 +323,7 @@ const normalizeUrl = (value: string) => {
             </button>
             {profile && (
               <a
-                href={`/organisateur/${profile.id}`}
+                href={profile.slug ? `/organisateur/${profile.slug}` : `/organisateur/${profile.id}`}
                 className="px-6 py-3 bg-white/10 border border-white/20 text-white font-semibold rounded-xl hover:bg-white/20 transition-all duration-200 flex items-center gap-2"
               >
                 <ExternalLink className="w-4 h-4" />

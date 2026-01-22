@@ -597,7 +597,7 @@ function FollowingOrganizersList() {
       {organizers.map((org) => (
         <Link
           key={org.id}
-          href={`/organisateur/${org.id}`}
+          href={org.slug ? `/organisateur/${org.slug}` : `/organisateur/${org.id}`}
           className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all"
         >
           <div className="flex items-start gap-3">

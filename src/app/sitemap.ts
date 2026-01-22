@@ -68,6 +68,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     prisma.organizer.findMany({
       select: {
         id: true,
+        slug: true,
       },
       orderBy: {
         displayName: 'asc',
@@ -83,12 +84,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  const organizerPages: MetadataRoute.Sitemap = organizers.map((organizer) => ({
-    url: `${baseUrl}/organisateur/${organizer.id}`,
-    lastModified: new Date(),
-    changeFrequency: 'monthly',
-    priority: 0.5,
-  }));
+  const organizerPages: MetadataRoute.Sitemap = organizers
+    .filter((organizer) => organizer.slug) // Ne garder que ceux avec un slug
+    .map((organizer) => ({
+      url: `${baseUrl}/organisateur/${organizer.slug}`,
+      lastModified: new Date(),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    }));
 
   return [...staticPages, ...eventPages, ...organizerPages];
 }

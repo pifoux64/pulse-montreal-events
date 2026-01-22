@@ -137,7 +137,10 @@ export default function SearchBar({
       // Rechercher l'organisateur et rediriger
       const event = events.find(e => e.organizer?.name === suggestion.text);
       if (event?.organizerId) {
-        router.push(`/organisateur/${event.organizerId}`);
+        const organizerUrl = event.organizerSlug 
+          ? `/organisateur/${event.organizerSlug}` 
+          : `/organisateur/${event.organizerId}`;
+        router.push(organizerUrl);
       }
     } else {
       // Recherche normale

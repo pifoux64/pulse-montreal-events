@@ -60,7 +60,9 @@ export const buildEventJsonLd = (event: EventWithRelations) => {
       ? {
           '@type': 'Organization',
           name: event.organizer.displayName,
-          url: `${SITE_URL}/organisateur/${event.organizer.id}`,
+          url: event.organizer.slug 
+            ? `${SITE_URL}/organisateur/${event.organizer.slug}`
+            : `${SITE_URL}/organisateur/${event.organizer.id}`,
         }
       : undefined,
     offers: {
