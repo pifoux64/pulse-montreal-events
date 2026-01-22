@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
       },
       take: 15,
       orderBy: {
-        createdAt: 'desc',
+        name: 'asc',
       },
     });
 
@@ -193,7 +193,7 @@ export async function GET(request: NextRequest) {
       },
       take: 15,
       orderBy: {
-        createdAt: 'desc',
+        id: 'desc',
       },
     });
 
