@@ -202,11 +202,23 @@ const EventForm = ({
       if (importedData.description) setValue('description', importedData.description);
       if (importedData.startDate) {
         const startDate = new Date(importedData.startDate);
-        setValue('startDate', startDate.toISOString().split('T')[0] + 'T' + startDate.toTimeString().split(' ')[0].slice(0, 5));
+        // Format datetime-local: YYYY-MM-DDTHH:mm
+        const year = startDate.getFullYear();
+        const month = String(startDate.getMonth() + 1).padStart(2, '0');
+        const day = String(startDate.getDate()).padStart(2, '0');
+        const hours = String(startDate.getHours()).padStart(2, '0');
+        const minutes = String(startDate.getMinutes()).padStart(2, '0');
+        setValue('startDate', `${year}-${month}-${day}T${hours}:${minutes}`);
       }
       if (importedData.endDate) {
         const endDate = new Date(importedData.endDate);
-        setValue('endDate', endDate.toISOString().split('T')[0] + 'T' + endDate.toTimeString().split(' ')[0].slice(0, 5));
+        // Format datetime-local: YYYY-MM-DDTHH:mm
+        const year = endDate.getFullYear();
+        const month = String(endDate.getMonth() + 1).padStart(2, '0');
+        const day = String(endDate.getDate()).padStart(2, '0');
+        const hours = String(endDate.getHours()).padStart(2, '0');
+        const minutes = String(endDate.getMinutes()).padStart(2, '0');
+        setValue('endDate', `${year}-${month}-${day}T${hours}:${minutes}`);
       }
       if (importedData.location) {
         setValue('location', {
