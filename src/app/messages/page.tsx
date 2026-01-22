@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -42,7 +42,7 @@ interface Conversation {
   unreadCount: number;
 }
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -334,5 +334,20 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900">
+        <Navigation />
+        <div className="pt-24 flex items-center justify-center min-h-[calc(100vh-5rem)]">
+          <ModernLoader size="lg" text="Chargement des messages..." variant="default" />
+        </div>
+      </div>
+    }>
+      <MessagesPageContent />
+    </Suspense>
   );
 }
