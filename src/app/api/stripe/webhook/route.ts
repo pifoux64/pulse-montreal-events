@@ -12,6 +12,9 @@ export async function POST(request: NextRequest) {
   let event: Stripe.Event;
 
   try {
+    if (!stripe) {
+      return new NextResponse('Stripe not configured', { status: 500 });
+    }
     event = stripe.webhooks.constructEvent(body, signature, endpointSecret);
   } catch (error) {
     console.error('Webhook signature verification failed:', error);
@@ -231,32 +234,6 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     }
   }
 }
-  const { userId, planId } = subscription.metadata || {};
-
-  if (userId && planId) {
-    console.log('Subscription created:', {
-      userId,
-      planId,
-      subscriptionId: subscription.id,
-      status: subscription.status,
-    });
-
-    // TODO: Mettre à jour la base de données
-    // await prisma.subscription.upsert({
-    //   where: { userId },
-    //   create: {
-    //     userId,
-    //     plan: planId === 'pro_monthly' ? 'PRO' : 'BASIC',
-    //     active: subscription.status === 'active',
-    //     stripeSubscriptionId: subscription.id,
-    //   },
-    //   update: {
-    //     active: subscription.status === 'active',
-    //     stripeSubscriptionId: subscription.id,
-    //   },
-    // });
-  }
-}
 
 /**
  * Gère la mise à jour d'un abonnement
@@ -274,29 +251,6 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
     },
   });
 }
-  const { userId } = subscription.metadata || {};
-
-  if (userId) {
-    console.log('Subscription updated:', {
-      userId,
-      subscriptionId: subscription.id,
-      status: subscription.status,
-    });
-
-    // TODO: Mettre à jour le statut de l'abonnement
-    // await prisma.subscription.updateMany({
-    //   where: { stripeSubscriptionId: subscription.id },
-    //   data: {
-    //     active: subscription.status === 'active',
-    //   },
-    // });
-
-    // Si l'abonnement est annulé, envoyer un email
-    if (subscription.status === 'canceled') {
-      // await sendSubscriptionCancelledEmail(userId);
-    }
-  }
-}
 
 /**
  * Gère la suppression d'un abonnement
@@ -310,21 +264,6 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       active: false,
     },
   });
-}
-  const { userId } = subscription.metadata || {};
-
-  if (userId) {
-    console.log('Subscription deleted:', {
-      userId,
-      subscriptionId: subscription.id,
-    });
-
-    // TODO: Désactiver l'abonnement
-    // await prisma.subscription.updateMany({
-    //   where: { stripeSubscriptionId: subscription.id },
-    //   data: { active: false },
-    // });
-  }
 }
 
 /**

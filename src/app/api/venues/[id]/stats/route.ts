@@ -59,19 +59,22 @@ export async function GET(
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
+    // Récupérer les IDs des événements de la salle
+    const venueEventIds = events.map(e => e.id);
+
     // Calculer les vues (via EventView)
     const totalViews = await prisma.eventView.count({
       where: {
-        event: {
-          venueId: params.id,
+        eventId: {
+          in: venueEventIds,
         },
       },
     });
 
     const viewsLast30Days = await prisma.eventView.count({
       where: {
-        event: {
-          venueId: params.id,
+        eventId: {
+          in: venueEventIds,
         },
         createdAt: {
           gte: thirtyDaysAgo,

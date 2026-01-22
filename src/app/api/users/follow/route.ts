@@ -54,12 +54,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si déjà suivi
-    const existing = await prisma.userFollow.findUnique({
+    const existing = await prisma.userFollow.findFirst({
       where: {
-        followerId_followingId: {
-          followerId: session.user.id,
-          followingId: userId,
-        },
+        followerId: session.user.id,
+        followingId: userId,
       },
     });
 
