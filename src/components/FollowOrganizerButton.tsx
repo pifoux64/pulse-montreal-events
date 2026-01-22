@@ -11,14 +11,18 @@ import { UserPlus, UserCheck, Loader2 } from 'lucide-react';
 interface FollowOrganizerButtonProps {
   organizerId: string;
   className?: string;
+  onToggle?: (newState: boolean) => void;
+  initialIsFollowing?: boolean;
 }
 
 export default function FollowOrganizerButton({
   organizerId,
   className = '',
+  onToggle,
+  initialIsFollowing = false,
 }: FollowOrganizerButtonProps) {
   const { data: session, status } = useSession();
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [isLoading, setIsLoading] = useState(true);
   const [isToggling, setIsToggling] = useState(false);
 
@@ -35,6 +39,7 @@ export default function FollowOrganizerButton({
         if (response.ok) {
           const data = await response.json();
           setIsFollowing(data.isFollowing);
+          onToggle?.(data.isFollowing);
         }
       } catch (error) {
         console.error('Erreur lors de la vérification du suivi:', error);
@@ -60,6 +65,7 @@ export default function FollowOrganizerButton({
         });
         if (response.ok) {
           setIsFollowing(false);
+          onToggle?.(false);
         }
       } else {
         // Suivre
@@ -68,6 +74,7 @@ export default function FollowOrganizerButton({
         });
         if (response.ok) {
           setIsFollowing(true);
+          onToggle?.(true);
         }
       }
     } catch (error) {

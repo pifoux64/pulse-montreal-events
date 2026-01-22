@@ -270,6 +270,8 @@ export default function PulsersPage() {
                     ) : pulser.type === 'organizer' ? (
                       <FollowOrganizerButton
                         organizerId={pulser.id}
+                        initialIsFollowing={pulser.isFollowing}
+                        onToggle={(newState) => handleFollowToggle(pulser.id, 'organizer', newState)}
                         className="flex-1"
                       />
                     ) : pulser.type === 'venue' ? (
