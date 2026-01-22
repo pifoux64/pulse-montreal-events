@@ -68,11 +68,11 @@ export default function VenueEventCard({ event }: VenueEventCardProps) {
     category: event.category,
     subCategory: undefined,
     tags: event.tags || [],
-    price: {
-      amount: event.priceMin != null ? event.priceMin / 100 : 0,
+    price: event.priceMin != null || event.priceMax != null ? {
+      amount: event.priceMin != null ? event.priceMin / 100 : (event.priceMax != null ? event.priceMax / 100 : 0),
       currency: event.currency || 'CAD',
       isFree: event.priceMin === 0 && event.priceMin != null,
-    },
+    } : undefined, // Ne pas créer d'objet price si aucun prix n'est disponible
     imageUrl: event.imageUrl || undefined,
     ticketUrl: event.url || null,
     organizerId: event.organizer?.user?.name || 'default',

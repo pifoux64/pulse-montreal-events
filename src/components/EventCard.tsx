@@ -161,9 +161,10 @@ const EventCard = ({
   };
 
   const formatPrice = (price: Event['price']) => {
-    if (!price) return 'Prix non communiqué';
+    if (!price) return null; // Ne pas afficher si pas de prix
     if (price.isFree) return 'Gratuit';
-    if (price.amount === 0 && !price.isFree) return 'Prix non communiqué';
+    // Si amount est 0 et que ce n'est pas explicitement gratuit, considérer comme prix non disponible
+    if (price.amount === 0 && !price.isFree) return null;
     return `${price.amount.toFixed(2)} ${price.currency}`;
   };
 
@@ -272,7 +273,7 @@ const EventCard = ({
 
           {/* Prix avec glassmorphism */}
           <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2`}>
-            {event.price && (
+            {event.price && formatPrice(event.price) && (
               <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
                 event.price.isFree 
                   ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' 

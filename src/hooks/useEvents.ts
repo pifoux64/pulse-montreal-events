@@ -154,11 +154,11 @@ const transformApiEvent = (event: ApiEvent): Event => {
     tags: Array.from(
       new Set([...(event.tags || []), ...normalizedStructured]),
     ),
-    price: { 
-      amount: event.priceMin != null ? event.priceMin / 100 : 0, // Convertir de cents en dollars si nécessaire
+    price: event.priceMin != null || event.priceMax != null ? {
+      amount: event.priceMin != null ? event.priceMin / 100 : (event.priceMax != null ? event.priceMax / 100 : 0), // Convertir de cents en dollars si nécessaire
       currency: event.currency || 'CAD', 
       isFree: event.priceMin === 0 && event.priceMin != null // Gratuit seulement si explicitement 0
-    },
+    } : undefined, // Ne pas créer d'objet price si aucun prix n'est disponible
     imageUrl: event.imageUrl || null,
     ticketUrl: event.url || '#',
     organizerId: event.organizerId || 'default',

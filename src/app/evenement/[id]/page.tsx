@@ -305,29 +305,38 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                     <h2 className="text-xl font-bold mb-4">Détails</h2>
                     <div className="space-y-4">
                       {/* Price */}
-                      <div className="flex items-start gap-3">
-                        <DollarSign className="h-5 w-5 text-green-600 mt-0.5" />
-                        <div>
-                          <div className="font-medium">Prix</div>
-                          <div className="text-sm text-gray-600">
-                            {event.priceMin == null && event.priceMax == null ? (
-                              event.url && event.url.trim() !== ''
-                                ? 'Voir les prix sur le site de billetterie'
-                                : 'Prix non communiqué'
-                            ) : event.priceMin === 0 ? (
-                              'Gratuit'
-                            ) : event.priceMin != null &&
-                              event.priceMax != null &&
-                              event.priceMin === event.priceMax ? (
-                              `${(event.priceMin / 100).toFixed(2)} ${event.currency}`
-                            ) : (
-                              `${event.priceMin != null ? (event.priceMin / 100).toFixed(2) : '?'} - ${
-                                event.priceMax != null ? (event.priceMax / 100).toFixed(2) : '?'
-                              } ${event.currency}`
-                            )}
+                      {(event.priceMin != null || event.priceMax != null || (event.url && event.url.trim() !== '')) && (
+                        <div className="flex items-start gap-3">
+                          <DollarSign className="h-5 w-5 text-green-600 mt-0.5" />
+                          <div>
+                            <div className="font-medium">Prix</div>
+                            <div className="text-sm text-gray-600">
+                              {event.priceMin == null && event.priceMax == null ? (
+                                event.url && event.url.trim() !== '' ? (
+                                  <a
+                                    href={event.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-600 hover:text-blue-800 underline"
+                                  >
+                                    Voir les prix sur le site de billetterie
+                                  </a>
+                                ) : null
+                              ) : event.priceMin === 0 ? (
+                                'Gratuit'
+                              ) : event.priceMin != null &&
+                                event.priceMax != null &&
+                                event.priceMin === event.priceMax ? (
+                                `${(event.priceMin / 100).toFixed(2)} ${event.currency}`
+                              ) : (
+                                `${event.priceMin != null ? (event.priceMin / 100).toFixed(2) : '?'} - ${
+                                  event.priceMax != null ? (event.priceMax / 100).toFixed(2) : '?'
+                                } ${event.currency}`
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )}
 
                       {/* Organizer */}
                       <div className="flex items-start gap-3">
