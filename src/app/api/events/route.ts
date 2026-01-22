@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
       // SPRINT 2: Support dateFrom et dateTo pour dates personnalisées
       dateFrom: params.dateFrom || undefined,
       dateTo: params.dateTo || undefined,
-      futureOnly: params.futureOnly === 'true' || params.futureOnly === true,
+      futureOnly: params.futureOnly === 'true' || (typeof params.futureOnly === 'boolean' && params.futureOnly),
     });
 
     // SPRINT 1: Logique temporelle selon scope (timezone Montréal)
@@ -949,12 +949,6 @@ export async function POST(request: NextRequest) {
     // Récupérer l'organisateur
     const organizer = await prisma.organizer.findUnique({
       where: { userId: session.user.id },
-      select: {
-        id: true,
-        displayName: true,
-        slug: true,
-        verified: true,
-      },
     });
 
     if (!organizer) {
@@ -1076,7 +1070,7 @@ export async function POST(request: NextRequest) {
         // Envoyer les emails aux followers qui ont activé les notifications email
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-mtl.vercel.app';
         const eventUrl = `${appUrl}/evenement/${event.id}`;
-        const organizerUrl = organizer.slug 
+        const organizerUrl = (organizer.slug && organizer.slug.trim()) 
           ? `${appUrl}/organisateur/${organizer.slug}`
           : `${appUrl}/organisateur/${organizer.id}`;
 
