@@ -211,9 +211,16 @@ const EventCard = ({
 
   return (
     <Link
-      href={`/evenement/${event.id}`}
+      href={onEventClick ? '#' : `/evenement/${event.id}`}
       className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative block"
       onClick={(e) => {
+        // Si onEventClick est fourni, l'utiliser au lieu de la navigation
+        if (onEventClick) {
+          e.preventDefault();
+          handleEventClick();
+          return;
+        }
+        
         // Si le clic est sur un élément interactif, empêcher la navigation
         const target = e.target as HTMLElement;
         const tagName = target.tagName.toUpperCase();
