@@ -130,6 +130,13 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20', 10);
 
     // Récupérer tous les utilisateurs (sauf soi-même et les organisateurs)
+    // Si l'utilisateur n'a pas encore de favoris/interactions, retourner des utilisateurs populaires
+    const userHasActivity = await prisma.favorite.count({
+      where: { userId: session.user.id },
+    }) > 0 || await prisma.userEventInteraction.count({
+      where: { userId: session.user.id },
+    }) > 0;
+
     const allUsers = await prisma.user.findMany({
       where: {
         id: { not: session.user.id },
@@ -140,7 +147,10 @@ export async function GET(request: NextRequest) {
         name: true,
         image: true,
       },
-      take: 100, // Limiter pour performance
+      take: userHasActivity ? 50 : 20, // Moins d'utilisateurs si pas d'activité
+      orderBy: {
+        createdAt: 'desc', // Utilisateurs récents en premier si pas d'activité
+      },
     });
 
     // Récupérer les utilisateurs déjà suivis
@@ -151,31 +161,38 @@ export async function GET(request: NextRequest) {
 
     const followingIds = new Set(following.map(f => f.followingId));
 
-    // Calculer la similarité pour chaque utilisateur
+    // Calculer la similarité pour chaque utilisateur (limiter à 20 pour performance)
     const similarities: UserSimilarity[] = [];
+    const usersToProcess = allUsers.slice(0, 20); // Limiter pour éviter trop de calculs
 
-    for (const user of allUsers) {
+    for (const user of usersToProcess) {
       // Ignorer si déjà suivi
       if (followingIds.has(user.id)) {
         continue;
       }
 
-      const { score, commonFavorites, commonEvents } = await calculateSimilarity(
-        session.user.id,
-        user.id
-      );
+      try {
+        const { score, commonFavorites, commonEvents } = await calculateSimilarity(
+          session.user.id,
+          user.id
+        );
 
-      // Ne garder que les utilisateurs avec un score > 0
-      if (score > 0) {
-        similarities.push({
-          userId: user.id,
-          name: user.name,
-          image: user.image,
-          similarityScore: score,
-          commonFavorites,
-          commonEvents,
-          isFollowing: false,
-        });
+        // Ne garder que les utilisateurs avec un score > 0 OU qui ont au moins un favori/événement en commun
+        if (score > 0 || commonFavorites > 0 || commonEvents > 0) {
+          similarities.push({
+            userId: user.id,
+            name: user.name,
+            image: user.image,
+            similarityScore: score,
+            commonFavorites,
+            commonEvents,
+            isFollowing: false,
+          });
+        }
+      } catch (error) {
+        // Ignorer les erreurs pour un utilisateur spécifique et continuer
+        console.warn(`Erreur lors du calcul de similarité pour ${user.id}:`, error);
+        continue;
       }
     }
 
