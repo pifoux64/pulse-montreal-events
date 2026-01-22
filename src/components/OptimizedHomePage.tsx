@@ -684,19 +684,14 @@ export default function OptimizedHomePage() {
                 : 'grid-cols-1'
             }`}>
               {displayedEvents.map((event, index) => (
-                <div
+                <EventCard
                   key={event.id}
-                  className="animate-slide-up hover-lift group"
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  <EventCard
-                    event={event}
-                    onFavoriteToggle={handleFavoriteToggle}
-                    isFavorite={isFavorite(event.id)}
-                    isFavoriteLoading={isFavoriteLoading(event.id)}
-                    showImage={true}
-                  />
-                </div>
+                  event={event}
+                  onFavoriteToggle={handleFavoriteToggle}
+                  isFavorite={isFavorite(event.id)}
+                  isFavoriteLoading={isFavoriteLoading(event.id)}
+                  showImage={true}
+                />
               ))}
             </div>
           )}

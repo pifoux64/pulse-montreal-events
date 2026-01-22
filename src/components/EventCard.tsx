@@ -221,31 +221,38 @@ const EventCard = ({
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Ne déclencher que si le clic n'est pas sur un élément interactif
+    const target = e.target as HTMLElement;
+    
+    // Vérifier si le clic est directement sur un élément interactif ou dans un élément interactif
+    const isInteractive = target.tagName === 'BUTTON' ||
+                          target.tagName === 'A' ||
+                          target.tagName === 'INPUT' ||
+                          target.tagName === 'SELECT' ||
+                          target.tagName === 'TEXTAREA' ||
+                          target.closest('button') !== null || 
+                          target.closest('a') !== null || 
+                          target.closest('input') !== null ||
+                          target.closest('select') !== null ||
+                          target.closest('textarea') !== null ||
+                          target.closest('[role="button"]') !== null ||
+                          target.closest('[onclick]') !== null ||
+                          target.hasAttribute('onclick');
+    
+    if (isInteractive) {
+      // Laisser les éléments interactifs gérer leur propre clic
+      return;
+    }
+    
+    // Déclencher le clic sur l'événement
+    handleEventClick();
+  };
+
   return (
     <div 
       className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative"
-      onClick={(e) => {
-        // Ne déclencher que si le clic n'est pas sur un élément interactif
-        const target = e.target as HTMLElement;
-        // Vérifier si le clic est sur un élément interactif (bouton, lien, input, etc.)
-        const isInteractive = target.closest('button') || 
-                              target.closest('a') || 
-                              target.closest('input') ||
-                              target.closest('select') ||
-                              target.closest('textarea') ||
-                              target.closest('[role="button"]') ||
-                              target.closest('[onclick]') ||
-                              target.hasAttribute('onclick');
-        
-        if (isInteractive) {
-          return; // Laisser les éléments interactifs gérer leur propre clic
-        }
-        
-        // Déclencher le clic sur l'événement
-        e.preventDefault();
-        e.stopPropagation();
-        handleEventClick();
-      }}
+      onClick={handleCardClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="button"
