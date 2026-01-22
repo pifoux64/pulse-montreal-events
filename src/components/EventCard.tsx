@@ -472,7 +472,7 @@ const EventCard = ({
           {/* Organisateur */}
           {event.organizer && event.organizerId && event.organizerId !== 'default' && (
             <Link
-              href={`/organisateur/${event.organizerId}`}
+              href={event.organizerSlug ? `/organisateur/${event.organizerSlug}` : `/organisateur/${event.organizerId}`}
               onClick={(e) => e.stopPropagation()}
               className="flex items-center text-sm text-slate-200 hover:text-sky-400 transition-colors duration-200 group"
             >

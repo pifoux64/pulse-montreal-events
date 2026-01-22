@@ -43,6 +43,19 @@ async function main() {
 
     console.log('\n' + '='.repeat(60) + '\n');
 
+    // 1.5. Générer les slugs pour les organisateurs existants
+    console.log('🔗 Étape 1.5/3 : Génération des slugs pour les organisateurs existants...\n');
+    try {
+      const { stdout, stderr } = await execAsync('npx tsx scripts/generate-organizer-slugs.ts');
+      console.log(stdout);
+      if (stderr) console.error(stderr);
+    } catch (error: any) {
+      console.error('❌ Erreur lors de la génération des slugs organisateurs:', error.message);
+      // Continuer même en cas d'erreur
+    }
+
+    console.log('\n' + '='.repeat(60) + '\n');
+
     // 2. Créer les organisateurs depuis les événements
     console.log('👥 Étape 2/3 : Création des organisateurs depuis les événements...\n');
     try {

@@ -11,6 +11,37 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
+// Fonction utilitaire pour générer un slug à partir d'un nom
+function generateSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
+    .replace(/[^a-z0-9]+/g, '-') // Remplacer les caractères non alphanumériques par des tirets
+    .replace(/^-+|-+$/g, '') // Supprimer les tirets en début/fin
+    .substring(0, 100); // Limiter la longueur
+}
+
+// Fonction pour s'assurer que le slug est unique
+async function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<string> {
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existing = await prisma.organizer.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+
+    if (!existing || existing.id === excludeId) {
+      return slug;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+}
+
 const UpdateOrganizerSchema = z.object({
   displayName: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').optional(),
   website: z.string().url('URL invalide').optional().or(z.literal('')),

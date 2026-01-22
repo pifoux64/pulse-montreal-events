@@ -41,6 +41,7 @@ export interface Event {
   organizerId: string;
   organizer: User;
   venueSlug?: string | null; // Slug de la salle pour les liens
+  organizerSlug?: string | null; // Slug de l'organisateur pour les liens
   customFilters: CustomFilter[];
   accessibility: AccessibilityInfo;
   targetAudience: string[];

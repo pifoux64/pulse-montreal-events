@@ -170,6 +170,7 @@ const transformApiEvent = (event: ApiEvent): Event => {
       createdAt: new Date(),
       updatedAt: new Date()
     },
+    organizerSlug: event.organizer?.slug || null,
     customFilters: [],
     accessibility: [],
     status: 'published' as const,

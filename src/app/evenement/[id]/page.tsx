@@ -336,7 +336,7 @@ export default async function EventPage({ params }: { params: { id: string } }) 
                           <div className="font-medium">Organisateur</div>
                           {event.organizer ? (
                             <Link
-                              href={`/organisateur/${event.organizer.id}`}
+                              href={event.organizer.slug ? `/organisateur/${event.organizer.slug}` : `/organisateur/${event.organizer.id}`}
                               className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
                             >
                               {event.organizer.displayName}
