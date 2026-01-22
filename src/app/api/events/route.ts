@@ -707,7 +707,7 @@ export async function GET(request: NextRequest) {
         console.error('Message:', prismaError.message);
         console.error('Stack:', prismaError.stack);
       }
-      if ('code' in prismaError) {
+      if (prismaError && typeof prismaError === 'object' && 'code' in prismaError) {
         console.error('Code Prisma:', (prismaError as any).code);
         console.error('Meta Prisma:', JSON.stringify((prismaError as any).meta, null, 2));
       }
@@ -906,7 +906,7 @@ export async function POST(request: NextRequest) {
     // Vérifier que l'utilisateur est un organisateur vérifié
     requireRole([UserRole.ORGANIZER, UserRole.ADMIN])(session.user.role);
     
-    if (session.user.role === UserRole.ORGANIZER) {
+    if (session.user.role === UserRole.ORGANIZER && session.user.organizer) {
       requireVerifiedOrganizer(session.user.organizer);
     }
 
@@ -1252,7 +1252,7 @@ ${appUrl}
     
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'Données invalides', details: error.errors },
+        { error: 'Données invalides', details: (error as z.ZodError).issues },
         { status: 400 }
       );
     }
