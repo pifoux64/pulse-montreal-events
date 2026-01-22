@@ -384,19 +384,14 @@ export default function OrganisateurPageClient({ organizer }: OrganisateurPageCl
                 : 'grid-cols-1'
             }`}>
               {organizerEvents.map((event, index) => (
-                <div
+                <EventCard
                   key={event.id}
-                  className="animate-slide-up hover-lift group"
-                  style={{ animationDelay: `${index * 0.05}s` }}
-                >
-                  <EventCard
-                    event={event}
-                    onFavoriteToggle={handleFavoriteToggle}
-                    isFavorite={isFavorite(event.id)}
-                    isFavoriteLoading={isFavoriteLoading(event.id)}
-                    showImage={viewMode === 'grid'}
-                  />
-                </div>
+                  event={event}
+                  onFavoriteToggle={handleFavoriteToggle}
+                  isFavorite={isFavorite(event.id)}
+                  isFavoriteLoading={isFavoriteLoading(event.id)}
+                  showImage={viewMode === 'grid'}
+                />
               ))}
             </div>
           )}
