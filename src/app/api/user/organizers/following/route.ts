@@ -74,6 +74,7 @@ export async function GET(request: NextRequest) {
 
     const organizers = follows.map((follow) => ({
       id: follow.organizer.id,
+      slug: follow.organizer.slug,
       displayName: follow.organizer.displayName,
       website: follow.organizer.website,
       verified: follow.organizer.verified,
