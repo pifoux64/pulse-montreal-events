@@ -223,8 +223,15 @@ const EventCard = ({
 
   return (
     <div 
-      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl"
-      onClick={handleEventClick}
+      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative"
+      onClick={(e) => {
+        // Ne déclencher que si le clic n'est pas sur un élément interactif
+        const target = e.target as HTMLElement;
+        if (target.closest('button') || target.closest('a') || target.closest('[role="button"]')) {
+          return; // Laisser les boutons/liens gérer leur propre clic
+        }
+        handleEventClick();
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       role="button"
@@ -238,10 +245,7 @@ const EventCard = ({
     >
       {/* Image avec design simplifié et lazy loading optimisé */}
       {showImage && (
-        <div 
-          className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300"
-          onClick={handleEventClick}
-        >
+        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
           {event.imageUrl && !imageError ? (
             <Image
               src={
@@ -407,10 +411,7 @@ const EventCard = ({
       )}
 
       {/* Contenu simplifié et lisible */}
-      <div 
-        className="p-5 bg-slate-800/90 backdrop-blur-xl"
-        onClick={handleEventClick}
-      >
+      <div className="p-5 bg-slate-800/90 backdrop-blur-xl">
         {/* En-tête clean */}
         <div className="mb-4">
           {/* Genre musical principal - Utilise EventTag si disponible, sinon fallback enrichedTags */}
