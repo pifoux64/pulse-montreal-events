@@ -227,9 +227,23 @@ const EventCard = ({
       onClick={(e) => {
         // Ne déclencher que si le clic n'est pas sur un élément interactif
         const target = e.target as HTMLElement;
-        if (target.closest('button') || target.closest('a') || target.closest('[role="button"]')) {
-          return; // Laisser les boutons/liens gérer leur propre clic
+        // Vérifier si le clic est sur un élément interactif (bouton, lien, input, etc.)
+        const isInteractive = target.closest('button') || 
+                              target.closest('a') || 
+                              target.closest('input') ||
+                              target.closest('select') ||
+                              target.closest('textarea') ||
+                              target.closest('[role="button"]') ||
+                              target.closest('[onclick]') ||
+                              target.hasAttribute('onclick');
+        
+        if (isInteractive) {
+          return; // Laisser les éléments interactifs gérer leur propre clic
         }
+        
+        // Déclencher le clic sur l'événement
+        e.preventDefault();
+        e.stopPropagation();
         handleEventClick();
       }}
       onMouseEnter={() => setIsHovered(true)}
