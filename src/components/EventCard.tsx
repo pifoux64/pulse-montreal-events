@@ -238,7 +238,10 @@ const EventCard = ({
     >
       {/* Image avec design simplifié et lazy loading optimisé */}
       {showImage && (
-        <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
+        <div 
+          className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300"
+          onClick={handleEventClick}
+        >
           {event.imageUrl && !imageError ? (
             <Image
               src={
@@ -284,7 +287,7 @@ const EventCard = ({
           )}
 
           {/* Prix avec glassmorphism */}
-          <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2`}>
+          <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2 z-20`}>
             {event.price && formatPrice(event.price) && (
               <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
                 event.price.isFree 
@@ -303,7 +306,7 @@ const EventCard = ({
           </div>
           
           {/* Actions (Favori + Partage) */}
-          <div className="absolute top-4 right-4 flex gap-2">
+          <div className="absolute top-4 right-4 flex gap-2 z-20">
             {/* Bouton Partage */}
             <button
               onClick={handleShareClick}
@@ -404,7 +407,10 @@ const EventCard = ({
       )}
 
       {/* Contenu simplifié et lisible */}
-      <div className="p-5 bg-slate-800/90 backdrop-blur-xl">
+      <div 
+        className="p-5 bg-slate-800/90 backdrop-blur-xl"
+        onClick={handleEventClick}
+      >
         {/* En-tête clean */}
         <div className="mb-4">
           {/* Genre musical principal - Utilise EventTag si disponible, sinon fallback enrichedTags */}
