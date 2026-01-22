@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { geocodeAddress, getDefaultCoordinates } from '@/lib/geocode';
 import { EventCategory, EventLanguage, EventStatus, UserRole, PromotionStatus, NotificationType } from '@prisma/client';
 import { enrichEventWithTags } from '@/lib/tagging/eventTaggingService';
+import { normalizeUrl } from '@/lib/utils';
 
 /**
  * Génère des tags automatiques basés sur le contenu de l'événement
