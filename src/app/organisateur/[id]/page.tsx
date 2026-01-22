@@ -437,15 +437,13 @@ export default function OrganisateurPage() {
                   className="animate-slide-up hover-lift group"
                   style={{ animationDelay: `${index * 0.05}s` }}
                 >
-                  <div className="bg-slate-800/70 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 shadow-xl group-hover:shadow-2xl transition-all duration-300">
-                    <EventCard
-                      event={event}
-                      onFavoriteToggle={handleFavoriteToggle}
-                      isFavorite={isFavorite(event.id)}
-                      isFavoriteLoading={isFavoriteLoading(event.id)}
-                      showImage={viewMode === 'grid'}
-                    />
-                  </div>
+                  <EventCard
+                    event={event}
+                    onFavoriteToggle={handleFavoriteToggle}
+                    isFavorite={isFavorite(event.id)}
+                    isFavoriteLoading={isFavoriteLoading(event.id)}
+                    showImage={viewMode === 'grid'}
+                  />
                 </div>
               ))}
             </div>
