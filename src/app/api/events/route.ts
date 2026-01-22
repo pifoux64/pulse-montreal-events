@@ -949,6 +949,12 @@ export async function POST(request: NextRequest) {
     // Récupérer l'organisateur
     const organizer = await prisma.organizer.findUnique({
       where: { userId: session.user.id },
+      select: {
+        id: true,
+        displayName: true,
+        slug: true,
+        verified: true,
+      },
     });
 
     if (!organizer) {
