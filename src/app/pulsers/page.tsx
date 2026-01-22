@@ -39,16 +39,24 @@ export default function PulsersPage() {
   const loadRecommendedUsers = async () => {
     try {
       setIsLoading(true);
+      setError(null);
       const response = await fetch('/api/users/recommended?limit=50');
       
       if (!response.ok) {
-        throw new Error('Erreur lors du chargement des utilisateurs');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erreur lors du chargement des utilisateurs');
       }
 
       const data = await response.json();
       setUsers(data.users || []);
+      
+      // Si aucun utilisateur mais pas d'erreur, c'est normal (pas encore d'activité)
+      if (data.users && data.users.length === 0) {
+        setError(null); // Pas d'erreur, juste pas de recommandations
+      }
     } catch (err: any) {
-      setError(err.message);
+      console.error('Erreur lors du chargement des utilisateurs:', err);
+      setError(err.message || 'Erreur lors du chargement des utilisateurs');
     } finally {
       setIsLoading(false);
     }
@@ -120,19 +128,25 @@ export default function PulsersPage() {
 
           {error && (
             <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200">
-              {error}
+              <p className="font-semibold mb-1">Erreur</p>
+              <p className="text-sm">{error}</p>
             </div>
           )}
 
           {/* Users Grid */}
-          {filteredUsers.length === 0 ? (
+          {!error && filteredUsers.length === 0 ? (
             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-12 text-center border border-white/10">
               <Users className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-              <p className="text-slate-400 text-lg">
+              <p className="text-slate-400 text-lg mb-2">
                 {searchQuery ? 'Aucun utilisateur trouvé' : 'Aucun utilisateur recommandé pour le moment'}
               </p>
+              {!searchQuery && (
+                <p className="text-slate-500 text-sm">
+                  Ajoutez des événements à vos favoris pour découvrir des personnes avec des goûts similaires !
+                </p>
+              )}
             </div>
-          ) : (
+          ) : !error && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredUsers.map((user) => (
                 <div
