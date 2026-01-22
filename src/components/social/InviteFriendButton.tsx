@@ -326,6 +326,7 @@ export default function InviteFriendButton({ eventId, eventTitle, eventUrl }: In
                 </div>
               </>
             )}
+              </>
             )}
           </div>
         </div>

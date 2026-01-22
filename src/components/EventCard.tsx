@@ -201,60 +201,14 @@ const EventCard = ({
     return '🎵';
   };
 
-  // handleEventClick n'est plus nécessaire car on utilise Link maintenant
-  // Mais on garde la fonction pour onEventClick si fourni
   const handleEventClick = () => {
     if (onEventClick) {
       onEventClick(event);
     }
   };
 
-  return (
-    <Link
-      href={onEventClick ? '#' : `/evenement/${event.id}`}
-      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative block"
-      onClick={(e) => {
-        // Si onEventClick est fourni, l'utiliser au lieu de la navigation
-        if (onEventClick) {
-          e.preventDefault();
-          handleEventClick();
-          return;
-        }
-        
-        // Si le clic est sur un élément interactif, empêcher la navigation
-        const target = e.target as HTMLElement;
-        const tagName = target.tagName.toUpperCase();
-        const isDirectInteractive = tagName === 'BUTTON' ||
-                                    tagName === 'A' ||
-                                    tagName === 'INPUT' ||
-                                    tagName === 'SELECT' ||
-                                    tagName === 'TEXTAREA';
-        
-        if (isDirectInteractive) {
-          e.preventDefault();
-          return;
-        }
-        
-        const closestInteractive = target.closest('button, a, input, select, textarea, [role="button"]');
-        if (closestInteractive) {
-          e.preventDefault();
-          return;
-        }
-        
-        // Tracker l'interaction si authentifié
-        if (isAuthenticated && session?.user?.id) {
-          fetch('/api/user/interactions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ eventId: event.id, type: 'CLICK' }),
-          }).catch(() => {
-            // Ignorer les erreurs de tracking
-          });
-        }
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+  const cardContent = (
+    <>
       {/* Image avec design simplifié et lazy loading optimisé */}
       {showImage && (
         <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-200 to-gray-300">
@@ -676,6 +630,51 @@ const EventCard = ({
           }}
         />
       )}
+    </>
+  );
+
+  // Si onEventClick est fourni, utiliser un div au lieu d'un Link
+  if (onEventClick) {
+    return (
+      <div
+        className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative block"
+        onClick={handleEventClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleEventClick();
+          }
+        }}
+      >
+        {cardContent}
+      </div>
+    );
+  }
+
+  return (
+    <Link
+      href={`/evenement/${event.id}`}
+      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative block"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => {
+        // Tracker l'interaction si authentifié (non-bloquant)
+        if (isAuthenticated && session?.user?.id) {
+          fetch('/api/user/interactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventId: event.id, type: 'CLICK' }),
+          }).catch(() => {
+            // Ignorer les erreurs de tracking
+          });
+        }
+      }}
+    >
+      {cardContent}
     </Link>
   );
 };
