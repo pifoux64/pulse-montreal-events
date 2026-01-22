@@ -171,11 +171,16 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const data = CreateOrganizerSchema.parse(body);
 
+    // Générer le slug
+    const baseSlug = generateSlug(data.displayName);
+    const slug = await ensureUniqueSlug(baseSlug);
+
     // Créer le profil organisateur
     const organizer = await prisma.organizer.create({
       data: {
         userId: session.user.id,
         displayName: data.displayName,
+        slug,
         website: data.website || null,
         socials: data.socials || null,
         verified: autoVerifyOrganizers,

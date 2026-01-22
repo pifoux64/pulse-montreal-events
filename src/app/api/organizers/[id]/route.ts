@@ -159,7 +159,12 @@ export async function PUT(
 
     // Seuls les admins peuvent modifier le statut verified
     const updateData: any = {};
-    if (data.displayName) updateData.displayName = data.displayName;
+    if (data.displayName) {
+      updateData.displayName = data.displayName;
+      // Régénérer le slug si le nom change
+      const baseSlug = generateSlug(data.displayName);
+      updateData.slug = await ensureUniqueSlug(baseSlug, organizer.id);
+    }
     if (data.website !== undefined) updateData.website = data.website || null;
     if (data.socials) updateData.socials = data.socials;
 
