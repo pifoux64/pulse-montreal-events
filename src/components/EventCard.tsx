@@ -262,7 +262,7 @@ const EventCard = ({
           )}
           
           {/* Overlay subtil */}
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300" />
+          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none" />
           
           {/* Badge Trending */}
           {isTrending && (
