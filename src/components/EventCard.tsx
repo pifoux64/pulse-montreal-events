@@ -257,7 +257,7 @@ const EventCard = ({
           )}
 
           {/* Prix avec glassmorphism */}
-          <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2 z-20`}>
+          <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2 z-20`} onClick={(e) => e.stopPropagation()}>
             {event.price && formatPrice(event.price) && (
               <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
                 event.price.isFree 
@@ -276,7 +276,7 @@ const EventCard = ({
           </div>
           
           {/* Actions (Favori + Partage) */}
-          <div className="absolute top-4 right-4 flex gap-2 z-20">
+          <div className="absolute top-4 right-4 flex gap-2 z-20" onClick={(e) => e.stopPropagation()}>
             {/* Bouton Partage */}
             <button
               onClick={handleShareClick}
