@@ -76,7 +76,10 @@
     "organizer": {
       "dashboard": "Dashboard",
       "profile": "My Organizer Profile"
-    }
+    },
+    "social": "Social",
+    "pulsers": "Pulsers",
+    "messages": "Messages"
   },
   "home": {
     "title": "Discover Montreal Events",

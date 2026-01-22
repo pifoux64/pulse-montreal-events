@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
-import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3, Sparkles, Users, Palette, Trophy, Compass, Music } from 'lucide-react';
+import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut, BarChart3, Sparkles, Users, Palette, Trophy, Compass, Music, MessageCircle, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
 import NotificationBell from './NotificationBell';
@@ -279,6 +279,30 @@ export default function Navigation() {
                         )}
                       </Link>
                       
+                      {/* Section Social */}
+                      <div className="border-t border-white/10 my-2" />
+                      <div className="px-3 py-1.5 mb-1">
+                        <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                          {t('social')}
+                        </div>
+                      </div>
+                      <Link
+                        href="/pulsers"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
+                      >
+                        <UserPlus className="w-4 h-4 text-slate-400 group-hover:text-blue-400 transition-colors" />
+                        <span>{t('pulsers')}</span>
+                      </Link>
+                      <Link
+                        href="/messages"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
+                      >
+                        <MessageCircle className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
+                        <span>{t('messages')}</span>
+                      </Link>
+                      
                       {/* Section Organisateur (si applicable) */}
                       {(session.user.role === 'ORGANIZER' || session.user.organizer) && (
                         <>
@@ -522,6 +546,34 @@ export default function Navigation() {
                           {favoritesCount > 99 ? '99+' : favoritesCount}
                         </span>
                       )}
+                    </button>
+                    
+                    {/* Section Social mobile */}
+                    <div className="border-t border-white/10 my-2" />
+                    <div className="px-3 py-1">
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        {t('social')}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        router.push('/pulsers');
+                      }}
+                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
+                    >
+                      <UserPlus className="w-5 h-5 text-slate-200" />
+                      <span className="font-medium text-slate-100">{t('pulsers')}</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsMenuOpen(false);
+                        router.push('/messages');
+                      }}
+                      className="flex items-center space-x-3 w-full p-3 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 text-slate-100"
+                    >
+                      <MessageCircle className="w-5 h-5 text-slate-200" />
+                      <span className="font-medium text-slate-100">{t('messages')}</span>
                     </button>
                     
                     {/* Section Organisateur mobile (si applicable) */}

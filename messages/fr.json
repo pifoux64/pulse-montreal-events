@@ -76,7 +76,10 @@
     "organizer": {
       "dashboard": "Tableau de bord",
       "profile": "Mon profil organisateur"
-    }
+    },
+    "social": "Social",
+    "pulsers": "Pulsers",
+    "messages": "Messages"
   },
   "home": {
     "title": "Découvrez les événements de Montréal",

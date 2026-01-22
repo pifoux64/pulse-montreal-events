@@ -77,7 +77,10 @@
     "organizer": {
       "dashboard": "Panel",
       "profile": "Mi perfil de organizador"
-    }
+    },
+    "social": "Social",
+    "pulsers": "Pulsers",
+    "messages": "Mensajes"
   },
   "home": {
     "title": "Descubre eventos en Montreal",
