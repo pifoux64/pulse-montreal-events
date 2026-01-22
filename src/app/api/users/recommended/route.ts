@@ -213,6 +213,8 @@ export async function GET(request: NextRequest) {
 
     // Traiter les utilisateurs avec similarité
     const usersToProcess = allUsers.slice(0, 20);
+    const usersWithSimilarity: PulserSimilarity[] = [];
+    
     for (const user of usersToProcess) {
       if (followingUserIds.has(user.id)) continue;
 
@@ -222,8 +224,9 @@ export async function GET(request: NextRequest) {
           user.id
         );
 
+        // Inclure si score > 0 OU si on a des éléments en commun
         if (score > 0 || commonFavorites > 0 || commonEvents > 0) {
-          results.push({
+          usersWithSimilarity.push({
             id: user.id,
             type: 'user',
             name: user.name,
@@ -239,7 +242,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Ajouter les venues
+    // Si on a des utilisateurs avec similarité, les ajouter
+    results.push(...usersWithSimilarity);
+
+    // Si pas d'utilisateurs avec similarité, ajouter quand même quelques utilisateurs récents
+    if (usersWithSimilarity.length === 0 && allUsers.length > 0) {
+      const recentUsers = allUsers
+        .filter(u => !followingUserIds.has(u.id))
+        .slice(0, 5);
+      
+      for (const user of recentUsers) {
+        results.push({
+          id: user.id,
+          type: 'user',
+          name: user.name,
+          image: user.image,
+          similarityScore: 0,
+          commonFavorites: 0,
+          commonEvents: 0,
+          isFollowing: false,
+        });
+      }
+    }
+
+    // Ajouter les venues (toujours les inclure)
     for (const venue of venues) {
       results.push({
         id: venue.id,
@@ -252,7 +278,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Ajouter les organisateurs
+    // Ajouter les organisateurs (toujours les inclure, sauf si déjà suivis)
     for (const organizer of organizers) {
       // Ignorer si déjà suivi
       if (followingOrganizerIds.has(organizer.id)) continue;
@@ -263,11 +289,14 @@ export async function GET(request: NextRequest) {
         name: organizer.displayName,
         image: organizer.user?.image || null,
         slug: organizer.slug,
-        isFollowing: followingOrganizerIds.has(organizer.id),
+        isFollowing: false, // On a déjà vérifié qu'on ne suit pas
         eventsCount: organizer._count.events,
         verified: organizer.verified,
       });
     }
+
+    // Log pour déboguer
+    console.log(`[Pulsers API] Résultats: ${results.length} pulsers (${results.filter(r => r.type === 'user').length} users, ${results.filter(r => r.type === 'venue').length} venues, ${results.filter(r => r.type === 'organizer').length} organizers)`);
 
     // Trier : utilisateurs avec score en premier, puis venues/organisateurs
     results.sort((a, b) => {
