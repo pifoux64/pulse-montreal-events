@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image as ImageIcon } from 'lucide-react';
+import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image as ImageIcon, Facebook, Loader2 } from 'lucide-react';
 import { EventFormData, EventCategory, CustomFilter } from '@/types';
 
 // Schéma de validation avec Zod
@@ -71,6 +71,9 @@ const EventForm = ({
   const [showCustomFilters, setShowCustomFilters] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [newCustomFilter, setNewCustomFilter] = useState<Partial<CustomFilter>>({});
+  const [facebookUrl, setFacebookUrl] = useState('');
+  const [isImportingFacebook, setIsImportingFacebook] = useState(false);
+  const [facebookImportError, setFacebookImportError] = useState<string | null>(null);
 
   const {
     control,
@@ -170,8 +173,113 @@ const EventForm = ({
     return category?.subCategories || [];
   };
 
+  const handleImportFacebook = async () => {
+    if (!facebookUrl.trim()) {
+      setFacebookImportError('Veuillez entrer une URL Facebook');
+      return;
+    }
+
+    setIsImportingFacebook(true);
+    setFacebookImportError(null);
+
+    try {
+      const response = await fetch('/api/events/import-facebook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: facebookUrl.trim() }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de l\'import');
+      }
+
+      const result = await response.json();
+      const importedData = result.data;
+
+      // Pré-remplir le formulaire avec les données importées
+      if (importedData.title) setValue('title', importedData.title);
+      if (importedData.description) setValue('description', importedData.description);
+      if (importedData.startDate) {
+        const startDate = new Date(importedData.startDate);
+        setValue('startDate', startDate.toISOString().split('T')[0] + 'T' + startDate.toTimeString().split(' ')[0].slice(0, 5));
+      }
+      if (importedData.endDate) {
+        const endDate = new Date(importedData.endDate);
+        setValue('endDate', endDate.toISOString().split('T')[0] + 'T' + endDate.toTimeString().split(' ')[0].slice(0, 5));
+      }
+      if (importedData.location) {
+        setValue('location', {
+          name: importedData.location.name || '',
+          address: importedData.location.address || '',
+          city: importedData.location.city || 'Montréal',
+          postalCode: importedData.location.postalCode || '',
+        });
+      }
+      if (importedData.imageUrl) setValue('imageUrl', importedData.imageUrl);
+      if (importedData.ticketUrl) setValue('ticketUrl', importedData.ticketUrl);
+      if (importedData.price) {
+        setValue('price', {
+          amount: importedData.price.amount || 0,
+          currency: importedData.price.currency || 'CAD',
+          isFree: importedData.price.isFree !== false,
+        });
+      }
+
+      // Réinitialiser l'URL après import réussi
+      setFacebookUrl('');
+    } catch (error: any) {
+      console.error('Erreur import Facebook:', error);
+      setFacebookImportError(error.message || 'Erreur lors de l\'import depuis Facebook');
+    } finally {
+      setIsImportingFacebook(false);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
+      {/* Import depuis Facebook */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <Facebook className="w-6 h-6 text-blue-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Importer depuis Facebook</h3>
+        </div>
+        <p className="text-sm text-gray-600 mb-4">
+          Collez l'URL d'un événement Facebook pour pré-remplir automatiquement le formulaire
+        </p>
+        <div className="flex gap-3">
+          <input
+            type="url"
+            value={facebookUrl}
+            onChange={(e) => setFacebookUrl(e.target.value)}
+            placeholder="https://www.facebook.com/events/..."
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            disabled={isImportingFacebook}
+          />
+          <button
+            type="button"
+            onClick={handleImportFacebook}
+            disabled={isImportingFacebook || !facebookUrl.trim()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+          >
+            {isImportingFacebook ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Import...
+              </>
+            ) : (
+              <>
+                <Facebook className="w-4 h-4" />
+                Importer
+              </>
+            )}
+          </button>
+        </div>
+        {facebookImportError && (
+          <p className="mt-2 text-sm text-red-600">{facebookImportError}</p>
+        )}
+      </div>
+
       {/* Informations de base */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations de base</h3>
