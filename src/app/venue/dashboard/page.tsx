@@ -98,13 +98,26 @@ export default function VenueDashboard() {
 
   const venueTypes = ['bar', 'club', 'salle', 'centre_culturel', 'restaurant', 'café', 'théâtre', 'autre'];
 
-  // Normalise une URL en ajoutant https:// si le protocole est manquant
-  const normalizeUrl = (value: string) => {
+  // Importer la fonction de normalisation depuis utils
+  // Note: On ne peut pas importer directement car c'est un composant client
+  // On utilise une version simplifiée locale
+  const normalizeUrlLocal = (value: string) => {
     if (!value) return '';
     const trimmed = value.trim();
     if (!trimmed) return '';
+    // Si c'est déjà une URL complète, la retourner
     if (/^https?:\/\//i.test(trimmed)) {
       return trimmed;
+    }
+    // Si ça commence par www., ajouter https://
+    if (trimmed.startsWith('www.')) {
+      return `https://${trimmed}`;
+    }
+    // Sinon, ajouter https://www. pour les domaines connus, sinon juste https://
+    const knownDomains = ['facebook.com', 'eventbrite.com', 'eventbrite.ca', 'instagram.com', 'twitter.com', 'linkedin.com'];
+    const domain = trimmed.split('/')[0];
+    if (knownDomains.some(d => domain.includes(d))) {
+      return `https://www.${trimmed}`;
     }
     return `https://${trimmed}`;
   };
@@ -624,7 +637,7 @@ export default function VenueDashboard() {
                         onBlur={(e) => {
                           // Normaliser l'URL lors de la perte de focus pour une meilleure UX
                           if (e.target.value.trim()) {
-                            setFormData({ ...formData, website: normalizeUrl(e.target.value) });
+                            setFormData({ ...formData, website: normalizeUrlLocal(e.target.value) });
                           }
                         }}
                         placeholder="leministere.ca ou https://leministere.ca"
