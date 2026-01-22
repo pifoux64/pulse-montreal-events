@@ -223,10 +223,18 @@ const EventCard = ({
 
   return (
     <div 
-      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative"
+      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl"
       onClick={handleEventClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleEventClick();
+        }
+      }}
     >
       {/* Image avec design simplifié et lazy loading optimisé */}
       {showImage && (
