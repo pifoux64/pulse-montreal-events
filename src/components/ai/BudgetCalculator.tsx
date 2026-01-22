@@ -220,43 +220,43 @@ export default function BudgetCalculator() {
             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
               <h4 className="text-lg font-semibold text-white mb-4">Coûts estimés</h4>
               <div className="space-y-2">
-                {result.estimatedCosts.venue && (
+                {result.estimatedCosts.venue != null && typeof result.estimatedCosts.venue === 'number' && (
                   <div className="flex justify-between text-slate-300">
                     <span>Salle</span>
                     <span>{result.estimatedCosts.venue.toFixed(2)} $</span>
                   </div>
                 )}
-                {result.estimatedCosts.artists && (
+                {result.estimatedCosts.artists != null && typeof result.estimatedCosts.artists === 'number' && (
                   <div className="flex justify-between text-slate-300">
                     <span>Artistes</span>
                     <span>{result.estimatedCosts.artists.toFixed(2)} $</span>
                   </div>
                 )}
-                {result.estimatedCosts.sound && (
+                {result.estimatedCosts.sound != null && typeof result.estimatedCosts.sound === 'number' && (
                   <div className="flex justify-between text-slate-300">
                     <span>Sonorisation</span>
                     <span>{result.estimatedCosts.sound.toFixed(2)} $</span>
                   </div>
                 )}
-                {result.estimatedCosts.lighting && (
+                {result.estimatedCosts.lighting != null && typeof result.estimatedCosts.lighting === 'number' && (
                   <div className="flex justify-between text-slate-300">
                     <span>Éclairage</span>
                     <span>{result.estimatedCosts.lighting.toFixed(2)} $</span>
                   </div>
                 )}
-                {result.estimatedCosts.promotion && (
+                {result.estimatedCosts.promotion != null && typeof result.estimatedCosts.promotion === 'number' && (
                   <div className="flex justify-between text-slate-300">
                     <span>Promotion</span>
                     <span>{result.estimatedCosts.promotion.toFixed(2)} $</span>
                   </div>
                 )}
-                {result.estimatedCosts.staff && (
+                {result.estimatedCosts.staff != null && typeof result.estimatedCosts.staff === 'number' && (
                   <div className="flex justify-between text-slate-300">
                     <span>Personnel</span>
                     <span>{result.estimatedCosts.staff.toFixed(2)} $</span>
                   </div>
                 )}
-                {result.estimatedCosts.other && (
+                {result.estimatedCosts.other != null && typeof result.estimatedCosts.other === 'number' && (
                   <div className="flex justify-between text-slate-300">
                     <span>Autres</span>
                     <span>{result.estimatedCosts.other.toFixed(2)} $</span>
@@ -264,7 +264,7 @@ export default function BudgetCalculator() {
                 )}
                 <div className="flex justify-between text-white font-bold pt-2 border-t border-white/10">
                   <span>Total</span>
-                  <span>{result.estimatedCosts.total.toFixed(2)} $</span>
+                  <span>{result.estimatedCosts.total != null && typeof result.estimatedCosts.total === 'number' ? result.estimatedCosts.total.toFixed(2) : '0.00'} $</span>
                 </div>
               </div>
             </div>
@@ -278,11 +278,17 @@ export default function BudgetCalculator() {
               <div className="space-y-2">
                 <div className="flex justify-between text-slate-300">
                   <span>Prix de billet nécessaire</span>
-                  <span className="text-white font-semibold">{result.breakEven.ticketPrice.toFixed(2)} $</span>
+                  <span className="text-white font-semibold">
+                    {result.breakEven?.ticketPrice != null && typeof result.breakEven.ticketPrice === 'number' 
+                      ? result.breakEven.ticketPrice.toFixed(2) 
+                      : '0.00'} $
+                  </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Personnes nécessaires</span>
-                  <span className="text-white font-semibold">{result.breakEven.attendeesNeeded}</span>
+                  <span className="text-white font-semibold">
+                    {result.breakEven?.attendeesNeeded != null ? result.breakEven.attendeesNeeded : '0'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -300,18 +306,30 @@ export default function BudgetCalculator() {
                 <div className="grid grid-cols-3 gap-2">
                   <div className="p-3 bg-white/5 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">Bas</div>
-                    <div className="text-white font-semibold">{result.suggestedPricing.low.price.toFixed(2)} $</div>
-                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing.low.target}</div>
+                    <div className="text-white font-semibold">
+                      {result.suggestedPricing?.low?.price != null && typeof result.suggestedPricing.low.price === 'number'
+                        ? result.suggestedPricing.low.price.toFixed(2)
+                        : '0.00'} $
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.low?.target || ''}</div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">Moyen</div>
-                    <div className="text-white font-semibold">{result.suggestedPricing.medium.price.toFixed(2)} $</div>
-                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing.medium.target}</div>
+                    <div className="text-white font-semibold">
+                      {result.suggestedPricing?.medium?.price != null && typeof result.suggestedPricing.medium.price === 'number'
+                        ? result.suggestedPricing.medium.price.toFixed(2)
+                        : '0.00'} $
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.medium?.target || ''}</div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">Élevé</div>
-                    <div className="text-white font-semibold">{result.suggestedPricing.high.price.toFixed(2)} $</div>
-                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing.high.target}</div>
+                    <div className="text-white font-semibold">
+                      {result.suggestedPricing?.high?.price != null && typeof result.suggestedPricing.high.price === 'number'
+                        ? result.suggestedPricing.high.price.toFixed(2)
+                        : '0.00'} $
+                    </div>
+                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.high?.target || ''}</div>
                   </div>
                 </div>
               </div>
