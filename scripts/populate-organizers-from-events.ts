@@ -33,11 +33,7 @@ async function main() {
       include: {
         features: true,
         organizer: true, // Si déjà lié
-        eventSources: {
-          include: {
-            source: true,
-          },
-        },
+        eventSources: true,
       },
     });
 
@@ -78,7 +74,8 @@ async function main() {
         // Chercher dans eventSources
         const primarySource = event.eventSources.find(s => s.isPrimary);
         if (primarySource) {
-          sourceName = primarySource.source?.name || primarySource.source || event.source;
+          // source est un champ scalaire (EventSource enum), pas une relation
+          sourceName = primarySource.source || event.source;
         } else {
           sourceName = event.source;
         }
@@ -177,7 +174,8 @@ async function main() {
           // Si pas de nom dans les features, utiliser la source
           if (!eventOrganizerName) {
             const primarySource = e.eventSources.find(s => s.isPrimary);
-            const eventSource = primarySource?.source?.name || primarySource?.source || e.source;
+            // source est un champ scalaire (EventSource enum), pas une relation
+            const eventSource = primarySource?.source || e.source;
             eventOrganizerName = sourceToOrganizerName[eventSource] || eventSource || 'Organisateur inconnu';
           }
 
