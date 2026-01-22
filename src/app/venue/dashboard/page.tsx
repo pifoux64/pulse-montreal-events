@@ -98,6 +98,17 @@ export default function VenueDashboard() {
 
   const venueTypes = ['bar', 'club', 'salle', 'centre_culturel', 'restaurant', 'café', 'théâtre', 'autre'];
 
+  // Normalise une URL en ajoutant https:// si le protocole est manquant
+  const normalizeUrl = (value: string) => {
+    if (!value) return '';
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+    return `https://${trimmed}`;
+  };
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/signin?callbackUrl=/venue/dashboard');
@@ -225,11 +236,15 @@ export default function VenueDashboard() {
       
       const method = selectedVenue ? 'PATCH' : 'POST';
 
+      // Normaliser l'URL du site web si fournie
+      const normalizedWebsite = formData.website ? normalizeUrl(formData.website) : null;
+
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
+          website: normalizedWebsite,
           capacity: formData.capacity ? parseInt(formData.capacity, 10) : null,
           lat: parseFloat(formData.lat) || 0,
           lon: parseFloat(formData.lon) || 0,
@@ -603,9 +618,16 @@ export default function VenueDashboard() {
                         Site web
                       </label>
                       <input
-                        type="url"
+                        type="text"
                         value={formData.website}
                         onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                        onBlur={(e) => {
+                          // Normaliser l'URL lors de la perte de focus pour une meilleure UX
+                          if (e.target.value.trim()) {
+                            setFormData({ ...formData, website: normalizeUrl(e.target.value) });
+                          }
+                        }}
+                        placeholder="leministere.ca ou https://leministere.ca"
                         className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
                       />
                     </div>
