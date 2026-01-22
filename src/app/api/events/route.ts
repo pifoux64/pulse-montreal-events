@@ -13,6 +13,7 @@ import { geocodeAddress, getDefaultCoordinates } from '@/lib/geocode';
 import { EventCategory, EventLanguage, EventStatus, UserRole, PromotionStatus, NotificationType } from '@prisma/client';
 import { enrichEventWithTags } from '@/lib/tagging/eventTaggingService';
 import { normalizeUrl } from '@/lib/utils';
+import { sendEmailViaResend } from '@/lib/email/resend';
 
 /**
  * Génère des tags automatiques basés sur le contenu de l'événement
@@ -1025,14 +1026,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // SPRINT 6: Notifier les followers de l'organisateur
+    // SPRINT 6: Notifier les followers de l'organisateur (notifications + emails)
     try {
       const followers = await prisma.organizerFollow.findMany({
         where: { organizerId: organizer.id },
-        select: { userId: true },
+        include: {
+          user: {
+            include: {
+              preferences: true,
+            },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              preferences: {
+                select: {
+                  notificationsEmail: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       if (followers.length > 0) {
+        // Créer les notifications dans la base
         const notifications = followers.map((follow) => ({
           userId: follow.userId,
           eventId: event.id,
@@ -1047,6 +1065,166 @@ export async function POST(request: NextRequest) {
 
         await prisma.notification.createMany({
           data: notifications,
+        });
+
+        // Envoyer les emails aux followers qui ont activé les notifications email
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-mtl.vercel.app';
+        const eventUrl = `${appUrl}/evenement/${event.id}`;
+        const organizerUrl = event.organizer?.slug 
+          ? `${appUrl}/organisateur/${event.organizer.slug}`
+          : `${appUrl}/organisateur/${organizer.id}`;
+
+        // Formater la date
+        const eventDate = new Date(event.startAt);
+        const formattedDate = eventDate.toLocaleDateString('fr-CA', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'America/Montreal',
+        });
+
+        // Formater le prix
+        let priceText = 'Gratuit';
+        if (event.priceMin !== null && event.priceMin !== undefined) {
+          if (event.priceMin === 0) {
+            priceText = 'Gratuit';
+          } else {
+            const priceMinCAD = (event.priceMin / 100).toFixed(2);
+            if (event.priceMax && event.priceMax !== event.priceMin) {
+              const priceMaxCAD = (event.priceMax / 100).toFixed(2);
+              priceText = `${priceMinCAD}$ - ${priceMaxCAD}$ CAD`;
+            } else {
+              priceText = `${priceMinCAD}$ CAD`;
+            }
+          }
+        }
+
+        // Envoyer les emails en arrière-plan (ne pas bloquer la réponse)
+        Promise.all(
+          followers
+            .filter((follow) => {
+              // Filtrer les utilisateurs qui ont activé les notifications email
+              const prefs = follow.user.preferences;
+              return prefs?.notificationsEmail !== false && follow.user.email;
+            })
+            .map(async (follow) => {
+              if (!follow.user.email) return;
+
+              const userName = follow.user.name || 'utilisateur';
+              const subject = `🎉 Nouvel événement : ${event.title} - ${organizer.displayName}`;
+              
+              const html = `
+                <!DOCTYPE html>
+                <html>
+                  <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  </head>
+                  <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+                      <h1 style="color: white; margin: 0; font-size: 24px;">🎉 Nouvel événement !</h1>
+                    </div>
+                    
+                    <div style="background: #f9fafb; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e5e7eb; border-top: none;">
+                      <p style="font-size: 16px; margin-bottom: 20px;">
+                        Bonjour ${userName},
+                      </p>
+                      
+                      <p style="font-size: 16px; margin-bottom: 20px;">
+                        <strong>${organizer.displayName}</strong> vient de publier un nouvel événement que vous pourriez aimer :
+                      </p>
+                      
+                      <div style="background: white; border-radius: 8px; padding: 20px; margin: 20px 0; border: 1px solid #e5e7eb;">
+                        ${event.imageUrl ? `
+                          <img src="${event.imageUrl}" alt="${event.title}" style="width: 100%; border-radius: 8px; margin-bottom: 15px; max-height: 300px; object-fit: cover;">
+                        ` : ''}
+                        
+                        <h2 style="color: #1f2937; margin-top: 0; font-size: 22px;">${event.title}</h2>
+                        
+                        <p style="color: #6b7280; margin: 10px 0;">
+                          📅 <strong>Date :</strong> ${formattedDate}
+                        </p>
+                        
+                        ${event.venue ? `
+                          <p style="color: #6b7280; margin: 10px 0;">
+                            📍 <strong>Lieu :</strong> ${event.venue.name}
+                            ${event.venue.address ? `<br>${event.venue.address}, ${event.venue.city}` : ''}
+                          </p>
+                        ` : ''}
+                        
+                        <p style="color: #6b7280; margin: 10px 0;">
+                          💰 <strong>Prix :</strong> ${priceText}
+                        </p>
+                        
+                        ${event.description ? `
+                          <p style="color: #4b5563; margin: 15px 0; line-height: 1.6;">
+                            ${event.description.substring(0, 200)}${event.description.length > 200 ? '...' : ''}
+                          </p>
+                        ` : ''}
+                      </div>
+                      
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="${eventUrl}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+                          Voir l'événement
+                        </a>
+                      </div>
+                      
+                      <p style="font-size: 14px; color: #6b7280; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                        Vous recevez cet email car vous suivez <strong>${organizer.displayName}</strong> sur Pulse Montréal.
+                        <br>
+                        <a href="${organizerUrl}" style="color: #667eea; text-decoration: none;">Voir le profil de l'organisateur</a>
+                      </p>
+                      
+                      <p style="font-size: 12px; color: #9ca3af; margin-top: 20px; text-align: center;">
+                        Pulse Montréal - Votre guide des événements à Montréal
+                        <br>
+                        <a href="${appUrl}" style="color: #9ca3af; text-decoration: none;">${appUrl}</a>
+                      </p>
+                    </div>
+                  </body>
+                </html>
+              `;
+
+              const text = `
+Bonjour ${userName},
+
+${organizer.displayName} vient de publier un nouvel événement :
+
+${event.title}
+📅 Date : ${formattedDate}
+${event.venue ? `📍 Lieu : ${event.venue.name}${event.venue.address ? `, ${event.venue.address}, ${event.venue.city}` : ''}` : ''}
+💰 Prix : ${priceText}
+
+${event.description ? `${event.description.substring(0, 200)}${event.description.length > 200 ? '...' : ''}` : ''}
+
+Voir l'événement : ${eventUrl}
+
+Vous recevez cet email car vous suivez ${organizer.displayName} sur Pulse Montréal.
+Voir le profil : ${organizerUrl}
+
+---
+Pulse Montréal - Votre guide des événements à Montréal
+${appUrl}
+              `;
+
+              try {
+                await sendEmailViaResend({
+                  to: follow.user.email,
+                  subject,
+                  html,
+                  text,
+                });
+              } catch (emailError) {
+                // Logger l'erreur mais ne pas faire échouer la création de l'événement
+                console.error(`Erreur lors de l'envoi de l'email à ${follow.user.email}:`, emailError);
+              }
+            })
+        ).catch((error) => {
+          // Logger l'erreur globale mais ne pas faire échouer
+          console.error('Erreur lors de l\'envoi des emails aux followers:', error);
         });
 
         // Envoyer les notifications push si configuré
