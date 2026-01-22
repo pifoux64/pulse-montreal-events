@@ -11,7 +11,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { generateMusicTags, getGenreEmoji, getGenreColor } from '@/lib/musicTags';
 import { useSession } from 'next-auth/react';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import EventTagsDisplay, { EventTag } from './EventTagsDisplay';
 
@@ -39,7 +39,6 @@ const EventCard = ({
 }: EventCardProps) => {
   const { data: session, status } = useSession();
   const pathname = usePathname();
-  const router = useRouter();
   const isAuthenticated = status === 'authenticated';
   const [justToggled, setJustToggled] = useState(false);
   const [animationKey, setAnimationKey] = useState(0);
@@ -202,66 +201,52 @@ const EventCard = ({
     return '🎵';
   };
 
-  const handleEventClick = async () => {
-    // SPRINT 2: Tracker l'interaction CLICK
-    if (isAuthenticated && session?.user?.id) {
-      fetch('/api/user/interactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ eventId: event.id, type: 'CLICK' }),
-      }).catch(() => {
-        // Ignorer les erreurs de tracking
-      });
-    }
-
+  // handleEventClick n'est plus nécessaire car on utilise Link maintenant
+  // Mais on garde la fonction pour onEventClick si fourni
+  const handleEventClick = () => {
     if (onEventClick) {
       onEventClick(event);
-    } else {
-      router.push(`/evenement/${event.id}`);
     }
-  };
-
-  const handleCardClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Ne déclencher que si le clic n'est pas sur un élément interactif
-    const target = e.target as HTMLElement;
-    
-    // Vérifier si le clic est directement sur un élément interactif ou dans un élément interactif
-    // Vérifier d'abord le tagName directement (plus rapide)
-    const tagName = target.tagName.toUpperCase();
-    const isDirectInteractive = tagName === 'BUTTON' ||
-                                tagName === 'A' ||
-                                tagName === 'INPUT' ||
-                                tagName === 'SELECT' ||
-                                tagName === 'TEXTAREA';
-    
-    if (isDirectInteractive) {
-      return; // Laisser l'élément gérer son propre clic
-    }
-    
-    // Vérifier si on est dans un élément interactif (plus lent, donc en second)
-    const closestInteractive = target.closest('button, a, input, select, textarea, [role="button"]');
-    if (closestInteractive) {
-      return; // Laisser l'élément interactif gérer son propre clic
-    }
-    
-    // Déclencher le clic sur l'événement
-    handleEventClick();
   };
 
   return (
-    <div 
-      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative"
-      onClick={handleCardClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
+    <Link
+      href={`/evenement/${event.id}`}
+      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative block"
+      onClick={(e) => {
+        // Si le clic est sur un élément interactif, empêcher la navigation
+        const target = e.target as HTMLElement;
+        const tagName = target.tagName.toUpperCase();
+        const isDirectInteractive = tagName === 'BUTTON' ||
+                                    tagName === 'A' ||
+                                    tagName === 'INPUT' ||
+                                    tagName === 'SELECT' ||
+                                    tagName === 'TEXTAREA';
+        
+        if (isDirectInteractive) {
           e.preventDefault();
-          handleEventClick();
+          return;
+        }
+        
+        const closestInteractive = target.closest('button, a, input, select, textarea, [role="button"]');
+        if (closestInteractive) {
+          e.preventDefault();
+          return;
+        }
+        
+        // Tracker l'interaction si authentifié
+        if (isAuthenticated && session?.user?.id) {
+          fetch('/api/user/interactions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ eventId: event.id, type: 'CLICK' }),
+          }).catch(() => {
+            // Ignorer les erreurs de tracking
+          });
         }
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image avec design simplifié et lazy loading optimisé */}
       {showImage && (
@@ -684,7 +669,7 @@ const EventCard = ({
           }}
         />
       )}
-    </div>
+    </Link>
   );
 };
 
