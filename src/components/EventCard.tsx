@@ -223,7 +223,7 @@ const EventCard = ({
 
   return (
     <div 
-      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl"
+      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative"
       onClick={handleEventClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -586,7 +586,10 @@ const EventCard = ({
         )}
 
         {/* Actions simplifiées */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-700/50">
+        <div 
+          className="flex items-center justify-between pt-3 border-t border-slate-700/50"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center space-x-3">
             <button
               onClick={handleFavoriteClick}
