@@ -164,8 +164,8 @@ const transformApiEvent = (event: ApiEvent): Event => {
     organizerId: event.organizerId || 'default',
     organizer: { 
       id: event.organizerId || 'default',
-      email: 'api@pulse.com',
-      name: event.source,
+      email: event.organizer?.user?.email || 'api@pulse.com',
+      name: event.organizer?.user?.name || event.organizer?.displayName || event.source || 'Organisateur',
       role: 'organizer' as const,
       createdAt: new Date(),
       updatedAt: new Date()
