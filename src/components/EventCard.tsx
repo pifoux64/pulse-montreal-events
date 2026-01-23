@@ -575,14 +575,14 @@ const EventCard = ({
 
         {/* Actions simplifiées */}
         <div 
-          className="flex items-center justify-between pt-3 border-t border-slate-700/50"
+          className="flex items-center justify-between pt-3 border-t border-slate-700/50 gap-2 overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-shrink-0 min-w-0">
             <button
               onClick={handleFavoriteClick}
               disabled={isFavoriteLoading}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 flex-shrink-0 ${
                 isFavorite
                   ? 'bg-red-500/20 text-red-400 border border-red-400/30 hover:bg-red-500/30'
                   : 'bg-slate-700/60 text-slate-100 border border-slate-600/50 hover:bg-red-500/20 hover:text-red-400 hover:border-red-400/30'
@@ -602,7 +602,7 @@ const EventCard = ({
             
             <button
               onClick={handleShareClick}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-700/60 text-slate-100 border border-slate-600/50 hover:bg-blue-500/20 hover:text-blue-400 hover:border-blue-400/30 transition-all duration-200 will-change-[color]"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-slate-700/60 text-slate-100 border border-slate-600/50 hover:bg-blue-500/20 hover:text-blue-400 hover:border-blue-400/30 transition-all duration-200 will-change-[color] flex-shrink-0"
             >
               <Share2 className="w-4 h-4" />
               <span className="hidden sm:inline">Partager</span>
@@ -616,7 +616,7 @@ const EventCard = ({
                 e.stopPropagation();
                 window.open(event.ticketUrl!, '_blank', 'noopener,noreferrer');
               }}
-              className="px-5 py-2 bg-blue-500 text-white rounded-full text-sm font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-lg hover:shadow-xl"
+              className="px-4 py-2 bg-blue-500 text-white rounded-full text-sm font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-lg hover:shadow-xl flex-shrink-0 whitespace-nowrap"
             >
               Billets
             </button>
@@ -666,7 +666,7 @@ const EventCard = ({
   return (
     <Link
       href={`/evenement/${event.id}`}
-      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative block"
+      className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative block w-full"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => {

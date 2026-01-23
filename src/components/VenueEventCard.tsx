@@ -19,7 +19,9 @@ interface VenueEventCardProps {
     tags: string[];
     category: string;
     venue: {
+      id: string;
       name: string;
+      slug: string | null;
       address: string;
       city: string;
       postalCode: string;
@@ -59,12 +61,7 @@ export default function VenueEventCard({ event }: VenueEventCardProps) {
             lng: event.venue.lon,
           },
         }
-      : {
-          name: 'Lieu à confirmer',
-          address: '',
-          city: 'Montréal',
-          postalCode: '',
-        },
+      : null, // Ne pas créer de location par défaut - si venue est null, location sera null
     category: event.category,
     subCategory: undefined,
     tags: event.tags || [],
@@ -105,6 +102,11 @@ export default function VenueEventCard({ event }: VenueEventCardProps) {
     createdAt: new Date(),
     updatedAt: new Date(),
   };
+
+  // Ajouter venueSlug si disponible
+  if (event.venue && 'slug' in event.venue && event.venue.slug) {
+    (eventData as any).venueSlug = event.venue.slug;
+  }
 
   return (
     <EventCard

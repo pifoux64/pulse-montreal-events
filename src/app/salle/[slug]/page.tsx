@@ -38,6 +38,18 @@ async function fetchVenue(slug: string) {
           startAt: 'asc',
         },
         include: {
+          venue: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              address: true,
+              city: true,
+              postalCode: true,
+              lat: true,
+              lon: true,
+            },
+          },
           organizer: {
             include: {
               user: {
@@ -315,7 +327,9 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {upcomingEvents.map((event) => (
-                  <VenueEventCard key={event.id} event={event} />
+                  <div key={event.id} className="w-full min-w-0">
+                    <VenueEventCard event={event} />
+                  </div>
                 ))}
               </div>
             </div>
@@ -329,7 +343,9 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {weekendEvents.map((event) => (
-                  <VenueEventCard key={event.id} event={event} />
+                  <div key={event.id} className="w-full min-w-0">
+                    <VenueEventCard event={event} />
+                  </div>
                 ))}
               </div>
             </div>
@@ -343,7 +359,9 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {pastEvents.map((event) => (
-                  <VenueEventCard key={event.id} event={event} />
+                  <div key={event.id} className="w-full min-w-0">
+                    <VenueEventCard event={event} />
+                  </div>
                 ))}
               </div>
             </div>
