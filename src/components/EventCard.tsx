@@ -234,8 +234,8 @@ const EventCard = ({
             </div>
           )}
           
-          {/* Overlay subtil */}
-          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none" />
+          {/* Overlay subtil - pointer-events-none pour ne pas bloquer les clics */}
+          <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none z-0" />
           
           {/* Badge Trending */}
           {isTrending && (
@@ -257,7 +257,7 @@ const EventCard = ({
           )}
 
           {/* Prix avec glassmorphism */}
-          <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2 z-20`} onClick={(e) => e.stopPropagation()}>
+          <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2 z-20 pointer-events-none`}>
             {event.price && formatPrice(event.price) && (
               <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
                 event.price.isFree 
@@ -276,7 +276,7 @@ const EventCard = ({
           </div>
           
           {/* Actions (Favori + Partage) */}
-          <div className="absolute top-4 right-4 flex gap-2 z-20" onClick={(e) => e.stopPropagation()}>
+          <div className="absolute top-4 right-4 flex gap-2 z-20">
             {/* Bouton Partage */}
             <button
               onClick={handleShareClick}
