@@ -70,11 +70,15 @@ function parseFacebookEventHtml(html: string, eventId: string): FacebookEventDat
   const descSelectors = [
     'div[data-testid="event-permalink-details"]',
     'div[data-testid="event-permalink-description"]',
+    'div[data-testid="event-permalink-event-description"]',
     'div[class*="event"] div[class*="description"]',
     'div[class*="event"] p[class*="description"]',
     'div[id*="event"] div[id*="description"]',
     'div[class*="event"] p',
     'div[class*="event"] div[dir="auto"]',
+    'div[class*="event"] span[dir="auto"]',
+    // Chercher dans les scripts JSON-LD
+    'script[type="application/ld+json"]',
     // Meta tags en dernier recours, mais filtrer les descriptions génériques
     'meta[property="og:description"]',
   ];
@@ -83,6 +87,19 @@ function parseFacebookEventHtml(html: string, eventId: string): FacebookEventDat
     let desc = '';
     if (selector.startsWith('meta')) {
       desc = $(selector).attr('content') || '';
+    } else if (selector.includes('script')) {
+      // Essayer de parser JSON-LD
+      try {
+        const scriptContent = $(selector).html();
+        if (scriptContent) {
+          const jsonLd = JSON.parse(scriptContent);
+          if (jsonLd.description) {
+            desc = jsonLd.description;
+          }
+        }
+      } catch (e) {
+        // Ignorer les erreurs de parsing JSON
+      }
     } else {
       desc = $(selector).first().text().trim();
     }
@@ -95,7 +112,8 @@ function parseFacebookEventHtml(html: string, eventId: string): FacebookEventDat
         !desc.includes('people interested') &&
         !desc.includes('people going') &&
         !desc.match(/by \w+ and \d+ others/) &&
-        !desc.match(/on \w+day, \w+ \d+ \d{4}/)
+        !desc.match(/on \w+day, \w+ \d+ \d{4}/) &&
+        !desc.match(/^\d+ people/)
       ) {
         data.description = desc;
         break;
@@ -280,6 +298,19 @@ export async function POST(request: NextRequest) {
 
           if (response.ok) {
             const html = await response.text();
+            
+            // Vérifier si Facebook a bloqué la requête (redirection vers login, etc.)
+            if (html.includes('login') && html.includes('facebook.com/login')) {
+              console.warn('Facebook a redirigé vers la page de connexion');
+              continue;
+            }
+            
+            // Vérifier si on a reçu du contenu valide
+            if (html.length < 1000) {
+              console.warn('Réponse HTML trop courte, probablement une erreur');
+              continue;
+            }
+            
             const scrapedData = parseFacebookEventHtml(html, eventId);
             
             // Fusionner les données, en gardant les meilleures valeurs
@@ -294,19 +325,37 @@ export async function POST(request: NextRequest) {
             if (eventData.title && eventData.description && eventData.imageUrl) {
               break;
             }
+          } else {
+            console.warn(`Erreur HTTP ${response.status} pour ${urlToTry}`);
           }
-        } catch (error) {
-          console.warn(`Erreur lors du scraping Facebook (${urlToTry}):`, error);
+        } catch (error: any) {
+          console.warn(`Erreur lors du scraping Facebook (${urlToTry}):`, error.message);
         }
       }
     }
 
-    // Si on n'a toujours pas de titre, retourner une erreur
+    // Si on n'a toujours pas de titre, retourner une erreur avec plus de détails
     if (!eventData.title) {
+      console.error('Impossible de récupérer les données Facebook:', {
+        eventId,
+        normalizedUrl,
+        hasToken: !!facebookToken,
+        scrapedData: {
+          hasTitle: !!eventData.title,
+          hasDescription: !!eventData.description,
+          hasImage: !!eventData.imageUrl,
+        }
+      });
+      
       return NextResponse.json(
         { 
           error: 'Impossible de récupérer les données de l\'événement Facebook. Vérifiez que l\'événement est public et que l\'URL est correcte.',
-          suggestion: 'Assurez-vous que l\'événement Facebook est public et accessible sans connexion.'
+          suggestion: 'Assurez-vous que l\'événement Facebook est public et accessible sans connexion. Facebook bloque parfois le scraping automatique. Essayez de copier manuellement les informations ou utilisez l\'API Graph de Facebook si vous avez un token d\'accès.',
+          details: process.env.NODE_ENV === 'development' ? {
+            eventId,
+            url: normalizedUrl,
+            hasToken: !!facebookToken,
+          } : undefined
         },
         { status: 404 }
       );
