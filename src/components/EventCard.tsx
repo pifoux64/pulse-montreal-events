@@ -436,13 +436,16 @@ const EventCard = ({
             <div className="flex items-center text-sm text-slate-200">
               <MapPin className="w-4 h-4 mr-2 text-green-400" />
               {event.venueSlug ? (
-                <Link
-                  href={`/salle/${event.venueSlug}`}
-                  onClick={(e) => e.stopPropagation()}
-                  className="font-medium truncate hover:text-green-400 transition-colors duration-200 group"
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.location.href = `/salle/${event.venueSlug}`;
+                  }}
+                  className="font-medium truncate hover:text-green-400 transition-colors duration-200 group text-left"
                 >
                   <span className="group-hover:underline">{event.location.name}</span>
-                </Link>
+                </button>
               ) : (
                 <span className="font-medium truncate">{event.location.name}</span>
               )}
@@ -457,16 +460,20 @@ const EventCard = ({
 
           {/* Organisateur */}
           {event.organizer && event.organizerId && event.organizerId !== 'default' && (
-            <Link
-              href={event.organizerSlug ? `/organisateur/${event.organizerSlug}` : `/organisateur/${event.organizerId}`}
-              onClick={(e) => e.stopPropagation()}
-              className="flex items-center text-sm text-slate-200 hover:text-sky-400 transition-colors duration-200 group"
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const url = event.organizerSlug ? `/organisateur/${event.organizerSlug}` : `/organisateur/${event.organizerId}`;
+                window.location.href = url;
+              }}
+              className="flex items-center text-sm text-slate-200 hover:text-sky-400 transition-colors duration-200 group text-left"
             >
               <User className="w-4 h-4 mr-2 text-sky-400" />
               <span className="font-medium truncate group-hover:underline">
                 {event.organizer.name}
               </span>
-            </Link>
+            </button>
           )}
         </div>
 
