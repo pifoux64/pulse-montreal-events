@@ -603,15 +603,16 @@ const EventCard = ({
           </div>
           
           {event.ticketUrl && (
-            <a
-              href={event.ticketUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                window.open(event.ticketUrl!, '_blank', 'noopener,noreferrer');
+              }}
               className="px-5 py-2 bg-blue-500 text-white rounded-full text-sm font-semibold hover:bg-blue-600 transition-colors duration-200 shadow-lg hover:shadow-xl"
             >
               Billets
-            </a>
+            </button>
           )}
         </div>
       </div>
