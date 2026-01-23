@@ -237,29 +237,29 @@ const EventCard = ({
           {/* Overlay subtil - pointer-events-none pour ne pas bloquer les clics */}
           <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors duration-300 pointer-events-none z-0" />
           
-          {/* Badge Trending */}
+          {/* Badge Trending - pointer-events-none pour ne pas bloquer les clics */}
           {isTrending && (
-            <div className="absolute top-4 left-4 z-10">
-              <span className="px-2 py-1 rounded-lg bg-red-500/90 text-white text-xs font-bold flex items-center gap-1 backdrop-blur-sm">
+            <div className="absolute top-4 left-4 z-10 pointer-events-none">
+              <span className="px-2 py-1 rounded-lg bg-red-500/90 text-white text-xs font-bold flex items-center gap-1 backdrop-blur-sm pointer-events-none">
                 <TrendingUp className="w-3 h-3" />
                 Trending
               </span>
             </div>
           )}
 
-          {/* Social proof: "{X} saves today" */}
+          {/* Social proof: "{X} saves today" - pointer-events-none pour ne pas bloquer les clics */}
           {favoritesToday > 0 && (
-            <div className="absolute top-4 right-4 z-10">
-              <span className="px-2 py-1 rounded-lg bg-black/60 text-white text-xs backdrop-blur-sm">
+            <div className="absolute top-4 right-4 z-10 pointer-events-none">
+              <span className="px-2 py-1 rounded-lg bg-black/60 text-white text-xs backdrop-blur-sm pointer-events-none">
                 {favoritesToday} sauvegardé{favoritesToday > 1 ? 's' : ''} aujourd'hui
               </span>
             </div>
           )}
 
-          {/* Prix avec glassmorphism */}
+          {/* Prix avec glassmorphism - pointer-events-none pour ne pas bloquer les clics */}
           <div className={`absolute ${isTrending ? 'top-12' : 'top-4'} left-4 flex flex-col gap-2 z-20 pointer-events-none`}>
             {event.price && formatPrice(event.price) && (
-              <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 ${
+              <span className={`px-4 py-2 rounded-2xl text-sm font-bold shadow-2xl backdrop-blur-md transition-all duration-300 pointer-events-none ${
                 event.price.isFree 
                   ? 'bg-gradient-to-r from-green-400 to-emerald-500 text-white' 
                   : 'glass-effect text-gray-900 border border-white/30'
@@ -269,7 +269,7 @@ const EventCard = ({
             )}
             {/* Badge promotion */}
             {event.promotions && event.promotions.length > 0 && (
-              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white shadow-lg backdrop-blur-md border border-white/30 animate-pulse">
+              <span className="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 text-white shadow-lg backdrop-blur-md border border-white/30 animate-pulse pointer-events-none">
                 ⭐ Promu
               </span>
             )}
