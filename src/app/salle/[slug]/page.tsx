@@ -63,8 +63,9 @@ async function fetchVenue(slug: string) {
   });
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const venue = await fetchVenue(params.slug);
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const venue = await fetchVenue(slug);
 
   if (!venue) {
     return {
@@ -119,9 +120,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function VenuePage({ params }: { params: { slug: string } }) {
+export default async function VenuePage({ params }: { params: Promise<{ slug: string }> }) {
   try {
-    const venue = await fetchVenue(params.slug);
+    const { slug } = await params;
+    const venue = await fetchVenue(slug);
 
     if (!venue) {
       notFound();

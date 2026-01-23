@@ -3,10 +3,10 @@ import { generateTop5ByGenre } from '@/lib/editorial/editorialService';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { genre: string } }
+  { params }: { params: Promise<{ genre: string }> }
 ) {
   try {
-    const { genre } = params;
+    const { genre } = await params;
     const { searchParams } = new URL(request.url);
     const period = (searchParams.get('period') || 'week') as 'week' | 'weekend';
 

@@ -37,11 +37,12 @@ const UpdateEventSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const event = await prisma.event.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         venue: true,
         organizer: {
@@ -115,9 +116,10 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
@@ -129,7 +131,7 @@ export async function PATCH(
 
     // Récupérer l'événement existant
     const existingEvent = await prisma.event.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         organizer: {
           include: {
@@ -171,7 +173,7 @@ export async function PATCH(
 
     // Mettre à jour l'événement
     const updatedEvent = await prisma.event.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...parsedData,
         updatedAt: new Date(),
@@ -227,9 +229,10 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const session = await getServerSession(authOptions);
     
     if (!session?.user) {
@@ -241,7 +244,7 @@ export async function DELETE(
 
     // Récupérer l'événement existant
     const existingEvent = await prisma.event.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         organizer: {
           include: {
@@ -271,7 +274,7 @@ export async function DELETE(
 
     // Supprimer l'événement (cascade supprimera automatiquement les relations)
     await prisma.event.delete({
-      where: { id: params.id },
+      where: { id },
     });
 
     return NextResponse.json({ message: 'Événement supprimé avec succès' });

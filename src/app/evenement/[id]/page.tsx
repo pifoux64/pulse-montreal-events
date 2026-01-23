@@ -33,9 +33,10 @@ async function fetchEvent(id: string) {
   });
 }
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   try {
-    const event = await fetchEvent(params.id);
+    const { id } = await params;
+    const event = await fetchEvent(id);
 
     if (!event) {
       return {
@@ -133,9 +134,10 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-export default async function EventPage({ params }: { params: { id: string } }) {
+export default async function EventPage({ params }: { params: Promise<{ id: string }> }) {
   try {
-    const event = await fetchEvent(params.id);
+    const { id } = await params;
+    const event = await fetchEvent(id);
 
     if (!event) {
       notFound();

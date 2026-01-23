@@ -15,11 +15,12 @@ function isUUID(str: string): boolean {
   return uuidRegex.test(str);
 }
 
-export async function generateMetadata({ params }: { params: { param: string } }): Promise<Metadata> {
-  const isId = isUUID(params.param);
+export async function generateMetadata({ params }: { params: Promise<{ param: string }> }): Promise<Metadata> {
+  const { param } = await params;
+  const isId = isUUID(param);
   
   const organizer = await prisma.organizer.findUnique({
-    where: isId ? { id: params.param } : { slug: params.param },
+    where: isId ? { id: param } : { slug: param },
     include: {
       user: {
         select: {
@@ -47,11 +48,12 @@ export async function generateMetadata({ params }: { params: { param: string } }
   };
 }
 
-export default async function OrganisateurPage({ params }: { params: { param: string } }) {
-  const isId = isUUID(params.param);
+export default async function OrganisateurPage({ params }: { params: Promise<{ param: string }> }) {
+  const { param } = await params;
+  const isId = isUUID(param);
   
   const organizer = await prisma.organizer.findUnique({
-    where: isId ? { id: params.param } : { slug: params.param },
+    where: isId ? { id: param } : { slug: param },
     include: {
       user: {
         select: {

@@ -13,9 +13,10 @@ interface Top5PageProps {
   params: { slug: string };
 }
 
-export async function generateMetadata({ params }: Top5PageProps): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
   const post = await prisma.editorialPost.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       events: {
         take: 1,
@@ -79,10 +80,11 @@ export async function generateMetadata({ params }: Top5PageProps): Promise<Metad
   };
 }
 
-export default async function Top5Page({ params }: Top5PageProps) {
+export default async function Top5Page({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
   const t = await getTranslations('top5');
   const post = await prisma.editorialPost.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
   });
 
   if (!post || post.status === 'ARCHIVED') {

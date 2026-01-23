@@ -3,10 +3,10 @@ import { generateTop5ByVibe } from '@/lib/editorial/editorialService';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { vibe: string } }
+  { params }: { params: Promise<{ vibe: string }> }
 ) {
   try {
-    const { vibe } = params;
+    const { vibe } = await params;
     const { searchParams } = new URL(request.url);
     const period = (searchParams.get('period') || 'week') as 'week' | 'weekend';
 

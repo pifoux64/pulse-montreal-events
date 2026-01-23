@@ -12,10 +12,10 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const eventId = params.id;
+    const { id: eventId } = await params;
     const limit = parseInt(request.nextUrl.searchParams.get('limit') || '5', 10);
 
     // Récupérer l'événement de référence
