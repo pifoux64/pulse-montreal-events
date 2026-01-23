@@ -661,7 +661,16 @@ const EventCard = ({
       className="glass-effect rounded-3xl overflow-hidden hover-lift cursor-pointer group border border-white/20 backdrop-blur-xl relative block"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onClick={() => {
+      onClick={(e) => {
+        // Si le clic est sur un élément interactif, laisser le comportement par défaut
+        const target = e.target as HTMLElement;
+        const isInteractive = target.closest('button, a, input, select, textarea, [role="button"]');
+        
+        if (isInteractive) {
+          // Ne pas empêcher le comportement par défaut pour les éléments interactifs
+          return;
+        }
+        
         // Tracker l'interaction si authentifié (non-bloquant)
         if (isAuthenticated && session?.user?.id) {
           fetch('/api/user/interactions', {
