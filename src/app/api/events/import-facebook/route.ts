@@ -53,42 +53,90 @@ function parseFacebookEventHtml(html: string, eventId: string): FacebookEventDat
   const titleSelectors = [
     'h1[data-testid="event-permalink-event-name"]',
     'h1[class*="event"]',
+    'h1[id*="event"]',
     'meta[property="og:title"]',
     'title',
   ];
   for (const selector of titleSelectors) {
     const title = $(selector).first().text().trim() || $(selector).attr('content');
-    if (title && title !== 'Facebook') {
+    if (title && title !== 'Facebook' && !title.includes('Music event in')) {
       data.title = title;
       break;
     }
   }
 
-  // Description - chercher dans plusieurs endroits
+  // Description - chercher dans plusieurs endroits, en évitant les meta tags génériques
+  // D'abord chercher dans le contenu HTML réel
   const descSelectors = [
     'div[data-testid="event-permalink-details"]',
+    'div[data-testid="event-permalink-description"]',
+    'div[class*="event"] div[class*="description"]',
+    'div[class*="event"] p[class*="description"]',
+    'div[id*="event"] div[id*="description"]',
     'div[class*="event"] p',
+    'div[class*="event"] div[dir="auto"]',
+    // Meta tags en dernier recours, mais filtrer les descriptions génériques
     'meta[property="og:description"]',
   ];
+  
   for (const selector of descSelectors) {
-    const desc = $(selector).first().text().trim() || $(selector).attr('content');
+    let desc = '';
+    if (selector.startsWith('meta')) {
+      desc = $(selector).attr('content') || '';
+    } else {
+      desc = $(selector).first().text().trim();
+    }
+    
+    // Filtrer les descriptions génériques de Facebook
     if (desc && desc.length > 20) {
-      data.description = desc;
-      break;
+      // Ignorer les descriptions génériques comme "Music event in Montreal, QC by..."
+      if (
+        !desc.includes('Music event in') &&
+        !desc.includes('people interested') &&
+        !desc.includes('people going') &&
+        !desc.match(/by \w+ and \d+ others/) &&
+        !desc.match(/on \w+day, \w+ \d+ \d{4}/)
+      ) {
+        data.description = desc;
+        break;
+      }
     }
   }
 
-  // Image - chercher l'image de couverture
+  // Image - chercher l'image de couverture dans plusieurs endroits
   const imageSelectors = [
-    'meta[property="og:image"]',
+    // Images de couverture spécifiques
+    'img[data-testid="event-cover-photo"]',
     'img[class*="cover"]',
+    'img[class*="event-cover"]',
+    'img[id*="cover"]',
+    // Meta tags Open Graph (mais vérifier que ce n'est pas l'image par défaut)
+    'meta[property="og:image"]',
+    // Autres images d'événement
     'img[class*="event"]',
+    'img[alt*="event"]',
+    'img[alt*="cover"]',
   ];
+  
   for (const selector of imageSelectors) {
-    const image = $(selector).attr('content') || $(selector).attr('src');
+    let image = '';
+    if (selector.startsWith('meta')) {
+      image = $(selector).attr('content') || '';
+    } else {
+      image = $(selector).attr('src') || $(selector).attr('data-src') || '';
+    }
+    
     if (image && image.startsWith('http')) {
-      data.imageUrl = image;
-      break;
+      // Ignorer les images par défaut de Facebook (logos, icônes)
+      if (
+        !image.includes('facebook.com/images/') &&
+        !image.includes('static.xx.fbcdn.net/rsrc.php/') &&
+        !image.includes('fbstatic-a.akamaihd.net/rsrc.php/') &&
+        image.includes('scontent') || image.includes('fbcdn') || image.includes('cdn')
+      ) {
+        data.imageUrl = image;
+        break;
+      }
     }
   }
 
@@ -213,23 +261,43 @@ export async function POST(request: NextRequest) {
     }
 
     // Option 2: Scraping HTML (fallback ou si pas de token)
-    if (!eventData.title) {
-      try {
-        // Utiliser la version mobile pour un HTML plus simple
-        const mobileUrl = normalizedUrl.replace('www.facebook.com', 'm.facebook.com');
-        const response = await fetch(mobileUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15',
-          },
-        });
+    // Essayer d'abord la version desktop, puis mobile
+    if (!eventData.title || !eventData.description || !eventData.imageUrl) {
+      const urlsToTry = [
+        normalizedUrl, // Version desktop
+        normalizedUrl.replace('www.facebook.com', 'm.facebook.com'), // Version mobile
+      ];
 
-        if (response.ok) {
-          const html = await response.text();
-          const scrapedData = parseFacebookEventHtml(html, eventId);
-          eventData = { ...eventData, ...scrapedData };
+      for (const urlToTry of urlsToTry) {
+        try {
+          const response = await fetch(urlToTry, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+              'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8',
+            },
+          });
+
+          if (response.ok) {
+            const html = await response.text();
+            const scrapedData = parseFacebookEventHtml(html, eventId);
+            
+            // Fusionner les données, en gardant les meilleures valeurs
+            if (scrapedData.title && !eventData.title) eventData.title = scrapedData.title;
+            if (scrapedData.description && !eventData.description) eventData.description = scrapedData.description;
+            if (scrapedData.imageUrl && !eventData.imageUrl) eventData.imageUrl = scrapedData.imageUrl;
+            if (scrapedData.startDate && !eventData.startDate) eventData.startDate = scrapedData.startDate;
+            if (scrapedData.location && !eventData.location) eventData.location = scrapedData.location;
+            if (scrapedData.ticketUrl && !eventData.ticketUrl) eventData.ticketUrl = scrapedData.ticketUrl;
+            
+            // Si on a trouvé les données essentielles, arrêter
+            if (eventData.title && eventData.description && eventData.imageUrl) {
+              break;
+            }
+          }
+        } catch (error) {
+          console.warn(`Erreur lors du scraping Facebook (${urlToTry}):`, error);
         }
-      } catch (error) {
-        console.error('Erreur lors du scraping Facebook:', error);
       }
     }
 
