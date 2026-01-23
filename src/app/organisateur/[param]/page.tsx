@@ -1,6 +1,7 @@
 /**
- * Page publique pour un organisateur (par slug)
- * Route: /organisateur/[slug]
+ * Page publique pour un organisateur (par slug ou ID)
+ * Route: /organisateur/[param]
+ * Gère à la fois les slugs et les IDs pour compatibilité
  */
 
 import { Metadata } from 'next';
@@ -8,9 +9,17 @@ import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import OrganisateurPageClient from './OrganisateurPageClient';
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+// Fonction pour détecter si le paramètre est un UUID (ID) ou un slug
+function isUUID(str: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(str);
+}
+
+export async function generateMetadata({ params }: { params: { param: string } }): Promise<Metadata> {
+  const isId = isUUID(params.param);
+  
   const organizer = await prisma.organizer.findUnique({
-    where: { slug: params.slug },
+    where: isId ? { id: params.param } : { slug: params.param },
     include: {
       user: {
         select: {
@@ -38,9 +47,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function OrganisateurPage({ params }: { params: { slug: string } }) {
+export default async function OrganisateurPage({ params }: { params: { param: string } }) {
+  const isId = isUUID(params.param);
+  
   const organizer = await prisma.organizer.findUnique({
-    where: { slug: params.slug },
+    where: isId ? { id: params.param } : { slug: params.param },
     include: {
       user: {
         select: {
@@ -52,10 +63,7 @@ export default async function OrganisateurPage({ params }: { params: { slug: str
       },
       events: {
         where: {
-          status: 'SCHEDULED',
-          startAt: {
-            gte: new Date(),
-          },
+          status: { in: ['SCHEDULED', 'UPDATED'] },
         },
         orderBy: {
           startAt: 'asc',
