@@ -110,6 +110,10 @@ const CreateEventSchema = z.object({
     .transform((val) => val ? normalizeUrl(val) || val : val)
     .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
     .optional(),
+  sourceUrl: z.string()
+    .transform((val) => val ? normalizeUrl(val) || val : val)
+    .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL source invalide')
+    .optional(),
   priceMin: z.number().int().min(0).optional(),
   priceMax: z.number().int().min(0).optional(),
   currency: z.string().length(3).default('CAD'),
@@ -1023,6 +1027,23 @@ export async function POST(request: NextRequest) {
         await prisma.eventFeature.createMany({
           data: featuresToCreate,
         });
+      }
+    }
+
+    // Stocker source_url si fourni (URL d'origine de l'import)
+    if (eventData.sourceUrl) {
+      try {
+        await prisma.eventSourceLink.create({
+          data: {
+            eventId: event.id,
+            source: 'INTERNAL', // Source manuelle
+            sourceUrl: eventData.sourceUrl,
+            isPrimary: false,
+          },
+        });
+      } catch (error) {
+        // Logger mais ne pas faire échouer la création
+        console.warn('Erreur lors de la création du lien source:', error);
       }
     }
 

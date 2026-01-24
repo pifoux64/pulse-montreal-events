@@ -86,6 +86,10 @@ const EventForm = ({
   const [eventbriteUrl, setEventbriteUrl] = useState('');
   const [isImportingEventbrite, setIsImportingEventbrite] = useState(false);
   const [eventbriteImportError, setEventbriteImportError] = useState<string | null>(null);
+  const [genericUrl, setGenericUrl] = useState('');
+  const [isImportingUrl, setIsImportingUrl] = useState(false);
+  const [urlImportError, setUrlImportError] = useState<string | null>(null);
+  const [sourceUrl, setSourceUrl] = useState<string | null>(null);
 
   const {
     control,
@@ -173,7 +177,12 @@ const EventForm = ({
   const handleFormSubmit = async (data: EventFormSchema) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(data);
+      // Ajouter sourceUrl si disponible
+      const formDataWithSource = {
+        ...data,
+        sourceUrl: sourceUrl || undefined,
+      };
+      await onSubmit(formDataWithSource as EventFormData);
     } catch (error) {
       console.error('Erreur lors de la soumission:', error);
     } finally {
@@ -186,10 +195,11 @@ const EventForm = ({
     return category?.subCategories || [];
   };
 
-  const fillFormWithImportedData = (importedData: any) => {
+  const fillFormWithImportedData = (importedData: any, sourceUrl?: string) => {
     // Pré-remplir le formulaire avec les données importées
     if (importedData.title) setValue('title', importedData.title);
     if (importedData.description) setValue('description', importedData.description);
+    if (importedData.longDescription) setValue('longDescription', importedData.longDescription);
     if (importedData.startDate) {
       const startDate = new Date(importedData.startDate);
       // Format datetime-local: YYYY-MM-DDTHH:mm
@@ -218,8 +228,20 @@ const EventForm = ({
         postalCode: importedData.location.postalCode || '',
       });
     }
+    // Si venueName est fourni mais pas location.name, l'utiliser
+    if (importedData.venueName && !importedData.location?.name) {
+      const currentLocation = watch('location');
+      setValue('location', {
+        ...currentLocation,
+        name: importedData.venueName,
+      });
+    }
     if (importedData.imageUrl) setValue('imageUrl', importedData.imageUrl);
     if (importedData.ticketUrl) setValue('ticketUrl', importedData.ticketUrl);
+    // Si sourceUrl est fourni et pas de ticketUrl, l'utiliser comme ticketUrl
+    if (sourceUrl && !importedData.ticketUrl) {
+      setValue('ticketUrl', sourceUrl);
+    }
     if (importedData.price) {
       setValue('price', {
         amount: importedData.price.amount || 0,
@@ -263,6 +285,43 @@ const EventForm = ({
     }
   };
 
+  const handleImportUrl = async () => {
+    if (!genericUrl.trim()) {
+      setUrlImportError('Veuillez entrer une URL');
+      return;
+    }
+
+    setIsImportingUrl(true);
+    setUrlImportError(null);
+
+    try {
+      const response = await fetch('/api/import-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: genericUrl.trim() }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de l\'import');
+      }
+
+      fillFormWithImportedData(result.data, genericUrl.trim());
+      
+      // Stocker l'URL source pour l'envoyer lors de la création
+      setSourceUrl(genericUrl.trim());
+
+      // Réinitialiser l'URL après import réussi
+      setGenericUrl('');
+    } catch (error: any) {
+      console.error('Erreur import URL:', error);
+      setUrlImportError(error.message || 'Erreur lors de l\'import depuis cette URL');
+    } finally {
+      setIsImportingUrl(false);
+    }
+  };
+
   const handleImportEventbrite = async () => {
     if (!eventbriteUrl.trim()) {
       setEventbriteImportError('Veuillez entrer une URL Eventbrite');
@@ -299,10 +358,59 @@ const EventForm = ({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-8">
-      {/* Import depuis Facebook et Eventbrite */}
+      {/* Import depuis URL générique */}
       <div className="space-y-4">
-        {/* Import Facebook */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-6">
+        {/* Import URL générique */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <ImageIcon className="w-6 h-6 text-purple-600" />
+            <h3 className="text-lg font-semibold text-gray-900">Coller un lien d'événement</h3>
+          </div>
+          <p className="text-sm text-gray-600 mb-4">
+            Collez l'URL d'un événement public (Facebook, Eventbrite, site de salle, etc.) pour pré-remplir automatiquement le formulaire
+          </p>
+          <div className="flex gap-3">
+            <input
+              type="url"
+              value={genericUrl}
+              onChange={(e) => setGenericUrl(e.target.value)}
+              placeholder="https://www.facebook.com/events/... ou https://www.eventbrite.com/e/... ou toute autre URL d'événement"
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              disabled={isImportingUrl}
+            />
+            <button
+              type="button"
+              onClick={handleImportUrl}
+              disabled={isImportingUrl || !genericUrl.trim()}
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+            >
+              {isImportingUrl ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Import...
+                </>
+              ) : (
+                <>
+                  <ImageIcon className="w-4 h-4" />
+                  Importer
+                </>
+              )}
+            </button>
+          </div>
+          {urlImportError && (
+            <div className="mt-2">
+              <p className="text-sm text-red-600">{urlImportError}</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Ce site ne permet pas l'import automatique. Veuillez copier manuellement les informations et télécharger l'image.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Import depuis Facebook et Eventbrite */}
+        <div className="space-y-4">
+          {/* Import Facebook */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Facebook className="w-6 h-6 text-blue-600" />
             <h3 className="text-lg font-semibold text-gray-900">Importer depuis Facebook</h3>
@@ -383,6 +491,7 @@ const EventForm = ({
           {eventbriteImportError && (
             <p className="mt-2 text-sm text-red-600">{eventbriteImportError}</p>
           )}
+        </div>
         </div>
       </div>
 

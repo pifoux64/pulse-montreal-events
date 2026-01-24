@@ -208,6 +208,7 @@ export interface EventFormData {
   };
   imageUrl?: string;
   ticketUrl?: string;
+  sourceUrl?: string; // URL source de l'import (Facebook, Eventbrite, etc.)
   customFilters: Omit<CustomFilter, 'id' | 'eventId'>[];
   accessibility: AccessibilityInfo;
   targetAudience: string[];

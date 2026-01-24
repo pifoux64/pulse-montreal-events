@@ -162,6 +162,7 @@ export default function PublierPage() {
           neighborhood: undefined, // Sera calculé automatiquement
         },
         url: data.ticketUrl || undefined,
+        sourceUrl: data.sourceUrl || undefined, // URL source de l'import
         priceMin: data.price.isFree ? 0 : Math.round(data.price.amount * 100), // Convertir en cents
         priceMax: data.price.isFree ? 0 : Math.round(data.price.amount * 100),
         currency: data.price.currency || 'CAD',
