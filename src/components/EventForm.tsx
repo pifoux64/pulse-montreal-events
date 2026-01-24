@@ -303,8 +303,11 @@ const EventForm = ({
 
       const result = await response.json();
 
-      if (!result.success) {
-        throw new Error(result.error || 'Erreur lors de l\'import');
+      // Si la réponse n'est pas OK ou si success est false
+      if (!response.ok || !result.success) {
+        const errorMessage = result.error || 'Erreur lors de l\'import';
+        const suggestion = result.suggestion || 'Veuillez copier manuellement les informations.';
+        throw new Error(`${errorMessage}${suggestion ? ` ${suggestion}` : ''}`);
       }
 
       fillFormWithImportedData(result.data, genericUrl.trim());

@@ -169,7 +169,11 @@ export async function POST(request: NextRequest) {
 
     if (!url || typeof url !== 'string') {
       return NextResponse.json(
-        { error: 'URL requise' },
+        { 
+          success: false,
+          error: 'URL requise',
+          suggestion: 'Veuillez fournir une URL valide.',
+        },
         { status: 400 }
       );
     }
@@ -178,7 +182,11 @@ export async function POST(request: NextRequest) {
     const normalizedUrl = normalizeUrl(url);
     if (!normalizedUrl) {
       return NextResponse.json(
-        { error: 'URL invalide' },
+        { 
+          success: false,
+          error: 'URL invalide',
+          suggestion: 'Vérifiez que l\'URL est correctement formatée (ex: https://example.com/event).',
+        },
         { status: 400 }
       );
     }
@@ -187,7 +195,11 @@ export async function POST(request: NextRequest) {
     const validation = validateUrl(normalizedUrl);
     if (!validation.valid) {
       return NextResponse.json(
-        { error: validation.error || 'URL non autorisée' },
+        { 
+          success: false,
+          error: validation.error || 'URL non autorisée',
+          suggestion: 'Seules les URLs publiques HTTP/HTTPS sont autorisées.',
+        },
         { status: 400 }
       );
     }
@@ -227,7 +239,7 @@ export async function POST(request: NextRequest) {
             success: false,
             error: 'Ce site ne permet pas l\'import automatique. Veuillez copier manuellement les informations.',
             suggestion: 'Vous pouvez copier le titre, la description et télécharger l\'image manuellement.',
-          });
+          }, { status: 200 }); // Retourner 200 pour que le client puisse gérer l'erreur gracieusement
         }
         
         return NextResponse.json(
@@ -236,7 +248,7 @@ export async function POST(request: NextRequest) {
             error: `Erreur HTTP ${response.status} lors de la récupération de la page`,
             suggestion: 'Vérifiez que l\'URL est accessible et publique.',
           },
-          { status: response.status }
+          { status: 200 } // Retourner 200 pour que le client puisse gérer l'erreur gracieusement
         );
       }
 
@@ -248,7 +260,7 @@ export async function POST(request: NextRequest) {
           success: false,
           error: 'Timeout lors de la récupération de la page',
           suggestion: 'Le site prend trop de temps à répondre. Veuillez copier manuellement les informations.',
-        });
+        }, { status: 200 }); // Retourner 200 pour que le client puisse gérer l'erreur gracieusement
       }
 
       return NextResponse.json({
@@ -256,7 +268,7 @@ export async function POST(request: NextRequest) {
         error: 'Impossible de récupérer la page',
         suggestion: 'Vérifiez que l\'URL est correcte et accessible. Certains sites bloquent les requêtes automatiques.',
         details: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      });
+      }, { status: 200 }); // Retourner 200 pour que le client puisse gérer l'erreur gracieusement
     }
 
     // Parser les meta tags Open Graph
@@ -273,7 +285,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Aucune donnée d\'événement trouvée sur cette page',
         suggestion: 'Cette page ne contient pas de meta tags Open Graph pour les événements. Veuillez copier manuellement les informations.',
-      });
+      }, { status: 200 }); // Retourner 200 pour que le client puisse gérer l'erreur gracieusement
     }
 
     // Mettre en cache
@@ -303,9 +315,10 @@ export async function POST(request: NextRequest) {
       { 
         success: false,
         error: error.message || 'Erreur lors de l\'import de l\'URL',
+        suggestion: 'Vérifiez que l\'URL est correcte et accessible. Certains sites bloquent les requêtes automatiques.',
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
-      { status: 500 }
+      { status: 200 } // Retourner 200 pour que le client puisse gérer l'erreur gracieusement
     );
   }
 }
