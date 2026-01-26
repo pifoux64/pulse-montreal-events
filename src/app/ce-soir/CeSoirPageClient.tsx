@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import EventCard from '@/components/EventCard';
 import { Event } from '@/types';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -9,6 +10,7 @@ interface CeSoirPageClientProps {
 }
 
 export default function CeSoirPageClient({ events }: CeSoirPageClientProps) {
+  const t = useTranslations('pages');
   const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(events);
 
   return (
@@ -16,7 +18,7 @@ export default function CeSoirPageClient({ events }: CeSoirPageClientProps) {
       {events.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center">
           <p className="text-gray-600">
-            Aucun événement prévu ce soir. Découvrez les événements de demain ou ce week-end.
+            {t('noEventsTonight')}
           </p>
         </div>
       ) : (

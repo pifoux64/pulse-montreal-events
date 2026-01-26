@@ -39,7 +39,9 @@
     "both": "Les deux",
     "events": "événements",
     "followers": "followers",
-    "view": "Voir"
+    "view": "Voir",
+    "page": "Page",
+    "of": "sur"
   },
   "navigation": {
     "home": "Accueil",
@@ -207,6 +209,10 @@
     "searchResults": "Résultats de recherche",
     "filters": "Filtres",
     "sortBy": "Trier par",
+    "notFound": "Événement non trouvé",
+    "notFoundDescription": "Cet événement n'existe pas ou a été supprimé.",
+    "loadingError": "Erreur de chargement",
+    "loadingErrorDescription": "Impossible de charger les informations de cet événement.",
     "sortOptions": {
       "date": "Date",
       "popularity": "Popularité",
@@ -339,7 +345,28 @@
     "weakPassword": "Le mot de passe est trop faible",
     "termsAndConditions": "Conditions d'utilisation",
     "privacyPolicy": "Politique de confidentialité",
-    "agreeToTerms": "J'accepte les conditions d'utilisation"
+    "agreeToTerms": "J'accepte les conditions d'utilisation",
+    "error": {
+      "title": "Erreur d'authentification",
+      "configuration": "Il y a un problème avec la configuration du serveur. Vérifiez que les variables d'environnement sont correctement configurées.",
+      "accessDenied": "Vous n'avez pas l'autorisation d'accéder à cette page.",
+      "verification": "Le lien de vérification a expiré ou a déjà été utilisé.",
+      "oauthSignin": "Erreur lors de la connexion OAuth. Vérifiez que Google OAuth est correctement configuré.",
+      "oauthCallback": "Erreur lors du callback OAuth. Vérifiez les URLs de redirection dans Google Cloud Console.",
+      "oauthCreateAccount": "Impossible de créer le compte. Vérifiez la configuration de la base de données.",
+      "emailCreateAccount": "Impossible de créer le compte avec cet email.",
+      "callback": "Erreur lors du callback d'authentification.",
+      "oauthAccountNotLinked": "Un compte existe déjà avec cette adresse email. Connectez-vous avec votre méthode habituelle.",
+      "emailSignin": "Erreur lors de l'envoi de l'email de connexion.",
+      "credentialsSignin": "Les identifiants fournis sont incorrects.",
+      "sessionRequired": "Vous devez être connecté pour accéder à cette page.",
+      "default": "Une erreur inattendue est survenue. Si le problème persiste, vérifiez la configuration OAuth.",
+      "debugInfo": "Informations de débogage",
+      "debugCheck1": "Vérifiez que GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET sont configurés dans Vercel",
+      "debugCheck2": "Vérifiez que NEXTAUTH_URL correspond à votre domaine (https://pulse-event.ca)",
+      "debugCheck3": "Vérifiez les URLs de redirection dans Google Cloud Console",
+      "debugCheck4": "Consultez le guide: docs/GOOGLE_OAUTH_SETUP.md"
+    }
   },
   "organizer": {
     "dashboard": "Tableau de bord",
@@ -581,5 +608,50 @@
     "sharePrompt": "Envoie cette liste à quelqu'un?",
     "backToHome": "← Retour à l'accueil",
     "errorAddingFavorites": "Erreur lors de l'ajout aux favoris"
+  },
+  "venues": {
+    "notFound": "Salle non trouvée",
+    "searchPlaceholder": "Rechercher une salle, un quartier, un type de lieu...",
+    "title": "Découvrez les meilleurs lieux",
+    "subtitle": "Explorez les salles et lieux emblématiques de Montréal qui accueillent vos événements préférés",
+    "badge": "Salles & Lieux",
+    "loadingError": "Erreur lors du chargement des salles",
+    "noVenuesFound": "Aucune salle trouvée",
+    "venuesFound": "{count} salle trouvée",
+    "venuesFound_plural": "{count} salles trouvées",
+    "clearSearch": "Effacer la recherche",
+    "eventsCount": "{count} événement",
+    "eventsCount_plural": "{count} événements",
+    "capacity": "{count} places",
+    "seeDetails": "Voir les détails",
+    "popular": "Populaire"
+  },
+  "organizers": {
+    "notFound": "Organisateur non trouvé",
+    "searchPlaceholder": "Rechercher un organisateur...",
+    "title": "Organisateurs",
+    "subtitle": "Découvrez les événements organisés par",
+    "subtitleFull": "Découvrez tous les organisateurs d'événements à Montréal",
+    "loadingError": "Erreur lors du chargement des organisateurs",
+    "noOrganizersFound": "Aucun organisateur trouvé",
+    "organizersFound": "{count} organisateur trouvé",
+    "organizersFound_plural": "{count} organisateurs trouvés",
+    "verified": "Vérifié",
+    "eventsCount": "{count} événement",
+    "eventsCount_plural": "{count} événements"
+  },
+  "pages": {
+    "tonight": "Ce soir à Montréal",
+    "weekend": "Ce week-end à Montréal",
+    "tonightDescription": "Découvrez les événements de ce soir à Montréal. Concerts, spectacles, festivals et plus encore.",
+    "weekendDescription": "Découvrez les événements de ce week-end à Montréal. Concerts, spectacles, festivals et plus encore.",
+    "tonightTitle": "Ce soir à Montréal | Pulse",
+    "weekendTitle": "Ce week-end à Montréal | Pulse",
+    "tonightEventsCount": "{count} événement ce soir",
+    "tonightEventsCount_plural": "{count} événements ce soir",
+    "weekendEventsCount": "{count} événement ce week-end",
+    "weekendEventsCount_plural": "{count} événements ce week-end",
+    "noEventsTonight": "Aucun événement prévu ce soir. Découvrez les événements de demain ou ce week-end.",
+    "noEventsWeekend": "Aucun événement prévu ce week-end. Découvrez les événements de la semaine prochaine."
   }
 }

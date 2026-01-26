@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import EventCard from '@/components/EventCard';
 import { Event } from '@/types';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -9,6 +10,7 @@ interface CeWeekendPageClientProps {
 }
 
 export default function CeWeekendPageClient({ events }: CeWeekendPageClientProps) {
+  const t = useTranslations('pages');
   const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(events);
 
   return (
@@ -16,7 +18,7 @@ export default function CeWeekendPageClient({ events }: CeWeekendPageClientProps
       {events.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-12 text-center">
           <p className="text-gray-600">
-            Aucun événement prévu ce week-end. Découvrez les événements de la semaine prochaine.
+            {t('noEventsWeekend')}
           </p>
         </div>
       ) : (

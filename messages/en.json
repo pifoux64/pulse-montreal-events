@@ -40,7 +40,9 @@
     "events": "events",
     "followers": "followers",
     "view": "View",
-    "categories": "Categories"
+    "categories": "Categories",
+    "page": "Page",
+    "of": "of"
   },
   "navigation": {
     "home": "Home",
@@ -207,6 +209,9 @@
     "filters": "Filters",
     "sortBy": "Sort By",
     "notFound": "Event not found",
+    "notFoundDescription": "This event does not exist or has been deleted.",
+    "loadingError": "Loading error",
+    "loadingErrorDescription": "Unable to load event information.",
     "sortOptions": {
       "date": "Date",
       "popularity": "Popularity",
@@ -378,7 +383,28 @@
     "weakPassword": "Password is too weak",
     "termsAndConditions": "Terms and Conditions",
     "privacyPolicy": "Privacy Policy",
-    "agreeToTerms": "I agree to the terms and conditions"
+    "agreeToTerms": "I agree to the terms and conditions",
+    "error": {
+      "title": "Authentication Error",
+      "configuration": "There is a problem with the server configuration. Check that environment variables are correctly configured.",
+      "accessDenied": "You do not have permission to access this page.",
+      "verification": "The verification link has expired or has already been used.",
+      "oauthSignin": "Error during OAuth connection. Check that Google OAuth is correctly configured.",
+      "oauthCallback": "Error during OAuth callback. Check redirect URLs in Google Cloud Console.",
+      "oauthCreateAccount": "Unable to create account. Check database configuration.",
+      "emailCreateAccount": "Unable to create account with this email.",
+      "callback": "Error during authentication callback.",
+      "oauthAccountNotLinked": "An account already exists with this email address. Sign in with your usual method.",
+      "emailSignin": "Error sending login email.",
+      "credentialsSignin": "The provided credentials are incorrect.",
+      "sessionRequired": "You must be logged in to access this page.",
+      "default": "An unexpected error occurred. If the problem persists, check OAuth configuration.",
+      "debugInfo": "Debug Information",
+      "debugCheck1": "Check that GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET are configured in Vercel",
+      "debugCheck2": "Check that NEXTAUTH_URL matches your domain (https://pulse-event.ca)",
+      "debugCheck3": "Check redirect URLs in Google Cloud Console",
+      "debugCheck4": "See guide: docs/GOOGLE_OAUTH_SETUP.md"
+    }
   },
   "organizer": {
     "dashboard": "Dashboard",
@@ -437,15 +463,46 @@
     "tonight": "Tonight in Montreal",
     "weekend": "This Weekend in Montreal",
     "tonightDescription": "Discover tonight's events in Montreal. Concerts, shows, festivals and more.",
-    "weekendDescription": "Discover this weekend's events in Montreal. Concerts, shows, festivals and more."
+    "weekendDescription": "Discover this weekend's events in Montreal. Concerts, shows, festivals and more.",
+    "tonightTitle": "Tonight in Montreal | Pulse",
+    "weekendTitle": "This Weekend in Montreal | Pulse",
+    "tonightEventsCount": "{count} event tonight",
+    "tonightEventsCount_plural": "{count} events tonight",
+    "weekendEventsCount": "{count} event this weekend",
+    "weekendEventsCount_plural": "{count} events this weekend",
+    "noEventsTonight": "No events scheduled tonight. Discover tomorrow's events or this weekend.",
+    "noEventsWeekend": "No events scheduled this weekend. Discover next week's events."
   },
   "venues": {
     "notFound": "Venue not found",
-    "searchPlaceholder": "Search for a venue, neighborhood, type of place..."
+    "searchPlaceholder": "Search for a venue, neighborhood, type of place...",
+    "title": "Discover the best venues",
+    "subtitle": "Explore iconic venues and places in Montreal that host your favorite events",
+    "badge": "Venues & Places",
+    "loadingError": "Error loading venues",
+    "noVenuesFound": "No venues found",
+    "venuesFound": "{count} venue found",
+    "venuesFound_plural": "{count} venues found",
+    "clearSearch": "Clear search",
+    "eventsCount": "{count} event",
+    "eventsCount_plural": "{count} events",
+    "capacity": "{count} seats",
+    "seeDetails": "See details",
+    "popular": "Popular"
   },
   "organizers": {
     "notFound": "Organizer not found",
-    "searchPlaceholder": "Search for an organizer..."
+    "searchPlaceholder": "Search for an organizer...",
+    "title": "Organizers",
+    "subtitle": "Discover events organized by",
+    "subtitleFull": "Discover all event organizers in Montreal",
+    "loadingError": "Error loading organizers",
+    "noOrganizersFound": "No organizers found",
+    "organizersFound": "{count} organizer found",
+    "organizersFound_plural": "{count} organizers found",
+    "verified": "Verified",
+    "eventsCount": "{count} event",
+    "eventsCount_plural": "{count} events"
   },
   "notifications": {
     "eventAdded": "Event added successfully",

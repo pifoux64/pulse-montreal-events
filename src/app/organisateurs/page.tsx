@@ -31,7 +31,8 @@ interface ApiResponse {
 }
 
 export default function OrganisateursPage() {
-  const t = useTranslations('common');
+  const t = useTranslations('organizers');
+  const tCommon = useTranslations('common');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
 
@@ -44,7 +45,7 @@ export default function OrganisateursPage() {
       params.set('pageSize', '20');
       
       const res = await fetch(`/api/organizers?${params.toString()}`);
-      if (!res.ok) throw new Error('Erreur lors du chargement');
+      if (!res.ok) throw new Error(t('loadingError'));
       return res.json();
     },
   });
@@ -61,10 +62,10 @@ export default function OrganisateursPage() {
           {/* En-tête */}
           <div className="mb-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-              Organisateurs
+              {t('title')}
             </h1>
             <p className="text-slate-400 text-lg">
-              Découvrez tous les organisateurs d'événements à Montréal
+              {t('subtitleFull')}
             </p>
           </div>
 
@@ -74,7 +75,7 @@ export default function OrganisateursPage() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Rechercher un organisateur..."
+                placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -92,17 +93,17 @@ export default function OrganisateursPage() {
             </div>
           ) : error ? (
             <div className="text-center py-16">
-              <p className="text-red-400">Erreur lors du chargement des organisateurs</p>
+              <p className="text-red-400">{t('loadingError')}</p>
             </div>
           ) : organizers.length === 0 ? (
             <div className="text-center py-16">
               <Users className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-              <p className="text-slate-400 text-lg">Aucun organisateur trouvé</p>
+              <p className="text-slate-400 text-lg">{t('noOrganizersFound')}</p>
             </div>
           ) : (
             <>
               <div className="mb-4 text-slate-400 text-sm">
-                {total} organisateur{total > 1 ? 's' : ''} trouvé{total > 1 ? 's' : ''}
+                {t('organizersFound', { count: total })}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {organizers.map((organizer) => (
@@ -132,7 +133,7 @@ export default function OrganisateursPage() {
                               {organizer.displayName}
                             </h3>
                             {organizer.verified && (
-                              <CheckCircle className="w-5 h-5 text-blue-400" title="Vérifié" />
+                              <CheckCircle className="w-5 h-5 text-blue-400" title={t('verified')} />
                             )}
                           </div>
                           {organizer.user?.name && (
@@ -143,7 +144,7 @@ export default function OrganisateursPage() {
                       
                       <div className="flex items-center gap-2 text-slate-300 text-sm">
                         <Calendar className="w-4 h-4" />
-                        <span>{organizer._count.events} événement{organizer._count.events > 1 ? 's' : ''}</span>
+                        <span>{t('eventsCount', { count: organizer._count.events })}</span>
                       </div>
                     </div>
                   </Link>
@@ -158,17 +159,17 @@ export default function OrganisateursPage() {
                     disabled={page === 1}
                     className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
                   >
-                    Précédent
+                    {tCommon('previous')}
                   </button>
                   <span className="text-slate-400 px-4">
-                    Page {page} sur {data.totalPages}
+                    {tCommon('page')} {page} {tCommon('of')} {data.totalPages}
                   </span>
                   <button
                     onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
                     disabled={page === data.totalPages}
                     className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
                   >
-                    Suivant
+                    {tCommon('next')}
                   </button>
                 </div>
               )}

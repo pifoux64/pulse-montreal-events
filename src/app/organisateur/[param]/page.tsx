@@ -31,18 +31,21 @@ export async function generateMetadata({ params }: { params: Promise<{ param: st
     },
   });
 
+  const { getTranslations } = await import('next-intl/server');
+  const t = await getTranslations('organizers');
+  
   if (!organizer) {
     return {
-      title: 'Organisateur non trouvé',
+      title: t('notFound'),
     };
   }
 
   return {
-    title: `${organizer.displayName} - Organisateur d'événements à Montréal | Pulse`,
-    description: `Découvrez les événements organisés par ${organizer.displayName} à Montréal.`,
+    title: `${organizer.displayName} - ${t('title')} à Montréal | Pulse`,
+    description: `${t('subtitle')} ${organizer.displayName} à Montréal.`,
     openGraph: {
-      title: `${organizer.displayName} - Organisateur d'événements`,
-      description: `Découvrez les événements organisés par ${organizer.displayName} à Montréal.`,
+      title: `${organizer.displayName} - ${t('title')}`,
+      description: `${t('subtitle')} ${organizer.displayName} à Montréal.`,
       images: organizer.user?.image ? [organizer.user.image] : undefined,
     },
   };

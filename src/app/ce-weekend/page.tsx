@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { getTranslations } from 'next-intl/server';
 import Navigation from '@/components/Navigation';
 import CeWeekendPageClient from './CeWeekendPageClient';
 import { prisma } from '@/lib/prisma';
@@ -6,32 +7,36 @@ import { Event } from '@/types';
 
 export const revalidate = 300; // 5 minutes
 
-export const metadata: Metadata = {
-  title: 'Ce week-end à Montréal | Pulse',
-  description: 'Découvrez les événements de ce week-end à Montréal. Concerts, spectacles, festivals et plus encore.',
-  openGraph: {
-    type: 'website',
-    locale: 'fr_CA',
-    url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/ce-weekend`,
-    title: 'Ce week-end à Montréal | Pulse',
-    description: 'Découvrez les événements de ce week-end à Montréal',
-    siteName: 'Pulse Montréal',
-    images: [
-      {
-        url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-weekend.png`,
-        width: 1200,
-        height: 630,
-        alt: 'Ce week-end à Montréal',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Ce week-end à Montréal | Pulse',
-    description: 'Découvrez les événements de ce week-end à Montréal',
-    images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-weekend.png`],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('pages');
+  
+  return {
+    title: t('weekendTitle'),
+    description: t('weekendDescription'),
+    openGraph: {
+      type: 'website',
+      locale: 'fr_CA',
+      url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/ce-weekend`,
+      title: t('weekendTitle'),
+      description: t('weekendDescription'),
+      siteName: 'Pulse Montréal',
+      images: [
+        {
+          url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-weekend.png`,
+          width: 1200,
+          height: 630,
+          alt: t('weekend'),
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('weekendTitle'),
+      description: t('weekendDescription'),
+      images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-weekend.png`],
+    },
+  };
+}
 
 async function getWeekendEvents(): Promise<Event[]> {
   const montrealTZ = 'America/Montreal';
@@ -139,6 +144,7 @@ async function getWeekendEvents(): Promise<Event[]> {
 }
 
 export default async function CeWeekendPage() {
+  const t = await getTranslations('pages');
   const events = await getWeekendEvents();
 
   return (
@@ -148,10 +154,10 @@ export default async function CeWeekendPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Ce week-end à Montréal
+            {t('weekend')}
           </h1>
           <p className="text-lg text-gray-600">
-            {events.length} événement{events.length > 1 ? 's' : ''} ce week-end
+            {t('weekendEventsCount', { count: events.length })}
           </p>
         </div>
 

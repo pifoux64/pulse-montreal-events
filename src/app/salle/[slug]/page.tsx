@@ -77,11 +77,14 @@ async function fetchVenue(slug: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
+  const { getTranslations } = await import('next-intl/server');
+  const t = await getTranslations('venues');
+  
   const venue = await fetchVenue(slug);
 
   if (!venue) {
     return {
-      title: 'Salle non trouvée | Pulse Montréal',
+      title: `${t('notFound')} | Pulse Montréal`,
     };
   }
 

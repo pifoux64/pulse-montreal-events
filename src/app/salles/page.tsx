@@ -34,7 +34,9 @@ interface ApiResponse {
 }
 
 export default function SallesPage() {
-  const t = useTranslations('common');
+  const t = useTranslations('venues');
+  const tCommon = useTranslations('common');
+  const tErrors = useTranslations('errors');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
 
@@ -47,7 +49,7 @@ export default function SallesPage() {
       params.set('pageSize', '20');
       
       const res = await fetch(`/api/venues?${params.toString()}`);
-      if (!res.ok) throw new Error('Erreur lors du chargement');
+      if (!res.ok) throw new Error(tErrors('loadingError'));
       return res.json();
     },
   });
@@ -70,13 +72,13 @@ export default function SallesPage() {
             <div className="relative">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 mb-6">
                 <Building2 className="w-5 h-5 text-blue-400" />
-                <span className="text-sm font-semibold text-blue-300">Salles & Lieux</span>
+                <span className="text-sm font-semibold text-blue-300">{t('badge')}</span>
               </div>
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 to-purple-200">
-                Découvrez les meilleurs lieux
+                {t('title')}
               </h1>
               <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                Explorez les salles et lieux emblématiques de Montréal qui accueillent vos événements préférés
+                {t('subtitle')}
               </p>
             </div>
           </div>
@@ -89,7 +91,7 @@ export default function SallesPage() {
                 <Search className="absolute left-5 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-blue-400 transition-colors" />
                 <input
                   type="text"
-                  placeholder="Rechercher une salle, un quartier, un type de lieu..."
+                  placeholder={t('searchPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
@@ -108,12 +110,12 @@ export default function SallesPage() {
             </div>
           ) : error ? (
             <div className="text-center py-16">
-              <p className="text-red-400">Erreur lors du chargement des salles</p>
+              <p className="text-red-400">{t('loadingError')}</p>
             </div>
           ) : venues.length === 0 ? (
             <div className="text-center py-16">
               <Building2 className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-              <p className="text-slate-400 text-lg">Aucune salle trouvée</p>
+              <p className="text-slate-400 text-lg">{t('noVenuesFound')}</p>
             </div>
           ) : (
             <>
@@ -121,7 +123,7 @@ export default function SallesPage() {
                 <div className="flex items-center gap-3">
                   <div className="px-4 py-2 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10">
                     <span className="text-slate-300 font-semibold">
-                      {total} {total > 1 ? 'salles' : 'salle'} trouvée{total > 1 ? 's' : ''}
+                      {t('venuesFound', { count: total })}
                     </span>
                   </div>
                   {searchQuery && (
@@ -129,7 +131,7 @@ export default function SallesPage() {
                       onClick={() => setSearchQuery('')}
                       className="text-sm text-slate-400 hover:text-white transition-colors"
                     >
-                      Effacer la recherche
+                      {t('clearSearch')}
                     </button>
                   )}
                 </div>
@@ -169,7 +171,7 @@ export default function SallesPage() {
                       <div className="absolute top-4 right-4 z-10">
                         <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-sm border border-amber-400/50">
                           <TrendingUp className="w-3 h-3 text-white" />
-                          <span className="text-xs font-bold text-white">Populaire</span>
+                          <span className="text-xs font-bold text-white">{t('popular')}</span>
                         </div>
                       </div>
                     )}
@@ -206,14 +208,14 @@ export default function SallesPage() {
                             <div className="p-1.5 rounded-lg bg-white/5">
                               <Calendar className="w-4 h-4 text-emerald-400" />
                             </div>
-                            <span className="font-semibold">{venue._count.events} événement{venue._count.events > 1 ? 's' : ''}</span>
+                            <span className="font-semibold">{t('eventsCount', { count: venue._count.events })}</span>
                           </div>
                           {venue.capacity && (
                             <div className="flex items-center gap-2">
                               <div className="p-1.5 rounded-lg bg-white/5">
                                 <Users className="w-4 h-4 text-purple-400" />
                               </div>
-                              <span className="font-semibold">{venue.capacity.toLocaleString('fr-CA')} places</span>
+                              <span className="font-semibold">{t('capacity', { count: venue.capacity })}</span>
                             </div>
                           )}
                         </div>
@@ -250,7 +252,7 @@ export default function SallesPage() {
                       {/* Footer avec CTA */}
                       <div className="pt-4 border-t border-white/10">
                         <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-400">Voir les détails</span>
+                          <span className="text-xs text-slate-400">{t('seeDetails')}</span>
                           <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <span className="text-blue-300 text-lg">→</span>
                           </div>
@@ -269,17 +271,17 @@ export default function SallesPage() {
                     disabled={page === 1}
                     className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
                   >
-                    Précédent
+                    {tCommon('previous')}
                   </button>
                   <span className="text-slate-400 px-4">
-                    Page {page} sur {data.totalPages}
+                    {tCommon('page')} {page} {tCommon('of')} {data.totalPages}
                   </span>
                   <button
                     onClick={() => setPage(p => Math.min(data.totalPages, p + 1))}
                     disabled={page === data.totalPages}
                     className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
                   >
-                    Suivant
+                    {tCommon('next')}
                   </button>
                 </div>
               )}

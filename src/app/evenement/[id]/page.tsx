@@ -128,8 +128,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   } catch (error) {
     console.error('Erreur metadata event:', error);
     return {
-      title: 'Erreur de chargement',
-      description: 'Impossible de charger les informations de cet événement.',
+      title: t('loadingError'),
+      description: t('loadingErrorDescription'),
     };
   }
 }
