@@ -87,9 +87,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: `${t('notFound')} | Pulse Montréal`,
     };
   }
-
-  const { getTranslations } = await import('next-intl/server');
-  const t = await getTranslations('venues');
   
   const descriptionSnippet = venue.description
     ? venue.description.substring(0, SAFE_DESCRIPTION_LENGTH)
