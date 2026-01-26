@@ -74,23 +74,120 @@ export default function PracticalInfo({
   const duration = calculateDuration();
 
   const getTransportHints = () => {
-    if (!venue?.neighborhood) return null;
-
     const hints: string[] = [];
 
-    // Hints basés sur le quartier (génériques pour éviter la traduction complexe)
-    const neighborhood = venue.neighborhood.toLowerCase();
-    if (neighborhood.includes('plateau') || neighborhood.includes('mile-end')) {
-      hints.push('Metro: Orange Line (Mont-Royal, Sherbrooke)');
-      hints.push('Parking: Limited, prefer public transit');
-    } else if (neighborhood.includes('village') || neighborhood.includes('centre-ville')) {
-      hints.push('Metro: Green and Orange Lines (Beaudry, Berri-UQAM)');
-      hints.push('Parking: Metered parking available');
-    } else if (neighborhood.includes('petite-italie') || neighborhood.includes('rosemont')) {
-      hints.push('Metro: Blue Line (Jean-Talon, De Castelnau)');
-      hints.push('Bus: Lines 18, 55');
-    } else {
-      hints.push('Check public transit options on STM.info');
+    // Si on a un quartier, utiliser la logique basée sur le nom
+    if (venue?.neighborhood) {
+      const neighborhood = venue.neighborhood.toLowerCase();
+      
+      // Plateau Mont-Royal / Mile-End
+      if (neighborhood.includes('plateau') || neighborhood.includes('mile-end') || neighborhood.includes('mile end')) {
+        hints.push('Métro: Ligne Orange (Mont-Royal, Sherbrooke)');
+        hints.push('Stationnement: Limité, privilégier le transport en commun');
+        return hints;
+      }
+      
+      // Village / Centre-ville
+      if (neighborhood.includes('village') || neighborhood.includes('centre-ville') || neighborhood.includes('centre ville') || neighborhood.includes('downtown')) {
+        hints.push('Métro: Lignes Verte et Orange (Beaudry, Berri-UQAM)');
+        hints.push('Stationnement: Parcomètres disponibles');
+        return hints;
+      }
+      
+      // Petite-Italie / Rosemont
+      if (neighborhood.includes('petite-italie') || neighborhood.includes('petite italie') || neighborhood.includes('rosemont')) {
+        hints.push('Métro: Ligne Bleue (Jean-Talon, De Castelnau)');
+        hints.push('Autobus: Lignes 18, 55');
+        return hints;
+      }
+      
+      // Villeray
+      if (neighborhood.includes('villeray')) {
+        hints.push('Métro: Ligne Orange (Jarry, Crémazie)');
+        hints.push('Autobus: Lignes 30, 31, 45');
+        return hints;
+      }
+      
+      // Hochelaga-Maisonneuve
+      if (neighborhood.includes('hochelaga') || neighborhood.includes('maisonneuve')) {
+        hints.push('Métro: Ligne Verte (Préfontaine, Viau, Pie-IX)');
+        hints.push('Autobus: Lignes 25, 29, 85');
+        return hints;
+      }
+      
+      // Griffintown / Sud-Ouest
+      if (neighborhood.includes('griffintown') || neighborhood.includes('sud-ouest') || neighborhood.includes('sud ouest')) {
+        hints.push('Métro: Ligne Orange (Lucien-L\'Allier, Bonaventure)');
+        hints.push('Autobus: Lignes 61, 211');
+        return hints;
+      }
+      
+      // Outremont
+      if (neighborhood.includes('outremont')) {
+        hints.push('Métro: Ligne Bleue (Outremont, Édouard-Montpetit)');
+        hints.push('Autobus: Lignes 51, 129');
+        return hints;
+      }
+      
+      // Verdun
+      if (neighborhood.includes('verdun')) {
+        hints.push('Métro: Ligne Verte (Verdun, De l\'Église)');
+        hints.push('Autobus: Lignes 37, 58, 107');
+        return hints;
+      }
+      
+      // Ahuntsic
+      if (neighborhood.includes('ahuntsic')) {
+        hints.push('Métro: Ligne Orange (Sauvé, Henri-Bourassa)');
+        hints.push('Autobus: Lignes 30, 31, 121');
+        return hints;
+      }
+      
+      // Côte-des-Neiges
+      if (neighborhood.includes('côte-des-neiges') || neighborhood.includes('cote-des-neiges') || neighborhood.includes('côte des neiges')) {
+        hints.push('Métro: Ligne Bleue (Côte-des-Neiges, Université-de-Montréal)');
+        hints.push('Autobus: Lignes 51, 165');
+        return hints;
+      }
+      
+      // Parc-Extension
+      if (neighborhood.includes('parc-extension') || neighborhood.includes('parc extension')) {
+        hints.push('Métro: Ligne Bleue (Parc, Acadie)');
+        hints.push('Autobus: Lignes 16, 92');
+        return hints;
+      }
+    }
+
+    // Si on a des coordonnées mais pas de quartier, essayer de déterminer par la position
+    if (venue?.lat && venue?.lon) {
+      const lat = venue.lat;
+      const lon = venue.lon;
+      
+      // Plateau Mont-Royal (approximatif)
+      if (lat >= 45.515 && lat <= 45.535 && lon >= -73.59 && lon <= -73.57) {
+        hints.push('Métro: Ligne Orange (Mont-Royal, Sherbrooke)');
+        hints.push('Stationnement: Limité, privilégier le transport en commun');
+        return hints;
+      }
+      
+      // Centre-ville (approximatif)
+      if (lat >= 45.495 && lat <= 45.515 && lon >= -73.57 && lon <= -73.55) {
+        hints.push('Métro: Lignes Verte et Orange (Beaudry, Berri-UQAM)');
+        hints.push('Stationnement: Parcomètres disponibles');
+        return hints;
+      }
+      
+      // Petite-Italie / Rosemont (approximatif)
+      if (lat >= 45.535 && lat <= 45.555 && lon >= -73.61 && lon <= -73.59) {
+        hints.push('Métro: Ligne Bleue (Jean-Talon, De Castelnau)');
+        hints.push('Autobus: Lignes 18, 55');
+        return hints;
+      }
+    }
+
+    // Si aucune correspondance, message générique
+    if (hints.length === 0) {
+      hints.push('Vérifier les options de transport en commun sur STM.info');
     }
 
     return hints;
