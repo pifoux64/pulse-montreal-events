@@ -3,12 +3,13 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import ModernLoader from '@/components/ModernLoader';
 import { MessageCircle, Send, ArrowLeft, Users } from 'lucide-react';
 import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr, enUS } from 'date-fns/locale';
 
 interface Message {
   id: string;
@@ -43,10 +44,16 @@ interface Conversation {
 }
 
 function MessagesPageContent() {
+  const t = useTranslations('navigation.messages');
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const selectedUserId = searchParams.get('userId');
+  
+  // Détecter la locale pour date-fns
+  const locale = typeof window !== 'undefined' 
+    ? (document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] === 'en' ? enUS : fr)
+    : fr;
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -70,7 +77,10 @@ function MessagesPageContent() {
         if (eventId && eventTitle) {
           const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
           const eventUrl = `${baseUrl}/evenement/${eventId}`;
-          const defaultMessage = `Viens à cet événement avec moi ! ${decodeURIComponent(eventTitle)}\n\n${eventUrl}`;
+          const defaultMessage = t('comeToEvent', { 
+            title: decodeURIComponent(eventTitle),
+            url: eventUrl
+          });
           setMessageContent(defaultMessage);
         }
       }
@@ -179,8 +189,8 @@ function MessagesPageContent() {
               <MessageCircle className="w-8 h-8 text-blue-400" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Messages</h1>
-              <p className="text-slate-400 text-sm">Discute avec les autres pulsers</p>
+              <h1 className="text-3xl font-bold text-white">{t('title')}</h1>
+              <p className="text-slate-400 text-sm">{t('subtitle')}</p>
             </div>
           </div>
 
@@ -191,7 +201,7 @@ function MessagesPageContent() {
                 {conversations.length === 0 ? (
                   <div className="p-8 text-center">
                     <Users className="w-12 h-12 text-slate-500 mx-auto mb-4" />
-                    <p className="text-slate-400">Aucune conversation</p>
+                    <p className="text-slate-400">{t('noConversations')}</p>
                   </div>
                 ) : (
                   <div>
@@ -208,7 +218,7 @@ function MessagesPageContent() {
                             {conversation.user.image ? (
                               <Image
                                 src={conversation.user.image}
-                                alt={conversation.user.name || 'User'}
+                                alt={conversation.user.name || t('user')}
                                 fill
                                 className="object-cover"
                               />
@@ -221,7 +231,7 @@ function MessagesPageContent() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between mb-1">
                               <h3 className="font-semibold text-white truncate">
-                                {conversation.user.name || 'Utilisateur'}
+                                {conversation.user.name || t('user')}
                               </h3>
                               {conversation.unreadCount > 0 && (
                                 <span className="bg-blue-600 text-white text-xs font-bold rounded-full px-2 py-0.5">
@@ -230,13 +240,13 @@ function MessagesPageContent() {
                               )}
                             </div>
                             <p className="text-sm text-slate-400 truncate">
-                              {conversation.lastMessage.isFromMe ? 'Vous: ' : ''}
+                              {conversation.lastMessage.isFromMe ? t('you') : ''}
                               {conversation.lastMessage.content}
                             </p>
                             <p className="text-xs text-slate-500 mt-1">
                               {formatDistanceToNow(new Date(conversation.lastMessage.createdAt), {
                                 addSuffix: true,
-                                locale: fr,
+                                locale,
                               })}
                             </p>
                           </div>
@@ -257,7 +267,7 @@ function MessagesPageContent() {
                         {selectedUser.user.image ? (
                           <Image
                             src={selectedUser.user.image}
-                            alt={selectedUser.user.name || 'User'}
+                            alt={selectedUser.user.name || t('user')}
                             fill
                             className="object-cover"
                           />
@@ -269,7 +279,7 @@ function MessagesPageContent() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-white">
-                          {selectedUser.user.name || 'Utilisateur'}
+                          {selectedUser.user.name || t('user')}
                         </h3>
                       </div>
                     </div>
@@ -294,7 +304,7 @@ function MessagesPageContent() {
                               <p className="text-xs mt-1 opacity-70">
                                 {formatDistanceToNow(new Date(message.createdAt), {
                                   addSuffix: true,
-                                  locale: fr,
+                                  locale,
                                 })}
                               </p>
                             </div>
@@ -317,7 +327,7 @@ function MessagesPageContent() {
                               handleSendMessage();
                             }
                           }}
-                          placeholder="Tapez un message..."
+                          placeholder={t('typeMessage')}
                           className="flex-1 px-4 py-2 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <button
@@ -334,7 +344,7 @@ function MessagesPageContent() {
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-center">
                       <MessageCircle className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-                      <p className="text-slate-400">Sélectionnez une conversation</p>
+                      <p className="text-slate-400">{t('selectConversation')}</p>
                     </div>
                   </div>
                 )}

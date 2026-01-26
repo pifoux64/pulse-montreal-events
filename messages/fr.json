@@ -100,6 +100,24 @@
     "eventsCount_plural": "{count} événements",
     "viewVenue": "Voir la salle",
     "message": "Message",
+    "social": {
+      "title": "Social",
+      "subtitle": "Découvrez où vont vos amis et les événements tendance",
+      "myFriends": "Mes amis",
+      "trending": "Tendance",
+      "invitations": "Invitations"
+    },
+    "messages": {
+      "title": "Messages",
+      "subtitle": "Discute avec les autres pulsers",
+      "loading": "Chargement des messages...",
+      "noConversations": "Aucune conversation",
+      "selectConversation": "Sélectionnez une conversation",
+      "typeMessage": "Tapez un message...",
+      "you": "Vous: ",
+      "user": "Utilisateur",
+      "comeToEvent": "Viens à cet événement avec moi ! {title}\n\n{url}"
+    },
     "venues": "Salles",
     "organizers": "Organisateurs",
     "explore": "Explorer",

@@ -101,6 +101,24 @@
     "eventsCount_plural": "{count} events",
     "viewVenue": "View venue",
     "message": "Message",
+    "social": {
+      "title": "Social",
+      "subtitle": "Discover where your friends are going and trending events",
+      "myFriends": "My Friends",
+      "trending": "Trending",
+      "invitations": "Invitations"
+    },
+    "messages": {
+      "title": "Messages",
+      "subtitle": "Chat with other pulsers",
+      "loading": "Loading messages...",
+      "noConversations": "No conversations",
+      "selectConversation": "Select a conversation",
+      "typeMessage": "Type a message...",
+      "you": "You: ",
+      "user": "User",
+      "comeToEvent": "Come to this event with me! {title}\n\n{url}"
+    },
     "venues": "Venues",
     "organizers": "Organizers",
     "explore": "Explore"

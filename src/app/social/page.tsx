@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import ModernLoader from '@/components/ModernLoader';
 import FriendsEvents from '@/components/social/FriendsEvents';
@@ -11,6 +12,7 @@ import EventInvitations from '@/components/social/EventInvitations';
 import { Users, TrendingUp, Mail } from 'lucide-react';
 
 export default function SocialPage() {
+  const t = useTranslations('navigation.social');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'friends' | 'trending' | 'invitations'>('friends');
@@ -37,10 +39,10 @@ export default function SocialPage() {
         {/* En-tête */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-white mb-2">
-            Social
+            {t('title')}
           </h1>
           <p className="text-slate-300">
-            Découvrez où vont vos amis et les événements tendance
+            {t('subtitle')}
           </p>
         </div>
 
@@ -55,7 +57,7 @@ export default function SocialPage() {
             }`}
           >
             <Users className="w-5 h-5" />
-            Mes amis
+            {t('myFriends')}
           </button>
           <button
             onClick={() => setActiveTab('trending')}
@@ -66,7 +68,7 @@ export default function SocialPage() {
             }`}
           >
             <TrendingUp className="w-5 h-5" />
-            Tendance
+            {t('trending')}
           </button>
           <button
             onClick={() => setActiveTab('invitations')}
@@ -77,7 +79,7 @@ export default function SocialPage() {
             }`}
           >
             <Mail className="w-5 h-5" />
-            Invitations
+            {t('invitations')}
           </button>
         </div>
 
