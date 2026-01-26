@@ -72,7 +72,9 @@ export default function DevErrorSuppressor() {
           'cz-shortcut-listen',
           'ethereum',
           'chrome-extension',
-          'Extension context'
+          'Extension context',
+          '[Turbopack HMR] Expected module to match pattern',
+          'Turbopack HMR'
         ];
 
         if (suppressedWarnings.some(warning => message.includes(warning))) {
