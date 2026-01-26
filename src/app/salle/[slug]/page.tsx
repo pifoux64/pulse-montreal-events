@@ -275,18 +275,13 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                 {venue.imageUrl && (
                   <div className="mb-8 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
                     <VenueImage
-                      src={
-                        venue.imageUrl.startsWith('http') && 
-                        !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
-                          ? `/api/image-proxy?url=${encodeURIComponent(venue.imageUrl)}`
-                          : venue.imageUrl
-                      }
+                      src={venue.imageUrl}
                       alt={venue.name}
                       width={1200}
                       height={600}
                       className="w-full h-[400px] object-cover"
                       priority
-                      unoptimized={venue.imageUrl.startsWith('http') && !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')}
+                      unoptimized={false}
                     />
                   </div>
                 )}

@@ -146,17 +146,12 @@ export default function SallesPage() {
                     {venue.imageUrl ? (
                       <div className="relative h-48 overflow-hidden">
                         <VenueImage
-                          src={
-                            venue.imageUrl.startsWith('http') && 
-                            !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
-                              ? `/api/image-proxy?url=${encodeURIComponent(venue.imageUrl)}`
-                              : venue.imageUrl
-                          }
+                          src={venue.imageUrl}
                           alt={venue.name}
                           fill
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover group-hover:scale-110 transition-transform duration-500"
-                          unoptimized={venue.imageUrl.startsWith('http') && !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')}
+                          unoptimized={false}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none"></div>
                       </div>
