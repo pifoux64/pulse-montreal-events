@@ -179,6 +179,10 @@
       "assistantCreation": "Creation Assistant",
       "contentGenerator": "Content Generator",
       "budgetCalculator": "Budget Calculator",
+      "flyerGenerator": "Flyer Generator",
+      "createFlyer": "Create flyer",
+      "selectEventForFlyer": "Select an event",
+      "noEventsForFlyer": "Create an event first to generate a flyer",
       "importICS": "Import ICS",
       "icsAvailablePro": "ICS import is available with PRO plan. Upgrade to import your events in bulk.",
       "clickToSelectICS": "Click to select a .ics file",
@@ -1000,5 +1004,36 @@
     "sharePrompt": "Send this list to someone?",
     "backToHome": "← Back to home",
     "errorAddingFavorites": "Error adding to favorites"
+  },
+  "flyer": {
+    "title": "AI Flyer Generator",
+    "description": "Create professional flyers for your events with artificial intelligence. Choose the format and style, and download your social media-ready flyer.",
+    "selectFormat": "Flyer format",
+    "selectStyle": "Visual style",
+    "formats": {
+      "story": "Instagram Story",
+      "square": "Square",
+      "cover": "Facebook Cover"
+    },
+    "styles": {
+      "reggae": "Reggae / Dub",
+      "reggaeDesc": "Warm colors, tropical vibes",
+      "techno": "Techno / Electronic",
+      "technoDesc": "Neon lights, club atmosphere",
+      "family": "Family",
+      "familyDesc": "Bright colors, cheerful atmosphere",
+      "culture": "Culture",
+      "cultureDesc": "Elegant and refined design",
+      "minimal": "Minimal",
+      "minimalDesc": "Clean and modern design"
+    },
+    "includeQR": "Include QR code",
+    "includeQRDesc": "The QR code redirects to the event page on Pulse",
+    "generate": "Generate flyer",
+    "generating": "Generating...",
+    "preview": "Preview",
+    "download": "Download",
+    "regenerate": "Regenerate",
+    "flyerPreview": "Flyer preview"
   }
 }

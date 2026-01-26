@@ -179,6 +179,10 @@
       "assistantCreation": "Assistant Création",
       "contentGenerator": "Générateur Contenu",
       "budgetCalculator": "Calculateur Budget",
+      "flyerGenerator": "Générateur Flyer",
+      "createFlyer": "Créer un flyer",
+      "selectEventForFlyer": "Sélectionner un événement",
+      "noEventsForFlyer": "Créez d'abord un événement pour générer un flyer",
       "importICS": "Import ICS",
       "icsAvailablePro": "L'import ICS est disponible avec le plan PRO. Upgradez pour importer vos événements en masse.",
       "clickToSelectICS": "Cliquez pour sélectionner un fichier .ics",
@@ -999,5 +1003,36 @@
     "weekendEventsCount_plural": "{count} événements ce week-end",
     "noEventsTonight": "Aucun événement prévu ce soir. Découvrez les événements de demain ou ce week-end.",
     "noEventsWeekend": "Aucun événement prévu ce week-end. Découvrez les événements de la semaine prochaine."
+  },
+  "flyer": {
+    "title": "Générateur de Flyer IA",
+    "description": "Créez des flyers professionnels pour vos événements avec l'intelligence artificielle. Choisissez le format et le style, et téléchargez votre flyer prêt pour les réseaux sociaux.",
+    "selectFormat": "Format du flyer",
+    "selectStyle": "Style visuel",
+    "formats": {
+      "story": "Story Instagram",
+      "square": "Carré",
+      "cover": "Couverture Facebook"
+    },
+    "styles": {
+      "reggae": "Reggae / Dub",
+      "reggaeDesc": "Couleurs chaudes, ambiance tropicale",
+      "techno": "Techno / Électronique",
+      "technoDesc": "Lumières néon, ambiance club",
+      "family": "Famille",
+      "familyDesc": "Couleurs vives, ambiance joyeuse",
+      "culture": "Culture",
+      "cultureDesc": "Design élégant et raffiné",
+      "minimal": "Minimal",
+      "minimalDesc": "Design épuré et moderne"
+    },
+    "includeQR": "Inclure un QR code",
+    "includeQRDesc": "Le QR code redirige vers la page de l'événement sur Pulse",
+    "generate": "Générer le flyer",
+    "generating": "Génération en cours...",
+    "preview": "Aperçu",
+    "download": "Télécharger",
+    "regenerate": "Régénérer",
+    "flyerPreview": "Aperçu du flyer"
   }
 }

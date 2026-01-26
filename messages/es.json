@@ -588,6 +588,10 @@
     "assistantCreation": "Asistente de Creación",
     "contentGenerator": "Generador de Contenido",
     "budgetCalculator": "Calculadora de Presupuesto",
+    "flyerGenerator": "Generador de Flyer",
+    "createFlyer": "Crear flyer",
+    "selectEventForFlyer": "Seleccionar un evento",
+    "noEventsForFlyer": "Crea un evento primero para generar un flyer",
     "importICS": "Importar ICS",
     "icsAvailablePro": "La importación ICS está disponible con el plan PRO. Actualiza para importar tus eventos en masa.",
     "clickToSelectICS": "Haz clic para seleccionar un archivo .ics",
@@ -818,6 +822,37 @@
       "legalNotice": "Aviso legal",
       "termsOfService": "Términos de servicio"
     }
+  },
+  "flyer": {
+    "title": "Generador de Flyer IA",
+    "description": "Crea flyers profesionales para tus eventos con inteligencia artificial. Elige el formato y el estilo, y descarga tu flyer listo para redes sociales.",
+    "selectFormat": "Formato del flyer",
+    "selectStyle": "Estilo visual",
+    "formats": {
+      "story": "Story de Instagram",
+      "square": "Cuadrado",
+      "cover": "Portada de Facebook"
+    },
+    "styles": {
+      "reggae": "Reggae / Dub",
+      "reggaeDesc": "Colores cálidos, ambiente tropical",
+      "techno": "Techno / Electrónica",
+      "technoDesc": "Luces de neón, ambiente de club",
+      "family": "Familiar",
+      "familyDesc": "Colores brillantes, ambiente alegre",
+      "culture": "Cultura",
+      "cultureDesc": "Diseño elegante y refinado",
+      "minimal": "Minimalista",
+      "minimalDesc": "Diseño limpio y moderno"
+    },
+    "includeQR": "Incluir código QR",
+    "includeQRDesc": "El código QR redirige a la página del evento en Pulse",
+    "generate": "Generar flyer",
+    "generating": "Generando...",
+    "preview": "Vista previa",
+    "download": "Descargar",
+    "regenerate": "Regenerar",
+    "flyerPreview": "Vista previa del flyer"
   }
 }
 

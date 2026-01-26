@@ -28,6 +28,7 @@ import {
 import EventAssistant from '@/components/ai/EventAssistant';
 import ContentGenerator from '@/components/ai/ContentGenerator';
 import BudgetCalculator from '@/components/ai/BudgetCalculator';
+import FlyerGenerator from '@/components/flyer/FlyerGenerator';
 import SubscriptionManager from '@/components/subscription/SubscriptionManager';
 import Link from 'next/link';
 import { format, subDays } from 'date-fns';
@@ -75,7 +76,8 @@ export default function OrganisateurDashboard() {
   const [showImportICS, setShowImportICS] = useState(false);
   const [icsPreview, setIcsPreview] = useState<any[]>([]);
   const [showAITools, setShowAITools] = useState(false);
-  const [activeAITool, setActiveAITool] = useState<'assistant' | 'content' | 'budget'>('assistant');
+  const [activeAITool, setActiveAITool] = useState<'assistant' | 'content' | 'budget' | 'flyer'>('assistant');
+  const [selectedEventForFlyer, setSelectedEventForFlyer] = useState<Event | null>(null);
   
   // Détecter la locale pour date-fns
   const dateLocale = typeof window !== 'undefined' 
@@ -409,6 +411,21 @@ export default function OrganisateurDashboard() {
                 >
                   {t('budgetCalculator')}
                 </button>
+                <button
+                  onClick={() => {
+                    setActiveAITool('flyer');
+                    if (events.length > 0 && !selectedEventForFlyer) {
+                      setSelectedEventForFlyer(events[0]);
+                    }
+                  }}
+                  className={`px-4 py-2 font-medium transition-colors ${
+                    activeAITool === 'flyer'
+                      ? 'text-sky-400 border-b-2 border-sky-400'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {t('flyerGenerator')}
+                </button>
               </div>
 
               {/* Content */}
@@ -421,6 +438,45 @@ export default function OrganisateurDashboard() {
                 )}
                 {activeAITool === 'budget' && (
                   <BudgetCalculator />
+                )}
+                {activeAITool === 'flyer' && (
+                  <div className="space-y-4">
+                    {events.length === 0 ? (
+                      <div className="text-center py-8 text-slate-400">
+                        <p>{t('noEventsForFlyer')}</p>
+                      </div>
+                    ) : (
+                      <>
+                        {events.length > 1 && (
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-2">
+                              {t('selectEventForFlyer')}
+                            </label>
+                            <select
+                              value={selectedEventForFlyer?.id || ''}
+                              onChange={(e) => {
+                                const event = events.find(ev => ev.id === e.target.value);
+                                setSelectedEventForFlyer(event || null);
+                              }}
+                              className="w-full px-4 py-2 bg-slate-900/50 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-400"
+                            >
+                              {events.map((event) => (
+                                <option key={event.id} value={event.id}>
+                                  {event.title} - {format(new Date(event.startAt), 'PP', { locale: dateLocale })}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        {selectedEventForFlyer && (
+                          <FlyerGenerator
+                            eventId={selectedEventForFlyer.id}
+                            eventTitle={selectedEventForFlyer.title}
+                          />
+                        )}
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -587,6 +643,17 @@ export default function OrganisateurDashboard() {
                         title={t('edit')}
                       >
                         <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAITools(true);
+                          setActiveAITool('flyer');
+                          setSelectedEventForFlyer(event);
+                        }}
+                        className="p-2 text-purple-400 hover:text-purple-300 hover:bg-purple-400/10 rounded-lg transition-colors"
+                        title={t('createFlyer')}
+                      >
+                        <Upload className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteEvent(event.id)}
