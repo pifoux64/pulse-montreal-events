@@ -50,6 +50,12 @@ async function downloadImageBuffer(url: string): Promise<Buffer> {
           .catch(reject);
       }
       
+      if (response.statusCode === 429) {
+        // Rate limiting - attendre plus longtemps
+        reject(new Error(`Rate limited (429) for ${url}. Please wait and retry.`));
+        return;
+      }
+      
       if (response.statusCode !== 200) {
         reject(new Error(`Failed to download ${url}: ${response.statusCode}`));
         return;
@@ -222,8 +228,26 @@ async function downloadVenueImages() {
       console.log(`⬇️  Téléchargement: ${venue.name}...`);
       
       try {
-        // Télécharger l'image en mémoire
-        const imageBuffer = await downloadImageBuffer(originalUrl);
+        // Télécharger l'image en mémoire avec retry en cas de rate limiting
+        let imageBuffer: Buffer;
+        let retries = 0;
+        const maxRetries = 3;
+        
+        while (retries < maxRetries) {
+          try {
+            imageBuffer = await downloadImageBuffer(originalUrl);
+            break; // Succès
+          } catch (error) {
+            if (error instanceof Error && error.message.includes('429') && retries < maxRetries - 1) {
+              retries++;
+              const waitTime = 10000 * retries; // 10s, 20s, 30s
+              console.log(`   ⏳ Rate limited, attente de ${waitTime/1000}s avant retry ${retries}/${maxRetries}...`);
+              await new Promise(resolve => setTimeout(resolve, waitTime));
+              continue;
+            }
+            throw error; // Réessayer avec thumbnail ou échouer
+          }
+        }
         
         // Déterminer le type MIME
         const extension = path.extname(fileName).toLowerCase();
@@ -232,7 +256,7 @@ async function downloadVenueImages() {
                            extension === '.webp' ? 'image/webp' : 'image/jpeg';
         
         // Uploader vers Supabase Storage
-        const supabaseUrl = await uploadToSupabase(fileName, imageBuffer, contentType);
+        const supabaseUrl = await uploadToSupabase(fileName, imageBuffer!, contentType);
         
         updates.push({
           id: venue.id,
@@ -268,7 +292,8 @@ async function downloadVenueImages() {
       }
       
       // Pause plus longue pour éviter le rate limiting (429)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Wikimedia limite à ~200 requêtes par minute, donc ~300ms entre chaque
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
     } catch (error) {
       console.error(`❌ Erreur pour ${venue.name}:`, error instanceof Error ? error.message : error);
