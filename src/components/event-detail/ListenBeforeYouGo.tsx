@@ -11,6 +11,7 @@ interface ListenBeforeYouGoProps {
   youtubeUrl?: string | null;
   isMusicEvent?: boolean;
   eventTags?: Array<{ category: string; value: string }> | null;
+  category?: string | null;
 }
 
 type Platform = 'spotify' | 'soundcloud' | 'mixcloud' | 'youtube';
@@ -50,18 +51,32 @@ const platforms: Record<Platform, PlatformInfo> = {
 };
 
 /**
- * Détecte si un événement est musical basé sur les tags
+ * Détecte si un événement est musical basé sur les tags ou la catégorie
  */
-function isMusicEvent(eventTags?: Array<{ category: string; value: string }> | null): boolean {
-  if (!eventTags) return false;
+function isMusicEvent(
+  eventTags?: Array<{ category: string; value: string }> | null,
+  category?: string | null
+): boolean {
+  // Si on a des tags, vérifier s'il y a des tags musicaux
+  if (eventTags && eventTags.length > 0) {
+    const musicGenres = ['techno', 'house', 'electronic', 'reggae', 'dub', 'hip_hop', 'rock', 'jazz', 'afrobeat', 'latin', 'pop', 'indie', 'folk', 'blues', 'country', 'metal', 'punk', 'rap', 'r&b', 'soul', 'funk', 'disco', 'ambient', 'drum_and_bass', 'dubstep', 'trance', 'hardcore'];
+    const musicTypes = ['concert', 'dj_set', 'soiree_club', 'festival', 'live_music', 'show', 'performance'];
+    
+    const hasMusicTag = eventTags.some(tag => 
+      (tag.category === 'genre' && musicGenres.includes(tag.value)) ||
+      (tag.category === 'type' && musicTypes.includes(tag.value))
+    );
+    
+    if (hasMusicTag) return true;
+  }
   
-  const musicGenres = ['techno', 'house', 'electronic', 'reggae', 'dub', 'hip_hop', 'rock', 'jazz', 'afrobeat', 'latin'];
-  const musicTypes = ['concert', 'dj_set', 'soiree_club', 'festival'];
+  // Sinon, vérifier la catégorie
+  if (category) {
+    const musicCategories = ['MUSIC', 'music', 'Music'];
+    return musicCategories.includes(category);
+  }
   
-  return eventTags.some(tag => 
-    (tag.category === 'genre' && musicGenres.includes(tag.value)) ||
-    (tag.category === 'type' && musicTypes.includes(tag.value))
-  );
+  return false;
 }
 
 /**
@@ -141,8 +156,11 @@ export default function ListenBeforeYouGo({
     availablePlatforms.length > 0 ? availablePlatforms[0] : null
   );
   
-  // Ne rien afficher si ce n'est pas un événement musical ou s'il n'y a pas de plateformes
-  if (!musicEvent || availablePlatforms.length === 0) {
+  // Si on a des URLs mais que ce n'est pas détecté comme musical, afficher quand même
+  // (l'utilisateur a explicitement ajouté des URLs musicales)
+  const shouldShow = availablePlatforms.length > 0 && (musicEvent || availablePlatforms.length > 0);
+  
+  if (!shouldShow) {
     return null;
   }
   

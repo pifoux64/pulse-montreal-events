@@ -53,21 +53,29 @@ interface EventPageClientProps {
 export default function EventPageClient({ event, isOwner, isAdmin }: EventPageClientProps) {
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
 
-  // Récupérer la localisation utilisateur
+  // Récupérer la localisation utilisateur (avec gestion des permissions)
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          });
-        },
-        () => {
-          // Ignore errors silently
-        }
-      );
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      return;
     }
+    
+    // Vérifier si la géolocalisation est disponible et autorisée
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        });
+      },
+      (error) => {
+        // Ignore errors silently (permissions denied, timeout, etc.)
+        // Ne pas logger pour éviter les warnings dans la console
+      },
+      {
+        timeout: 5000,
+        maximumAge: 300000, // Cache 5 minutes
+      }
+    );
   }, []);
 
   // Extraire lineup, longDescription et URLs musicales depuis EventFeature
@@ -132,6 +140,7 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
           mixcloudUrl={mixcloudUrl}
           youtubeUrl={youtubeUrl}
           eventTags={event.eventTags}
+          category={event.category}
         />
 
         {/* Main content grid */}

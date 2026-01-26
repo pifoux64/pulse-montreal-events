@@ -35,19 +35,27 @@ export default function PracticalInfo({
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude,
-          });
-        },
-        () => {
-          // Ignore errors silently
-        }
-      );
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      return;
     }
+    
+    // Vérifier si la géolocalisation est disponible et autorisée
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude,
+        });
+      },
+      (error) => {
+        // Ignore errors silently (permissions denied, timeout, etc.)
+        // Ne pas logger pour éviter les warnings dans la console
+      },
+      {
+        timeout: 5000,
+        maximumAge: 300000, // Cache 5 minutes
+      }
+    );
   }, []);
 
   const calculateDuration = () => {
