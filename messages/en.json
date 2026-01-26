@@ -594,7 +594,18 @@
     "organizersFound_plural": "{count} organizers found",
     "verified": "Verified",
     "eventsCount": "{count} event",
-    "eventsCount_plural": "{count} events"
+    "eventsCount_plural": "{count} events",
+    "eventOrganizer": "Event organizer",
+    "events": "Events",
+    "upcoming": "Upcoming",
+    "followers": "Followers",
+    "upcomingEvents": "Upcoming events",
+    "event": "event",
+    "event_plural": "events",
+    "eventCategories": "Event categories",
+    "noUpcomingEvents": "No upcoming events",
+    "noUpcomingEventsDescription": "This organizer doesn't have any scheduled events yet.",
+    "venueToConfirm": "Venue to be confirmed"
   },
   "notifications": {
     "eventAdded": "Event added successfully",

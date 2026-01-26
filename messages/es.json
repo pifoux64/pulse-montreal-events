@@ -823,6 +823,31 @@
       "termsOfService": "Términos de servicio"
     }
   },
+  "organizers": {
+    "notFound": "Organizador no encontrado",
+    "searchPlaceholder": "Buscar un organizador...",
+    "title": "Organizadores",
+    "subtitle": "Descubre los eventos organizados por",
+    "subtitleFull": "Descubre todos los organizadores de eventos en Montreal",
+    "loadingError": "Error al cargar los organizadores",
+    "noOrganizersFound": "No se encontraron organizadores",
+    "organizersFound": "{count} organizador encontrado",
+    "organizersFound_plural": "{count} organizadores encontrados",
+    "verified": "Verificado",
+    "eventsCount": "{count} evento",
+    "eventsCount_plural": "{count} eventos",
+    "eventOrganizer": "Organizador de eventos",
+    "events": "Eventos",
+    "upcoming": "Próximos",
+    "followers": "Seguidores",
+    "upcomingEvents": "Próximos eventos",
+    "event": "evento",
+    "event_plural": "eventos",
+    "eventCategories": "Categorías de eventos",
+    "noUpcomingEvents": "No hay eventos próximos",
+    "noUpcomingEventsDescription": "Este organizador aún no tiene eventos programados.",
+    "venueToConfirm": "Lugar por confirmar"
+  },
   "flyer": {
     "title": "Generador de Flyer IA",
     "description": "Crea flyers profesionales para tus eventos con inteligencia artificial. Elige el formato y el estilo, y descarga tu flyer listo para redes sociales.",

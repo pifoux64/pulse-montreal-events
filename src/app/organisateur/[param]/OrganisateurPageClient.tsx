@@ -5,6 +5,7 @@ import { Event } from '@/types';
 import { useFavorites } from '@/hooks/useFavorites';
 import Navigation from '@/components/Navigation';
 import EventCard from '@/components/EventCard';
+import { useTranslations } from 'next-intl';
 import { 
   User, 
   Calendar, 
@@ -70,6 +71,7 @@ interface OrganisateurPageClientProps {
 }
 
 export default function OrganisateurPageClient({ organizer }: OrganisateurPageClientProps) {
+  const t = useTranslations('organizers');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
   // Transformer les événements de l'API vers le format Event
@@ -92,7 +94,7 @@ export default function OrganisateurPageClient({ organizer }: OrganisateurPageCl
             coordinates: undefined,
           }
         : {
-            name: 'Lieu à confirmer',
+            name: t('venueToConfirm'),
             address: '',
             city: 'Montréal',
             postalCode: '',
@@ -216,12 +218,12 @@ export default function OrganisateurPageClient({ organizer }: OrganisateurPageCl
                   {organizer.verified && (
                     <span className="px-3 py-1 bg-emerald-500/20 border border-emerald-400/50 rounded-full text-xs font-semibold text-emerald-200 flex items-center gap-1">
                       <CheckCircle className="w-3 h-3" />
-                      Vérifié
+                      {t('verified')}
                     </span>
                   )}
                 </div>
                 <p className="text-xl text-white/95 mb-4 capitalize drop-shadow-md">
-                  Organisateur d'événements
+                  {t('eventOrganizer')}
                 </p>
                 
                 {/* Liens sociaux et site web */}
@@ -286,19 +288,19 @@ export default function OrganisateurPageClient({ organizer }: OrganisateurPageCl
                       <div className="text-2xl font-bold text-white mb-1">
                         {organizerStats.totalEvents}
                       </div>
-                      <div className="text-white/90 text-sm">Événements</div>
+                      <div className="text-white/90 text-sm">{t('events')}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/30 text-center">
                       <div className="text-2xl font-bold text-white mb-1">
                         {organizerStats.upcomingEvents}
                       </div>
-                      <div className="text-white/90 text-sm">À venir</div>
+                      <div className="text-white/90 text-sm">{t('upcoming')}</div>
                     </div>
                     <div className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/30 text-center">
                       <div className="text-2xl font-bold text-white mb-1">
                         {organizerStats.followers}
                       </div>
-                      <div className="text-white/90 text-sm">Abonnés</div>
+                      <div className="text-white/90 text-sm">{t('followers')}</div>
                     </div>
                   </div>
                 )}
@@ -313,10 +315,10 @@ export default function OrganisateurPageClient({ organizer }: OrganisateurPageCl
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center space-x-4">
               <h2 className="text-2xl font-bold text-white">
-                Prochains événements
+                {t('upcomingEvents')}
               </h2>
               <span className="px-3 py-1 rounded-full text-sm font-medium text-slate-300 bg-white/10 border border-white/20">
-                {organizerEvents.length} événement{organizerEvents.length > 1 ? 's' : ''}
+                {organizerEvents.length} {organizerEvents.length > 1 ? t('event_plural') : t('event')}
               </span>
             </div>
 
@@ -348,7 +350,7 @@ export default function OrganisateurPageClient({ organizer }: OrganisateurPageCl
           {organizerStats && organizerStats.categories.length > 0 && (
             <div className="mb-8">
               <h3 className="text-lg font-semibold text-white mb-4">
-                Catégories d'événements
+                {t('eventCategories')}
               </h3>
               <div className="flex flex-wrap gap-2">
                 {organizerStats.categories.map((category, index) => (
@@ -368,10 +370,10 @@ export default function OrganisateurPageClient({ organizer }: OrganisateurPageCl
             <div className="text-center py-12 bg-slate-800/70 backdrop-blur-xl rounded-3xl border border-white/10">
               <Calendar className="w-16 h-16 mx-auto mb-4 text-slate-400" />
               <h3 className="text-xl font-semibold text-white mb-2">
-                Aucun événement à venir
+                {t('noUpcomingEvents')}
               </h3>
               <p className="text-slate-300">
-                Cet organisateur n'a pas encore d'événements programmés.
+                {t('noUpcomingEventsDescription')}
               </p>
             </div>
           )}

@@ -883,7 +883,18 @@
     "organizersFound_plural": "{count} organisateurs trouvés",
     "verified": "Vérifié",
     "eventsCount": "{count} événement",
-    "eventsCount_plural": "{count} événements"
+    "eventsCount_plural": "{count} événements",
+    "eventOrganizer": "Organisateur d'événements",
+    "events": "Événements",
+    "upcoming": "À venir",
+    "followers": "Abonnés",
+    "upcomingEvents": "Prochains événements",
+    "event": "événement",
+    "event_plural": "événements",
+    "eventCategories": "Catégories d'événements",
+    "noUpcomingEvents": "Aucun événement à venir",
+    "noUpcomingEventsDescription": "Cet organisateur n'a pas encore d'événements programmés.",
+    "venueToConfirm": "Lieu à confirmer"
   },
   "pages": {
     "tonight": "Ce soir à Montréal",
