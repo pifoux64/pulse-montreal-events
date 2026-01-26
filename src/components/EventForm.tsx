@@ -8,6 +8,7 @@ import { useTranslations } from 'next-intl';
 import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image as ImageIcon, Facebook, Loader2, Ticket, Upload } from 'lucide-react';
 import { EventFormData, EventCategory, CustomFilter } from '@/types';
 import { normalizeUrl } from '@/lib/utils';
+import VenueSearchInput from './VenueSearchInput';
 
 // Fonction pour créer le schéma de validation avec traductions
 const createEventFormSchema = (t: (key: string) => string) => z.object({
@@ -948,17 +949,23 @@ const EventForm = ({
               name="location.name"
               control={control}
               render={({ field }) => (
-                <input
-                  {...field}
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <VenueSearchInput
+                  value={field.value}
+                  onChange={(value) => {
+                    field.onChange(value);
+                  }}
+                  onVenueSelect={(venue) => {
+                    // Auto-remplir les champs avec les données de la salle sélectionnée
+                    setValue('location.name', venue.name);
+                    setValue('location.address', venue.address);
+                    setValue('location.city', venue.city);
+                    setValue('location.postalCode', venue.postalCode);
+                  }}
                   placeholder={t('venueNamePlaceholder')}
+                  error={errors.location?.name?.message}
                 />
               )}
             />
-            {errors.location?.name && (
-              <p className="mt-1 text-sm text-red-600">{errors.location.name.message}</p>
-            )}
           </div>
 
           <div>
