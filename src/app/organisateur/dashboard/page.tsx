@@ -65,9 +65,9 @@ interface Subscription {
 }
 
 export default function OrganisateurDashboard() {
-  const t = useTranslations('dashboard');
   const { data: session, status } = useSession();
   const router = useRouter();
+  const t = useTranslations('dashboard');
   const [events, setEvents] = useState<Event[]>([]);
   const [stats, setStats] = useState<Stats | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
