@@ -511,7 +511,7 @@ export default function Navigation() {
                   </div>
                 </Link>
 
-                {/* Explorer - Section */}
+                {/* Events - Section */}
                 <div className="space-y-2">
                   <div className="px-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Events</div>
                   <div className="grid grid-cols-2 gap-3">
