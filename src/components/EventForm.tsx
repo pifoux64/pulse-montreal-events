@@ -846,7 +846,12 @@ const EventForm = ({
               </label>
               <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
                 <img
-                  src={watchedImageUrl}
+                  src={
+                    watchedImageUrl.startsWith('http') && 
+                    !watchedImageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
+                      ? `/api/image-proxy?url=${encodeURIComponent(watchedImageUrl)}`
+                      : watchedImageUrl
+                  }
                   alt={t('imagePreviewAlt')}
                   className="w-full h-full object-cover"
                   onError={(e) => {
@@ -854,7 +859,12 @@ const EventForm = ({
                     target.style.display = 'none';
                     const parent = target.parentElement;
                     if (parent) {
-                      parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-400"><p>${t('imageLoadError')}</p></div>`;
+                      // Vérifier si c'est une URL Facebook de photo
+                      const isFacebookPhotoUrl = watchedImageUrl.includes('facebook.com/photo') || watchedImageUrl.includes('fbid=');
+                      const errorMessage = isFacebookPhotoUrl
+                        ? t('imageLoadErrorFacebook')
+                        : t('imageLoadError');
+                      parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-400 p-4 text-center"><p>${errorMessage}</p></div>`;
                     }
                   }}
                 />

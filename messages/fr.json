@@ -918,6 +918,7 @@
     "preview": "Aperçu",
     "imagePreviewAlt": "Aperçu de l'image de l'événement",
     "imageLoadError": "Impossible de charger l'image",
+    "imageLoadErrorFacebook": "Les URLs de photos Facebook ne peuvent pas être chargées directement. Veuillez utiliser la fonction d'import d'événement Facebook ou télécharger l'image directement.",
     "removeImage": "Supprimer l'image",
     "validation": {
       "titleMin": "Le titre doit contenir au moins 3 caractères",

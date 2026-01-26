@@ -792,6 +792,7 @@
     "preview": "Preview",
     "imagePreviewAlt": "Event image preview",
     "imageLoadError": "Unable to load image",
+    "imageLoadErrorFacebook": "Facebook photo URLs cannot be loaded directly. Please use the Facebook event import feature or upload the image directly.",
     "removeImage": "Remove image",
     "validation": {
       "titleMin": "Title must contain at least 3 characters",

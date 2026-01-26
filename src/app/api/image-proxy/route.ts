@@ -24,8 +24,17 @@ export async function GET(request: NextRequest) {
       return new NextResponse('Invalid protocol', { status: 400 });
     }
 
+    // Headers pour simuler un navigateur (nécessaire pour certains sites comme Facebook)
+    const headers: HeadersInit = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': 'https://www.facebook.com/',
+    };
+
     const res = await fetch(target.toString(), {
       redirect: 'follow',
+      headers,
     });
 
     if (!res.ok) {
