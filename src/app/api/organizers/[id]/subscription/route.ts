@@ -22,7 +22,7 @@ const UpdateSubscriptionSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -35,8 +35,10 @@ export async function GET(
       );
     }
 
+    const { id } = await params;
+
     const organizer = await prisma.organizer.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!organizer) {
@@ -60,7 +62,7 @@ export async function GET(
     // Récupérer l'abonnement actif
     const subscription = await prisma.subscription.findFirst({
       where: {
-        organizerId: params.id,
+        organizerId: id,
         active: true,
       },
       orderBy: {
@@ -94,7 +96,7 @@ export async function GET(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -113,8 +115,10 @@ export async function POST(
       );
     }
 
+    const { id } = await params;
+
     const organizer = await prisma.organizer.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!organizer) {
@@ -130,7 +134,7 @@ export async function POST(
     // Désactiver les autres abonnements actifs
     await prisma.subscription.updateMany({
       where: {
-        organizerId: params.id,
+        organizerId: id,
         active: true,
       },
       data: {
@@ -141,7 +145,7 @@ export async function POST(
     // Vérifier s'il existe déjà un abonnement pour ce plan
     const existing = await prisma.subscription.findFirst({
       where: {
-        organizerId: params.id,
+        organizerId: id,
         plan: data.plan,
       },
     });
@@ -158,7 +162,7 @@ export async function POST(
         })
       : await prisma.subscription.create({
           data: {
-            organizerId: params.id,
+            organizerId: id,
             plan: data.plan,
             billingMonthly: data.billingMonthly,
             active: data.active !== undefined ? data.active : true,
