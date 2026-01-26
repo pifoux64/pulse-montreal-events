@@ -111,6 +111,7 @@ const venueEnrichmentData: Record<string, {
   'mtelus': {
     description: 'Le MTELUS est une salle de spectacles mythique à Montréal, située au cœur du Quartier des spectacles. Cette salle historique a été rénovée en 2017 tout en préservant son caractère architectural d\'époque. Elle accueille régulièrement des spectacles musicaux de tous genres, du rock à la musique populaire, dans une ambiance intime et chaleureuse.',
     capacity: 2300,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/f/f5/M_Telus_Concert_Hall%2C_Montreal%2C_Quebec%2C_Canada.jpg',
     types: ['salle', 'club'],
     tags: ['concerts', 'rock', 'musique populaire', 'spectacles', 'musique live'],
     website: 'https://www.mtelus.com',
@@ -152,6 +153,7 @@ const venueEnrichmentData: Record<string, {
   'olympia': {
     description: 'L\'Olympia de Montréal est une salle de spectacle iconique construite en 1925, située au 1004 rue Sainte-Catherine Est. Cette salle historique du patrimoine culturel montréalais peut accueillir jusqu\'à 2 438 places en configuration avec sièges, ou 2 600 personnes debout. Elle dispose d\'un système de son exceptionnel et combine l\'élégance de son histoire cinématographique avec des installations modernes. Un lounge peut accueillir jusqu\'à 350 personnes.',
     capacity: 2438,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'danse', 'cirque', 'variété', 'événements corporatifs'],
     website: 'https://www.olympiamontreal.com',
@@ -160,6 +162,7 @@ const venueEnrichmentData: Record<string, {
   'l-olympia': {
     description: 'L\'Olympia de Montréal est une salle de spectacle iconique construite en 1925, située au 1004 rue Sainte-Catherine Est. Cette salle historique du patrimoine culturel montréalais peut accueillir jusqu\'à 2 438 places en configuration avec sièges, ou 2 600 personnes debout. Elle dispose d\'un système de son exceptionnel et combine l\'élégance de son histoire cinématographique avec des installations modernes. Un lounge peut accueillir jusqu\'à 350 personnes.',
     capacity: 2438,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'danse', 'cirque', 'variété', 'événements corporatifs'],
     website: 'https://www.olympiamontreal.com',
@@ -186,6 +189,7 @@ const venueEnrichmentData: Record<string, {
   'club-soda': {
     description: 'Le Club Soda est une salle de spectacle professionnelle historique située au 1225 boulevard Saint-Laurent. Construit en 1908, ce bâtiment patrimonial (anciennement Crystal Palace) a été rénové et ouvert en 2000. La salle peut accueillir 950 personnes debout ou 450 personnes assises, avec plusieurs configurations possibles. Elle présente régulièrement des spectacles de différents genres musicaux (rock, rap, métal, pop, country) et des événements humoristiques.',
     capacity: 950,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Club_Soda%2C_Montr%C3%A9al_2011.jpg/1200px-Club_Soda%2C_Montr%C3%A9al_2011.jpg',
     types: ['club', 'salle'],
     tags: ['concerts', 'rock', 'rap', 'métal', 'pop', 'country', 'humour', 'spectacles'],
     website: 'https://www.clubsoda.ca',
@@ -215,6 +219,7 @@ const venueEnrichmentData: Record<string, {
   // Studio TD
   'studio-td': {
     description: 'Le Studio TD est une salle de spectacle située au cœur du Quartier des spectacles à Montréal, au 305 rue Sainte-Catherine Ouest. Cette salle moderne accueille régulièrement des spectacles musicaux et des événements variés dans une ambiance intime et professionnelle.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle'],
     tags: ['concerts', 'spectacles', 'musique', 'variétés'],
     phone: '514-492-1775',
@@ -223,6 +228,7 @@ const venueEnrichmentData: Record<string, {
   },
   'le-studio-td': {
     description: 'Le Studio TD est une salle de spectacle située au cœur du Quartier des spectacles à Montréal, au 305 rue Sainte-Catherine Ouest. Cette salle moderne accueille régulièrement des spectacles musicaux et des événements variés dans une ambiance intime et professionnelle.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle'],
     tags: ['concerts', 'spectacles', 'musique', 'variétés'],
     phone: '514-492-1775',
@@ -262,6 +268,7 @@ const venueEnrichmentData: Record<string, {
   'bar-le-ritz-pdb': {
     description: 'Le Bar le Ritz PDB (Punks Don\'t Bend) est une salle de concerts et d\'événements polyvalente située au 179 rue Jean-Talon Ouest dans le Mile-End/Mile-Ex. Ouvert en 2014 par Meyer Billurcu en partenariat avec des membres de Godspeed You! Black Emperor, ce lieu intime peut accueillir environ 300 personnes (ou 150 pour les soirées de spectacles). Le venue dispose d\'un bar en bois vintage, d\'un design mural coloré et d\'une petite scène. Il est accessible en fauteuil roulant avec des toilettes non genrées et accueille un mélange éclectique de concerts live, soirées DJ, spectacles d\'humour, projections de films et fêtes thématiques avec une forte atmosphère LGBTQ-friendly.',
     capacity: 300,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['bar', 'salle'],
     tags: ['concerts', 'rock', 'indie', 'DJ', 'humour', 'cinéma', 'LGBTQ', 'musique live'],
     neighborhood: 'Mile-End',
@@ -269,6 +276,7 @@ const venueEnrichmentData: Record<string, {
   'bar-le-ritz-pdb-1': {
     description: 'Le Bar le Ritz PDB (Punks Don\'t Bend) est une salle de concerts et d\'événements polyvalente située au 179 rue Jean-Talon Ouest dans le Mile-End/Mile-Ex. Ouvert en 2014 par Meyer Billurcu en partenariat avec des membres de Godspeed You! Black Emperor, ce lieu intime peut accueillir environ 300 personnes (ou 150 pour les soirées de spectacles). Le venue dispose d\'un bar en bois vintage, d\'un design mural coloré et d\'une petite scène. Il est accessible en fauteuil roulant avec des toilettes non genrées et accueille un mélange éclectique de concerts live, soirées DJ, spectacles d\'humour, projections de films et fêtes thématiques avec une forte atmosphère LGBTQ-friendly.',
     capacity: 300,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['bar', 'salle'],
     tags: ['concerts', 'rock', 'indie', 'DJ', 'humour', 'cinéma', 'LGBTQ', 'musique live'],
     neighborhood: 'Mile-End',
@@ -278,6 +286,7 @@ const venueEnrichmentData: Record<string, {
   'la-sala-rossa': {
     description: 'La Sala Rossa est une salle de spectacle emblématique située au 4848 Boulevard Saint-Laurent dans le Plateau-Mont-Royal. Construite en 1932 par l\'organisation juive Workmen\'s Circle, elle est devenue un lieu emblématique de la scène culturelle et musicale montréalaise. La salle se caractérise par ses murs rouges distinctifs, son acoustique exceptionnelle et son atmosphère intime. Elle peut accueillir 250 personnes et propose une programmation éclectique incluant du rock indépendant, du jazz, du flamenco, de la musique électronique et des performances expérimentales. Originellement créée comme espace de rassemblement pour la communauté juive montréalaise, elle a ensuite servi de centre social pour les immigrants espagnols.',
     capacity: 250,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle', 'centre_culturel'],
     tags: ['rock indépendant', 'jazz', 'flamenco', 'musique électronique', 'expérimental', 'concerts', 'spectacles'],
     neighborhood: 'Plateau-Mont-Royal',
@@ -287,6 +296,7 @@ const venueEnrichmentData: Record<string, {
   'casino-de-montreal': {
     description: 'Le Casino de Montréal, ouvert en 1993, est installé sur l\'île Notre-Dame dans le parc Jean-Drapeau. Ce bâtiment emblématique était à l\'origine le pavillon de la France lors de l\'Exposition universelle de 1967. Le complexe dispose de plusieurs espaces : le Théâtre Le Qube (jusqu\'à 800 personnes), le Cabaret du Casino (616 places avec 532 places en souper-spectacle et 84 places au balcon), et des salles de réunion (capacité totale de 800 places assises, 300 places debout). Le Cabaret a été rénové avec des équipements modernes : système de son psychoacoustique 3D, 44 coupoles LED au plafond pour projections vidéo, 98 projecteurs robotisés, et système d\'éclairage de 800 000 watts. Le casino reçoit plus de 6 millions de visiteurs annuellement.',
     capacity: 800,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Casino_de_Montreal.JPG/1200px-Casino_de_Montreal.JPG',
     types: ['casino', 'salle'],
     tags: ['spectacles', 'divertissement', 'événements corporatifs', 'galas', 'tournois', 'poker'],
     website: 'https://www.casinosduquebec.com',
@@ -295,6 +305,7 @@ const venueEnrichmentData: Record<string, {
   'cabaret-du-casino-de-montreal': {
     description: 'Le Cabaret du Casino de Montréal est une salle de spectacle moderne située dans le Casino de Montréal sur l\'île Notre-Dame. Rénové récemment, le Cabaret peut accueillir 616 places (532 places en souper-spectacle + 84 places au balcon). Il dispose d\'équipements de pointe : système de son psychoacoustique 3D, 44 coupoles LED au plafond pour projections vidéo, 98 projecteurs robotisés, et système d\'éclairage de 800 000 watts. Le Cabaret accueille une programmation diversifiée : spectacles (dont des artistes de renommée comme Tony Bennett), galas de boxe, tournois de poker style WSOP, événements corporatifs et caritatifs.',
     capacity: 616,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Casino_de_Montreal.JPG/1200px-Casino_de_Montreal.JPG',
     types: ['cabaret', 'salle'],
     tags: ['spectacles', 'divertissement', 'événements corporatifs', 'galas', 'boxe', 'poker'],
     website: 'https://www.casinosduquebec.com',
@@ -315,7 +326,7 @@ const venueEnrichmentData: Record<string, {
   // Musée des Beaux-Arts de Montréal
   'musee-des-beaux-arts-de-montreal': {
     description: 'Le Musée des beaux-arts de Montréal (MBAM) est l\'un des musées les plus importants au Canada. Situé au 1380 rue Sherbrooke Ouest, il propose une programmation variée incluant des expositions majeures, des visites guidées, des conférences, des activités famille et des ateliers. La Salle Bourgie accueille des concerts et événements musicaux. Le musée est ouvert du mardi au dimanche de 10 h à 17 h, ainsi que le mercredi de 10 h à 21 h. Les groupes de plus de 10 personnes doivent réserver. Le MBAM présente des collections permanentes et temporaires d\'art canadien, international et contemporain.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Mus%C3%A9e_des_beaux-arts_de_Montr%C3%A9al_%28MBAM%29.jpg/1200px-Mus%C3%A9e_des_beaux-arts_de_Montr%C3%A9al_%28MBAM%29.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Musee_Beaux_Arts_Montr%C3%A9al.JPG/1200px-Musee_Beaux_Arts_Montr%C3%A9al.JPG',
     types: ['musée', 'centre_culturel'],
     tags: ['art', 'expositions', 'culture', 'concerts', 'conférences', 'ateliers', 'visites guidées'],
     website: 'https://www.mbam.qc.ca',
@@ -335,6 +346,7 @@ const venueEnrichmentData: Record<string, {
   // Le Belmont
   'le-belmont': {
     description: 'Le Belmont est un établissement emblématique situé au 4483 Boulevard Saint-Laurent, au coin de Mont-Royal, dans le quartier du Plateau-Mont-Royal. C\'est un lieu au cœur de la vie nocturne montréalaise depuis plus de vingt ans. Il s\'agit d\'un café-bar-restaurant qui accueille des concerts et événements. Le Belmont présente chaque semaine une programmation originale et diversifiée incluant musique électronique, rock, burlesque et arts de la scène. L\'établissement dispose d\'une terrasse, d\'un bar complet, et d\'un vestiaire obligatoire.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Punk_performance%2C_Le_Belmont_%28Montreal%29.jpg/1200px-Punk_performance%2C_Le_Belmont_%28Montreal%29.jpg',
     types: ['bar', 'café', 'salle'],
     tags: ['musique électronique', 'rock', 'burlesque', 'arts de la scène', 'concerts', 'vie nocturne'],
     neighborhood: 'Plateau-Mont-Royal',
@@ -344,6 +356,7 @@ const venueEnrichmentData: Record<string, {
   'le-ministere': {
     description: 'Le Ministère est une salle de spectacles située dans un immeuble patrimonial du boulevard Saint-Laurent, dans une ancienne banque. Ouverte en 2017, elle s\'est établie comme l\'une des salles les plus en demande de Montréal avec une capacité de 288 places. La salle est parfaitement insonorisée et équipée de matériel audiovisuel de pointe. Elle dispose d\'une régie conçue comme un studio de mixage avec une fenêtre de 10\' par 4\', de 4 caméras Sony A7s II en résolution 4K, et d\'un studio Livestream H550 capable de faire du montage en direct. La salle accueille les spectacles de tous genres, conférences, événements corporatifs et privés, lancements d\'albums, vidéoclips, et autres événements.',
     capacity: 288,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle', 'studio'],
     tags: ['spectacles', 'concerts', 'conférences', 'événements corporatifs', 'livestream', 'vidéo'],
     website: 'https://leministere.ca',
@@ -369,6 +382,7 @@ const venueEnrichmentData: Record<string, {
   // Vieux-Port de Montréal
   'vieux-port-de-montreal': {
     description: 'Le Vieux-Port de Montréal est un espace public emblématique situé le long du fleuve Saint-Laurent dans le Vieux-Montréal. Cet espace historique accueille de nombreux événements publics, festivals, concerts en plein air et activités culturelles tout au long de l\'année. Le Vieux-Port offre des vues spectaculaires sur le fleuve et la ville, avec des espaces ouverts pour des événements de grande envergure.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Old_Port_of_Montreal_%28French-_Vieux-Port_de_Montr%C3%A9al%29.jpg/1200px-Old_Port_of_Montreal_%28French-_Vieux-Port_de_Montr%C3%A9al%29.jpg',
     types: ['espace_public', 'quai'],
     tags: ['festivals', 'concerts en plein air', 'événements publics', 'culture', 'patrimoine'],
     neighborhood: 'Vieux-Montréal',
@@ -377,6 +391,14 @@ const venueEnrichmentData: Record<string, {
   // Parc du Mont-Royal
   'parc-du-mont-royal': {
     description: 'Le Parc du Mont-Royal est un grand espace vert public situé sur la montagne du même nom au cœur de Montréal. Conçu par Frederick Law Olmsted, le parc accueille de nombreux événements publics, concerts en plein air, festivals et activités culturelles. Il offre des vues panoramiques sur la ville et constitue un lieu de rassemblement populaire pour les Montréalais et les visiteurs.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg/1200px-Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg',
+    types: ['parc', 'espace_public'],
+    tags: ['concerts en plein air', 'festivals', 'événements publics', 'nature', 'culture'],
+    neighborhood: 'Mont-Royal',
+  },
+  'parc-du-mont-royal-1': {
+    description: 'Le Parc du Mont-Royal est un grand espace vert public situé sur la montagne du même nom au cœur de Montréal. Conçu par Frederick Law Olmsted, le parc accueille de nombreux événements publics, concerts en plein air, festivals et activités culturelles. Il offre des vues panoramiques sur la ville et constitue un lieu de rassemblement populaire pour les Montréalais et les visiteurs.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg/1200px-Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg',
     types: ['parc', 'espace_public'],
     tags: ['concerts en plein air', 'festivals', 'événements publics', 'nature', 'culture'],
     neighborhood: 'Mont-Royal',
@@ -385,12 +407,14 @@ const venueEnrichmentData: Record<string, {
   // Quartier des Spectacles
   'quartier-des-spectacles': {
     description: 'Le Quartier des spectacles est un quartier culturel dynamique au cœur de Montréal, concentrant de nombreux lieux de spectacles, festivals et événements culturels. Cet espace public accueille des centaines d\'événements chaque année, incluant des festivals majeurs comme le Festival international de jazz de Montréal, les Francofolies, Juste pour Rire, et bien d\'autres. Le quartier dispose d\'espaces publics pour des événements en plein air et des installations culturelles de renommée mondiale.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['quartier', 'espace_public'],
     tags: ['festivals', 'spectacles', 'culture', 'événements publics', 'quartier culturel'],
     neighborhood: 'Quartier des spectacles',
   },
   'quartier-des-spectacles-1': {
     description: 'Le Quartier des spectacles est un quartier culturel dynamique au cœur de Montréal, concentrant de nombreux lieux de spectacles, festivals et événements culturels. Cet espace public accueille des centaines d\'événements chaque année, incluant des festivals majeurs comme le Festival international de jazz de Montréal, les Francofolies, Juste pour Rire, et bien d\'autres. Le quartier dispose d\'espaces publics pour des événements en plein air et des installations culturelles de renommée mondiale.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['quartier', 'espace_public'],
     tags: ['festivals', 'spectacles', 'culture', 'événements publics', 'quartier culturel'],
     neighborhood: 'Quartier des spectacles',
@@ -448,72 +472,65 @@ function normalizeVenueName(name: string): string {
 function generateGenericEnrichment(venue: { name: string; slug: string | null }): typeof venueEnrichmentData[string] | null {
   const name = venue.name.toLowerCase();
   
-  // Églises
+  // Églises - PAS d'image placeholder, seulement description
   if (name.includes('eglise') || name.includes('église') || name.includes('church')) {
     return {
       description: `Cette église historique de Montréal accueille des événements culturels, concerts de musique sacrée, cérémonies et activités communautaires. Lieu de patrimoine architectural et religieux, elle offre un cadre unique pour des événements solennels et culturels.`,
       types: ['église', 'monument'],
       tags: ['patrimoine', 'culture religieuse', 'concerts', 'événements communautaires'],
-      imageUrl: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&h=600&fit=crop',
     };
   }
   
-  // Parcs et espaces publics
+  // Parcs et espaces publics - PAS d'image placeholder
   if (name.includes('parc') || name.includes('park') || name.includes('place jacques') || name.includes('esplanade')) {
     return {
       description: `Cet espace public emblématique de Montréal accueille de nombreux événements en plein air, festivals, concerts et activités culturelles tout au long de l'année. Lieu de rassemblement populaire pour les Montréalais et les visiteurs.`,
       types: ['espace_public', 'parc'],
       tags: ['festivals', 'concerts en plein air', 'événements publics', 'culture'],
-      imageUrl: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&h=600&fit=crop',
     };
   }
   
-  // Bars et clubs
+  // Bars et clubs - PAS d'image placeholder
   if (name.includes('bar') || name.includes('club') || name.includes('rittz') || name.includes('escogriffe') || name.includes('belmont')) {
     return {
       description: `Ce lieu de vie nocturne montréalaise accueille des concerts, spectacles, soirées DJ et événements musicaux dans une ambiance intime et chaleureuse. Un espace dédié à la musique live et à la culture alternative.`,
       types: ['bar', 'club'],
       tags: ['concerts', 'musique live', 'vie nocturne', 'spectacles'],
-      imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop',
     };
   }
   
-  // Théâtres
+  // Théâtres - PAS d'image placeholder
   if (name.includes('theatre') || name.includes('théâtre') || name.includes('theater')) {
     return {
       description: `Cette salle de spectacle montréalaise accueille des représentations théâtrales, concerts, spectacles et événements culturels dans un cadre intime et professionnel. Un lieu dédié aux arts de la scène.`,
       types: ['théâtre', 'salle'],
       tags: ['théâtre', 'spectacles', 'concerts', 'arts de la scène'],
-      imageUrl: 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=1200&h=600&fit=crop',
     };
   }
   
-  // Salles et venues génériques
+  // Salles et venues génériques - PAS d'image placeholder
   if (name.includes('salle') || name.includes('venue') || name.includes('centre') || name.includes('balcon')) {
     return {
       description: `Cette salle polyvalente de Montréal accueille une variété d'événements incluant concerts, spectacles, conférences et événements corporatifs. Un espace moderne et fonctionnel adapté à différents types d'événements.`,
       types: ['salle'],
       tags: ['concerts', 'spectacles', 'événements', 'culture'],
-      imageUrl: 'https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&h=600&fit=crop',
     };
   }
   
-  // Lieux multiples / divers
+  // Lieux multiples / divers - PAS d'image placeholder
   if (name.includes('divers') || name.includes('multiple') || name.includes('lieux')) {
     return {
       description: `Cet espace polyvalent de Montréal accueille une variété d'événements dans différents lieux. Un réseau de salles et d'espaces adaptés à différents types d'événements culturels et artistiques.`,
       types: ['espace_public'],
       tags: ['événements', 'culture', 'spectacles', 'festivals'],
-      imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop',
     };
   }
   
-  // Par défaut, enrichissement générique
+  // Par défaut, enrichissement générique SANS image
   return {
     description: `Ce lieu montréalais accueille des événements culturels, spectacles et activités communautaires. Un espace dédié à la culture et aux arts dans la métropole québécoise.`,
     types: ['salle'],
     tags: ['événements', 'culture', 'spectacles'],
-    imageUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop',
   };
 }
 
@@ -610,28 +627,14 @@ async function enrichVenues() {
         updateData.capacity = enrichmentData.capacity;
       }
       
-      // Image : toujours ajouter si disponible, ou ajouter une image générique si aucune n'existe
+      // Image : seulement si on a une vraie image spécifique (PAS de placeholders)
       if (enrichmentData.imageUrl) {
         // Si on a une image spécifique, l'utiliser
         if (!venue.imageUrl || isGenericEnrichment) {
           updateData.imageUrl = enrichmentData.imageUrl;
         }
-      } else if (!venue.imageUrl) {
-        // Si aucune image n'existe et qu'on n'a pas d'image spécifique, ajouter une image générique selon le type
-        const venueNameLower = venue.name.toLowerCase();
-        if (venueNameLower.includes('eglise') || venueNameLower.includes('église') || venueNameLower.includes('church')) {
-          updateData.imageUrl = 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&h=600&fit=crop';
-        } else if (venueNameLower.includes('parc') || venueNameLower.includes('park') || venueNameLower.includes('place') || venueNameLower.includes('esplanade')) {
-          updateData.imageUrl = 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&h=600&fit=crop';
-        } else if (venueNameLower.includes('bar') || venueNameLower.includes('club') || venueNameLower.includes('rittz') || venueNameLower.includes('escogriffe') || venueNameLower.includes('belmont')) {
-          updateData.imageUrl = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop';
-        } else if (venueNameLower.includes('theatre') || venueNameLower.includes('théâtre') || venueNameLower.includes('theater')) {
-          updateData.imageUrl = 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=1200&h=600&fit=crop';
-        } else {
-          // Image générique par défaut
-          updateData.imageUrl = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop';
-        }
       }
+      // Si pas d'image spécifique, on ne met PAS d'image (pas de placeholder)
       
       // Types : fusionner avec les types existants, toujours ajouter si enrichissement générique
       if (enrichmentData.types && enrichmentData.types.length > 0) {
