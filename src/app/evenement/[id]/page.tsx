@@ -34,14 +34,17 @@ async function fetchEvent(id: string) {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { getTranslations } = await import('next-intl/server');
+  const t = await getTranslations('events');
+  
   try {
     const { id } = await params;
     const event = await fetchEvent(id);
 
     if (!event) {
       return {
-        title: 'Événement non trouvé',
-        description: 'Cet événement n’existe pas ou a été supprimé.',
+        title: t('notFound'),
+        description: t('notFoundDescription'),
       };
     }
 
@@ -127,6 +130,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     };
   } catch (error) {
     console.error('Erreur metadata event:', error);
+    const { getTranslations } = await import('next-intl/server');
+    const t = await getTranslations('events');
     return {
       title: t('loadingError'),
       description: t('loadingErrorDescription'),
@@ -144,358 +149,276 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
     }
 
     const session = await getServerSession(authOptions);
-    const canPostToFeed =
-      Boolean(session?.user?.id) && event.organizer?.userId === session.user.id;
+    const isOwner = session?.user?.id === event.organizer?.userId;
+    const isAdmin = session?.user?.role === 'ADMIN';
 
-    const eventDate = new Date(event.startAt);
-    const eventEndDate = event.endAt ? new Date(event.endAt) : null;
-    const isPastEvent = eventDate < new Date();
-    const isCancelled = event.status === EventStatus.CANCELLED;
+    // Vérifier si l'événement est publié ou si l'utilisateur est propriétaire/admin
+    if (event.status !== EventStatus.SCHEDULED && event.status !== EventStatus.UPDATED && !isOwner && !isAdmin) {
+      notFound();
+    }
+
     const jsonLd = buildEventJsonLd(event);
 
     return (
-      <div className="min-h-screen pt-24 pb-12">
+      <>
         <script
           type="application/ld+json"
-          suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Hero Section */}
-          <div className="relative overflow-hidden rounded-3xl mb-8">
-              <div className="aspect-[16/9] relative">
-              <Image
-                src={
-                  event.imageUrl
-                    ? `/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`
-                    : '/placeholder-event.jpg'
-                }
-                alt={event.title}
-                fill
-                className="object-cover"
-                priority
-                unoptimized={!!event.imageUrl}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+            {/* Header avec image */}
+            <div className="relative mb-8 rounded-3xl overflow-hidden">
+              {event.imageUrl ? (
+                <div className="relative h-96">
+                  <Image
+                    src={event.imageUrl.startsWith('http') || event.imageUrl.startsWith('/')
+                      ? `/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`
+                      : event.imageUrl}
+                    alt={event.title}
+                    fill
+                    sizes="100vw"
+                    className="object-cover"
+                    priority
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
+                </div>
+              ) : (
+                <div className="h-96 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center">
+                  <Calendar className="w-32 h-32 text-white/50" />
+                </div>
+              )}
+              
+              {/* Titre et infos principales */}
+              <div className="absolute bottom-0 left-0 right-0 p-8">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{event.title}</h1>
+                <div className="flex flex-wrap items-center gap-4 text-white/90">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    <span>
+                      {new Date(event.startAt).toLocaleDateString('fr-CA', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        timeZone: 'America/Montreal',
+                      })}
+                    </span>
+                  </div>
+                  {event.venue && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-5 h-5" />
+                      <span>{event.venue.name}</span>
+                    </div>
+                  )}
+                  {event.priceMin === 0 && event.priceMin !== null && (
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5" />
+                      <span>Gratuit</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
 
-              {/* Event Status Badge */}
-              <div className="absolute top-4 left-4">
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    isCancelled
-                      ? 'bg-red-600 text-white'
-                      : isPastEvent
-                      ? 'bg-gray-500 text-white'
-                      : 'bg-green-500 text-white'
-                  }`}
-                >
-                  {isCancelled ? 'Annulé' : isPastEvent ? 'Terminé' : 'À venir'}
-                </span>
+            {/* Actions */}
+            <div className="mb-8">
+              <EventDetailActions event={event} />
+            </div>
+
+            {/* Contenu principal */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Colonne principale */}
+              <div className="lg:col-span-2 space-y-8">
+                {/* Description */}
+                {event.description && (
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
+                    <div className="prose prose-invert max-w-none">
+                      <p className="text-slate-300 whitespace-pre-line">{event.description}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tags */}
+                {event.tags && event.tags.length > 0 && (
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <h2 className="text-2xl font-bold text-white mb-4">Tags</h2>
+                    <EventTagsDisplay event={event} />
+                  </div>
+                )}
+
+                {/* Tabs Section */}
+                <EventTabsSection event={event} />
+
+                {/* Similar Events */}
+                <SimilarEvents eventId={event.id} />
               </div>
 
-              {/* Action Buttons */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
-                <EventDetailActions 
-                  eventId={event.id} 
-                  eventTitle={event.title}
-                  eventVenue={event.venue}
-                  eventStartAt={event.startAt}
-                  eventNeighborhood={event.venue?.neighborhood || null}
-                />
-                <InviteFriendButton 
-                  eventId={event.id} 
-                  eventTitle={event.title}
-                  eventUrl={`${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-mtl.vercel.app'}/evenement/${event.id}`}
-                />
-              </div>
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Informations pratiques */}
+                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                  <h2 className="text-xl font-bold text-white mb-4">Informations pratiques</h2>
+                  <div className="space-y-4">
+                    {event.venue && (
+                      <div>
+                        <div className="flex items-center gap-2 text-slate-400 mb-1">
+                          <MapPin className="w-4 h-4" />
+                          <span className="text-sm">Lieu</span>
+                        </div>
+                        <Link
+                          href={event.venue.slug ? `/salle/${event.venue.slug}` : `/salle/${event.venue.id}`}
+                          className="text-white hover:text-blue-400 transition-colors"
+                        >
+                          {event.venue.name}
+                        </Link>
+                        <p className="text-slate-400 text-sm mt-1">
+                          {event.venue.address}, {event.venue.city}
+                        </p>
+                      </div>
+                    )}
 
-              {/* Event Title & Basic Info */}
-              <div className="absolute inset-x-0 bottom-0">
-                {/* Léger gradient sombre en fond pour les images très claires */}
-                <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
-                <div className="relative px-6 pb-6 md:px-10 md:pb-8 max-w-5xl">
-                  <div className="inline-flex flex-col gap-2 bg-white/90 text-slate-900 rounded-2xl px-4 py-3 shadow-2xl">
-                    <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-1">
-                      {event.title}
-                    </h1>
-                    <div className="flex flex-wrap items-center gap-4 text-xs md:text-sm text-slate-700">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {eventDate.toLocaleDateString('fr-CA', {
+                    <div>
+                      <div className="flex items-center gap-2 text-slate-400 mb-1">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">Date et heure</span>
+                      </div>
+                      <p className="text-white">
+                        {new Date(event.startAt).toLocaleDateString('fr-CA', {
                           weekday: 'long',
                           year: 'numeric',
                           month: 'long',
                           day: 'numeric',
-                          timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
+                          timeZone: 'America/Montreal',
                         })}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {eventDate.toLocaleTimeString('fr-CA', { 
-                          hour: '2-digit', 
+                      </p>
+                      <p className="text-slate-400 text-sm mt-1">
+                        {new Date(event.startAt).toLocaleTimeString('fr-CA', {
+                          hour: '2-digit',
                           minute: '2-digit',
-                          timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
+                          timeZone: 'America/Montreal',
                         })}
-                        {eventEndDate && (
+                        {event.endAt && (
                           <>
-                            <span className="px-1">-</span>
-                            {eventEndDate.toLocaleTimeString('fr-CA', {
+                            {' - '}
+                            {new Date(event.endAt).toLocaleTimeString('fr-CA', {
                               hour: '2-digit',
                               minute: '2-digit',
-                              timeZone: 'America/Montreal', // Toujours utiliser le timezone Montréal
+                              timeZone: 'America/Montreal',
                             })}
                           </>
                         )}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPin className="h-4 w-4" />
-                        {event.venue?.name ?? 'Montréal'}
-                      </div>
+                      </p>
                     </div>
+
+                    {event.priceMin !== null && (
+                      <div>
+                        <div className="flex items-center gap-2 text-slate-400 mb-1">
+                          <DollarSign className="w-4 h-4" />
+                          <span className="text-sm">Prix</span>
+                        </div>
+                        <p className="text-white">
+                          {event.priceMin === 0
+                            ? 'Gratuit'
+                            : event.priceMax && event.priceMax !== event.priceMin
+                            ? `${(event.priceMin / 100).toFixed(2)} $ - ${(event.priceMax / 100).toFixed(2)} $`
+                            : `${(event.priceMin / 100).toFixed(2)} $`}
+                        </p>
+                      </div>
+                    )}
+
+                    {event.minAttendees && (
+                      <div>
+                        <div className="flex items-center gap-2 text-slate-400 mb-1">
+                          <Users className="w-4 h-4" />
+                          <span className="text-sm">Participants</span>
+                        </div>
+                        <p className="text-white">
+                          {event.minAttendees}
+                          {event.maxAttendees && ` - ${event.maxAttendees}`} personnes
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <EventTabsSection
-            infoContent={
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Content */}
-                <div className="lg:col-span-2 space-y-8">
-                  {/* Description */}
-                  <div className="bg-white rounded-2xl p-6 shadow-lg">
-                    <h2 className="text-xl font-bold mb-4">Description</h2>
-                    <div className="prose prose-gray max-w-none">
-                      <p className="whitespace-pre-line">{event.description}</p>
-                    </div>
+                {/* Carte */}
+                {event.venue && event.venue.lat && event.venue.lon && (
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <h2 className="text-xl font-bold text-white mb-4">Localisation</h2>
+                    <EventDetailMap
+                      lat={event.venue.lat}
+                      lng={event.venue.lon}
+                      venueName={event.venue.name}
+                    />
                   </div>
+                )}
 
-                  {/* Tags structurés (EventTag) - SPRINT 2 */}
-                  {(event.eventTags && event.eventTags.length > 0) || event.tags.length > 0 ? (
-                    <div className="bg-white rounded-2xl p-6 shadow-lg">
-                      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                        <Tag className="h-5 w-5" />
-                        Tags
-                      </h2>
-                      {event.eventTags && event.eventTags.length > 0 ? (
-                        <EventTagsDisplay 
-                          eventTags={event.eventTags.map(tag => ({
-                            id: tag.id,
-                            category: tag.category as 'type' | 'genre' | 'ambiance' | 'public',
-                            value: tag.value,
-                          }))}
-                          showCategoryLabels={true}
+                {/* Organisateur */}
+                {event.organizer && (
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                    <h2 className="text-xl font-bold text-white mb-4">Organisateur</h2>
+                    <Link
+                      href={event.organizer.slug ? `/organisateur/${event.organizer.slug}` : `/organisateur/${event.organizer.id}`}
+                      className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                    >
+                      {event.organizer.user?.image ? (
+                        <Image
+                          src={event.organizer.user.image}
+                          alt={event.organizer.displayName}
+                          width={48}
+                          height={48}
+                          className="rounded-full"
                         />
                       ) : (
-                        // Fallback : Tags simples (ancien système)
-                        <div className="flex flex-wrap gap-2">
-                          {event.tags.map((tag) => (
-                            <span
-                              key={tag}
-                              className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
-                            >
-                              #{tag}
-                            </span>
-                          ))}
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                          <Users className="w-6 h-6 text-white" />
                         </div>
                       )}
-                    </div>
-                  ) : null}
-                </div>
-
-                {/* Sidebar */}
-                <div className="space-y-6">
-                  {/* Event Details */}
-                  <div className="bg-white rounded-2xl p-6 shadow-lg">
-                    <h2 className="text-xl font-bold mb-4">Détails</h2>
-                    <div className="space-y-4">
-                      {/* Price */}
-                      {(event.priceMin != null || event.priceMax != null || (event.url && event.url.trim() !== '')) && (
-                        <div className="flex items-start gap-3">
-                          <DollarSign className="h-5 w-5 text-green-600 mt-0.5" />
-                          <div>
-                            <div className="font-medium">Prix</div>
-                            <div className="text-sm text-gray-600">
-                              {event.priceMin == null && event.priceMax == null ? (
-                                event.url && event.url.trim() !== '' ? (
-                                  <a
-                                    href={event.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-600 hover:text-blue-800 underline"
-                                  >
-                                    Voir les prix sur le site de billetterie
-                                  </a>
-                                ) : null
-                              ) : event.priceMin === 0 ? (
-                                'Gratuit'
-                              ) : event.priceMin != null &&
-                                event.priceMax != null &&
-                                event.priceMin === event.priceMax ? (
-                                `${(event.priceMin / 100).toFixed(2)} ${event.currency}`
-                              ) : (
-                                `${event.priceMin != null ? (event.priceMin / 100).toFixed(2) : '?'} - ${
-                                  event.priceMax != null ? (event.priceMax / 100).toFixed(2) : '?'
-                                } ${event.currency}`
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Organizer */}
-                      <div className="flex items-start gap-3">
-                        <Users className="h-5 w-5 text-blue-600 mt-0.5" />
-                        <div>
-                          <div className="font-medium">Organisateur</div>
-                          {event.organizer ? (
-                            <Link
-                              href={event.organizer.slug ? `/organisateur/${event.organizer.slug}` : `/organisateur/${event.organizer.id}`}
-                              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                            >
-                              {event.organizer.displayName}
-                              {event.organizer.verified && <span className="text-green-600">✓</span>}
-                            </Link>
-                          ) : (
-                            <span className="text-sm text-gray-600">Organisateur externe</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Language */}
-                      <div className="flex items-start gap-3">
-                        <div className="h-5 w-5 text-teal-600 mt-0.5 flex items-center justify-center">
-                          🌐
-                        </div>
-                        <div>
-                          <div className="font-medium">Langue</div>
-                          <div className="text-sm text-gray-600">
-                            {event.language === 'FR'
-                              ? 'Français'
-                              : event.language === 'EN'
-                              ? 'Anglais'
-                              : 'Français et Anglais'}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Accessibility */}
-                      {event.accessibility.length > 0 && (
-                        <div className="flex items-start gap-3">
-                          <div className="h-5 w-5 text-orange-600 mt-0.5 flex items-center justify-center">
-                            ♿
-                          </div>
-                          <div>
-                            <div className="font-medium">Accessibilité</div>
-                            <div className="text-sm text-gray-600">
-                              {event.accessibility
-                                .map((a) =>
-                                  a === 'wheelchair'
-                                    ? 'Accès fauteuil roulant'
-                                    : a === 'hearing_assistance'
-                                    ? 'Assistance auditive'
-                                    : a,
-                                )
-                                .join(', ')}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Venue */}
-                  <div className="bg-white rounded-2xl p-6 shadow-lg">
-                    <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                      <MapPin className="h-5 w-5" />
-                      Lieu
-                    </h2>
-                    <div className="space-y-3">
                       <div>
-                        {event.venue?.slug ? (
-                          <Link
-                            href={`/salle/${event.venue.slug}`}
-                            className="font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                          >
-                            {event.venue.name}
-                          </Link>
-                        ) : (
-                          <div className="font-medium">{event.venue?.name ?? 'Lieu à confirmer'}</div>
-                        )}
-                        <div className="text-sm text-gray-600">
-                          {event.venue ? `${event.venue.address}, ${event.venue.city}` : 'À déterminer'}
-                        </div>
-                        {event.venue?.slug && (
-                          <Link
-                            href={`/salle/${event.venue.slug}`}
-                            className="text-sm text-blue-600 hover:text-blue-800 mt-1 inline-block"
-                          >
-                            Voir la fiche de la salle →
-                          </Link>
+                        <p className="text-white font-semibold">{event.organizer.displayName}</p>
+                        {event.organizer.verified && (
+                          <p className="text-xs text-blue-400">Vérifié</p>
                         )}
                       </div>
-
-                      <div className="aspect-video rounded-lg overflow-hidden bg-gray-200">
-                        {event.venue ? (
-                          <EventDetailMap
-                            lat={event.venue.lat}
-                            lon={event.venue.lon}
-                            title={event.title}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-500">
-                            Carte interactive bientôt disponible
-                          </div>
-                        )}
-                      </div>
-
-                      {event.venue && (
-                        <a
-                          href={`https://maps.google.com/?q=${event.venue.lat},${event.venue.lon}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                          Ouvrir dans Google Maps
-                        </a>
-                      )}
-                    </div>
+                    </Link>
                   </div>
+                )}
 
-                  {/* Publication multi-plateformes (pour organisateurs) */}
-                  {canPostToFeed && (
-                    <EventPublishSection 
-                      eventId={event.id} 
-                      organizerId={event.organizerId} 
-                    />
-                  )}
-
-                  {/* CTA Button */}
-                  {!isPastEvent && !isCancelled && event.url && (
+                {/* Lien externe */}
+                {event.url && (
+                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
                     <a
                       href={event.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block w-full bg-gradient-to-r from-sky-600 to-emerald-600 text-white font-bold py-4 px-6 rounded-2xl text-center hover:from-sky-700 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all"
                     >
-                      Acheter des billets
+                      <ExternalLink className="w-5 h-5" />
+                      <span>Billets</span>
                     </a>
-                  )}
-                </div>
-              </div>
-            }
-            feedContent={<EventFeedPanel eventId={event.id} canPost={canPostToFeed} />}
-          />
+                  </div>
+                )}
 
-          {/* Événements similaires - SPRINT 2 */}
-          <SimilarEvents eventId={event.id} limit={6} />
+                {/* Invite Friend */}
+                <InviteFriendButton eventId={event.id} />
+
+                {/* Event Feed Panel */}
+                <EventFeedPanel eventId={event.id} />
+
+                {/* Actions admin/organisateur */}
+                {(isOwner || isAdmin) && (
+                  <EventPublishSection event={event} />
+                )}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
+      </>
     );
   } catch (error) {
-    console.error('Error loading event:', error);
+    console.error('Erreur chargement event:', error);
     notFound();
   }
 }
