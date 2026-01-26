@@ -1,6 +1,5 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Phone, Globe, Users, Calendar, ExternalLink, Building2, Star, TrendingUp, Sparkles, Clock, Mail, Award } from 'lucide-react';
 import { format } from 'date-fns';
@@ -8,6 +7,7 @@ import { fr } from 'date-fns/locale';
 
 import { prisma } from '@/lib/prisma';
 import { buildVenueJsonLd, canonicalUrlForPath } from '@/lib/seo';
+import { VenueImage } from '@/components/VenueImage';
 import EventDetailMap from '@/components/EventDetailMap';
 import VenueEventCard from '@/components/VenueEventCard';
 import VenueRequestButton from '@/components/VenueRequestButton';
@@ -196,9 +196,11 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
         return acc;
       }, {} as Record<string, number>),
       tags: pastEvents.reduce((acc, event) => {
-        event.tags.forEach(tag => {
-          acc[tag] = (acc[tag] || 0) + 1;
-        });
+        if (event.tags && Array.isArray(event.tags)) {
+          event.tags.forEach(tag => {
+            acc[tag] = (acc[tag] || 0) + 1;
+          });
+        }
         return acc;
       }, {} as Record<string, number>),
     };
@@ -272,7 +274,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                 {/* Image de la salle */}
                 {venue.imageUrl && (
                   <div className="mb-8 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
-                    <Image
+                    <VenueImage
                       src={
                         venue.imageUrl.startsWith('http') && 
                         !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
@@ -285,10 +287,6 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                       className="w-full h-[400px] object-cover"
                       priority
                       unoptimized={venue.imageUrl.startsWith('http') && !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')}
-                      onError={(e) => {
-                        // Si l'image échoue, cacher l'image et afficher un placeholder
-                        e.currentTarget.style.display = 'none';
-                      }}
                     />
                   </div>
                 )}

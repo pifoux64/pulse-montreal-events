@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import Image from 'next/image';
 import Navigation from '@/components/Navigation';
+import { VenueImage } from '@/components/VenueImage';
 import { Building2, MapPin, Calendar, Search, Loader2, Star, Users, Sparkles, TrendingUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
@@ -144,7 +145,7 @@ export default function SallesPage() {
                     {/* Image de la salle */}
                     {venue.imageUrl ? (
                       <div className="relative h-48 overflow-hidden">
-                        <Image
+                        <VenueImage
                           src={
                             venue.imageUrl.startsWith('http') && 
                             !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
@@ -153,19 +154,11 @@ export default function SallesPage() {
                           }
                           alt={venue.name}
                           fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
                           unoptimized={venue.imageUrl.startsWith('http') && !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')}
-                          onError={(e) => {
-                            // Si l'image échoue, remplacer par un gradient
-                            e.currentTarget.style.display = 'none';
-                          }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
-                        {/* Fallback si l'image échoue */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Building2 className="w-16 h-16 text-white/50" />
-                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent pointer-events-none"></div>
                       </div>
                     ) : (
                       <div className="relative h-48 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center">
