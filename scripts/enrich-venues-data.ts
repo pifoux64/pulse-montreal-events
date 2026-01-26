@@ -334,7 +334,7 @@ const venueEnrichmentData: Record<string, {
   'stade-saputo': {
     description: 'Le Stade Saputo est le deuxième plus grand stade de soccer spécifique au Canada avec une capacité de 19 619 places. Situé au 4750 rue Sherbrooke Est dans le Parc olympique (arrondissement Mercier–Hochelaga-Maisonneuve), le stade a ouvert le 21 mai 2008. Il présente un design moderne et élégant et se trouve sur l\'ancien site d\'entraînement d\'athlétisme des Jeux olympiques d\'été de 1976. Le côté ouest offre des vues spectaculaires sur la tour inclinée emblématique du Stade olympique. Le stade est la maison du CF Montréal pour les matchs de Major League Soccer, le Championnat canadien et les compétitions Leagues Cup. Il accueille également des événements internationaux.',
     capacity: 19619,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Saputo_Stadium_2012.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b6/Saputo_Stadium.jpg',
     types: ['stade', 'sport'],
     tags: ['soccer', 'sport', 'football', 'CF Montréal', 'événements sportifs'],
     website: 'https://www.cfmontreal.com',
@@ -354,7 +354,7 @@ const venueEnrichmentData: Record<string, {
   // Basilique Notre-Dame
   'basilique-notre-dame': {
     description: 'La Basilique Notre-Dame de Montréal est un monument néogothique construit entre 1824 et 1829, situé au 110 rue Notre-Dame Ouest dans le Vieux-Montréal. Réputée pour sa riche décoration intérieure sculptée, peinte et dorée à la feuille d\'or, elle propose plusieurs activités : visite touristique autoguidée d\'environ une heure explorant 24 points d\'intérêt (vitraux, sculptures, feuille d\'or et un orgue de 7 000 tuyaux), et l\'expérience AURA, un spectacle immersif de lumière et son créé par Moment Factory. Des travaux de restauration importants sont en cours jusqu\'en 2040.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4f/Notre-Dame_Basilica_Montreal.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/ba/Notre_Dame_Basilica_Montreal.jpg',
     types: ['église', 'monument', 'centre_culturel'],
     tags: ['patrimoine', 'architecture', 'visites', 'spectacles immersifs', 'AURA', 'culture religieuse'],
     website: 'https://www.basiliquenotredame.ca',
