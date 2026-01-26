@@ -1,5 +1,6 @@
 /**
  * API Route pour créer et mettre à jour des venues
+ * GET /api/venues - Liste publique des venues
  * POST /api/venues - Créer une nouvelle venue
  * PATCH /api/venues/[id] - Mettre à jour une venue
  */
@@ -37,6 +38,68 @@ async function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<s
 
     slug = `${baseSlug}-${counter}`;
     counter++;
+  }
+}
+
+/**
+ * GET /api/venues - Liste publique des venues
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const page = parseInt(searchParams.get('page') || '1');
+    const pageSize = parseInt(searchParams.get('pageSize') || '20');
+    const search = searchParams.get('search');
+    const neighborhood = searchParams.get('neighborhood');
+    const skip = (page - 1) * pageSize;
+
+    const where: any = {};
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { neighborhood: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    
+    if (neighborhood) {
+      where.neighborhood = { contains: neighborhood, mode: 'insensitive' };
+    }
+
+    const [venues, total] = await Promise.all([
+      prisma.venue.findMany({
+        where,
+        include: {
+          _count: {
+            select: {
+              events: true,
+            },
+          },
+        },
+        orderBy: {
+          name: 'asc',
+        },
+        skip,
+        take: pageSize,
+      }),
+      prisma.venue.count({ where }),
+    ]);
+
+    return NextResponse.json({
+      items: venues,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
+    });
+
+  } catch (error: any) {
+    console.error('Erreur lors de la récupération des venues:', error);
+    return NextResponse.json(
+      { error: 'Erreur serveur lors de la récupération des venues' },
+      { status: 500 }
+    );
   }
 }
 

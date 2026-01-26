@@ -79,7 +79,11 @@
     },
     "social": "Social",
     "pulsers": "Pulsers",
-    "messages": "Messages"
+    "messages": "Messages",
+    "venues": "Salles",
+    "organizers": "Organisateurs",
+    "explore": "Explorer",
+    "discover": "Découvrir"
   },
   "home": {
     "title": "Découvrez les événements de Montréal",
