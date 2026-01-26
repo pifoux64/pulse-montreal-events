@@ -89,19 +89,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Vérifier si le bucket existe, sinon le créer
+    // Essayer de créer le bucket s'il n'existe pas (mais ne pas bloquer si ça échoue)
+    // Le bucket peut déjà exister ou on peut ne pas avoir les permissions pour le créer
     try {
-      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-      
-      if (listError) {
-        console.error('Erreur list buckets:', listError);
-        // Continuer quand même, peut-être que le bucket existe déjà
-      }
-      
+      const { data: buckets } = await supabase.storage.listBuckets();
       const bucketExists = buckets?.some(b => b.name === BUCKET_NAME);
       
       if (!bucketExists) {
-        console.log(`Création du bucket "${BUCKET_NAME}"...`);
+        // Essayer de créer le bucket, mais ignorer l'erreur si ça échoue
+        // (le bucket peut exister mais on n'a peut-être pas les permissions pour le lister)
         const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
           public: true,
           fileSizeLimit: MAX_FILE_SIZE,
@@ -109,30 +105,22 @@ export async function POST(request: NextRequest) {
         });
         
         if (createError) {
-          console.error('Erreur création bucket:', createError);
-          // Si l'erreur indique que le bucket existe déjà, continuer
-          if (createError.message?.includes('already exists') || createError.message?.includes('duplicate')) {
-            console.log('Bucket existe déjà, continuation...');
+          // Si l'erreur indique que le bucket existe déjà, c'est OK
+          if (createError.message?.includes('already exists') || 
+              createError.message?.includes('duplicate') ||
+              createError.message?.includes('Bucket already exists')) {
+            console.log(`Bucket "${BUCKET_NAME}" existe déjà`);
           } else {
-            return NextResponse.json(
-              { error: `Erreur lors de la création du bucket de stockage: ${createError.message}` },
-              { status: 500 }
-            );
+            // Autre erreur : logger mais continuer quand même
+            // (on essaiera l'upload et si ça échoue, on retournera une erreur plus claire)
+            console.warn(`Impossible de créer le bucket "${BUCKET_NAME}":`, createError.message);
           }
-        } else {
-          console.log(`Bucket "${BUCKET_NAME}" créé avec succès`);
         }
       }
     } catch (bucketError: any) {
-      console.error('Erreur lors de la vérification/création du bucket:', bucketError);
-      // Si c'est une erreur de permissions, on peut quand même essayer d'uploader
-      // (le bucket existe peut-être déjà mais on n'a pas les permissions pour le lister)
-      if (!bucketError.message?.includes('permission') && !bucketError.message?.includes('unauthorized')) {
-        return NextResponse.json(
-          { error: `Erreur lors de la vérification du bucket: ${bucketError.message}` },
-          { status: 500 }
-        );
-      }
+      // Ignorer les erreurs de vérification/création du bucket
+      // On essaiera quand même l'upload
+      console.warn('Erreur lors de la vérification du bucket (ignorée):', bucketError.message);
     }
 
     // Générer un nom de fichier unique
@@ -151,8 +139,21 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Erreur upload Supabase:', error);
+      
+      // Si l'erreur indique que le bucket n'existe pas, donner un message plus clair
+      if (error.message?.includes('Bucket not found') || 
+          error.message?.includes('does not exist') ||
+          error.statusCode === 404) {
+        return NextResponse.json(
+          { 
+            error: `Le bucket de stockage "${BUCKET_NAME}" n'existe pas. Veuillez le créer dans votre dashboard Supabase ou contacter l'administrateur.` 
+          },
+          { status: 500 }
+        );
+      }
+      
       return NextResponse.json(
-        { error: 'Erreur lors de l\'upload de l\'image' },
+        { error: `Erreur lors de l'upload de l'image: ${error.message || 'Erreur inconnue'}` },
         { status: 500 }
       );
     }
