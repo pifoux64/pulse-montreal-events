@@ -80,7 +80,10 @@
     },
     "social": "Social",
     "pulsers": "Pulsers",
-    "messages": "Messages"
+    "messages": "Messages",
+    "venues": "Venues",
+    "organizers": "Organizers",
+    "explore": "Explore"
   },
   "home": {
     "title": "Discover Montreal Events",
@@ -203,6 +206,7 @@
     "searchResults": "Search Results",
     "filters": "Filters",
     "sortBy": "Sort By",
+    "notFound": "Event not found",
     "sortOptions": {
       "date": "Date",
       "popularity": "Popularity",
@@ -422,7 +426,26 @@
     "unknownError": "Unknown Error",
     "tryAgain": "Try Again",
     "goHome": "Go Home",
-    "contactSupport": "Contact Support"
+    "contactSupport": "Contact Support",
+    "loadingError": "Error loading",
+    "fetchError": "Error fetching",
+    "updateError": "Error updating",
+    "createError": "Error creating",
+    "sendError": "Error sending"
+  },
+  "pages": {
+    "tonight": "Tonight in Montreal",
+    "weekend": "This Weekend in Montreal",
+    "tonightDescription": "Discover tonight's events in Montreal. Concerts, shows, festivals and more.",
+    "weekendDescription": "Discover this weekend's events in Montreal. Concerts, shows, festivals and more."
+  },
+  "venues": {
+    "notFound": "Venue not found",
+    "searchPlaceholder": "Search for a venue, neighborhood, type of place..."
+  },
+  "organizers": {
+    "notFound": "Organizer not found",
+    "searchPlaceholder": "Search for an organizer..."
   },
   "notifications": {
     "eventAdded": "Event added successfully",
@@ -568,6 +591,7 @@
     "saveAll": "Save all 5",
     "saving": "Adding...",
     "saved": "Saved",
+    "notFound": "Top 5 not found",
     "top5Theme": "Top 5 {theme} in Montreal",
     "period": "Period from {start} to {end}",
     "noEventsSelected": "No events selected for this Top 5 yet.",
