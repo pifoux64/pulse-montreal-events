@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { Calendar, MapPin, DollarSign, Heart, Share2, ExternalLink, Loader2, LogIn } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { useLocale } from 'next-intl';
 import { fr, enUS, es } from 'date-fns/locale';
@@ -56,6 +57,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
   const [distance, setDistance] = useState<number | null>(null);
   const t = useTranslations('eventDetail');
   const locale = useLocale();
+  const pathname = usePathname();
 
   // Calculer la distance si la localisation utilisateur est disponible
   useEffect(() => {
@@ -237,7 +239,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
           {/* Login prompt if not authenticated */}
           {!session && (
             <Link
-              href={`/auth/signin?callbackUrl=${encodeURIComponent(typeof window !== 'undefined' ? window.location.pathname : '/')}`}
+              href={`/auth/signin?callbackUrl=${encodeURIComponent(pathname || '/')}`}
               className="flex items-center gap-2 px-4 py-2 text-blue-400 hover:text-blue-300 transition-colors text-sm"
             >
               <LogIn className="w-4 h-4" />
