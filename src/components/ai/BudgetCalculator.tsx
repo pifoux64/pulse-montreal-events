@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Calculator, Loader2, DollarSign, TrendingUp, Users } from 'lucide-react';
 
 export default function BudgetCalculator() {
+  const t = useTranslations('budget');
   const [formData, setFormData] = useState({
     eventType: '',
     expectedAttendance: '',
@@ -49,7 +51,7 @@ export default function BudgetCalculator() {
       const data = await response.json();
       setResult(data);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du calcul');
+      setError(err.message || t('calculationError'));
     } finally {
       setIsCalculating(false);
     }
@@ -59,21 +61,21 @@ export default function BudgetCalculator() {
     <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
       <div className="flex items-center gap-3 mb-6">
         <Calculator className="w-6 h-6 text-sky-400" />
-        <h3 className="text-xl font-bold text-white">Calculateur de Budget</h3>
+        <h3 className="text-xl font-bold text-white">{t('title')}</h3>
       </div>
 
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Type d'événement
+              {t('eventType')}
             </label>
             <select
               value={formData.eventType}
               onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
-              <option value="">Sélectionnez...</option>
+              <option value="">{t('select')}</option>
               <option value="concert">Concert</option>
               <option value="dj_set">DJ Set</option>
               <option value="festival">Festival</option>
@@ -84,7 +86,7 @@ export default function BudgetCalculator() {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               <Users className="w-4 h-4 inline mr-1" />
-              Personnes attendues
+              {t('expectedAttendance')}
             </label>
             <input
               type="number"
@@ -98,7 +100,7 @@ export default function BudgetCalculator() {
 
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">
-            Capacité de la salle
+            {t('venueCapacity')}
           </label>
           <input
             type="number"
@@ -113,7 +115,7 @@ export default function BudgetCalculator() {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               <DollarSign className="w-4 h-4 inline mr-1" />
-              Coût salle (CAD)
+              {t('venueCost')}
             </label>
             <input
               type="number"
@@ -127,7 +129,7 @@ export default function BudgetCalculator() {
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
               <DollarSign className="w-4 h-4 inline mr-1" />
-              Cachets artistes (CAD)
+              {t('artistCosts')}
             </label>
             <input
               type="number"
@@ -148,7 +150,7 @@ export default function BudgetCalculator() {
               onChange={(e) => setFormData({ ...formData, hasSound: e.target.checked })}
               className="w-4 h-4 rounded"
             />
-            Sonorisation incluse
+            {t('soundIncluded')}
           </label>
           <label className="flex items-center gap-2 text-slate-300 cursor-pointer">
             <input
@@ -157,14 +159,14 @@ export default function BudgetCalculator() {
               onChange={(e) => setFormData({ ...formData, hasLighting: e.target.checked })}
               className="w-4 h-4 rounded"
             />
-            Éclairage inclus
+            {t('lightingIncluded')}
           </label>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Budget promotion (CAD)
+              {t('promotionBudget')}
             </label>
             <input
               type="number"
@@ -177,7 +179,7 @@ export default function BudgetCalculator() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Autres coûts (CAD)
+              {t('otherCosts')}
             </label>
             <input
               type="number"
@@ -198,12 +200,12 @@ export default function BudgetCalculator() {
           {isCalculating ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Calcul en cours...
+              {t('calculating')}
             </>
           ) : (
             <>
               <Calculator className="w-5 h-5" />
-              Calculer le budget
+              {t('calculate')}
             </>
           )}
         </button>
@@ -218,52 +220,52 @@ export default function BudgetCalculator() {
           <div className="mt-6 space-y-6">
             {/* Coûts estimés */}
             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-              <h4 className="text-lg font-semibold text-white mb-4">Coûts estimés</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">{t('estimatedCosts')}</h4>
               <div className="space-y-2">
                 {result.estimatedCosts.venue != null && typeof result.estimatedCosts.venue === 'number' && (
                   <div className="flex justify-between text-slate-300">
-                    <span>Salle</span>
+                    <span>{t('venue')}</span>
                     <span>{result.estimatedCosts.venue.toFixed(2)} $</span>
                   </div>
                 )}
                 {result.estimatedCosts.artists != null && typeof result.estimatedCosts.artists === 'number' && (
                   <div className="flex justify-between text-slate-300">
-                    <span>Artistes</span>
+                    <span>{t('artists')}</span>
                     <span>{result.estimatedCosts.artists.toFixed(2)} $</span>
                   </div>
                 )}
                 {result.estimatedCosts.sound != null && typeof result.estimatedCosts.sound === 'number' && (
                   <div className="flex justify-between text-slate-300">
-                    <span>Sonorisation</span>
+                    <span>{t('sound')}</span>
                     <span>{result.estimatedCosts.sound.toFixed(2)} $</span>
                   </div>
                 )}
                 {result.estimatedCosts.lighting != null && typeof result.estimatedCosts.lighting === 'number' && (
                   <div className="flex justify-between text-slate-300">
-                    <span>Éclairage</span>
+                    <span>{t('lighting')}</span>
                     <span>{result.estimatedCosts.lighting.toFixed(2)} $</span>
                   </div>
                 )}
                 {result.estimatedCosts.promotion != null && typeof result.estimatedCosts.promotion === 'number' && (
                   <div className="flex justify-between text-slate-300">
-                    <span>Promotion</span>
+                    <span>{t('promotion')}</span>
                     <span>{result.estimatedCosts.promotion.toFixed(2)} $</span>
                   </div>
                 )}
                 {result.estimatedCosts.staff != null && typeof result.estimatedCosts.staff === 'number' && (
                   <div className="flex justify-between text-slate-300">
-                    <span>Personnel</span>
+                    <span>{t('staff')}</span>
                     <span>{result.estimatedCosts.staff.toFixed(2)} $</span>
                   </div>
                 )}
                 {result.estimatedCosts.other != null && typeof result.estimatedCosts.other === 'number' && (
                   <div className="flex justify-between text-slate-300">
-                    <span>Autres</span>
+                    <span>{t('other')}</span>
                     <span>{result.estimatedCosts.other.toFixed(2)} $</span>
                   </div>
                 )}
                 <div className="flex justify-between text-white font-bold pt-2 border-t border-white/10">
-                  <span>Total</span>
+                  <span>{t('total')}</span>
                   <span>{result.estimatedCosts.total != null && typeof result.estimatedCosts.total === 'number' ? result.estimatedCosts.total.toFixed(2) : '0.00'} $</span>
                 </div>
               </div>
@@ -273,11 +275,11 @@ export default function BudgetCalculator() {
             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
               <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5" />
-                Seuil de rentabilité
+                {t('breakEven')}
               </h4>
               <div className="space-y-2">
                 <div className="flex justify-between text-slate-300">
-                  <span>Prix de billet nécessaire</span>
+                  <span>{t('ticketPriceNeeded')}</span>
                   <span className="text-white font-semibold">
                     {result.breakEven?.ticketPrice != null && typeof result.breakEven.ticketPrice === 'number' 
                       ? result.breakEven.ticketPrice.toFixed(2) 
@@ -285,7 +287,7 @@ export default function BudgetCalculator() {
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-300">
-                  <span>Personnes nécessaires</span>
+                  <span>{t('attendeesNeeded')}</span>
                   <span className="text-white font-semibold">
                     {result.breakEven?.attendeesNeeded != null ? result.breakEven.attendeesNeeded : '0'}
                   </span>
@@ -295,17 +297,17 @@ export default function BudgetCalculator() {
 
             {/* Suggestions de tarification */}
             <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-              <h4 className="text-lg font-semibold text-white mb-4">Suggestions de tarification</h4>
+              <h4 className="text-lg font-semibold text-white mb-4">{t('pricingSuggestions')}</h4>
               <div className="space-y-3">
                 {result.suggestedPricing.free.viable && (
                   <div className="p-3 bg-emerald-600/20 rounded-lg border border-emerald-600/50">
-                    <div className="font-semibold text-emerald-300 mb-1">Gratuit</div>
+                    <div className="font-semibold text-emerald-300 mb-1">{t('free')}</div>
                     <div className="text-sm text-slate-300">{result.suggestedPricing.free.notes}</div>
                   </div>
                 )}
                 <div className="grid grid-cols-3 gap-2">
                   <div className="p-3 bg-white/5 rounded-lg">
-                    <div className="text-xs text-slate-400 mb-1">Bas</div>
+                    <div className="text-xs text-slate-400 mb-1">{t('low')}</div>
                     <div className="text-white font-semibold">
                       {result.suggestedPricing?.low?.price != null && typeof result.suggestedPricing.low.price === 'number'
                         ? result.suggestedPricing.low.price.toFixed(2)
@@ -314,7 +316,7 @@ export default function BudgetCalculator() {
                     <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.low?.target || ''}</div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg">
-                    <div className="text-xs text-slate-400 mb-1">Moyen</div>
+                    <div className="text-xs text-slate-400 mb-1">{t('medium')}</div>
                     <div className="text-white font-semibold">
                       {result.suggestedPricing?.medium?.price != null && typeof result.suggestedPricing.medium.price === 'number'
                         ? result.suggestedPricing.medium.price.toFixed(2)
@@ -323,7 +325,7 @@ export default function BudgetCalculator() {
                     <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.medium?.target || ''}</div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg">
-                    <div className="text-xs text-slate-400 mb-1">Élevé</div>
+                    <div className="text-xs text-slate-400 mb-1">{t('high')}</div>
                     <div className="text-white font-semibold">
                       {result.suggestedPricing?.high?.price != null && typeof result.suggestedPricing.high.price === 'number'
                         ? result.suggestedPricing.high.price.toFixed(2)
@@ -338,7 +340,7 @@ export default function BudgetCalculator() {
             {/* Recommandations */}
             {result.recommendations && result.recommendations.length > 0 && (
               <div className="p-4 bg-white/5 rounded-lg border border-white/10">
-                <h4 className="text-lg font-semibold text-white mb-3">Recommandations</h4>
+                <h4 className="text-lg font-semibold text-white mb-3">{t('recommendations')}</h4>
                 <ul className="space-y-2">
                   {result.recommendations.map((rec: string, i: number) => (
                     <li key={i} className="text-slate-300 flex items-start gap-2">
