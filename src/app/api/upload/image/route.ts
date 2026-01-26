@@ -90,20 +90,46 @@ export async function POST(request: NextRequest) {
     }
 
     // Vérifier si le bucket existe, sinon le créer
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(b => b.name === BUCKET_NAME);
-    
-    if (!bucketExists) {
-      const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-        public: true,
-        fileSizeLimit: MAX_FILE_SIZE,
-        allowedMimeTypes: ALLOWED_TYPES,
-      });
+    try {
+      const { data: buckets, error: listError } = await supabase.storage.listBuckets();
       
-      if (createError) {
-        console.error('Erreur création bucket:', createError);
+      if (listError) {
+        console.error('Erreur list buckets:', listError);
+        // Continuer quand même, peut-être que le bucket existe déjà
+      }
+      
+      const bucketExists = buckets?.some(b => b.name === BUCKET_NAME);
+      
+      if (!bucketExists) {
+        console.log(`Création du bucket "${BUCKET_NAME}"...`);
+        const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+          public: true,
+          fileSizeLimit: MAX_FILE_SIZE,
+          allowedMimeTypes: ALLOWED_TYPES,
+        });
+        
+        if (createError) {
+          console.error('Erreur création bucket:', createError);
+          // Si l'erreur indique que le bucket existe déjà, continuer
+          if (createError.message?.includes('already exists') || createError.message?.includes('duplicate')) {
+            console.log('Bucket existe déjà, continuation...');
+          } else {
+            return NextResponse.json(
+              { error: `Erreur lors de la création du bucket de stockage: ${createError.message}` },
+              { status: 500 }
+            );
+          }
+        } else {
+          console.log(`Bucket "${BUCKET_NAME}" créé avec succès`);
+        }
+      }
+    } catch (bucketError: any) {
+      console.error('Erreur lors de la vérification/création du bucket:', bucketError);
+      // Si c'est une erreur de permissions, on peut quand même essayer d'uploader
+      // (le bucket existe peut-être déjà mais on n'a pas les permissions pour le lister)
+      if (!bucketError.message?.includes('permission') && !bucketError.message?.includes('unauthorized')) {
         return NextResponse.json(
-          { error: 'Erreur lors de la création du bucket de stockage' },
+          { error: `Erreur lors de la vérification du bucket: ${bucketError.message}` },
           { status: 500 }
         );
       }
