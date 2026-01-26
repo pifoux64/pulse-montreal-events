@@ -100,7 +100,6 @@ export async function POST(request: NextRequest) {
     costs.total = totalCosts;
 
     // Calcul du seuil de rentabilité avec validation
-    const attendance = expectedAttendance || venueCapacity || 200;
     // S'assurer que l'attendance est au moins 1 pour éviter division par zéro
     const safeAttendance = Math.max(1, parseInt(String(attendance), 10));
     
