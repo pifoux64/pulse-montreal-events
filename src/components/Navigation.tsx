@@ -139,7 +139,7 @@ export default function Navigation() {
                     
                     {/* Catégories */}
                     <div className="px-3 py-1.5 mb-1">
-                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Catégories</div>
+                      <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{tCommon('categories')}</div>
                     </div>
                     <Link
                       href="/musique"
