@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -84,19 +84,7 @@ export default function OrganisateurDashboard() {
     ? (document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] === 'en' ? enUS : document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] === 'es' ? es : fr)
     : fr;
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin?callbackUrl=/organisateur/dashboard');
-    } else if (status === 'authenticated') {
-      if (session.user.role !== 'ORGANIZER' && session.user.role !== 'ADMIN') {
-        router.push('/organisateur/mon-profil');
-      } else {
-        loadDashboard();
-      }
-    }
-  }, [status, session, router]);
-
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -109,9 +97,11 @@ export default function OrganisateurDashboard() {
       
       // Charger tous les événements de l'organisateur
       const allEventsResponse = await fetch(`/api/events?organizerId=${organizer.id}&pageSize=100`);
+      let loadedEvents: Event[] = [];
       if (allEventsResponse.ok) {
         const eventsData = await allEventsResponse.json();
-        setEvents(eventsData.items || []);
+        loadedEvents = eventsData.items || [];
+        setEvents(loadedEvents);
       }
 
       // Charger les statistiques
@@ -121,7 +111,6 @@ export default function OrganisateurDashboard() {
         setStats(statsData);
       } else {
         // Calculer des stats basiques si l'API n'existe pas encore
-        const loadedEvents = events.length > 0 ? events : [];
         const basicStats: Stats = {
           totalEvents: loadedEvents.length,
           upcomingEvents: loadedEvents.filter(e => new Date(e.startAt) > new Date()).length,
@@ -149,7 +138,19 @@ export default function OrganisateurDashboard() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin?callbackUrl=/organisateur/dashboard');
+    } else if (status === 'authenticated') {
+      if (session?.user?.role !== 'ORGANIZER' && session?.user?.role !== 'ADMIN') {
+        router.push('/organisateur/mon-profil');
+      } else {
+        loadDashboard();
+      }
+    }
+  }, [status, session, router, loadDashboard]);
 
   const handleDeleteEvent = async (eventId: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
