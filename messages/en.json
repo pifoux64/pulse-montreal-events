@@ -884,7 +884,16 @@
       "low": "Low",
       "medium": "Medium",
       "high": "High",
-      "recommendations": "Recommendations"
+      "recommendations": "Recommendations",
+      "profitMatrix": "Profit matrix",
+      "profitMatrixDescription": "Estimated profits based on ticket price and number of entries",
+      "profitMatrixLabel": "Benefit (Ticket Price / Entries)",
+      "lossHigh": "High loss",
+      "lossMedium": "Medium loss",
+      "lossLow": "Low loss",
+      "profitLow": "Low profit",
+      "profitMedium": "Medium profit",
+      "profitHigh": "High profit"
     },
     "flyerGenerator": "Flyer Generator",
     "createFlyer": "Create flyer",

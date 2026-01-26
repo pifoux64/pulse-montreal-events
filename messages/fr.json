@@ -1035,7 +1035,16 @@
       "low": "Bas",
       "medium": "Moyen",
       "high": "Élevé",
-      "recommendations": "Recommandations"
+      "recommendations": "Recommandations",
+      "profitMatrix": "Tableau des bénéfices",
+      "profitMatrixDescription": "Bénéfices estimés selon le prix des billets et le nombre d'entrées",
+      "profitMatrixLabel": "Bénéfice (Prix Billets / Entrées)",
+      "lossHigh": "Perte importante",
+      "lossMedium": "Perte modérée",
+      "lossLow": "Petite perte",
+      "profitLow": "Petit bénéfice",
+      "profitMedium": "Bénéfice modéré",
+      "profitHigh": "Excellent bénéfice"
     },
     "flyerGenerator": "Générateur Flyer",
     "createFlyer": "Créer un flyer",

@@ -99,9 +99,17 @@ export async function POST(request: NextRequest) {
     totalCosts += estimatedSound + estimatedLighting + estimatedPromotion + estimatedStaff + (costs.other || 0);
     costs.total = totalCosts;
 
-    // Calcul du seuil de rentabilité
-    const breakEvenAttendees = Math.ceil(totalCosts / 20); // Prix moyen de 20$ pour le calcul
-    const breakEvenPrice = totalCosts / (expectedAttendance || venueCapacity || 200);
+    // Calcul du seuil de rentabilité avec validation
+    const attendance = expectedAttendance || venueCapacity || 200;
+    // S'assurer que l'attendance est au moins 1 pour éviter division par zéro
+    const safeAttendance = Math.max(1, parseInt(String(attendance), 10));
+    
+    // Calcul du prix de billet nécessaire pour atteindre le seuil
+    const breakEvenPrice = totalCosts / safeAttendance;
+    
+    // Calcul du nombre de personnes nécessaires avec un prix de billet raisonnable (15-30$)
+    const reasonableTicketPrice = Math.max(15, Math.min(30, breakEvenPrice));
+    const breakEvenAttendees = Math.ceil(totalCosts / reasonableTicketPrice);
 
     // Utiliser l'IA pour des recommandations contextuelles
     const systemPrompt = `Tu es un expert en gestion financière d'événements culturels à Montréal.
@@ -163,7 +171,33 @@ Génère :
 
       aiRecommendations = result.data.recommendations || [];
       if (result.data.suggestedPricing) {
-        suggestedPricing = result.data.suggestedPricing;
+        // Valider et limiter les prix suggérés par l'IA pour éviter les valeurs aberrantes
+        const validatedPricing = { ...result.data.suggestedPricing };
+        
+        // Limiter les prix à des valeurs raisonnables (max 500$)
+        if (validatedPricing.low?.price && validatedPricing.low.price > 500) {
+          validatedPricing.low.price = Math.min(500, breakEvenPrice * 1.2);
+        }
+        if (validatedPricing.medium?.price && validatedPricing.medium.price > 500) {
+          validatedPricing.medium.price = Math.min(500, breakEvenPrice * 1.5);
+        }
+        if (validatedPricing.high?.price && validatedPricing.high.price > 500) {
+          validatedPricing.high.price = Math.min(500, breakEvenPrice * 2);
+        }
+        
+        // Valider le breakEven retourné par l'IA
+        if (result.data.breakEven) {
+          const aiBreakEven = result.data.breakEven;
+          // Si le prix retourné est aberrant (> 500$), utiliser notre calcul
+          if (aiBreakEven.ticketPrice && aiBreakEven.ticketPrice > 500) {
+            result.data.breakEven.ticketPrice = breakEvenPrice;
+          }
+          if (aiBreakEven.attendeesNeeded && aiBreakEven.attendeesNeeded > 100000) {
+            result.data.breakEven.attendeesNeeded = breakEvenAttendees;
+          }
+        }
+        
+        suggestedPricing = validatedPricing;
       }
     } catch (error) {
       console.warn('Erreur IA pour recommandations, utilisation des valeurs par défaut:', error);
@@ -174,11 +208,15 @@ Génère :
       ];
     }
 
+    // Valider et limiter le prix de billet nécessaire (max 500$)
+    const safeBreakEvenPrice = Math.min(500, Math.ceil(breakEvenPrice * 100) / 100);
+    const safeBreakEvenAttendees = Math.min(100000, breakEvenAttendees);
+    
     return NextResponse.json({
       estimatedCosts: costs,
       breakEven: {
-        ticketPrice: Math.ceil(breakEvenPrice * 100) / 100,
-        attendeesNeeded: breakEvenAttendees,
+        ticketPrice: safeBreakEvenPrice,
+        attendeesNeeded: safeBreakEvenAttendees,
         revenue: totalCosts,
       },
       suggestedPricing,

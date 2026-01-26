@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Calculator, Loader2, DollarSign, TrendingUp, Users } from 'lucide-react';
+import ProfitMatrixTable from './ProfitMatrixTable';
 
 export default function BudgetCalculator() {
   const t = useTranslations('budget');
@@ -336,6 +337,17 @@ export default function BudgetCalculator() {
                 </div>
               </div>
             </div>
+
+            {/* Tableau de bénéfices */}
+            {result.estimatedCosts?.total && (
+              <ProfitMatrixTable
+                totalCosts={result.estimatedCosts.total}
+                minTicketPrice={15}
+                maxTicketPrice={300}
+                minAttendees={15}
+                maxAttendees={25}
+              />
+            )}
 
             {/* Recommandations */}
             {result.recommendations && result.recommendations.length > 0 && (
