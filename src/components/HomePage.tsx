@@ -157,12 +157,12 @@ const transformApiEvent = (event: ApiEvent): Event => {
       description: event.description || '',
       shortDescription: event.description?.substring(0, 100) + '...' || '',
       startDate: new Date(event.startAt),
-      endDate: event.endAt ? new Date(event.endAt) : null,
+      endDate: event.endAt ? new Date(event.endAt) : new Date(event.startAt), // Utiliser startDate si pas de endDate
       location: {
         name: event.venue?.name || 'Lieu à confirmer',
         address: event.venue?.address || '',
         city: event.venue?.city || 'Montréal',
-        postalCode: event.venue?.postalCode || '',
+        postalCode: '', // Pas disponible dans l'API venue
         coordinates: {
           lat: event.venue?.lat ?? 45.5088,
           lng: event.venue?.lon ?? -73.5542,
@@ -179,9 +179,9 @@ const transformApiEvent = (event: ApiEvent): Event => {
         currency: event.currency || 'CAD',
         isFree: event.priceMin === 0 && event.priceMin != null, // Gratuit seulement si explicitement 0
       },
-      imageUrl: event.imageUrl || null, // Pas de fallback Unsplash (bloqué par CSP)
+      imageUrl: event.imageUrl || undefined, // Pas de fallback Unsplash (bloqué par CSP)
       ticketUrl: event.url || '#',
-      organizerId: event.organizerId || null,
+      organizerId: event.organizerId || 'default',
       organizer: event.organizer ? {
         id: event.organizer.id,
         email: 'api@pulse.com',
@@ -189,15 +189,32 @@ const transformApiEvent = (event: ApiEvent): Event => {
         role: 'organizer' as const,
         createdAt: new Date(),
         updatedAt: new Date(),
-      } : null,
+      } : {
+        id: 'default',
+        email: 'api@pulse.com',
+        name: 'Organisateur',
+        role: 'organizer' as const,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
       customFilters: [],
-      accessibility: [],
-      status: 'published' as const,
+      accessibility: {
+        wheelchairAccessible: false,
+        hearingAssistance: false,
+        visualAssistance: false,
+        quietSpace: false,
+        signLanguage: false,
+        audioDescription: false,
+        braille: false,
+      },
+      targetAudience: publicTags.map(t => t.replace(/_/g, ' ')),
+      currentCapacity: 0,
+      isFeatured: false,
+      isVerified: false,
+      rating: 0,
+      reviewCount: 0,
       source: event.source,
       externalId: event.id,
-      language: 'fr' as const,
-      minAttendees: 0,
-      maxAttendees: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -442,8 +459,8 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <Navigation />
 
-      {/* Hero Section - Design moderne */}
-      <section className="relative px-4 py-20 md:py-32 overflow-hidden">
+      {/* Hero Section - Design moderne et direct */}
+      <section className="relative px-4 pt-24 pb-12 md:pt-32 md:pb-16 overflow-hidden">
         {/* Background animé avec gradients */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl animate-pulse"></div>
@@ -452,26 +469,26 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
         </div>
 
         <div className="relative max-w-6xl mx-auto text-center">
-          {/* Titre principal avec gradient animé */}
-          <div className="mb-6">
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 via-cyan-200 to-purple-200 animate-gradient">
+          {/* Titre principal avec gradient animé - Plus compact */}
+          <div className="mb-4">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-200 via-cyan-200 to-purple-200 animate-gradient">
               {t('heroTitle')}
             </h1>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2">
+            <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-white mb-2">
               {t('heroSubtitle')}
             </h2>
           </div>
 
-          {/* Sous-titre élégant */}
-          <p className="text-lg md:text-xl text-slate-400 mb-12 font-light max-w-2xl mx-auto">
+          {/* Sous-titre élégant - Plus court */}
+          <p className="text-base md:text-lg text-slate-400 mb-8 font-light max-w-2xl mx-auto">
             {t('heroDescription')}
           </p>
 
-          {/* Boutons CTA modernes */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          {/* Boutons CTA modernes - Plus compacts */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
             <button
               onClick={() => setMode('today')}
-              className={`group relative px-10 py-5 rounded-2xl font-semibold text-lg transition-all duration-500 overflow-hidden ${
+              className={`group relative px-8 py-4 rounded-xl font-semibold text-base transition-all duration-500 overflow-hidden ${
                 mode === 'today'
                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl shadow-blue-500/50 scale-105'
                   : 'bg-white/5 text-white hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20'
@@ -481,13 +498,13 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               )}
               <span className="relative z-10 flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
+                <Calendar className="w-4 h-4" />
                 {t('whatToDoToday')}
               </span>
             </button>
             <button
               onClick={() => setMode('weekend')}
-              className={`group relative px-10 py-5 rounded-2xl font-semibold text-lg transition-all duration-500 overflow-hidden ${
+              className={`group relative px-8 py-4 rounded-xl font-semibold text-base transition-all duration-500 overflow-hidden ${
                 mode === 'weekend'
                   ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl shadow-blue-500/50 scale-105'
                   : 'bg-white/5 text-white hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/20'
@@ -497,15 +514,15 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                 <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               )}
               <span className="relative z-10 flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
+                <Calendar className="w-4 h-4" />
                 {t('whatToDoWeekend')}
               </span>
             </button>
           </div>
 
-          {/* Sélecteur de date personnalisé */}
-          <div className="mb-12 max-w-2xl mx-auto">
-            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-xl">
+          {/* Sélecteur de date personnalisé - Plus compact */}
+          <div className="mb-8 max-w-2xl mx-auto">
+            <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-xl">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Calendar className="w-5 h-5 text-slate-300" />
                 <label className="text-base font-semibold text-slate-200">
@@ -610,7 +627,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
           </div>
 
           {/* Filtres hiérarchiques : Catégorie → Genre → Style - Design moderne */}
-          <div className="mt-8 space-y-6">
+          <div className="mt-6 space-y-4">
             {/* Niveau 1 : Catégories principales */}
             <div className="flex flex-wrap gap-3 justify-center">
               {/* Bouton "Tout" */}
@@ -892,45 +909,30 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
             </div>
           </div>
 
-          {/* Lien vers la carte - Design moderne */}
-          <div className="mt-12">
-            <a
-              href="/carte"
-              className="group inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/30 text-slate-200 hover:text-white transition-all duration-300 hover:scale-105"
-            >
-              <MapPin className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-              <span className="font-medium">{t('viewOnMap')}</span>
-              <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            </a>
-          </div>
         </div>
       </section>
 
-      {/* Sections IA : Top 5 et Recommandations */}
-      <HomePageTrendingSections />
-      <HomePageAISections />
-
-      {/* Liste d'événements - Design moderne */}
-      <section className="px-4 pb-20 relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      {/* Liste d'événements - Design moderne - IMMÉDIATEMENT après les filtres */}
+      <section className="px-4 pb-12 relative bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
         <div className="max-w-7xl mx-auto relative">
-          {/* En-tête avec compteur moderne */}
-          <div className="mb-12 text-center pt-8">
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 backdrop-blur-xl border border-white/10 mb-4">
+          {/* En-tête avec compteur moderne - Plus compact et visible */}
+          <div className="mb-8 text-center pt-6">
+            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-xl bg-white/5 backdrop-blur-xl border border-white/10 mb-3">
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
-              <span className="text-sm text-slate-400 font-medium">
+              <span className="text-sm text-slate-300 font-semibold">
                 {t('eventsAvailable', { count: events.length })}
               </span>
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3">
-              {mode === 'today' ? t('today') : t('thisWeekend')}
+            <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white mb-2">
+              {mode === 'today' ? t('today') : mode === 'weekend' ? t('thisWeekend') : t('selectedPeriod')}
               {displayedFilterLabel && (
-                <span className="ml-3 text-2xl md:text-3xl bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                <span className="ml-2 text-xl md:text-2xl bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
                   · {displayedFilterLabel}
                 </span>
               )}
             </h2>
             {(displayedFilterLabel || selectedType || selectedAmbiance || selectedPublic) && (
-              <p className="text-slate-400 text-sm">
+              <p className="text-slate-400 text-xs md:text-sm">
                 {t('activeFilters')}: {selectedCategory && CATEGORY_LABELS[selectedCategory]?.fr}
                 {selectedGenre && ` → ${selectedGenre.replace(/_/g, ' ')}`}
                 {selectedStyle && ` → ${selectedStyle.replace(/_/g, ' ')}`}
@@ -939,6 +941,17 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
                 {selectedPublic && ` • ${t('public')}: ${selectedPublic === 'tout_public' ? t('allPublic') : selectedPublic === '18_plus' ? '18+' : selectedPublic.replace(/_/g, ' ')}`}
               </p>
             )}
+            {/* Lien vers la carte */}
+            <div className="mt-4">
+              <Link
+                href="/carte"
+                className="group inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 backdrop-blur-xl border border-white/10 hover:border-white/30 text-slate-300 hover:text-white transition-all duration-300 text-sm"
+              >
+                <MapPin className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                <span className="font-medium">{t('viewOnMap')}</span>
+                <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              </Link>
+            </div>
           </div>
 
           {/* Loading */}
@@ -1117,6 +1130,10 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
           )}
         </div>
       </section>
+
+      {/* Sections IA : Top 5 et Recommandations - Mise en avant de la valeur ajoutée */}
+      <HomePageAISections />
+      <HomePageTrendingSections />
     </div>
   );
 }
@@ -1191,7 +1208,7 @@ function HomePageTrendingSections() {
       description: trendingEvent.description || '',
       shortDescription: trendingEvent.description?.substring(0, 100) + '...' || '',
       startDate: new Date(trendingEvent.startAt),
-      endDate: trendingEvent.endAt ? new Date(trendingEvent.endAt) : undefined,
+      endDate: trendingEvent.endAt ? new Date(trendingEvent.endAt) : new Date(trendingEvent.startAt),
       location: trendingEvent.venue
         ? {
             name: trendingEvent.venue.name,
@@ -1230,13 +1247,23 @@ function HomePageTrendingSections() {
         updatedAt: new Date(),
       },
       customFilters: [],
-      accessibility: [],
-      status: 'published' as const,
+      accessibility: {
+        wheelchairAccessible: false,
+        hearingAssistance: false,
+        visualAssistance: false,
+        quietSpace: false,
+        signLanguage: false,
+        audioDescription: false,
+        braille: false,
+      },
+      targetAudience: [],
+      currentCapacity: 0,
+      isFeatured: false,
+      isVerified: false,
+      rating: 0,
+      reviewCount: 0,
       source: trendingEvent.source,
       externalId: trendingEvent.id,
-      language: 'fr' as const,
-      minAttendees: 0,
-      maxAttendees: 0,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -1244,7 +1271,7 @@ function HomePageTrendingSections() {
 
   return (
     <section className="px-4 py-12 relative bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-y border-white/5">
-      <div className="max-w-7xl mx-auto space-y-12">
+      <div className="max-w-7xl mx-auto space-y-10">
         {/* Section Trending tonight */}
         {trendingToday.length > 0 && (
           <div>
@@ -1262,7 +1289,7 @@ function HomePageTrendingSections() {
               </div>
               <Link
                 href="/ce-soir"
-                className="text-sm text-red-400 hover:text-red-300 flex items-center gap-1"
+                className="text-sm font-semibold text-red-400 hover:text-red-300 flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-500/10 transition-all"
               >
                 {t('seeAll')}
                 <ArrowRight className="w-4 h-4" />
@@ -1324,7 +1351,7 @@ function HomePageTrendingSections() {
               </div>
               <Link
                 href="/ce-weekend"
-                className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                className="text-sm font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-blue-500/10 transition-all"
               >
                 {t('seeAll')}
                 <ArrowRight className="w-4 h-4" />
@@ -1416,30 +1443,30 @@ function HomePageAISections() {
   }
 
   return (
-    <section className="px-4 py-12 relative bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-y border-white/5">
-      <div className="max-w-7xl mx-auto space-y-12">
-        {/* Section Top 5 Pulse Picks */}
+    <section className="px-4 py-16 relative bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 border-y border-white/5">
+      <div className="max-w-7xl mx-auto space-y-16">
+        {/* Section Top 5 Pulse Picks - Mise en avant de la valeur ajoutée IA */}
         {top5Posts.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
-                  <Trophy className="w-5 h-5 text-amber-400" />
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-amber-500/30 to-orange-500/30 border-2 border-amber-500/50 shadow-lg shadow-amber-500/20">
+                  <Trophy className="w-6 h-6 text-amber-300" />
                 </div>
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3 mb-1">
                     {t('pulsePicks')}
-                    <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 flex items-center gap-1">
-                      <Brain className="w-3 h-3" />
+                    <span className="text-xs px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/30 to-orange-500/30 border border-amber-500/50 text-amber-200 flex items-center gap-1.5 font-bold shadow-lg shadow-amber-500/20">
+                      <Brain className="w-3.5 h-3.5" />
                       IA
                     </span>
                   </h2>
-                  <p className="text-sm text-slate-400 mt-1">{t('top5Selected')}</p>
+                  <p className="text-base text-slate-300 font-medium">{t('top5Selected')}</p>
                 </div>
               </div>
               <Link
                 href="/top-5"
-                className="text-sm text-sky-400 hover:text-sky-300 flex items-center gap-1"
+                className="text-sm font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-amber-500/10 transition-all"
               >
                 {t('seeAll')}
                 <ArrowRight className="w-4 h-4" />
@@ -1491,28 +1518,28 @@ function HomePageAISections() {
           </div>
         )}
 
-        {/* Section Recommandations personnalisées */}
+        {/* Section Recommandations personnalisées - Mise en avant de la valeur ajoutée IA */}
         {session?.user && recommendations.length > 0 && (
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30">
-                  <Sparkles className="w-5 h-5 text-purple-400" />
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 border-2 border-purple-500/50 shadow-lg shadow-purple-500/20">
+                  <Sparkles className="w-6 h-6 text-purple-300" />
                 </div>
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-2">
+                  <h2 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3 mb-1">
                     {t('forYou')}
-                    <span className="text-xs px-2 py-1 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-300 flex items-center gap-1">
-                      <Brain className="w-3 h-3" />
+                    <span className="text-xs px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/50 text-purple-200 flex items-center gap-1.5 font-bold shadow-lg shadow-purple-500/20">
+                      <Brain className="w-3.5 h-3.5" />
                       IA
                     </span>
                   </h2>
-                  <p className="text-sm text-slate-400 mt-1">{t('recommendationsBasedOnTastes')}</p>
+                  <p className="text-base text-slate-300 font-medium">{t('recommendationsBasedOnTastes')}</p>
                 </div>
               </div>
               <Link
                 href="/pour-toi"
-                className="text-sm text-purple-400 hover:text-purple-300 flex items-center gap-1"
+                className="text-sm font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-purple-500/10 transition-all"
               >
                 {t('seeAll')}
                 <ArrowRight className="w-4 h-4" />

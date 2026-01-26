@@ -41,10 +41,11 @@ export default function Navigation() {
     };
   }, [isUserMenuOpen]);
 
+  // Navigation optimisée : éléments les plus importants en premier
   const navigationItems = [
+    { name: t('pourToi'), href: '/pour-toi', icon: Sparkles, shortName: t('pourToiShort'), highlight: true }, // IA en premier
     { name: t('map'), href: '/carte', icon: Map, shortName: t('mapShort') },
     { name: t('calendar'), href: '/calendrier', icon: Calendar, shortName: t('calendarShort') },
-    { name: t('pourToi'), href: '/pour-toi', icon: Sparkles, shortName: t('pourToiShort') },
     { name: t('favorites'), href: '/favoris', icon: Heart, shortName: t('favoritesShort') },
     { name: t('publish'), href: '/publier', icon: Plus, shortName: t('publishShort') },
   ];
@@ -82,15 +83,22 @@ export default function Navigation() {
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isFavorites = item.href === '/favoris';
+                const isHighlighted = (item as any).highlight;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap"
+                    className={`group relative px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-300 flex items-center space-x-2 whitespace-nowrap ${
+                      isHighlighted
+                        ? 'text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 hover:from-purple-500/30 hover:to-pink-500/30'
+                        : 'text-slate-200 hover:text-white'
+                    }`}
                     title={item.name}
                   >
-                    {/* Background gradient on hover */}
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    {/* Background gradient on hover - seulement si pas highlighté */}
+                    {!isHighlighted && (
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    )}
                     
                     <div className="relative z-10 flex-shrink-0">
                       <Icon className="w-4 h-4" />
@@ -101,6 +109,11 @@ export default function Navigation() {
                       )}
                     </div>
                     <span className="relative z-10 text-xs">{item.shortName || item.name}</span>
+                    {isHighlighted && (
+                      <span className="relative z-10 ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/50 text-purple-200 font-bold">
+                        IA
+                      </span>
+                    )}
                   </Link>
                 );
               })}
@@ -412,22 +425,36 @@ export default function Navigation() {
                 {navigationItems.map((item) => {
                   const Icon = item.icon;
                   const isFavorites = item.href === '/favoris';
+                  const isHighlighted = (item as any).highlight;
                   return (
                     <Link
                       key={item.href}
                       href={item.href}
-                      className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center space-x-3 group text-slate-100 relative"
+                      className={`p-4 rounded-2xl border transition-all duration-300 flex items-center space-x-3 group text-slate-100 relative ${
+                        isHighlighted
+                          ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border-purple-500/30 hover:from-purple-500/30 hover:to-pink-500/30'
+                          : 'bg-white/10 hover:bg-white/20 border-white/15'
+                      }`}
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <div className="relative">
-                        <Icon className="w-6 h-6 text-slate-200 group-hover:text-sky-300 group-hover:scale-105 transition-transform duration-300" />
+                        <Icon className={`w-6 h-6 transition-transform duration-300 ${
+                          isHighlighted
+                            ? 'text-purple-300 group-hover:text-purple-200 group-hover:scale-105'
+                            : 'text-slate-200 group-hover:text-sky-300 group-hover:scale-105'
+                        }`} />
                         {isFavorites && favoritesCount > 0 && (
                           <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                             {favoritesCount > 99 ? '99+' : favoritesCount}
                           </span>
                         )}
                       </div>
-                      <span className="font-semibold text-slate-100 whitespace-nowrap">{item.name}</span>
+                      <div className="flex-1">
+                        <span className="font-semibold text-slate-100 whitespace-nowrap block">{item.name}</span>
+                        {isHighlighted && (
+                          <span className="text-[10px] text-purple-300 font-bold">IA</span>
+                        )}
+                      </div>
                     </Link>
                   );
                 })}
