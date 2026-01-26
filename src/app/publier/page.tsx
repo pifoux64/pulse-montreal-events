@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { EventFormData, EventCategory } from '@/types';
 import Navigation from '@/components/Navigation';
 import EventForm from '@/components/EventForm';
@@ -104,6 +105,7 @@ const mapCategoryToPrisma = (category: string): PrismaEventCategory => {
 };
 
 export default function PublierPage() {
+  const t = useTranslations('publish');
   const { status } = useSession();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -188,13 +190,13 @@ export default function PublierPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la création de l\'événement');
+        throw new Error(errorData.error || t('publishError'));
       }
 
       const createdEvent = await response.json();
       
       setSubmitStatus('success');
-      setSubmitMessage('Votre événement a été publié avec succès ! Il sera visible dans quelques minutes.');
+      setSubmitMessage(t('eventPublished'));
       
       // Redirection après 3 secondes vers la page de l'événement
       setTimeout(() => {
@@ -204,17 +206,14 @@ export default function PublierPage() {
     } catch (error: any) {
       console.error('Erreur lors de la publication:', error);
       setSubmitStatus('error');
-      setSubmitMessage(
-        error.message || 
-        'Une erreur est survenue lors de la publication. Veuillez vérifier que vous êtes connecté en tant qu\'organisateur vérifié.'
-      );
+      setSubmitMessage(error.message || t('publishError'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleCancel = () => {
-    if (confirm('Êtes-vous sûr de vouloir annuler ? Toutes les données saisies seront perdues.')) {
+    if (confirm(t('cancelConfirm'))) {
       window.location.href = '/';
     }
   };
@@ -234,28 +233,27 @@ export default function PublierPage() {
         <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
           <div className="bg-slate-900/70 border border-white/10 rounded-2xl p-8 text-center space-y-6">
             <h1 className="text-3xl font-semibold text-white">
-              Créez votre profil organisateur
+              {t('createOrganizerProfile')}
             </h1>
             <p className="text-slate-300">
-              Vous devez disposer d&apos;un compte organisateur pour publier un événement.
-              Cela nous permet de vérifier vos informations et de garantir la qualité des contenus.
+              {t('organizerProfileRequired')}
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
                 onClick={() => router.push('/organisateur/mon-profil')}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-sky-600 to-emerald-600 text-white font-semibold shadow-lg hover:scale-105 transition-transform"
               >
-                Créer mon profil
+                {t('createProfile')}
               </button>
               <button
                 onClick={() => router.push('/')}
                 className="px-6 py-3 rounded-xl border border-white/20 text-slate-200 hover:bg-white/10 transition"
               >
-                Retour à l&apos;accueil
+                {t('backToHome')}
               </button>
             </div>
             <p className="text-sm text-slate-400">
-              Astuce : dès que votre profil sera validé, vous pourrez publier autant d&apos;événements que nécessaire.
+              {t('organizerTip')}
             </p>
           </div>
         </main>
@@ -275,11 +273,11 @@ export default function PublierPage() {
               <Plus className="w-6 h-6 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-white">
-              Publier un événement
+              {t('title')}
             </h1>
           </div>
           <p className="text-slate-300 text-lg">
-            Partagez votre événement avec la communauté montréalaise. Remplissez le formulaire ci-dessous pour le publier.
+            {t('subtitle')}
           </p>
         </div>
 
@@ -304,28 +302,28 @@ export default function PublierPage() {
         {/* Guide de publication */}
         <div className="bg-slate-800/70 backdrop-blur-xl border border-white/10 rounded-xl p-6 mb-8">
           <h2 className="text-lg font-semibold text-white mb-3">
-            💡 Conseils pour une publication réussie
+            💡 {t('successTips')}
           </h2>
           <ul className="space-y-2 text-slate-300">
             <li className="flex items-start space-x-2">
               <span className="text-sky-400">•</span>
-              <span>Rédigez un titre clair et accrocheur</span>
+              <span>{t('tip1')}</span>
             </li>
             <li className="flex items-start space-x-2">
               <span className="text-sky-400">•</span>
-              <span>Ajoutez une description détaillée avec les informations pratiques</span>
+              <span>{t('tip2')}</span>
             </li>
             <li className="flex items-start space-x-2">
               <span className="text-sky-400">•</span>
-              <span>Utilisez des tags pertinents pour améliorer la visibilité</span>
+              <span>{t('tip3')}</span>
             </li>
             <li className="flex items-start space-x-2">
               <span className="text-sky-400">•</span>
-              <span>Précisez les informations d'accessibilité si applicable</span>
+              <span>{t('tip4')}</span>
             </li>
             <li className="flex items-start space-x-2">
               <span className="text-sky-400">•</span>
-              <span>Ajoutez des filtres personnalisés pour aider les utilisateurs à trouver votre événement</span>
+              <span>{t('tip5')}</span>
             </li>
           </ul>
         </div>
@@ -343,36 +341,33 @@ export default function PublierPage() {
         {/* Informations supplémentaires */}
         <div className="mt-8 bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10">
           <h3 className="text-lg font-semibold text-white mb-3">
-            Questions fréquentes
+            {t('faq')}
           </h3>
           <div className="space-y-4">
             <div>
               <h4 className="font-medium text-white mb-2">
-                Combien de temps faut-il pour qu'un événement soit visible ?
+                {t('faq1Question')}
               </h4>
               <p className="text-slate-300">
-                Les événements sont généralement visibles immédiatement après leur publication. 
-                Les événements créés par des organisateurs vérifiés sont automatiquement approuvés.
+                {t('faq1Answer')}
               </p>
             </div>
             
             <div>
               <h4 className="font-medium text-white mb-2">
-                Puis-je modifier un événement après publication ?
+                {t('faq2Question')}
               </h4>
               <p className="text-slate-300">
-                Oui, vous pouvez modifier vos événements à tout moment depuis votre tableau de bord organisateur 
-                (bientôt disponible).
+                {t('faq2Answer')}
               </p>
             </div>
             
             <div>
               <h4 className="font-medium text-white mb-2">
-                Comment ajouter des filtres personnalisés ?
+                {t('faq3Question')}
               </h4>
               <p className="text-slate-300">
-                Utilisez la section "Filtres personnalisés" pour créer des critères spécifiques à votre événement, 
-                comme "tenue blanche obligatoire" ou "repas inclus".
+                {t('faq3Answer')}
               </p>
             </div>
           </div>

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image as ImageIcon, Facebook, Loader2, Ticket } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image as ImageIcon, Facebook, Loader2, Ticket, Upload } from 'lucide-react';
 import { EventFormData, EventCategory, CustomFilter } from '@/types';
 import { normalizeUrl } from '@/lib/utils';
 
@@ -31,10 +32,9 @@ const eventFormSchema = z.object({
     isFree: z.boolean(),
   }),
   imageUrl: z.string()
+    .min(1, 'L\'image est requise')
     .transform((val) => val ? normalizeUrl(val) || val : val)
-    .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), 'URL d\'image invalide')
-    .optional()
-    .or(z.literal('')),
+    .refine((val) => val && /^https?:\/\/.+/.test(val), 'URL d\'image invalide'),
   ticketUrl: z.string()
     .transform((val) => val ? normalizeUrl(val) || val : val)
     .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), 'URL de billetterie invalide')
@@ -76,6 +76,7 @@ const EventForm = ({
   initialData, 
   isEditing = false 
 }: EventFormProps) => {
+  const t = useTranslations('publish');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCustomFilters, setShowCustomFilters] = useState(false);
   const [newTag, setNewTag] = useState('');
@@ -90,6 +91,8 @@ const EventForm = ({
   const [isImportingUrl, setIsImportingUrl] = useState(false);
   const [urlImportError, setUrlImportError] = useState<string | null>(null);
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState<string | null>(null);
 
   const {
     control,
@@ -694,30 +697,140 @@ const EventForm = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
           <ImageIcon className="w-5 h-5 text-blue-600" />
-          <span>Image de l'événement</span>
+          <span>{t('imageTitle')}</span>
         </h3>
         
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              URL de l'image <span className="text-gray-500">(optionnel)</span>
+              {t('imageLabel')} <span className="text-red-500">*</span>
             </label>
+            
+            {/* Upload de fichier */}
+            <div className="mb-4">
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  {isUploadingImage ? (
+                    <>
+                      <Loader2 className="w-8 h-8 mb-2 text-blue-600 animate-spin" />
+                      <p className="text-sm text-gray-600">{t('uploading')}</p>
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 mb-2 text-gray-400" />
+                      <p className="mb-2 text-sm text-gray-500">
+                        <span className="font-semibold">{t('clickToUpload')}</span> {t('orDragDrop')}
+                      </p>
+                      <p className="text-xs text-gray-500">{t('imageRequirements')}</p>
+                    </>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    setIsUploadingImage(true);
+                    setImageUploadError(null);
+
+                    try {
+                      // Valider la taille du fichier (5MB max)
+                      const MAX_SIZE = 5 * 1024 * 1024;
+                      if (file.size > MAX_SIZE) {
+                        throw new Error(t('imageTooLarge', { maxSize: '5MB' }));
+                      }
+
+                      // Valider les dimensions
+                      const img = new Image();
+                      const url = URL.createObjectURL(file);
+                      
+                      await new Promise<void>((resolve, reject) => {
+                        img.onload = () => {
+                          URL.revokeObjectURL(url);
+                          const MIN_WIDTH = 400;
+                          const MIN_HEIGHT = 300;
+                          const MAX_WIDTH = 4000;
+                          const MAX_HEIGHT = 4000;
+                          
+                          if (img.width < MIN_WIDTH || img.height < MIN_HEIGHT) {
+                            reject(new Error(t('imageTooSmall', { minWidth: MIN_WIDTH, minHeight: MIN_HEIGHT, width: img.width, height: img.height })));
+                            return;
+                          }
+                          
+                          if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
+                            reject(new Error(t('imageTooBig', { maxWidth: MAX_WIDTH, maxHeight: MAX_HEIGHT, width: img.width, height: img.height })));
+                            return;
+                          }
+                          
+                          resolve();
+                        };
+                        
+                        img.onerror = () => {
+                          URL.revokeObjectURL(url);
+                          reject(new Error(t('imageInvalid')));
+                        };
+                        
+                        img.src = url;
+                      });
+
+                      const formData = new FormData();
+                      formData.append('file', file);
+
+                      const response = await fetch('/api/upload/image', {
+                        method: 'POST',
+                        body: formData,
+                      });
+
+                      if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || t('uploadError'));
+                      }
+
+                      const data = await response.json();
+                      setValue('imageUrl', data.url);
+                    } catch (error: any) {
+                      console.error('Erreur upload:', error);
+                      setImageUploadError(error.message || t('uploadError'));
+                    } finally {
+                      setIsUploadingImage(false);
+                    }
+                  }}
+                />
+              </label>
+              {imageUploadError && (
+                <p className="mt-2 text-sm text-red-600">{imageUploadError}</p>
+              )}
+            </div>
+
+            {/* Ou URL en fallback */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">{t('or')}</span>
+              </div>
+            </div>
+
             <Controller
               name="imageUrl"
               control={control}
               render={({ field }) => (
-                <div className="space-y-3">
+                <div className="space-y-3 mt-4">
                   <input
                     {...field}
                     type="url"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="https://example.com/image.jpg"
+                    placeholder={t('imageUrlPlaceholder')}
                   />
                   {errors.imageUrl && (
                     <p className="text-sm text-red-600">{errors.imageUrl.message}</p>
                   )}
                   <p className="text-xs text-gray-500">
-                    Collez l'URL d'une image pour votre événement. L'image sera automatiquement importée depuis Facebook ou Eventbrite si vous utilisez l'import.
+                    {t('imageUrlHelp')}
                   </p>
                 </div>
               )}
@@ -728,19 +841,19 @@ const EventForm = ({
           {watchedImageUrl && (
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Aperçu
+                {t('preview')}
               </label>
               <div className="relative w-full h-64 rounded-lg overflow-hidden border border-gray-200 bg-gray-100">
                 <img
                   src={watchedImageUrl}
-                  alt="Aperçu de l'image de l'événement"
+                  alt={t('imagePreviewAlt')}
                   className="w-full h-full object-cover"
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.style.display = 'none';
                     const parent = target.parentElement;
                     if (parent) {
-                      parent.innerHTML = '<div class="w-full h-full flex items-center justify-center text-gray-400"><p>Impossible de charger l\'image</p></div>';
+                      parent.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-400"><p>${t('imageLoadError')}</p></div>`;
                     }
                   }}
                 />
@@ -751,7 +864,7 @@ const EventForm = ({
                 className="mt-2 text-sm text-red-600 hover:text-red-800 flex items-center gap-1"
               >
                 <X className="w-4 h-4" />
-                Supprimer l'image
+                {t('removeImage')}
               </button>
             </div>
           )}
