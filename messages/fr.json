@@ -951,7 +951,40 @@
     "preview": "Aperçu",
     "imagePreviewAlt": "Aperçu de l'image de l'événement",
     "imageLoadError": "Impossible de charger l'image",
-    "removeImage": "Supprimer l'image"
+    "removeImage": "Supprimer l'image",
+    "validation": {
+      "titleMin": "Le titre doit contenir au moins 3 caractères",
+      "descriptionMin": "La description doit contenir au moins 20 caractères",
+      "startDateRequired": "La date de début est requise",
+      "endDateRequired": "La date de fin est requise",
+      "venueNameRequired": "Le nom du lieu est requis",
+      "addressRequired": "L'adresse est requise",
+      "cityRequired": "La ville est requise",
+      "postalCodeRequired": "Le code postal est requis",
+      "categoryRequired": "La catégorie est requise",
+      "tagsMin": "Au moins un tag est requis",
+      "priceNegative": "Le prix ne peut pas être négatif",
+      "currencyRequired": "La devise est requise",
+      "imageRequired": "L'image est requise",
+      "imageUrlInvalid": "URL d'image invalide",
+      "ticketUrlInvalid": "URL de billetterie invalide",
+      "filterNameRequired": "Le nom du filtre est requis",
+      "filterValueRequired": "La valeur du filtre est requise",
+      "targetAudienceMin": "Au moins un public cible est requis",
+      "capacityMin": "La capacité doit être supérieure à 0"
+    },
+    "import": {
+      "enterFacebookUrl": "Veuillez entrer une URL Facebook",
+      "enterEventbriteUrl": "Veuillez entrer une URL Eventbrite",
+      "enterUrl": "Veuillez entrer une URL",
+      "importError": "Erreur lors de l'import",
+      "importErrorFacebook": "Erreur lors de l'import depuis Facebook",
+      "importErrorEventbrite": "Erreur lors de l'import depuis Eventbrite",
+      "importErrorUrl": "Erreur lors de l'import depuis cette URL",
+      "pasteGenericUrl": "Collez l'URL d'un événement public (Facebook, Eventbrite, site de salle, etc.) pour pré-remplir automatiquement le formulaire",
+      "pasteFacebookUrl": "Collez l'URL d'un événement Facebook pour pré-remplir automatiquement le formulaire",
+      "pasteEventbriteUrl": "Collez l'URL d'un événement Eventbrite pour pré-remplir automatiquement le formulaire"
+    }
   },
   "dashboard": {
     "title": "Tableau de bord",

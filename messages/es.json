@@ -655,7 +655,40 @@
     "preview": "Vista previa",
     "imagePreviewAlt": "Vista previa de la imagen del evento",
     "imageLoadError": "No se puede cargar la imagen",
-    "removeImage": "Eliminar imagen"
+    "removeImage": "Eliminar imagen",
+    "validation": {
+      "titleMin": "El título debe contener al menos 3 caracteres",
+      "descriptionMin": "La descripción debe contener al menos 20 caracteres",
+      "startDateRequired": "La fecha de inicio es requerida",
+      "endDateRequired": "La fecha de fin es requerida",
+      "venueNameRequired": "El nombre del lugar es requerido",
+      "addressRequired": "La dirección es requerida",
+      "cityRequired": "La ciudad es requerida",
+      "postalCodeRequired": "El código postal es requerido",
+      "categoryRequired": "La categoría es requerida",
+      "tagsMin": "Se requiere al menos una etiqueta",
+      "priceNegative": "El precio no puede ser negativo",
+      "currencyRequired": "La moneda es requerida",
+      "imageRequired": "La imagen es requerida",
+      "imageUrlInvalid": "URL de imagen inválida",
+      "ticketUrlInvalid": "URL de billete inválida",
+      "filterNameRequired": "El nombre del filtro es requerido",
+      "filterValueRequired": "El valor del filtro es requerido",
+      "targetAudienceMin": "Se requiere al menos un público objetivo",
+      "capacityMin": "La capacidad debe ser mayor que 0"
+    },
+    "import": {
+      "enterFacebookUrl": "Por favor ingresa una URL de Facebook",
+      "enterEventbriteUrl": "Por favor ingresa una URL de Eventbrite",
+      "enterUrl": "Por favor ingresa una URL",
+      "importError": "Error de importación",
+      "importErrorFacebook": "Error al importar desde Facebook",
+      "importErrorEventbrite": "Error al importar desde Eventbrite",
+      "importErrorUrl": "Error al importar desde esta URL",
+      "pasteGenericUrl": "Pega la URL de un evento público (Facebook, Eventbrite, sitio del lugar, etc.) para rellenar automáticamente el formulario",
+      "pasteFacebookUrl": "Pega la URL de un evento de Facebook para rellenar automáticamente el formulario",
+      "pasteEventbriteUrl": "Pega la URL de un evento de Eventbrite para rellenar automáticamente el formulario"
+    }
   },
   "pricing": {
     "title": "Precios y planes",

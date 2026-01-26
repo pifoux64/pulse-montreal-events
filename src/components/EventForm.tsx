@@ -9,40 +9,40 @@ import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image
 import { EventFormData, EventCategory, CustomFilter } from '@/types';
 import { normalizeUrl } from '@/lib/utils';
 
-// Schéma de validation avec Zod
-const eventFormSchema = z.object({
-  title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères'),
-  description: z.string().min(20, 'La description doit contenir au moins 20 caractères'),
+// Fonction pour créer le schéma de validation avec traductions
+const createEventFormSchema = (t: (key: string) => string) => z.object({
+  title: z.string().min(3, t('validation.titleMin')),
+  description: z.string().min(20, t('validation.descriptionMin')),
   longDescription: z.string().optional(), // SPRINT 4: Description longue optionnelle
   lineup: z.array(z.string()).optional(), // SPRINT 4: Lineup optionnel
-  startDate: z.string().min(1, 'La date de début est requise'),
-  endDate: z.string().min(1, 'La date de fin est requise'),
+  startDate: z.string().min(1, t('validation.startDateRequired')),
+  endDate: z.string().min(1, t('validation.endDateRequired')),
   location: z.object({
-    name: z.string().min(1, 'Le nom du lieu est requis'),
-    address: z.string().min(1, 'L\'adresse est requise'),
-    city: z.string().min(1, 'La ville est requise'),
-    postalCode: z.string().min(1, 'Le code postal est requis'),
+    name: z.string().min(1, t('validation.venueNameRequired')),
+    address: z.string().min(1, t('validation.addressRequired')),
+    city: z.string().min(1, t('validation.cityRequired')),
+    postalCode: z.string().min(1, t('validation.postalCodeRequired')),
   }),
-  category: z.string().min(1, 'La catégorie est requise'),
+  category: z.string().min(1, t('validation.categoryRequired')),
   subCategory: z.string().optional(),
-  tags: z.array(z.string()).min(1, 'Au moins un tag est requis'),
+  tags: z.array(z.string()).min(1, t('validation.tagsMin')),
   price: z.object({
-    amount: z.number().min(0, 'Le prix ne peut pas être négatif'),
-    currency: z.string().min(1, 'La devise est requise'),
+    amount: z.number().min(0, t('validation.priceNegative')),
+    currency: z.string().min(1, t('validation.currencyRequired')),
     isFree: z.boolean(),
   }),
   imageUrl: z.string()
-    .min(1, 'L\'image est requise')
+    .min(1, t('validation.imageRequired'))
     .transform((val) => val ? normalizeUrl(val) || val : val)
-    .refine((val) => val && /^https?:\/\/.+/.test(val), 'URL d\'image invalide'),
+    .refine((val) => val && /^https?:\/\/.+/.test(val), t('validation.imageUrlInvalid')),
   ticketUrl: z.string()
     .transform((val) => val ? normalizeUrl(val) || val : val)
-    .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), 'URL de billetterie invalide')
+    .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), t('validation.ticketUrlInvalid'))
     .optional()
     .or(z.literal('')),
   customFilters: z.array(z.object({
-    name: z.string().min(1, 'Le nom du filtre est requis'),
-    value: z.string().min(1, 'La valeur du filtre est requise'),
+    name: z.string().min(1, t('validation.filterNameRequired')),
+    value: z.string().min(1, t('validation.filterValueRequired')),
     type: z.enum(['text', 'boolean', 'select', 'number']),
     options: z.array(z.string()).optional(),
     isRequired: z.boolean(),
@@ -55,11 +55,11 @@ const eventFormSchema = z.object({
     genderNeutralBathrooms: z.boolean(),
     other: z.array(z.string()),
   }),
-  targetAudience: z.array(z.string()).min(1, 'Au moins un public cible est requis'),
-  maxCapacity: z.number().min(1, 'La capacité doit être supérieure à 0').optional(),
+  targetAudience: z.array(z.string()).min(1, t('validation.targetAudienceMin')),
+  maxCapacity: z.number().min(1, t('validation.capacityMin')).optional(),
 });
 
-type EventFormSchema = z.infer<typeof eventFormSchema>;
+type EventFormSchema = z.infer<ReturnType<typeof createEventFormSchema>>;
 
 interface EventFormProps {
   categories: EventCategory[];
@@ -77,6 +77,7 @@ const EventForm = ({
   isEditing = false 
 }: EventFormProps) => {
   const t = useTranslations('publish');
+  const eventFormSchema = createEventFormSchema(t);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCustomFilters, setShowCustomFilters] = useState(false);
   const [newTag, setNewTag] = useState('');
@@ -256,7 +257,7 @@ const EventForm = ({
 
   const handleImportFacebook = async () => {
     if (!facebookUrl.trim()) {
-      setFacebookImportError('Veuillez entrer une URL Facebook');
+      setFacebookImportError(t('import.enterFacebookUrl'));
       return;
     }
 
@@ -272,7 +273,7 @@ const EventForm = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de l\'import');
+        throw new Error(errorData.error || t('import.importError'));
       }
 
       const result = await response.json();
@@ -282,7 +283,7 @@ const EventForm = ({
       setFacebookUrl('');
     } catch (error: any) {
       console.error('Erreur import Facebook:', error);
-      setFacebookImportError(error.message || 'Erreur lors de l\'import depuis Facebook');
+      setFacebookImportError(error.message || t('import.importErrorFacebook'));
     } finally {
       setIsImportingFacebook(false);
     }
@@ -290,7 +291,7 @@ const EventForm = ({
 
   const handleImportUrl = async () => {
     if (!genericUrl.trim()) {
-      setUrlImportError('Veuillez entrer une URL');
+      setUrlImportError(t('import.enterUrl'));
       return;
     }
 
@@ -308,7 +309,7 @@ const EventForm = ({
 
       // Si la réponse n'est pas OK ou si success est false
       if (!response.ok || !result.success) {
-        const errorMessage = result.error || 'Erreur lors de l\'import';
+        const errorMessage = result.error || t('import.importError');
         const suggestion = result.suggestion || 'Veuillez copier manuellement les informations.';
         throw new Error(`${errorMessage}${suggestion ? ` ${suggestion}` : ''}`);
       }
@@ -322,7 +323,7 @@ const EventForm = ({
       setGenericUrl('');
     } catch (error: any) {
       console.error('Erreur import URL:', error);
-      setUrlImportError(error.message || 'Erreur lors de l\'import depuis cette URL');
+      setUrlImportError(error.message || t('import.importErrorUrl'));
     } finally {
       setIsImportingUrl(false);
     }
@@ -330,7 +331,7 @@ const EventForm = ({
 
   const handleImportEventbrite = async () => {
     if (!eventbriteUrl.trim()) {
-      setEventbriteImportError('Veuillez entrer une URL Eventbrite');
+      setEventbriteImportError(t('import.enterEventbriteUrl'));
       return;
     }
 
@@ -356,7 +357,7 @@ const EventForm = ({
       setEventbriteUrl('');
     } catch (error: any) {
       console.error('Erreur import Eventbrite:', error);
-      setEventbriteImportError(error.message || 'Erreur lors de l\'import depuis Eventbrite');
+      setEventbriteImportError(error.message || t('import.importErrorEventbrite'));
     } finally {
       setIsImportingEventbrite(false);
     }
@@ -373,7 +374,7 @@ const EventForm = ({
             <h3 className="text-lg font-semibold text-gray-900">Coller un lien d'événement</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Collez l'URL d'un événement public (Facebook, Eventbrite, site de salle, etc.) pour pré-remplir automatiquement le formulaire
+            {t('import.pasteGenericUrl')}
           </p>
           <div className="flex gap-3">
             <input
@@ -422,7 +423,7 @@ const EventForm = ({
             <h3 className="text-lg font-semibold text-gray-900">Importer depuis Facebook</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Collez l'URL d'un événement Facebook pour pré-remplir automatiquement le formulaire
+            {t('import.pasteFacebookUrl')}
           </p>
           <div className="flex gap-3">
             <input
@@ -464,7 +465,7 @@ const EventForm = ({
             <h3 className="text-lg font-semibold text-gray-900">Importer depuis Eventbrite</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
-            Collez l'URL d'un événement Eventbrite pour pré-remplir automatiquement le formulaire
+            {t('import.pasteEventbriteUrl')}
           </p>
           <div className="flex gap-3">
             <input

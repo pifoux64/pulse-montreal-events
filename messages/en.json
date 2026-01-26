@@ -800,7 +800,40 @@
     "preview": "Preview",
     "imagePreviewAlt": "Event image preview",
     "imageLoadError": "Unable to load image",
-    "removeImage": "Remove image"
+    "removeImage": "Remove image",
+    "validation": {
+      "titleMin": "Title must contain at least 3 characters",
+      "descriptionMin": "Description must contain at least 20 characters",
+      "startDateRequired": "Start date is required",
+      "endDateRequired": "End date is required",
+      "venueNameRequired": "Venue name is required",
+      "addressRequired": "Address is required",
+      "cityRequired": "City is required",
+      "postalCodeRequired": "Postal code is required",
+      "categoryRequired": "Category is required",
+      "tagsMin": "At least one tag is required",
+      "priceNegative": "Price cannot be negative",
+      "currencyRequired": "Currency is required",
+      "imageRequired": "Image is required",
+      "imageUrlInvalid": "Invalid image URL",
+      "ticketUrlInvalid": "Invalid ticket URL",
+      "filterNameRequired": "Filter name is required",
+      "filterValueRequired": "Filter value is required",
+      "targetAudienceMin": "At least one target audience is required",
+      "capacityMin": "Capacity must be greater than 0"
+    },
+    "import": {
+      "enterFacebookUrl": "Please enter a Facebook URL",
+      "enterEventbriteUrl": "Please enter an Eventbrite URL",
+      "enterUrl": "Please enter a URL",
+      "importError": "Import error",
+      "importErrorFacebook": "Error importing from Facebook",
+      "importErrorEventbrite": "Error importing from Eventbrite",
+      "importErrorUrl": "Error importing from this URL",
+      "pasteGenericUrl": "Paste the URL of a public event (Facebook, Eventbrite, venue site, etc.) to automatically pre-fill the form",
+      "pasteFacebookUrl": "Paste the URL of a Facebook event to automatically pre-fill the form",
+      "pasteEventbriteUrl": "Paste the URL of an Eventbrite event to automatically pre-fill the form"
+    }
   },
   "dashboard": {
     "title": "Dashboard",
