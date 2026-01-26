@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { FileText, Loader2, Copy, CheckCircle, Facebook, Instagram, Calendar } from 'lucide-react';
 
 interface ContentGeneratorProps {
@@ -12,12 +13,18 @@ interface ContentGeneratorProps {
 }
 
 export default function ContentGenerator({
-  eventTitle = '',
-  eventDescription = '',
-  eventDate = '',
-  eventLocation = '',
-  eventUrl = '',
+  eventTitle: propEventTitle = '',
+  eventDescription: propEventDescription = '',
+  eventDate: propEventDate = '',
+  eventLocation: propEventLocation = '',
+  eventUrl: propEventUrl = '',
 }: ContentGeneratorProps) {
+  const t = useTranslations('content');
+  const [eventTitle, setEventTitle] = useState(propEventTitle);
+  const [eventDescription, setEventDescription] = useState(propEventDescription);
+  const [eventDate, setEventDate] = useState(propEventDate);
+  const [eventLocation, setEventLocation] = useState(propEventLocation);
+  const [eventUrl, setEventUrl] = useState(propEventUrl);
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +33,7 @@ export default function ContentGenerator({
 
   const handleGenerate = async () => {
     if (!eventTitle || !eventDescription || !eventDate) {
-      setError('Veuillez remplir au moins le titre, la description et la date');
+      setError(t('fillRequired'));
       return;
     }
 
@@ -49,13 +56,13 @@ export default function ContentGenerator({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la génération');
+        throw new Error(errorData.error || t('error'));
       }
 
       const data = await response.json();
       setResult(data);
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la génération');
+      setError(err.message || t('error'));
     } finally {
       setIsGenerating(false);
     }
@@ -71,10 +78,75 @@ export default function ContentGenerator({
     <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
       <div className="flex items-center gap-3 mb-6">
         <FileText className="w-6 h-6 text-sky-400" />
-        <h3 className="text-xl font-bold text-white">Générateur de Contenu</h3>
+        <h3 className="text-xl font-bold text-white">{t('title')}</h3>
       </div>
 
       <div className="space-y-4">
+        {/* Formulaire pour saisir les données si elles ne sont pas fournies */}
+        {(!propEventTitle || !propEventDescription || !propEventDate) && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                {t('eventTitle')} *
+              </label>
+              <input
+                type="text"
+                value={eventTitle}
+                onChange={(e) => setEventTitle(e.target.value)}
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                placeholder={t('eventTitle')}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                {t('eventDescription')} *
+              </label>
+              <textarea
+                value={eventDescription}
+                onChange={(e) => setEventDescription(e.target.value)}
+                rows={4}
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                placeholder={t('eventDescription')}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                {t('eventDate')} *
+              </label>
+              <input
+                type="datetime-local"
+                value={eventDate}
+                onChange={(e) => setEventDate(e.target.value)}
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                {t('eventLocation')}
+              </label>
+              <input
+                type="text"
+                value={eventLocation}
+                onChange={(e) => setEventLocation(e.target.value)}
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                placeholder={t('eventLocation')}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                {t('eventUrl')}
+              </label>
+              <input
+                type="url"
+                value={eventUrl}
+                onChange={(e) => setEventUrl(e.target.value)}
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                placeholder={t('eventUrl')}
+              />
+            </div>
+          </div>
+        )}
+
         <button
           onClick={handleGenerate}
           disabled={isGenerating || !eventTitle || !eventDescription || !eventDate}
@@ -83,12 +155,12 @@ export default function ContentGenerator({
           {isGenerating ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Génération en cours...
+              {t('generating')}
             </>
           ) : (
             <>
               <FileText className="w-5 h-5" />
-              Générer le plan de communication
+              {t('generate')}
             </>
           )}
         </button>
@@ -112,7 +184,7 @@ export default function ContentGenerator({
                 }`}
               >
                 <Calendar className="w-4 h-4 inline mr-2" />
-                Plan
+                {t('plan')}
               </button>
               <button
                 onClick={() => setActiveTab('facebook')}
@@ -123,7 +195,7 @@ export default function ContentGenerator({
                 }`}
               >
                 <Facebook className="w-4 h-4 inline mr-2" />
-                Facebook
+                {t('facebook')}
               </button>
               <button
                 onClick={() => setActiveTab('instagram')}
@@ -134,7 +206,7 @@ export default function ContentGenerator({
                 }`}
               >
                 <Instagram className="w-4 h-4 inline mr-2" />
-                Instagram
+                {t('instagram')}
               </button>
             </div>
 
@@ -163,7 +235,7 @@ export default function ContentGenerator({
                 </div>
 
                 <div>
-                  <h4 className="text-lg font-semibold text-white mb-3">Conseils</h4>
+                  <h4 className="text-lg font-semibold text-white mb-3">{t('tips')}</h4>
                   <ul className="space-y-2">
                     {result.communicationPlan?.tips?.map((tip: string, i: number) => (
                       <li key={i} className="text-slate-300 flex items-start gap-2">
@@ -181,7 +253,7 @@ export default function ContentGenerator({
               <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-slate-300">Post Facebook</label>
+                    <label className="text-sm font-medium text-slate-300">{t('facebookPost')}</label>
                     <button
                       onClick={() => handleCopy(result.facebookPost.text, 'facebook')}
                       className="text-slate-400 hover:text-white"
@@ -207,7 +279,7 @@ export default function ContentGenerator({
               <div className="space-y-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-sm font-medium text-slate-300">Légende Instagram</label>
+                    <label className="text-sm font-medium text-slate-300">{t('instagramCaption')}</label>
                     <button
                       onClick={() => handleCopy(result.instagramPost.caption, 'instagram')}
                       className="text-slate-400 hover:text-white"
@@ -221,7 +293,7 @@ export default function ContentGenerator({
                 </div>
                 {result.instagramPost.hashtags && result.instagramPost.hashtags.length > 0 && (
                   <div>
-                    <label className="text-sm font-medium text-slate-300 mb-2 block">Hashtags</label>
+                    <label className="text-sm font-medium text-slate-300 mb-2 block">{t('hashtags')}</label>
                     <div className="flex flex-wrap gap-2">
                       {result.instagramPost.hashtags.map((tag: string, i: number) => (
                         <span

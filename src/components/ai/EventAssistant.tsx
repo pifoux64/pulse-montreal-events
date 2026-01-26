@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Sparkles, Loader2, Copy, CheckCircle } from 'lucide-react';
 
 interface EventAssistantProps {
@@ -27,7 +28,7 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
 
   const handleGenerate = async () => {
     if (!input.trim()) {
-      setError('Veuillez décrire votre événement');
+      setError(t('describeError'));
       return;
     }
 
@@ -47,7 +48,7 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de la génération');
+        throw new Error(errorData.error || t('error'));
       }
 
       const data = await response.json();
@@ -56,7 +57,7 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
         onResult(data);
       }
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la génération');
+      setError(err.message || t('error'));
     } finally {
       setIsGenerating(false);
     }
@@ -72,33 +73,33 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
     <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10">
       <div className="flex items-center gap-3 mb-6">
         <Sparkles className="w-6 h-6 text-sky-400" />
-        <h3 className="text-xl font-bold text-white">Assistant Création d'Événement</h3>
+        <h3 className="text-xl font-bold text-white">{t('title')}</h3>
       </div>
 
       <div className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">
-            Décrivez votre événement en quelques mots
+            {t('describeEvent')}
           </label>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             rows={4}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
-            placeholder="Ex: Soirée techno avec DJ local au Belmont, ambiance warehouse, public 18+..."
+            placeholder={t('describePlaceholder')}
           />
         </div>
 
         <div>
           <label className="block text-sm font-medium text-slate-300 mb-2">
-            Type d'événement (optionnel)
+            {t('eventType')}
           </label>
           <select
             value={eventType}
             onChange={(e) => setEventType(e.target.value)}
             className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-sky-500"
           >
-            <option value="">Sélectionnez un type...</option>
+            <option value="">{t('selectType')}</option>
             <option value="concert">Concert</option>
             <option value="dj_set">DJ Set</option>
             <option value="festival">Festival</option>
@@ -117,12 +118,12 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
           {isGenerating ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Génération en cours...
+              {t('generating')}
             </>
           ) : (
             <>
               <Sparkles className="w-5 h-5" />
-              Générer avec l'IA
+              {t('generate')}
             </>
           )}
         </button>
@@ -137,7 +138,7 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
           <div className="space-y-4 mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-slate-300">Titre</label>
+                <label className="text-sm font-medium text-slate-300">{t('titleLabel')}</label>
                 <button
                   onClick={() => handleCopy(result.title, 'title')}
                   className="text-slate-400 hover:text-white"
@@ -150,7 +151,7 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-slate-300">Description courte</label>
+                <label className="text-sm font-medium text-slate-300">{t('shortDescription')}</label>
                 <button
                   onClick={() => handleCopy(result.shortDescription, 'short')}
                   className="text-slate-400 hover:text-white"
@@ -163,7 +164,7 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium text-slate-300">Description complète</label>
+                <label className="text-sm font-medium text-slate-300">{t('fullDescription')}</label>
                 <button
                   onClick={() => handleCopy(result.description, 'description')}
                   className="text-slate-400 hover:text-white"
@@ -176,7 +177,7 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
 
             {result.tags && result.tags.length > 0 && (
               <div>
-                <label className="text-sm font-medium text-slate-300 mb-2 block">Tags</label>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">{t('tags')}</label>
                 <div className="flex flex-wrap gap-2">
                   {result.tags.map((tag: string, i: number) => (
                     <span
@@ -192,7 +193,7 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
 
             {result.musicGenres && result.musicGenres.length > 0 && (
               <div>
-                <label className="text-sm font-medium text-slate-300 mb-2 block">Genres musicaux</label>
+                <label className="text-sm font-medium text-slate-300 mb-2 block">{t('musicGenres')}</label>
                 <div className="flex flex-wrap gap-2">
                   {result.musicGenres.map((genre: string, i: number) => (
                     <span
@@ -209,25 +210,25 @@ export default function EventAssistant({ onResult }: EventAssistantProps) {
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
               {result.eventType && (
                 <div>
-                  <label className="text-xs text-slate-400">Type</label>
+                  <label className="text-xs text-slate-400">{t('type')}</label>
                   <p className="text-white">{result.eventType}</p>
                 </div>
               )}
               {result.ambiance && (
                 <div>
-                  <label className="text-xs text-slate-400">Ambiance</label>
+                  <label className="text-xs text-slate-400">{t('ambiance')}</label>
                   <p className="text-white">{result.ambiance}</p>
                 </div>
               )}
               {result.targetAudience && (
                 <div>
-                  <label className="text-xs text-slate-400">Public</label>
+                  <label className="text-xs text-slate-400">{t('audience')}</label>
                   <p className="text-white">{result.targetAudience}</p>
                 </div>
               )}
               {result.suggestedPrice && (
                 <div>
-                  <label className="text-xs text-slate-400">Prix suggéré</label>
+                  <label className="text-xs text-slate-400">{t('suggestedPrice')}</label>
                   <p className="text-white">{result.suggestedPrice.toFixed(2)} $</p>
                 </div>
               )}
