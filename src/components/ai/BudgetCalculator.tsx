@@ -16,6 +16,7 @@ export default function BudgetCalculator() {
     hasSound: false,
     hasLighting: false,
     promotionBudget: '',
+    staffCost: '',
     otherCosts: '',
   });
   const [isCalculating, setIsCalculating] = useState(false);
@@ -40,6 +41,7 @@ export default function BudgetCalculator() {
           hasSound: formData.hasSound,
           hasLighting: formData.hasLighting,
           promotionBudget: formData.promotionBudget || undefined,
+          staffCost: formData.staffCost || undefined,
           otherCosts: formData.otherCosts || undefined,
         }),
       });
@@ -180,17 +182,32 @@ export default function BudgetCalculator() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              {t('otherCosts')}
+              {t('staffCost')}
             </label>
             <input
               type="number"
               step="0.01"
-              value={formData.otherCosts}
-              onChange={(e) => setFormData({ ...formData, otherCosts: e.target.value })}
+              value={formData.staffCost}
+              onChange={(e) => setFormData({ ...formData, staffCost: e.target.value })}
               className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
-              placeholder="300.00"
+              placeholder={t('staffCostPlaceholder')}
             />
+            <p className="text-xs text-slate-400 mt-1">{t('staffCostHint')}</p>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-300 mb-2">
+            {t('otherCosts')}
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            value={formData.otherCosts}
+            onChange={(e) => setFormData({ ...formData, otherCosts: e.target.value })}
+            className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500"
+            placeholder="300.00"
+          />
         </div>
 
         <button

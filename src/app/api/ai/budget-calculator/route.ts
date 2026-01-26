@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
       hasSound,
       hasLighting,
       promotionBudget,
+      staffCost,
       otherCosts,
     } = body;
 
@@ -92,7 +93,8 @@ export async function POST(request: NextRequest) {
     const estimatedSound = hasSound ? (safeAttendance < 100 ? 500 : safeAttendance < 300 ? 1000 : 2000) : 0;
     const estimatedLighting = hasLighting ? (safeAttendance < 100 ? 300 : safeAttendance < 300 ? 600 : 1200) : 0;
     const estimatedPromotion = promotionBudget ? parseFloat(promotionBudget) : (safeAttendance < 100 ? 200 : safeAttendance < 300 ? 500 : 1000);
-    const estimatedStaff = safeAttendance < 100 ? 200 : safeAttendance < 300 ? 400 : 800;
+    // Si l'utilisateur fournit un coût de personnel, l'utiliser, sinon estimer automatiquement
+    const estimatedStaff = staffCost ? parseFloat(staffCost) : (safeAttendance < 100 ? 200 : safeAttendance < 300 ? 400 : 800);
 
     costs.sound = estimatedSound;
     costs.lighting = estimatedLighting;
