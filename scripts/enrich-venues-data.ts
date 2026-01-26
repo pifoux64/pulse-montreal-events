@@ -314,7 +314,7 @@ const venueEnrichmentData: Record<string, {
   'casino-de-montreal': {
     description: 'Le Casino de Montréal, ouvert en 1993, est installé sur l\'île Notre-Dame dans le parc Jean-Drapeau. Ce bâtiment emblématique était à l\'origine le pavillon de la France lors de l\'Exposition universelle de 1967. Le complexe dispose de plusieurs espaces : le Théâtre Le Qube (jusqu\'à 800 personnes), le Cabaret du Casino (616 places avec 532 places en souper-spectacle et 84 places au balcon), et des salles de réunion (capacité totale de 800 places assises, 300 places debout). Le Cabaret a été rénové avec des équipements modernes : système de son psychoacoustique 3D, 44 coupoles LED au plafond pour projections vidéo, 98 projecteurs robotisés, et système d\'éclairage de 800 000 watts. Le casino reçoit plus de 6 millions de visiteurs annuellement.',
     capacity: 800,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Casino_de_Montreal.JPG/1200px-Casino_de_Montreal.JPG',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Casino_de_Montreal.JPG',
     types: ['casino', 'salle'],
     tags: ['spectacles', 'divertissement', 'événements corporatifs', 'galas', 'tournois', 'poker'],
     website: 'https://www.casinosduquebec.com',
@@ -323,7 +323,7 @@ const venueEnrichmentData: Record<string, {
   'cabaret-du-casino-de-montreal': {
     description: 'Le Cabaret du Casino de Montréal est une salle de spectacle moderne située dans le Casino de Montréal sur l\'île Notre-Dame. Rénové récemment, le Cabaret peut accueillir 616 places (532 places en souper-spectacle + 84 places au balcon). Il dispose d\'équipements de pointe : système de son psychoacoustique 3D, 44 coupoles LED au plafond pour projections vidéo, 98 projecteurs robotisés, et système d\'éclairage de 800 000 watts. Le Cabaret accueille une programmation diversifiée : spectacles (dont des artistes de renommée comme Tony Bennett), galas de boxe, tournois de poker style WSOP, événements corporatifs et caritatifs.',
     capacity: 616,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Casino_de_Montreal.JPG/1200px-Casino_de_Montreal.JPG',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/be/Casino_de_Montreal.JPG',
     types: ['cabaret', 'salle'],
     tags: ['spectacles', 'divertissement', 'événements corporatifs', 'galas', 'boxe', 'poker'],
     website: 'https://www.casinosduquebec.com',
