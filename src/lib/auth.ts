@@ -214,6 +214,9 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: providers.length > 0 ? providers : [],
   
+  // Normaliser l'URL pour gérer localhost et 127.0.0.1
+  trustHost: true,
+  
   callbacks: {
     async session({ session, user }) {
       try {
