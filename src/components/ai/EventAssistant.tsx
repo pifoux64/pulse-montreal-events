@@ -19,6 +19,7 @@ interface EventAssistantProps {
 }
 
 export default function EventAssistant({ onResult }: EventAssistantProps) {
+  const t = useTranslations('assistant');
   const [input, setInput] = useState('');
   const [eventType, setEventType] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
