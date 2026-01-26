@@ -40,8 +40,8 @@ export async function GET(
     }
 
     // Vérifier les permissions (propriétaire ou admin)
-    const isOwner = session.user.id === organizer.userId;
-    const isAdmin = session.user.role === 'ADMIN';
+    const isOwner = session.user?.id === organizer.userId;
+    const isAdmin = session.user?.role === 'ADMIN';
 
     if (!isOwner && !isAdmin) {
       return NextResponse.json(
