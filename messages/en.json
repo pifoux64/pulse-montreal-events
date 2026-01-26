@@ -75,16 +75,13 @@
     "organizerDashboard": "Organizer Dashboard",
     "organizerProfile": "My Organizer Profile",
     "adminDashboard": "Admin",
-    "signOut": "Sign Out",
     "organizer": {
       "dashboard": "Dashboard",
       "profile": "My Organizer Profile"
     },
     "venues": "Venues",
     "organizers": "Organizers",
-    "social": "Social",
     "pulsers": "Pulsers",
-    "messages": "Messages",
     "discoverPulsers": "Discover Pulsers",
     "findSimilarTastes": "Find people with similar tastes to yours",
     "searchPulser": "Search for a pulser...",
@@ -154,7 +151,6 @@
     "thisWeekend": "This Weekend",
     "activeFilters": "Active filters",
     "type": "Type",
-    "ambiance": "Ambiance",
     "public": "Public",
     "allPublic": "All public",
     "loadingEvents": "Loading events...",
@@ -183,8 +179,7 @@
     "eventCount_plural": "{count} events",
     "showAdvanced": "Show advanced filters",
     "hideAdvanced": "Hide advanced filters",
-    "eventType": "Event type",
-    "targetAudience": "Target audience"
+    "eventType": "Event type"
   },
   "filters": {
     "title": "Filters",
@@ -348,10 +343,7 @@
     "preferences": "Preferences",
     "notifications": "Notifications",
     "privacy": "Privacy",
-    "account": "Account",
-    "organizer": "Organizer",
     "becomeOrganizer": "Become Organizer",
-    "organizerProfile": "Organizer Profile",
     "myEvents": "My Events",
     "analytics": "Analytics",
     "promotions": "Promotions",
@@ -398,7 +390,6 @@
   "auth": {
     "signIn": "Sign In",
     "signUp": "Sign Up",
-    "signOut": "Sign Out",
     "email": "Email Address",
     "password": "Password",
     "forgotPassword": "Forgot Password?",
@@ -877,7 +868,6 @@
     "addTag": "Add a tag...",
     "add": "Add",
     "targetAudienceAndCapacity": "Target audience and capacity",
-    "targetAudience": "Target audience",
     "adult": "Adult",
     "family": "Family",
     "student": "Student",

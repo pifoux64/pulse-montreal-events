@@ -369,7 +369,7 @@ export default function Navigation() {
                       <div className="border-t border-white/10 my-2" />
                       <div className="px-3 py-1.5 mb-1">
                         <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                          {t('social')}
+                          {t('social.title')}
                         </div>
                       </div>
                       <Link
@@ -386,7 +386,7 @@ export default function Navigation() {
                         className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
                       >
                         <MessageCircle className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
-                        <span>{t('messages')}</span>
+                        <span>{t('messages.title')}</span>
                       </Link>
                       
                       {/* Section Organisateur (si applicable) */}

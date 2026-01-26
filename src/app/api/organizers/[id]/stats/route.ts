@@ -14,7 +14,7 @@ import { subDays } from 'date-fns';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -27,8 +27,9 @@ export async function GET(
       );
     }
 
+    const { id } = await params;
     const organizer = await prisma.organizer.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!organizer) {
@@ -53,7 +54,7 @@ export async function GET(
 
     // Récupérer tous les événements de l'organisateur
     const events = await prisma.event.findMany({
-      where: { organizerId: params.id },
+      where: { organizerId: id },
       include: {
         _count: {
           select: {
@@ -67,7 +68,7 @@ export async function GET(
     const viewsLast30Days = await prisma.eventView.count({
       where: {
         event: {
-          organizerId: params.id,
+          organizerId: id,
         },
         createdAt: {
           gte: thirtyDaysAgo,
@@ -79,7 +80,7 @@ export async function GET(
     const totalViews = await prisma.eventView.count({
       where: {
         event: {
-          organizerId: params.id,
+          organizerId: id,
         },
       },
     });
@@ -87,7 +88,7 @@ export async function GET(
     // Calculer les favoris (30 jours et total)
     const eventsWithFavorites = await prisma.event.findMany({
       where: {
-        organizerId: params.id,
+        organizerId: id,
         favorites: {
           some: {
             createdAt: {
