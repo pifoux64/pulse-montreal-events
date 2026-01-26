@@ -376,24 +376,38 @@ export async function POST(request: NextRequest) {
       includeQR
     );
 
-    // Vérifier si le bucket existe
-    const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(b => b.name === BUCKET_NAME);
-    
-    if (!bucketExists) {
-      const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-        public: true,
-        fileSizeLimit: 10 * 1024 * 1024, // 10MB
-        allowedMimeTypes: ['image/png'],
-      });
+    // Essayer de créer le bucket s'il n'existe pas (mais ne pas bloquer si ça échoue)
+    // Le bucket peut déjà exister ou on peut ne pas avoir les permissions pour le créer
+    try {
+      const { data: buckets } = await supabase.storage.listBuckets();
+      const bucketExists = buckets?.some(b => b.name === BUCKET_NAME);
       
-      if (createError) {
-        console.error('Erreur création bucket:', createError);
-        return NextResponse.json(
-          { error: 'Erreur lors de la création du bucket de stockage' },
-          { status: 500 }
-        );
+      if (!bucketExists) {
+        // Essayer de créer le bucket, mais ignorer l'erreur si ça échoue
+        // (le bucket peut exister mais on n'a peut-être pas les permissions pour le lister)
+        const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+          public: true,
+          fileSizeLimit: 10 * 1024 * 1024, // 10MB
+          allowedMimeTypes: ['image/png'],
+        });
+        
+        if (createError) {
+          // Si l'erreur indique que le bucket existe déjà, c'est OK
+          if (createError.message?.includes('already exists') || 
+              createError.message?.includes('duplicate') ||
+              createError.message?.includes('Bucket already exists')) {
+            console.log(`Bucket "${BUCKET_NAME}" existe déjà`);
+          } else {
+            // Autre erreur : logger mais continuer quand même
+            // (on essaiera l'upload et si ça échoue, on retournera une erreur plus claire)
+            console.warn(`Impossible de créer le bucket "${BUCKET_NAME}":`, createError.message);
+          }
+        }
       }
+    } catch (bucketError: any) {
+      // Ignorer les erreurs de vérification/création du bucket
+      // On essaiera quand même l'upload
+      console.warn('Erreur lors de la vérification du bucket (ignorée):', bucketError.message);
     }
 
     // Générer un nom de fichier unique
@@ -411,8 +425,19 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Erreur upload Supabase:', error);
+      // Si l'erreur indique que le bucket n'existe pas, donner un message plus clair
+      if (error.message?.includes('Bucket not found') || 
+          error.message?.includes('does not exist') || 
+          error.statusCode === 404) {
+        return NextResponse.json(
+          { 
+            error: `Le bucket de stockage "${BUCKET_NAME}" n'existe pas. Veuillez le créer dans votre dashboard Supabase ou contacter l'administrateur.` 
+          },
+          { status: 500 }
+        );
+      }
       return NextResponse.json(
-        { error: 'Erreur lors de l\'upload du flyer' },
+        { error: `Erreur lors de l'upload du flyer: ${error.message || 'Erreur inconnue'}` },
         { status: 500 }
       );
     }
