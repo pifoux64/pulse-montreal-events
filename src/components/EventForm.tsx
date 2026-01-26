@@ -394,12 +394,12 @@ const EventForm = ({
               {isImportingUrl ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Import...
+                  {t('importing')}
                 </>
               ) : (
                 <>
                   <ImageIcon className="w-4 h-4" />
-                  Importer
+                  {t('import')}
                 </>
               )}
             </button>
@@ -443,12 +443,12 @@ const EventForm = ({
               {isImportingFacebook ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Import...
+                  {t('importing')}
                 </>
               ) : (
                 <>
                   <Facebook className="w-4 h-4" />
-                  Importer
+                  {t('import')}
                 </>
               )}
             </button>
@@ -485,12 +485,12 @@ const EventForm = ({
               {isImportingEventbrite ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Import...
+                  {t('importing')}
                 </>
               ) : (
                 <>
                   <Ticket className="w-4 h-4" />
-                  Importer
+                  {t('import')}
                 </>
               )}
             </button>
