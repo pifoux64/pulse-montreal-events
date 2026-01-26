@@ -139,10 +139,11 @@ export default function ListenBeforeYouGo({
   youtubeUrl,
   isMusicEvent: propIsMusicEvent,
   eventTags,
+  category,
 }: ListenBeforeYouGoProps) {
   const t = useTranslations('eventDetail');
   
-  const musicEvent = propIsMusicEvent ?? isMusicEvent(eventTags);
+  const musicEvent = propIsMusicEvent ?? isMusicEvent(eventTags, category);
   
   // Collecter toutes les plateformes disponibles
   const availablePlatforms: Platform[] = [];
