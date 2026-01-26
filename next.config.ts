@@ -75,6 +75,9 @@ const nextConfig: NextConfig = {
       {
         pathname: '/placeholder-event.jpg',
       },
+      {
+        pathname: '/venues',
+      },
     ],
     formats: ['image/webp', 'image/avif'],
   },
