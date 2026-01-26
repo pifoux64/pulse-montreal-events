@@ -173,6 +173,7 @@ const venueEnrichmentData: Record<string, {
   'theatre-corona': {
     description: 'Le Théâtre Corona (maintenant Théâtre Beanfield) est un lieu historique construit en 1912, situé au 2490 rue Notre-Dame Ouest. Ancien cinéma de films muets et lieu de spectacles de vaudeville, il a été rénové en 1997 par L\'Institut des Arts de la Scène. La salle peut accueillir jusqu\'à 753 personnes avec le balcon ouvert, ou 353 places en formule cabaret. Elle conserve son charme historique avec ses boiseries apparentes, son éclairage chaleureux et son excellente acoustique.',
     capacity: 753,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'rock', 'indie', 'pop', 'hip-hop', 'conférences'],
     neighborhood: 'Sud-Ouest',
@@ -180,6 +181,23 @@ const venueEnrichmentData: Record<string, {
   'theatre-beanfield': {
     description: 'Le Théâtre Corona (maintenant Théâtre Beanfield) est un lieu historique construit en 1912, situé au 2490 rue Notre-Dame Ouest. Ancien cinéma de films muets et lieu de spectacles de vaudeville, il a été rénové en 1997 par L\'Institut des Arts de la Scène. La salle peut accueillir jusqu\'à 753 personnes avec le balcon ouvert, ou 353 places en formule cabaret. Elle conserve son charme historique avec ses boiseries apparentes, son éclairage chaleureux et son excellente acoustique.',
     capacity: 753,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    types: ['théâtre', 'salle'],
+    tags: ['concerts', 'spectacles', 'humour', 'rock', 'indie', 'pop', 'hip-hop', 'conférences'],
+    neighborhood: 'Sud-Ouest',
+  },
+  'beanfield-theatre': {
+    description: 'Le Théâtre Corona (maintenant Théâtre Beanfield) est un lieu historique construit en 1912, situé au 2490 rue Notre-Dame Ouest. Ancien cinéma de films muets et lieu de spectacles de vaudeville, il a été rénové en 1997 par L\'Institut des Arts de la Scène. La salle peut accueillir jusqu\'à 753 personnes avec le balcon ouvert, ou 353 places en formule cabaret. Elle conserve son charme historique avec ses boiseries apparentes, son éclairage chaleureux et son excellente acoustique.',
+    capacity: 753,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    types: ['théâtre', 'salle'],
+    tags: ['concerts', 'spectacles', 'humour', 'rock', 'indie', 'pop', 'hip-hop', 'conférences'],
+    neighborhood: 'Sud-Ouest',
+  },
+  'theatre-beanfield-1': {
+    description: 'Le Théâtre Corona (maintenant Théâtre Beanfield) est un lieu historique construit en 1912, situé au 2490 rue Notre-Dame Ouest. Ancien cinéma de films muets et lieu de spectacles de vaudeville, il a été rénové en 1997 par L\'Institut des Arts de la Scène. La salle peut accueillir jusqu\'à 753 personnes avec le balcon ouvert, ou 353 places en formule cabaret. Elle conserve son charme historique avec ses boiseries apparentes, son éclairage chaleureux et son excellente acoustique.',
+    capacity: 753,
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'rock', 'indie', 'pop', 'hip-hop', 'conférences'],
     neighborhood: 'Sud-Ouest',
