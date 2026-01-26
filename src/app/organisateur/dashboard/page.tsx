@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import ModernLoader from '@/components/ModernLoader';
 import { 
@@ -30,7 +31,7 @@ import BudgetCalculator from '@/components/ai/BudgetCalculator';
 import SubscriptionManager from '@/components/subscription/SubscriptionManager';
 import Link from 'next/link';
 import { format, subDays } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { fr, enUS, es } from 'date-fns/locale';
 
 interface Event {
   id: string;
@@ -63,6 +64,7 @@ interface Subscription {
 }
 
 export default function OrganisateurDashboard() {
+  const t = useTranslations('dashboard');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [events, setEvents] = useState<Event[]>([]);
@@ -74,6 +76,11 @@ export default function OrganisateurDashboard() {
   const [icsPreview, setIcsPreview] = useState<any[]>([]);
   const [showAITools, setShowAITools] = useState(false);
   const [activeAITool, setActiveAITool] = useState<'assistant' | 'content' | 'budget'>('assistant');
+  
+  // Détecter la locale pour date-fns
+  const dateLocale = typeof window !== 'undefined' 
+    ? (document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] === 'en' ? enUS : document.cookie.match(/NEXT_LOCALE=([^;]+)/)?.[1] === 'es' ? es : fr)
+    : fr;
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -94,7 +101,7 @@ export default function OrganisateurDashboard() {
       // Charger les événements de l'organisateur
       const organizerResponse = await fetch('/api/organizers/me');
       if (!organizerResponse.ok) {
-        throw new Error('Erreur lors du chargement des données');
+        throw new Error(t('loadingError'));
       }
       const organizer = await organizerResponse.json();
       
@@ -136,7 +143,7 @@ export default function OrganisateurDashboard() {
         setSubscription({ plan: 'BASIC', billingMonthly: 0, active: true });
       }
     } catch (err: any) {
-      setError(err.message || 'Erreur lors du chargement');
+      setError(err.message || t('loadError'));
     } finally {
       setIsLoading(false);
     }
@@ -248,7 +255,7 @@ export default function OrganisateurDashboard() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-4xl font-bold text-white">
-                  Tableau de bord
+                  {t('title')}
                 </h1>
                 {subscription && (
                   <span className={`px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2 ${
@@ -268,7 +275,7 @@ export default function OrganisateurDashboard() {
                 )}
               </div>
               <p className="text-slate-300">
-                Gérez vos événements et consultez vos statistiques
+                {t('subtitle')}
               </p>
             </div>
             <div className="flex items-center gap-4">
@@ -277,7 +284,7 @@ export default function OrganisateurDashboard() {
                 className="px-4 py-2 bg-gradient-to-r from-sky-600 to-emerald-600 text-white rounded-lg hover:from-sky-700 hover:to-emerald-700 transition-all duration-200 flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                Nouvel événement
+                {t('newEvent')}
               </Link>
             </div>
           </div>
@@ -289,7 +296,7 @@ export default function OrganisateurDashboard() {
             <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10 relative">
               {subscription?.plan === 'BASIC' && (
                 <div className="absolute top-2 right-2">
-                  <Lock className="w-4 h-4 text-slate-500" title="Fonctionnalité PRO" />
+                  <Lock className="w-4 h-4 text-slate-500" title={t('proFeature')} />
                 </div>
               )}
               <div className="flex items-center justify-between mb-4">
@@ -299,16 +306,16 @@ export default function OrganisateurDashboard() {
               <div className="text-3xl font-bold text-white mb-1">
                 {subscription?.plan === 'PRO' ? stats.viewsLast30Days : '—'}
               </div>
-              <div className="text-sm text-slate-400">Vues (30 jours)</div>
+              <div className="text-sm text-slate-400">{t('views30Days')}</div>
               <div className="text-xs text-slate-500 mt-2">
-                {subscription?.plan === 'PRO' ? `Total: ${stats.totalViews}` : 'Upgradez vers PRO pour voir les détails'}
+                {subscription?.plan === 'PRO' ? `${t('total')}: ${stats.totalViews}` : t('upgradeToPro')}
               </div>
             </div>
 
             <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10 relative">
               {subscription?.plan === 'BASIC' && (
                 <div className="absolute top-2 right-2">
-                  <Lock className="w-4 h-4 text-slate-500" title="Fonctionnalité PRO" />
+                  <Lock className="w-4 h-4 text-slate-500" title={t('proFeature')} />
                 </div>
               )}
               <div className="flex items-center justify-between mb-4">
@@ -318,9 +325,9 @@ export default function OrganisateurDashboard() {
               <div className="text-3xl font-bold text-white mb-1">
                 {subscription?.plan === 'PRO' ? stats.clicksLast30Days : '—'}
               </div>
-              <div className="text-sm text-slate-400">Clics (30 jours)</div>
+              <div className="text-sm text-slate-400">{t('clicks30Days')}</div>
               <div className="text-xs text-slate-500 mt-2">
-                {subscription?.plan === 'PRO' ? `Total: ${stats.totalClicks}` : 'Upgradez vers PRO pour voir les détails'}
+                {subscription?.plan === 'PRO' ? `${t('total')}: ${stats.totalClicks}` : t('upgradeToPro')}
               </div>
             </div>
 
@@ -332,9 +339,9 @@ export default function OrganisateurDashboard() {
               <div className="text-3xl font-bold text-white mb-1">
                 {stats.favoritesLast30Days}
               </div>
-              <div className="text-sm text-slate-400">Favoris (30 jours)</div>
+              <div className="text-sm text-slate-400">{t('favorites30Days')}</div>
               <div className="text-xs text-slate-500 mt-2">
-                Total: {stats.totalFavorites}
+                {t('total')}: {stats.totalFavorites}
               </div>
             </div>
 
@@ -345,9 +352,9 @@ export default function OrganisateurDashboard() {
               <div className="text-3xl font-bold text-white mb-1">
                 {stats.upcomingEvents}
               </div>
-              <div className="text-sm text-slate-400">Événements à venir</div>
+              <div className="text-sm text-slate-400">{t('upcomingEvents')}</div>
               <div className="text-xs text-slate-500 mt-2">
-                Total: {stats.totalEvents}
+                {t('total')}: {stats.totalEvents}
               </div>
             </div>
           </div>
@@ -358,13 +365,13 @@ export default function OrganisateurDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Sparkles className="w-5 h-5" />
-              Outils IA pour Organisateurs
+              {t('aiTools')}
             </h2>
             <button
               onClick={() => setShowAITools(!showAITools)}
               className="text-sky-400 hover:text-sky-300 text-sm"
             >
-              {showAITools ? 'Masquer' : 'Afficher'}
+              {showAITools ? t('hide') : t('show')}
             </button>
           </div>
 
@@ -380,7 +387,7 @@ export default function OrganisateurDashboard() {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Assistant Création
+                  {t('assistantCreation')}
                 </button>
                 <button
                   onClick={() => setActiveAITool('content')}
@@ -390,7 +397,7 @@ export default function OrganisateurDashboard() {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Générateur Contenu
+                  {t('contentGenerator')}
                 </button>
                 <button
                   onClick={() => setActiveAITool('budget')}
@@ -400,7 +407,7 @@ export default function OrganisateurDashboard() {
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  Calculateur Budget
+                  {t('budgetCalculator')}
                 </button>
               </div>
 
@@ -433,14 +440,14 @@ export default function OrganisateurDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <Upload className="w-5 h-5" />
-              Import ICS
+              {t('importICS')}
             </h2>
             <button
               onClick={() => setShowImportICS(!showImportICS)}
               className="text-sky-400 hover:text-sky-300 text-sm"
               disabled={subscription?.plan === 'BASIC'}
             >
-              {showImportICS ? 'Masquer' : 'Afficher'}
+              {showImportICS ? t('hide') : t('show')}
             </button>
           </div>
           
@@ -448,7 +455,7 @@ export default function OrganisateurDashboard() {
             <div className="mb-4 p-4 bg-amber-500/10 border border-amber-400/30 rounded-lg">
               <p className="text-sm text-amber-300">
                 <Crown className="w-4 h-4 inline mr-2" />
-                L'import ICS est disponible avec le plan PRO. Upgradez pour importer vos événements en masse.
+                {t('icsAvailablePro')}
               </p>
             </div>
           )}
@@ -469,7 +476,7 @@ export default function OrganisateurDashboard() {
                   />
                   <div className="cursor-pointer p-4 border-2 border-dashed border-white/20 rounded-lg hover:border-sky-400 transition-colors text-center">
                     <FileText className="w-8 h-8 mx-auto mb-2 text-slate-400" />
-                    <span className="text-slate-300">Cliquez pour sélectionner un fichier .ics</span>
+                    <span className="text-slate-300">{t('clickToSelectICS')}</span>
                   </div>
                 </label>
               </div>
@@ -477,14 +484,14 @@ export default function OrganisateurDashboard() {
               {icsPreview.length > 0 && (
                 <div className="mt-4">
                   <h3 className="text-lg font-semibold text-white mb-3">
-                    Aperçu ({icsPreview.length} événement{icsPreview.length > 1 ? 's' : ''})
+                    {t('preview')} ({t('previewEvents', { count: icsPreview.length })})
                   </h3>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {icsPreview.map((event, index) => (
                       <div key={index} className="bg-slate-900/50 p-3 rounded-lg border border-white/10">
                         <div className="font-medium text-white">{event.title}</div>
                         <div className="text-sm text-slate-400">
-                          {format(new Date(event.start), 'PPp', { locale: fr })}
+                          {format(new Date(event.start), 'PPp', { locale: dateLocale })}
                         </div>
                         {event.location && (
                           <div className="text-sm text-slate-400">{event.location}</div>
@@ -499,7 +506,7 @@ export default function OrganisateurDashboard() {
                     }}
                     className="mt-4 w-full px-4 py-2 bg-gradient-to-r from-sky-600 to-emerald-600 text-white rounded-lg hover:from-sky-700 hover:to-emerald-700 transition-all duration-200"
                   >
-                    Importer {icsPreview.length} événement{icsPreview.length > 1 ? 's' : ''}
+                    {t('importEvents', { count: icsPreview.length })}
                   </button>
                 </div>
               )}
@@ -511,24 +518,24 @@ export default function OrganisateurDashboard() {
         <div className="bg-slate-800/70 backdrop-blur-xl rounded-xl p-6 border border-white/10">
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <BarChart3 className="w-5 h-5" />
-            Mes événements ({events.length})
+            {t('myEvents', { count: events.length })}
           </h2>
 
           {events.length === 0 ? (
             <div className="text-center py-12">
               <Calendar className="w-16 h-16 mx-auto mb-4 text-slate-400" />
               <p className="text-xl font-semibold text-white mb-2">
-                Aucun événement
+                {t('noEvents')}
               </p>
               <p className="text-slate-300 mb-6">
-                Créez votre premier événement pour commencer
+                {t('createFirstEvent')}
               </p>
               <Link
                 href="/publier"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-sky-600 to-emerald-600 text-white rounded-lg hover:from-sky-700 hover:to-emerald-700 transition-all duration-200"
               >
                 <Plus className="w-4 h-4" />
-                Créer un événement
+                {t('createEvent')}
               </Link>
             </div>
           ) : (
@@ -549,20 +556,20 @@ export default function OrganisateurDashboard() {
                             ? 'bg-green-500/20 text-green-400' 
                             : 'bg-slate-500/20 text-slate-400'
                         }`}>
-                          {event.status === 'SCHEDULED' ? 'Programmé' : event.status}
+                          {event.status === 'SCHEDULED' ? t('scheduled') : event.status}
                         </span>
                       </div>
                       <div className="text-sm text-slate-400 mb-2">
-                        {format(new Date(event.startAt), 'PPp', { locale: fr })}
+                        {format(new Date(event.startAt), 'PPp', { locale: dateLocale })}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-slate-400">
                         <span className="flex items-center gap-1">
                           <Eye className="w-4 h-4" />
-                          {event._count?.views || 0} vues
+                          {event._count?.views || 0} {t('views')}
                         </span>
                         <span className="flex items-center gap-1">
                           <Heart className="w-4 h-4" />
-                          {event._count?.favorites || 0} favoris
+                          {event._count?.favorites || 0} {t('favorites')}
                         </span>
                       </div>
                     </div>
@@ -570,21 +577,21 @@ export default function OrganisateurDashboard() {
                       <Link
                         href={`/evenement/${event.id}`}
                         className="p-2 text-sky-400 hover:text-sky-300 hover:bg-sky-400/10 rounded-lg transition-colors"
-                        title="Voir"
+                        title={t('view')}
                       >
                         <Eye className="w-4 h-4" />
                       </Link>
                       <button
                         onClick={() => router.push(`/publier?edit=${event.id}`)}
                         className="p-2 text-emerald-400 hover:text-emerald-300 hover:bg-emerald-400/10 rounded-lg transition-colors"
-                        title="Modifier"
+                        title={t('edit')}
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteEvent(event.id)}
                         className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
-                        title="Supprimer"
+                        title={t('delete')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
