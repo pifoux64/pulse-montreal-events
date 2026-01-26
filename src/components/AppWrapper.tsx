@@ -40,15 +40,19 @@ function getCookieLocale(): Locale {
 
 export default function AppWrapper({ children }: AppWrapperProps) {
   // Lire la locale depuis le cookie immédiatement
-  const [locale, setLocale] = useState<Locale>(() => getCookieLocale());
+  const [locale, setLocale] = useState<Locale>(() => {
+    // Au premier rendu, utiliser defaultLocale pour éviter les erreurs d'hydratation
+    // La locale sera mise à jour après le montage
+    return defaultLocale;
+  });
 
-  // Lire la locale depuis le cookie au montage
+  // Lire la locale depuis le cookie après le montage
   useEffect(() => {
     const cookieLocale = getCookieLocale();
     if (cookieLocale !== locale) {
       setLocale(cookieLocale);
     }
-  }, [locale]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Écouter les changements de cookie (quand la langue change)
   useEffect(() => {
@@ -75,11 +79,11 @@ export default function AppWrapper({ children }: AppWrapperProps) {
         messages={messages[locale]} 
         timeZone="America/Montreal"
       >
-        <Navigation />
+        <Navigation suppressHydrationWarning />
         <main className="min-h-screen flex flex-col">
           {children}
         </main>
-        <Footer />
+        <Footer suppressHydrationWarning />
         <CookieConsent />
         <PWAInstallPrompt />
       </NextIntlClientProvider>

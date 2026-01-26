@@ -50,7 +50,7 @@ export default function Navigation() {
 
   return (
     <>
-    <nav className="fixed top-0 left-0 right-0 z-[50] bg-slate-950/70 backdrop-blur-2xl border-b border-white/10 shadow-[0_20px_60px_-40px_rgba(15,118,110,0.8)]">
+    <nav className="fixed top-0 left-0 right-0 z-[50] bg-slate-950/70 backdrop-blur-2xl border-b border-white/10 shadow-[0_20px_60px_-40px_rgba(15,118,110,0.8)]" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20 text-slate-100">
           {/* Logo avec animation float ajustée */}
