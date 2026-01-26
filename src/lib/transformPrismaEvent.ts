@@ -8,7 +8,7 @@ import { Event } from '@/types';
 
 export function transformPrismaEventToEvent(prismaEvent: any): Event {
   // Convertir le format Prisma en format ApiEvent
-  const apiEvent = {
+  const apiEvent: any = {
     id: prismaEvent.id,
     title: prismaEvent.title,
     description: prismaEvent.description || '',
@@ -53,6 +53,15 @@ export function transformPrismaEventToEvent(prismaEvent: any): Event {
       startsAt: p.startsAt instanceof Date ? p.startsAt.toISOString() : p.startsAt,
       endsAt: p.endsAt instanceof Date ? p.endsAt.toISOString() : p.endsAt,
     })) || [],
+    organizer: prismaEvent.organizer ? {
+      id: prismaEvent.organizer.id,
+      displayName: prismaEvent.organizer.displayName,
+      slug: prismaEvent.organizer.slug,
+      user: prismaEvent.organizer.user ? {
+        name: prismaEvent.organizer.user.name,
+        email: prismaEvent.organizer.user.email,
+      } : undefined,
+    } : undefined,
   };
 
   return transformApiEvent(apiEvent);

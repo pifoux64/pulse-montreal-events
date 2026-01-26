@@ -61,6 +61,7 @@
     "pourToi": "Pour toi",
     "pourToiShort": "Pour toi",
     "favoritesShort": "Favoris",
+    "discover": "Découvrir",
     "music": "Musique",
     "family": "Famille",
     "culture": "Culture",
@@ -78,6 +79,8 @@
       "dashboard": "Tableau de bord",
       "profile": "Mon profil organisateur"
     },
+    "venues": "Lieux",
+    "organizers": "Organisateurs",
     "pulsers": "Pulsers",
     "discoverPulsers": "Découvrir les Pulsers",
     "findSimilarTastes": "Trouve des personnes avec des goûts similaires aux tiens",
@@ -258,41 +261,9 @@
         "security": "Sécurité",
         "securityDesc": "Nous mettons en œuvre des mesures de sécurité appropriées pour protéger vos données contre l'accès non autorisé, la perte ou la destruction.",
         "modifications": "Modifications",
-        "modificationsDesc": "Nous pouvons modifier cette politique de confidentialité. Les modifications seront publiées sur cette page avec la date de mise à jour.",
-  "findSimilarTastes": "Trouve des personnes avec des goûts similaires aux tiens",
-  "searchPulser": "Rechercher un pulser...",
-  "loadingPulsers": "Chargement des pulsers...",
-  "noPulsersFound": "Aucun pulser trouvé",
-  "noPulsersRecommended": "Aucun pulser recommandé pour le moment",
-  "addFavoritesToDiscover": "Ajoutez des événements à vos favoris pour découvrir des personnes avec des goûts similaires !",
-  "pulser": "Pulser",
-  "anonymousUser": "Utilisateur anonyme",
-  "verified": "Vérifié",
-  "commonFavorites": "{count} favori en commun",
-  "commonFavorites_plural": "{count} favoris en commun",
-  "commonEvents": "{count} événement en commun",
-  "commonEvents_plural": "{count} événements en commun",
-  "eventsCount": "{count} événement",
-  "eventsCount_plural": "{count} événements",
-  "viewVenue": "Voir la salle",
-  "message": "Message",
-  "social": {
-    "title": "Social",
-    "subtitle": "Découvrez où vont vos amis et les événements tendance",
-    "myFriends": "Mes amis",
-    "trending": "Tendance",
-    "invitations": "Invitations"
-  },
-  "messages": {
-    "title": "Messages",
-    "subtitle": "Discute avec les autres pulsers",
-    "loading": "Chargement des messages...",
-    "noConversations": "Aucune conversation",
-    "selectConversation": "Sélectionnez une conversation",
-    "typeMessage": "Tapez un message...",
-    "you": "Vous: ",
-    "user": "Utilisateur",
-    "comeToEvent": "Viens à cet événement avec moi ! {title}\n\n{url}"
+        "modificationsDesc": "Nous pouvons modifier cette politique de confidentialité. Les modifications seront publiées sur cette page avec la date de mise à jour."
+      }
+    }
   },
   "pricing": {
     "title": "Tarifs et plans",
