@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Event } from '@/types';
 import EventCard from '../EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
-import { transformApiEvent } from '@/hooks/useEvents';
+import { transformPrismaEventToEvent } from '@/lib/transformPrismaEvent';
 
 interface ContextualDiscoveryProps {
   eventId: string;
@@ -39,16 +39,7 @@ export default function ContextualDiscovery({
           // Transformer les événements Prisma en format Event
           const transformed = (similarData.similar || []).map((e: any) => {
             try {
-              return transformApiEvent({
-                ...e,
-                startAt: e.startAt,
-                endAt: e.endAt,
-                venue: e.venue ? {
-                  ...e.venue,
-                  lat: e.venue.lat,
-                  lon: e.venue.lon,
-                } : null,
-              });
+              return transformPrismaEventToEvent(e);
             } catch (err) {
               console.error('Erreur transformation similar event:', err);
               return null;
@@ -64,16 +55,7 @@ export default function ContextualDiscovery({
             const venueData = await venueRes.json();
             const transformed = (venueData.events || []).map((e: any) => {
               try {
-                return transformApiEvent({
-                  ...e,
-                  startAt: e.startAt,
-                  endAt: e.endAt,
-                  venue: e.venue ? {
-                    ...e.venue,
-                    lat: e.venue.lat,
-                    lon: e.venue.lon,
-                  } : null,
-                });
+                return transformPrismaEventToEvent(e);
               } catch (err) {
                 console.error('Erreur transformation venue event:', err);
                 return null;
@@ -90,16 +72,7 @@ export default function ContextualDiscovery({
             const organizerData = await organizerRes.json();
             const transformed = (organizerData.events || []).map((e: any) => {
               try {
-                return transformApiEvent({
-                  ...e,
-                  startAt: e.startAt,
-                  endAt: e.endAt,
-                  venue: e.venue ? {
-                    ...e.venue,
-                    lat: e.venue.lat,
-                    lon: e.venue.lon,
-                  } : null,
-                });
+                return transformPrismaEventToEvent(e);
               } catch (err) {
                 console.error('Erreur transformation organizer event:', err);
                 return null;

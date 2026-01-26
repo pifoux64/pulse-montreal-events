@@ -51,7 +51,7 @@ interface ApiResponse {
 }
 
 // Fonction de transformation des données API vers le format frontend
-const transformApiEvent = (event: ApiEvent): Event => {
+export const transformApiEvent = (event: ApiEvent): Event => {
   // Extraire les tags structurés
   const structuredTags = event.eventTags ?? [];
   const categoryTags = structuredTags
