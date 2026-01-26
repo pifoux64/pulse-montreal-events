@@ -4,11 +4,13 @@ import { Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import { Mail, Loader2, Facebook, Instagram } from 'lucide-react';
 import EmailInput from './EmailInput';
 
 function SignInContent() {
+  const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -23,13 +25,13 @@ function SignInContent() {
     if (errorParam) {
       setError(
         errorParam === 'CredentialsSignin'
-          ? 'Identifiants invalides'
+          ? t('invalidCredentials')
           : errorParam === 'EmailSignin'
-          ? 'Erreur lors de l\'envoi de l\'email'
-          : 'Une erreur est survenue lors de la connexion'
+          ? t('emailError')
+          : t('errorOccurred')
       );
     }
-  }, [errorParam]);
+  }, [errorParam, t]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,10 +48,10 @@ function SignInContent() {
       if (result?.error) {
         // Messages d'erreur plus spécifiques
         const errorMessage = result.error === 'EmailSigninError'
-          ? 'Erreur lors de l\'envoi de l\'email. Vérifiez que le serveur email est configuré.'
+          ? t('emailError')
           : result.error === 'Configuration'
-          ? 'Erreur de configuration. Contactez l\'administrateur.'
-          : 'Erreur lors de l\'envoi de l\'email. Vérifiez votre adresse.';
+          ? t('configError')
+          : t('emailErrorCheck');
         setError(errorMessage);
       } else {
         setIsEmailSent(true);
@@ -57,10 +59,10 @@ function SignInContent() {
     } catch (err: any) {
       console.error('Erreur de connexion:', err);
       const errorMessage = err?.message?.includes('EMAIL_SERVER')
-        ? 'Le serveur email n\'est pas configuré. Contactez l\'administrateur.'
+        ? t('emailServerNotConfigured')
         : err?.message?.includes('ECONNREFUSED')
-        ? 'Impossible de se connecter au serveur email.'
-        : 'Une erreur est survenue. Veuillez réessayer.';
+        ? t('cannotConnectEmailServer')
+        : t('errorOccurred');
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -74,15 +76,15 @@ function SignInContent() {
       const result = await signIn(provider, { callbackUrl, redirect: false });
       if (result?.error) {
         const errorMessage = result.error === 'OAuthSignin'
-          ? `Erreur lors de la connexion ${providerLabel}. Vérifiez que ${providerLabel} OAuth est configuré.`
+          ? t('oauthError', { provider: providerLabel })
           : result.error === 'OAuthCallback'
-          ? `Erreur lors du callback ${providerLabel}.`
-          : `Erreur lors de la connexion ${providerLabel}.`;
+          ? t('oauthCallbackError', { provider: providerLabel })
+          : t('oauthGeneralError', { provider: providerLabel });
         setError(errorMessage);
       }
     } catch (err: any) {
       console.error(`Erreur ${providerLabel} OAuth:`, err);
-      setError(`Erreur lors de la connexion ${providerLabel}. Vérifiez la configuration.`);
+      setError(t('oauthGeneralError', { provider: providerLabel }));
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +97,7 @@ function SignInContent() {
 
   const socialButtons = [
     {
-      label: 'Continuer avec Google',
+      label: t('continueWithGoogle'),
       onClick: handleGoogleSignIn,
       icon: (
         <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -119,17 +121,17 @@ function SignInContent() {
       ),
     },
     {
-      label: 'Continuer avec Facebook',
+      label: t('continueWithFacebook'),
       onClick: handleFacebookSignIn,
       icon: <Facebook className="w-5 h-5" />,
     },
     {
-      label: 'Continuer avec Instagram',
+      label: t('continueWithInstagram'),
       onClick: handleInstagramSignIn,
       icon: <Instagram className="w-5 h-5" />,
     },
     {
-      label: 'Continuer avec TikTok',
+      label: t('continueWithTiktok'),
       onClick: handleTiktokSignIn,
       icon: (
         <svg className="w-5 h-5" viewBox="0 0 48 48" fill="none">
@@ -152,12 +154,12 @@ function SignInContent() {
               <div className="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Mail className="w-8 h-8 text-emerald-400" />
               </div>
-              <h1 className="text-2xl font-bold text-white mb-2">Vérifiez votre email</h1>
+              <h1 className="text-2xl font-bold text-white mb-2">{t('checkEmailTitle')}</h1>
               <p className="text-slate-300 mb-6">
-                Un lien de connexion a été envoyé à <strong className="text-white">{email}</strong>
+                {t('linkSentTo')} <strong className="text-white">{email}</strong>
               </p>
               <p className="text-sm text-slate-400">
-                Cliquez sur le lien dans l'email pour vous connecter. Le lien expire dans 24 heures.
+                {t('clickLinkInEmail')}
               </p>
               <button
                 onClick={() => {
@@ -166,7 +168,7 @@ function SignInContent() {
                 }}
                 className="mt-6 text-sky-400 hover:text-sky-300 text-sm font-medium"
               >
-                Utiliser une autre adresse
+                {t('useAnotherAddress')}
               </button>
             </div>
           </div>
@@ -181,8 +183,8 @@ function SignInContent() {
       <div className="flex items-center justify-center min-h-[calc(100vh-5rem)] px-4 pt-24">
         <div className="max-w-md w-full bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/15 shadow-2xl">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">Connexion</h1>
-            <p className="text-slate-300">Connectez-vous pour accéder à vos favoris et plus encore</p>
+            <h1 className="text-3xl font-bold text-white mb-2">{t('signInTitle')}</h1>
+            <p className="text-slate-300">{t('signInSubtitle')}</p>
           </div>
 
           {error && (
@@ -194,13 +196,13 @@ function SignInContent() {
           <form onSubmit={handleEmailSignIn} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-200 mb-2">
-                Adresse email
+                {t('email')}
               </label>
               <EmailInput
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLoading}
-                placeholder="votre@email.com"
+                placeholder={t('emailPlaceholder')}
               />
             </div>
 
@@ -212,12 +214,12 @@ function SignInContent() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Envoi en cours...
+                  {t('sending')}
                 </>
               ) : (
                 <>
                   <Mail className="w-5 h-5" />
-                  Envoyer un lien de connexion
+                  {t('sendLink')}
                 </>
               )}
             </button>
@@ -228,7 +230,7 @@ function SignInContent() {
               <div className="w-full border-t border-white/20"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-slate-950 text-slate-400">Ou</span>
+              <span className="px-4 bg-slate-950 text-slate-400">{t('or')}</span>
             </div>
           </div>
 
@@ -247,9 +249,9 @@ function SignInContent() {
           </div>
 
           <p className="mt-6 text-center text-sm text-slate-400">
-            En vous connectant, vous acceptez nos{' '}
-            <a href="/terms" className="text-sky-400 hover:text-sky-300">
-              conditions d'utilisation
+            {t('bySigningIn')}{' '}
+            <a href="/cgu" className="text-sky-400 hover:text-sky-300">
+              {t('termsOfUse')}
             </a>
           </p>
         </div>
