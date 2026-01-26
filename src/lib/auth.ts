@@ -215,7 +215,11 @@ export const authOptions: NextAuthOptions = {
   providers: providers.length > 0 ? providers : [],
   
   // Normaliser l'URL pour gérer localhost et 127.0.0.1
+  // trustHost permet à NextAuth de détecter automatiquement l'URL depuis les headers
   trustHost: true,
+  
+  // S'assurer que l'URL de base est correcte
+  ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
   
   callbacks: {
     async session({ session, user }) {
