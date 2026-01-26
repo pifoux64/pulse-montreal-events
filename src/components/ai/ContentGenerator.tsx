@@ -267,7 +267,7 @@ export default function ContentGenerator({
                 </div>
                 {result.facebookPost.suggestedImage && (
                   <div>
-                    <label className="text-sm font-medium text-slate-300 mb-2 block">Image suggérée</label>
+                    <label className="text-sm font-medium text-slate-300 mb-2 block">{t('suggestedImage')}</label>
                     <p className="text-slate-300 text-sm">{result.facebookPost.suggestedImage}</p>
                   </div>
                 )}
