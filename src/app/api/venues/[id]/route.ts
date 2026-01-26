@@ -45,11 +45,12 @@ async function ensureUniqueSlug(baseSlug: string, excludeId?: string): Promise<s
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const venue = await prisma.venue.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: {
         owner: {
           select: {
@@ -119,7 +120,7 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -131,9 +132,11 @@ export async function PATCH(
       );
     }
 
+    const { id } = await params;
+
     // Vérifier que la venue existe et appartient à l'utilisateur
     const existingVenue = await prisma.venue.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { ownerUserId: true },
     });
 
@@ -174,14 +177,14 @@ export async function PATCH(
     if (name) {
       // Récupérer le nom actuel pour comparer
       const currentVenue = await prisma.venue.findUnique({
-        where: { id: params.id },
+        where: { id },
         select: { name: true, slug: true },
       });
       
       // Générer un slug si le nom change ou si la venue n'a pas de slug
       if (!currentVenue?.slug || name !== currentVenue.name) {
         const baseSlug = generateSlug(name);
-        slug = await ensureUniqueSlug(baseSlug, params.id);
+        slug = await ensureUniqueSlug(baseSlug, id);
       }
     }
 
@@ -203,7 +206,7 @@ export async function PATCH(
     if (tags !== undefined) updateData.tags = tags;
 
     const venue = await prisma.venue.update({
-      where: { id: params.id },
+      where: { id },
       data: updateData,
       include: {
         owner: {

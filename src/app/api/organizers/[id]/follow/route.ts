@@ -16,7 +16,7 @@ import { prisma } from '@/lib/prisma';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -28,7 +28,7 @@ export async function POST(
       );
     }
 
-    const organizerId = params.id;
+    const { id: organizerId } = await params;
 
     // Vérifier que l'organisateur existe
     const organizer = await prisma.organizer.findUnique({
@@ -84,7 +84,7 @@ export async function POST(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -96,7 +96,7 @@ export async function DELETE(
       );
     }
 
-    const organizerId = params.id;
+    const { id: organizerId } = await params;
 
     // Supprimer le follow
     await prisma.organizerFollow.deleteMany({
@@ -124,7 +124,7 @@ export async function DELETE(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -133,7 +133,7 @@ export async function GET(
       return NextResponse.json({ isFollowing: false });
     }
 
-    const organizerId = params.id;
+    const { id: organizerId } = await params;
 
     const follow = await prisma.organizerFollow.findUnique({
       where: {

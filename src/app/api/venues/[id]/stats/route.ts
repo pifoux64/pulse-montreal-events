@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,9 +22,11 @@ export async function GET(
       );
     }
 
+    const { id } = await params;
+
     // Vérifier que la venue existe et appartient à l'utilisateur
     const venue = await prisma.venue.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { ownerUserId: true },
     });
 
@@ -45,7 +47,7 @@ export async function GET(
     // Récupérer tous les événements de la venue
     const events = await prisma.event.findMany({
       where: {
-        venueId: params.id,
+        venueId: id,
       },
       include: {
         _count: {
@@ -85,7 +87,7 @@ export async function GET(
     // Calculer les favoris
     const eventsWithFavorites = await prisma.event.findMany({
       where: {
-        venueId: params.id,
+        venueId: id,
         favorites: {
           some: {
             createdAt: {
