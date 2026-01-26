@@ -339,7 +339,7 @@ export default function BudgetCalculator() {
             </div>
 
             {/* Tableau de bénéfices */}
-            {result.estimatedCosts?.total && (
+            {result.estimatedCosts?.total && typeof result.estimatedCosts.total === 'number' && result.estimatedCosts.total > 0 && (
               <ProfitMatrixTable
                 totalCosts={result.estimatedCosts.total}
                 minTicketPrice={15}

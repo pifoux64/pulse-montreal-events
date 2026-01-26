@@ -174,26 +174,38 @@ Génère :
         const validatedPricing = { ...result.data.suggestedPricing };
         
         // Limiter les prix à des valeurs raisonnables (max 500$)
-        if (validatedPricing.low?.price && validatedPricing.low.price > 500) {
-          validatedPricing.low.price = Math.min(500, breakEvenPrice * 1.2);
-        }
-        if (validatedPricing.medium?.price && validatedPricing.medium.price > 500) {
-          validatedPricing.medium.price = Math.min(500, breakEvenPrice * 1.5);
-        }
-        if (validatedPricing.high?.price && validatedPricing.high.price > 500) {
-          validatedPricing.high.price = Math.min(500, breakEvenPrice * 2);
+        // S'assurer que les prix sont des nombres valides
+        if (validatedPricing.low?.price) {
+          const price = Number(validatedPricing.low.price);
+          if (isNaN(price) || price <= 0 || price > 500) {
+            validatedPricing.low.price = Math.max(10, Math.min(500, Math.ceil(breakEvenPrice * 0.8)));
+          } else {
+            validatedPricing.low.price = Math.min(500, Math.ceil(price));
+          }
+        } else {
+          validatedPricing.low.price = Math.max(10, Math.min(500, Math.ceil(breakEvenPrice * 0.8)));
         }
         
-        // Valider le breakEven retourné par l'IA
-        if (result.data.breakEven) {
-          const aiBreakEven = result.data.breakEven;
-          // Si le prix retourné est aberrant (> 500$), utiliser notre calcul
-          if (aiBreakEven.ticketPrice && aiBreakEven.ticketPrice > 500) {
-            result.data.breakEven.ticketPrice = breakEvenPrice;
+        if (validatedPricing.medium?.price) {
+          const price = Number(validatedPricing.medium.price);
+          if (isNaN(price) || price <= 0 || price > 500) {
+            validatedPricing.medium.price = Math.max(15, Math.min(500, Math.ceil(breakEvenPrice)));
+          } else {
+            validatedPricing.medium.price = Math.min(500, Math.ceil(price));
           }
-          if (aiBreakEven.attendeesNeeded && aiBreakEven.attendeesNeeded > 100000) {
-            result.data.breakEven.attendeesNeeded = breakEvenAttendees;
+        } else {
+          validatedPricing.medium.price = Math.max(15, Math.min(500, Math.ceil(breakEvenPrice)));
+        }
+        
+        if (validatedPricing.high?.price) {
+          const price = Number(validatedPricing.high.price);
+          if (isNaN(price) || price <= 0 || price > 500) {
+            validatedPricing.high.price = Math.max(20, Math.min(500, Math.ceil(breakEvenPrice * 1.5)));
+          } else {
+            validatedPricing.high.price = Math.min(500, Math.ceil(price));
           }
+        } else {
+          validatedPricing.high.price = Math.max(20, Math.min(500, Math.ceil(breakEvenPrice * 1.5)));
         }
         
         suggestedPricing = validatedPricing;
@@ -208,15 +220,39 @@ Génère :
     }
 
     // Valider et limiter le prix de billet nécessaire (max 500$)
-    const safeBreakEvenPrice = Math.min(500, Math.ceil(breakEvenPrice * 100) / 100);
-    const safeBreakEvenAttendees = Math.min(100000, breakEvenAttendees);
+    const safeBreakEvenPrice = Math.min(500, Math.max(0, Math.ceil(breakEvenPrice * 100) / 100));
+    const safeBreakEvenAttendees = Math.min(100000, Math.max(1, breakEvenAttendees));
+    
+    // S'assurer que costs.total est toujours défini et correct
+    costs.total = totalCosts;
+    
+    // Valider que tous les coûts sont des nombres valides
+    Object.keys(costs).forEach(key => {
+      if (key !== 'total' && costs[key] != null) {
+        const value = Number(costs[key]);
+        if (isNaN(value) || value < 0) {
+          costs[key] = 0;
+        } else {
+          costs[key] = Math.round(value * 100) / 100; // Arrondir à 2 décimales
+        }
+      }
+    });
+    
+    // Recalculer le total après validation
+    costs.total = (costs.venue || 0) + 
+                  (costs.artists || 0) + 
+                  (costs.sound || 0) + 
+                  (costs.lighting || 0) + 
+                  (costs.promotion || 0) + 
+                  (costs.staff || 0) + 
+                  (costs.other || 0);
     
     return NextResponse.json({
       estimatedCosts: costs,
       breakEven: {
         ticketPrice: safeBreakEvenPrice,
         attendeesNeeded: safeBreakEvenAttendees,
-        revenue: totalCosts,
+        revenue: costs.total,
       },
       suggestedPricing,
       recommendations: aiRecommendations,
