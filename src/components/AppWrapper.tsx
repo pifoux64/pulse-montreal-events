@@ -76,7 +76,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
   const displayLocale = mounted ? locale : defaultLocale;
 
   return (
-    <SessionProvider>
+    <SessionProvider basePath="/api/auth">
       <NextIntlClientProvider 
         locale={displayLocale} 
         messages={messages[displayLocale]} 

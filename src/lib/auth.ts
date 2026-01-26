@@ -214,12 +214,10 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: providers.length > 0 ? providers : [],
   
-  // Normaliser l'URL pour gérer localhost et 127.0.0.1
-  // trustHost permet à NextAuth de détecter automatiquement l'URL depuis les headers
-  trustHost: true,
-  
-  // S'assurer que l'URL de base est correcte
-  ...(process.env.NEXTAUTH_URL && { url: process.env.NEXTAUTH_URL }),
+  // Configuration de l'URL de base
+  // En production, utiliser NEXTAUTH_URL explicitement
+  // trustHost permet aussi la détection automatique depuis les headers si NEXTAUTH_URL n'est pas défini
+  ...(process.env.NEXTAUTH_URL ? { url: process.env.NEXTAUTH_URL } : { trustHost: true }),
   
   callbacks: {
     async session({ session, user }) {
