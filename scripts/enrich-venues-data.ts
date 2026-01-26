@@ -392,6 +392,7 @@ const venueEnrichmentData: Record<string, {
   // Place Bell
   'place-bell': {
     description: 'Place Bell est une aréna polyvalente moderne située à Laval, dans la région métropolitaine de Montréal. Cette installation sportive et de divertissement accueille des événements sportifs, des concerts et des spectacles. Elle dispose d\'équipements modernes et d\'une capacité importante pour accueillir divers types d\'événements.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['arène', 'salle'],
     tags: ['sport', 'concerts', 'spectacles', 'événements'],
     neighborhood: 'Laval',
@@ -441,6 +442,7 @@ const venueEnrichmentData: Record<string, {
   // Bibliothèque et Archives nationales du Québec
   'bibliotheque-et-archives-nationales-du-quebec': {
     description: 'La Bibliothèque et Archives nationales du Québec (BAnQ) est une institution culturelle majeure qui accueille des événements, conférences, expositions et activités culturelles. Située dans le Quartier des spectacles, elle dispose d\'espaces pour accueillir divers types d\'événements éducatifs et culturels.',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['bibliothèque', 'centre_culturel'],
     tags: ['conférences', 'expositions', 'culture', 'éducation', 'archives'],
     website: 'https://www.banq.qc.ca',
