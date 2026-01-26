@@ -86,6 +86,14 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
   const mixcloudUrlFeature = event.features?.find(f => f.featureKey === 'mixcloudUrl');
   const youtubeUrlFeature = event.features?.find(f => f.featureKey === 'youtubeUrl');
   
+  // Debug en développement : afficher toutes les features disponibles
+  if (process.env.NODE_ENV === 'development' && event.features) {
+    console.log('[EventPageClient] All EventFeatures:', event.features.map(f => ({
+      key: f.featureKey,
+      value: typeof f.featureValue === 'string' ? f.featureValue.substring(0, 100) : f.featureValue,
+    })));
+  }
+  
   const longDescription = longDescriptionFeature?.featureValue as string | undefined;
   const lineup = lineupFeature?.featureValue as string[] | undefined;
   const spotifyUrl = spotifyUrlFeature?.featureValue as string | undefined;
