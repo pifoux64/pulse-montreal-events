@@ -66,7 +66,9 @@ Ton objectif:
 - Identifier l'intensité (chill à very_high) et le niveau de danse si applicable
 - Générer des tags cliquables pour la découverte (genre, ambiance, time, crowd, accessibility)
 
-Style: Éditorial, immersif, authentique. Évite le marketing, sois descriptif et utile.`;
+Style: Éditorial, immersif, authentique. Évite le marketing, sois descriptif et utile.
+
+IMPORTANT: Tu dois toujours répondre avec un objet JSON valide, sans aucun texte ou formatage supplémentaire.`;
 
     const userPrompt = `Génère un insight Pulse pour cet événement:
 
