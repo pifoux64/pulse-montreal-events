@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import ModernLoader from '@/components/ModernLoader';
 import FollowUserButton from '@/components/social/FollowUserButton';
@@ -26,6 +27,9 @@ interface Pulser {
 }
 
 export default function PulsersPage() {
+  const t = useTranslations('navigation');
+  const tCommon = useTranslations('common');
+  const tErrors = useTranslations('errors');
   const { data: session, status } = useSession();
   const router = useRouter();
   const [pulsers, setPulsers] = useState<Pulser[]>([]);
@@ -49,7 +53,7 @@ export default function PulsersPage() {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Erreur lors du chargement des utilisateurs');
+        throw new Error(errorData.error || tErrors('loadingError'));
       }
 
       const data = await response.json();
@@ -61,7 +65,7 @@ export default function PulsersPage() {
       }
     } catch (err: any) {
       console.error('Erreur lors du chargement des utilisateurs:', err);
-      setError(err.message || 'Erreur lors du chargement des utilisateurs');
+      setError(err.message || tErrors('loadingError'));
     } finally {
       setIsLoading(false);
     }
@@ -88,7 +92,7 @@ export default function PulsersPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-gray-900">
         <Navigation />
         <div className="pt-24 flex items-center justify-center min-h-[calc(100vh-5rem)]">
-          <ModernLoader size="lg" text="Chargement des pulsers..." variant="default" />
+          <ModernLoader size="lg" text={t('loadingPulsers')} variant="default" />
         </div>
       </div>
     );
@@ -111,9 +115,9 @@ export default function PulsersPage() {
                 <Users className="w-8 h-8 text-blue-400" />
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-white">Découvrir les Pulsers</h1>
+                <h1 className="text-3xl sm:text-4xl font-bold text-white">{t('discoverPulsers')}</h1>
                 <p className="text-slate-400 mt-1">
-                  Trouve des personnes avec des goûts similaires aux tiens
+                  {t('findSimilarTastes')}
                 </p>
               </div>
             </div>
@@ -123,7 +127,7 @@ export default function PulsersPage() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Rechercher un pulser..."
+                placeholder={t('searchPulser')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -133,7 +137,7 @@ export default function PulsersPage() {
 
           {error && (
             <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-xl text-red-200">
-              <p className="font-semibold mb-1">Erreur</p>
+              <p className="font-semibold mb-1">{tCommon('error')}</p>
               <p className="text-sm">{error}</p>
             </div>
           )}
@@ -143,11 +147,11 @@ export default function PulsersPage() {
             <div className="bg-white/5 backdrop-blur-md rounded-2xl p-12 text-center border border-white/10">
               <Users className="w-16 h-16 text-slate-500 mx-auto mb-4" />
               <p className="text-slate-400 text-lg mb-2">
-                {searchQuery ? 'Aucun pulser trouvé' : 'Aucun pulser recommandé pour le moment'}
+                {searchQuery ? t('noPulsersFound') : t('noPulsersRecommended')}
               </p>
               {!searchQuery && (
                 <p className="text-slate-500 text-sm">
-                  Ajoutez des événements à vos favoris pour découvrir des personnes avec des goûts similaires !
+                  {t('addFavoritesToDiscover')}
                 </p>
               )}
             </div>
@@ -165,7 +169,7 @@ export default function PulsersPage() {
                         {pulser.image ? (
                           <Image
                             src={pulser.image}
-                            alt={pulser.name || 'Pulser'}
+                            alt={pulser.name || t('pulser')}
                             fill
                             className="object-cover"
                           />
@@ -184,10 +188,10 @@ export default function PulsersPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-white truncate">
-                            {pulser.name || (pulser.type === 'venue' ? 'Salle' : pulser.type === 'organizer' ? 'Organisateur' : 'Utilisateur anonyme')}
+                            {pulser.name || (pulser.type === 'venue' ? t('venues') : pulser.type === 'organizer' ? t('organizers') : t('anonymousUser'))}
                           </h3>
                           {pulser.verified && (
-                            <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" title="Vérifié" />
+                            <CheckCircle className="w-4 h-4 text-blue-400 flex-shrink-0" title={t('verified')} />
                           )}
                         </div>
                         <div className="flex items-center gap-2 flex-wrap">
@@ -202,17 +206,17 @@ export default function PulsersPage() {
                             {pulser.type === 'venue' ? (
                               <>
                                 <Building2 className="w-3 h-3" />
-                                Salle
+                                {t('venues')}
                               </>
                             ) : pulser.type === 'organizer' ? (
                               <>
                                 <UserCheck className="w-3 h-3" />
-                                Organisateur
+                                {t('organizers')}
                               </>
                             ) : (
                               <>
                                 <Users className="w-3 h-3" />
-                                Pulser
+                                {t('pulser')}
                               </>
                             )}
                           </span>
@@ -232,19 +236,19 @@ export default function PulsersPage() {
                     {pulser.type === 'user' && pulser.commonFavorites !== undefined && pulser.commonFavorites > 0 && (
                       <div className="flex items-center gap-2 text-sm text-slate-300">
                         <Heart className="w-4 h-4 text-red-400" />
-                        <span>{pulser.commonFavorites} favori{pulser.commonFavorites > 1 ? 's' : ''} en commun</span>
+                        <span>{t('commonFavorites', { count: pulser.commonFavorites })}</span>
                       </div>
                     )}
                     {pulser.type === 'user' && pulser.commonEvents !== undefined && pulser.commonEvents > 0 && (
                       <div className="flex items-center gap-2 text-sm text-slate-300">
                         <Calendar className="w-4 h-4 text-blue-400" />
-                        <span>{pulser.commonEvents} événement{pulser.commonEvents > 1 ? 's' : ''} en commun</span>
+                        <span>{t('commonEvents', { count: pulser.commonEvents })}</span>
                       </div>
                     )}
                     {(pulser.type === 'venue' || pulser.type === 'organizer') && pulser.eventsCount !== undefined && (
                       <div className="flex items-center gap-2 text-sm text-slate-300">
                         <Calendar className="w-4 h-4 text-blue-400" />
-                        <span>{pulser.eventsCount} événement{pulser.eventsCount > 1 ? 's' : ''}</span>
+                        <span>{t('eventsCount', { count: pulser.eventsCount })}</span>
                       </div>
                     )}
                   </div>
@@ -264,7 +268,7 @@ export default function PulsersPage() {
                           className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-700 text-slate-200 rounded-lg text-sm font-medium hover:bg-slate-600 transition-colors"
                         >
                           <MessageCircle className="w-4 h-4" />
-                          Message
+                          {t('message')}
                         </Link>
                       </>
                     ) : pulser.type === 'organizer' ? (
@@ -280,7 +284,7 @@ export default function PulsersPage() {
                         className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                       >
                         <Building2 className="w-4 h-4" />
-                        Voir la salle
+                        {t('viewVenue')}
                       </Link>
                     ) : null}
                   </div>
