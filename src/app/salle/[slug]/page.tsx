@@ -153,7 +153,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
       (e) => new Date(e.startAt) <= thisWeekend
     );
 
-    // Récupérer les événements passés (limité à 10)
+    // Récupérer les événements passés (limité à 20 pour avoir plus d'historique)
     const pastEvents = await prisma.event.findMany({
       where: {
         venueId: venue.id,
@@ -167,7 +167,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
       orderBy: {
         startAt: 'desc',
       },
-      take: 10,
+      take: 20,
       include: {
         organizer: {
           include: {
@@ -186,6 +186,22 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
         },
       },
     });
+
+    // Calculer les statistiques des événements passés
+    const pastEventsStats = {
+      total: pastEvents.length,
+      categories: pastEvents.reduce((acc, event) => {
+        const cat = event.category || 'OTHER';
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>),
+      tags: pastEvents.reduce((acc, event) => {
+        event.tags.forEach(tag => {
+          acc[tag] = (acc[tag] || 0) + 1;
+        });
+        return acc;
+      }, {} as Record<string, number>),
+    };
 
     const jsonLd = buildVenueJsonLd(venue);
 
@@ -253,12 +269,56 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                   )}
                 </div>
 
+                {/* Image de la salle */}
+                {venue.imageUrl && (
+                  <div className="mb-8 rounded-2xl overflow-hidden border-2 border-white/20 shadow-2xl">
+                    <Image
+                      src={
+                        venue.imageUrl.startsWith('http') && 
+                        !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
+                          ? `/api/image-proxy?url=${encodeURIComponent(venue.imageUrl)}`
+                          : venue.imageUrl
+                      }
+                      alt={venue.name}
+                      width={1200}
+                      height={600}
+                      className="w-full h-[400px] object-cover"
+                      priority
+                      unoptimized={venue.imageUrl.startsWith('http') && !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')}
+                      onError={(e) => {
+                        // Si l'image échoue, cacher l'image et afficher un placeholder
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+
                 {/* Description enrichie */}
                 {venue.description && (
                   <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
                     <p className="text-slate-200 leading-relaxed text-lg">
                       {venue.description}
                     </p>
+                  </div>
+                )}
+
+                {/* Tags / Styles d'événements */}
+                {venue.tags && venue.tags.length > 0 && (
+                  <div className="mb-8">
+                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-purple-400" />
+                      Styles d'événements
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      {venue.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-purple-200 rounded-xl text-sm font-medium backdrop-blur-sm hover:from-purple-500/30 hover:to-pink-500/30 transition-all"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 )}
 
@@ -441,22 +501,49 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
             </div>
           )}
 
-          {/* Événements passés */}
+          {/* Événements passés avec statistiques */}
           {pastEvents.length > 0 && (
             <div className="mb-12">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-500/20 to-slate-600/20 border border-slate-500/30">
-                  <Clock className="h-6 w-6 text-slate-400" />
-                </div>
-                <div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">
-                    Événements passés
-                  </h2>
-                  <p className="text-slate-400">
-                    Historique des {pastEvents.length} derniers événements
-                  </p>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-500/20 to-slate-600/20 border border-slate-500/30">
+                    <Clock className="h-6 w-6 text-slate-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">
+                      Événements passés
+                    </h2>
+                    <p className="text-slate-400">
+                      Historique des {pastEvents.length} derniers événements organisés dans cette salle
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* Statistiques des événements passés */}
+              {Object.keys(pastEventsStats.categories).length > 0 && (
+                <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                    <Award className="h-5 w-5 text-amber-400" />
+                    Types d'événements organisés
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(pastEventsStats.categories)
+                      .sort(([, a], [, b]) => b - a)
+                      .slice(0, 8)
+                      .map(([category, count]) => (
+                        <div
+                          key={category}
+                          className="px-4 py-2 rounded-xl bg-gradient-to-r from-slate-600/20 to-slate-700/20 border border-slate-500/30"
+                        >
+                          <span className="text-sm font-semibold text-white">{category.replace(/_/g, ' ')}</span>
+                          <span className="ml-2 text-xs text-slate-400">({count})</span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {pastEvents.map((event) => (
                   <div key={event.id} className="w-full min-w-0">

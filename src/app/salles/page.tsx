@@ -16,6 +16,9 @@ interface Venue {
   address: string;
   city: string;
   neighborhood: string | null;
+  imageUrl: string | null;
+  capacity: number | null;
+  tags: string[];
   _count: {
     events: number;
   };
@@ -138,6 +141,38 @@ export default function SallesPage() {
                     className="group relative bg-white/5 backdrop-blur-xl rounded-3xl overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/20"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
+                    {/* Image de la salle */}
+                    {venue.imageUrl ? (
+                      <div className="relative h-48 overflow-hidden">
+                        <Image
+                          src={
+                            venue.imageUrl.startsWith('http') && 
+                            !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')
+                              ? `/api/image-proxy?url=${encodeURIComponent(venue.imageUrl)}`
+                              : venue.imageUrl
+                          }
+                          alt={venue.name}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          unoptimized={venue.imageUrl.startsWith('http') && !venue.imageUrl.includes(process.env.NEXT_PUBLIC_APP_URL || 'localhost')}
+                          onError={(e) => {
+                            // Si l'image échoue, remplacer par un gradient
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent"></div>
+                        {/* Fallback si l'image échoue */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Building2 className="w-16 h-16 text-white/50" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="relative h-48 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center">
+                        <Building2 className="w-16 h-16 text-white/50" />
+                      </div>
+                    )}
+                    
                     {/* Gradient background animé */}
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 via-purple-500/0 to-pink-500/0 group-hover:from-blue-500/10 group-hover:via-purple-500/10 group-hover:to-pink-500/10 transition-all duration-500"></div>
                     
@@ -178,13 +213,44 @@ export default function SallesPage() {
                           </div>
                           <span className="line-clamp-1">{venue.address}, {venue.city}</span>
                         </div>
-                        <div className="flex items-center gap-2.5 text-slate-300 text-sm">
-                          <div className="p-1.5 rounded-lg bg-white/5">
-                            <Calendar className="w-4 h-4 text-emerald-400" />
+                        <div className="flex items-center gap-4 text-slate-300 text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="p-1.5 rounded-lg bg-white/5">
+                              <Calendar className="w-4 h-4 text-emerald-400" />
+                            </div>
+                            <span className="font-semibold">{venue._count.events} événement{venue._count.events > 1 ? 's' : ''}</span>
                           </div>
-                          <span className="font-semibold">{venue._count.events} événement{venue._count.events > 1 ? 's' : ''}</span>
+                          {venue.capacity && (
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 rounded-lg bg-white/5">
+                                <Users className="w-4 h-4 text-purple-400" />
+                              </div>
+                              <span className="font-semibold">{venue.capacity.toLocaleString('fr-CA')} places</span>
+                            </div>
+                          )}
                         </div>
                       </div>
+
+                      {/* Tags / Styles d'événements */}
+                      {venue.tags && venue.tags.length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-1.5">
+                            {venue.tags.slice(0, 3).map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-2 py-1 bg-white/5 text-slate-300 text-xs rounded-lg border border-white/10"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                            {venue.tags.length > 3 && (
+                              <span className="px-2 py-1 bg-white/5 text-slate-400 text-xs rounded-lg border border-white/10">
+                                +{venue.tags.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Description */}
                       {venue.description && (

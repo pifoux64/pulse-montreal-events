@@ -257,6 +257,7 @@ model Venue {
   phone        String?
   website      String?
   contactEmail String?  @map("contact_email")
+  imageUrl     String?  @map("image_url") // URL de l'image principale de la salle
   types        String[] @default([]) // ["bar", "club", "salle", "centre_culturel"]
   tags         String[] @default([]) // Tags pour recherche et filtrage
   ownerUserId  String?  @map("owner_user_id") @db.Uuid

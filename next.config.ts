@@ -49,6 +49,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.universe.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'commons.wikimedia.org',
+      },
     ],
     localPatterns: [
       {
