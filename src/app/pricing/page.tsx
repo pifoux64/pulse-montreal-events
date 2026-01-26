@@ -102,15 +102,15 @@ export default async function PricingPage() {
             {/* Badge "Populaire" */}
             <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-1 rounded-bl-lg text-sm font-bold flex items-center gap-1">
               <Star className="w-4 h-4 fill-current" />
-              Populaire
+              {t('popular')}
             </div>
 
             <div className="mb-6">
               <div className="flex items-center gap-2 mb-2">
                 <Crown className="w-6 h-6 text-amber-400" />
-                <h2 className="text-3xl font-bold text-white">PRO</h2>
+                <h2 className="text-3xl font-bold text-white">{t('pro')}</h2>
               </div>
-              <p className="text-slate-300">Pour les organisateurs sérieux</p>
+              <p className="text-slate-300">{t('proDescription')}</p>
             </div>
             
             <div className="mb-6">
@@ -118,7 +118,7 @@ export default async function PricingPage() {
                 <span className="text-5xl font-bold text-white">29$</span>
                 <span className="text-xl text-slate-300 ml-2">CAD</span>
               </div>
-              <p className="text-slate-300 mt-2">par mois</p>
+              <p className="text-slate-300 mt-2">{t('perMonth')}</p>
             </div>
 
             <Link
