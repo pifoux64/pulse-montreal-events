@@ -28,7 +28,7 @@ const createEventFormSchema = (t: (key: string) => string) => z.object({
   subCategory: z.string().optional(),
   tags: z.array(z.string()).min(1, t('validation.tagsMin')),
   price: z.object({
-    amount: z.number().min(0, t('validation.priceNegative')),
+    amount: z.coerce.number().min(0, t('validation.priceNegative')),
     currency: z.string().min(1, t('validation.currencyRequired')),
     isFree: z.boolean(),
   }),
@@ -1075,6 +1075,13 @@ const EventForm = ({
                       type="number"
                       min="0"
                       step="0.01"
+                      value={field.value ?? ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        // Convertir en nombre si la valeur n'est pas vide
+                        field.onChange(value === '' ? undefined : parseFloat(value) || 0);
+                      }}
+                      onBlur={field.onBlur}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={t('pricePlaceholder')}
                     />
