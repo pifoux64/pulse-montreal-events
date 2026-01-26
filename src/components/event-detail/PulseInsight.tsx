@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Sparkles, Loader2, Music, Users, Zap, Clock, Accessibility } from 'lucide-react';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import EventTagsDisplay, { EventTag } from '../EventTagsDisplay';
 
 interface PulseInsightData {
@@ -45,6 +45,7 @@ export default function PulseInsight({
   fallbackTags,
 }: PulseInsightProps) {
   const t = useTranslations('eventDetail');
+  const locale = useLocale();
   const [insight, setInsight] = useState<PulseInsightData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +69,7 @@ export default function PulseInsight({
             venue: venue ? { name: venue.name, neighborhood: venue.neighborhood } : null,
             organizer: organizer ? { displayName: organizer.displayName } : null,
             lineup: lineup || [],
+            locale: locale, // Passer la locale pour générer l'insight dans la bonne langue
           }),
         });
 
@@ -88,7 +90,7 @@ export default function PulseInsight({
     };
 
     fetchInsight();
-  }, [eventId, eventTitle, eventDescription, eventCategory, eventTags, venue, organizer, lineup, fallbackTags]);
+  }, [eventId, eventTitle, eventDescription, eventCategory, eventTags, venue, organizer, lineup, fallbackTags, locale]);
 
   if (loading) {
     return (
