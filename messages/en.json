@@ -1124,7 +1124,8 @@
     "minutes": "minutes",
     "min": "min",
     "h": "h",
-    "listen": "Listen"
+    "listen": "Listen",
+    "listenBeforeYouGo": "Listen before you go"
   },
   "flyer": {
     "title": "AI Flyer Generator",

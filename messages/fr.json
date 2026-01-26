@@ -1251,7 +1251,8 @@
     "minutes": "minutes",
     "min": "min",
     "h": "h",
-    "listen": "Écouter"
+    "listen": "Écouter",
+    "listenBeforeYouGo": "Écoutez avant d'y aller"
   },
   "flyer": {
     "title": "Générateur de Flyer IA",

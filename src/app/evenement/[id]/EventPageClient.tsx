@@ -9,6 +9,7 @@ import SocialRelevance from '@/components/event-detail/SocialRelevance';
 import ContextualDiscovery from '@/components/event-detail/ContextualDiscovery';
 import PracticalInfo from '@/components/event-detail/PracticalInfo';
 import OrganizerTools from '@/components/event-detail/OrganizerTools';
+import ListenBeforeYouGo from '@/components/event-detail/ListenBeforeYouGo';
 
 interface EventPageClientProps {
   event: {
@@ -69,11 +70,20 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
     }
   }, []);
 
-  // Extraire lineup et longDescription depuis EventFeature
+  // Extraire lineup, longDescription et URLs musicales depuis EventFeature
   const longDescriptionFeature = event.features?.find(f => f.featureKey === 'longDescription');
   const lineupFeature = event.features?.find(f => f.featureKey === 'lineup');
+  const spotifyUrlFeature = event.features?.find(f => f.featureKey === 'spotifyUrl');
+  const soundcloudUrlFeature = event.features?.find(f => f.featureKey === 'soundcloudUrl');
+  const mixcloudUrlFeature = event.features?.find(f => f.featureKey === 'mixcloudUrl');
+  const youtubeUrlFeature = event.features?.find(f => f.featureKey === 'youtubeUrl');
+  
   const longDescription = longDescriptionFeature?.featureValue as string | undefined;
   const lineup = lineupFeature?.featureValue as string[] | undefined;
+  const spotifyUrl = spotifyUrlFeature?.featureValue as string | undefined;
+  const soundcloudUrl = soundcloudUrlFeature?.featureValue as string | undefined;
+  const mixcloudUrl = mixcloudUrlFeature?.featureValue as string | undefined;
+  const youtubeUrl = youtubeUrlFeature?.featureValue as string | undefined;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
@@ -115,6 +125,15 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
           fallbackTags={event.tags}
         />
 
+        {/* 4. Listen Before You Go */}
+        <ListenBeforeYouGo
+          spotifyUrl={spotifyUrl}
+          soundcloudUrl={soundcloudUrl}
+          mixcloudUrl={mixcloudUrl}
+          youtubeUrl={youtubeUrl}
+          eventTags={event.eventTags}
+        />
+
         {/* Main content grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left column - Main content */}
@@ -129,14 +148,14 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
               accessibility={event.accessibility}
             />
 
-            {/* 5. Social relevance */}
+            {/* 6. Social relevance */}
             <SocialRelevance
               eventId={event.id}
               eventTitle={event.title}
               eventUrl={event.url}
             />
 
-            {/* 6. Contextual discovery */}
+            {/* 7. Contextual discovery */}
             <ContextualDiscovery
               eventId={event.id}
               venueId={event.venue?.id}
@@ -154,7 +173,7 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
               accessibility={event.accessibility}
             />
 
-            {/* 8. Organizer tools (role-based) */}
+            {/* 9. Organizer tools (role-based) */}
             <OrganizerTools
               eventId={event.id}
               organizerId={event.organizer?.id}
