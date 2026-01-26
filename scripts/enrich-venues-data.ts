@@ -364,7 +364,7 @@ const venueEnrichmentData: Record<string, {
   // Le Belmont
   'le-belmont': {
     description: 'Le Belmont est un établissement emblématique situé au 4483 Boulevard Saint-Laurent, au coin de Mont-Royal, dans le quartier du Plateau-Mont-Royal. C\'est un lieu au cœur de la vie nocturne montréalaise depuis plus de vingt ans. Il s\'agit d\'un café-bar-restaurant qui accueille des concerts et événements. Le Belmont présente chaque semaine une programmation originale et diversifiée incluant musique électronique, rock, burlesque et arts de la scène. L\'établissement dispose d\'une terrasse, d\'un bar complet, et d\'un vestiaire obligatoire.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/Punk_performance%2C_Le_Belmont_%28Montreal%29.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d6/Punk_performance%2C_Le_Belmont_%28Montreal%29.jpg',
     types: ['bar', 'café', 'salle'],
     tags: ['musique électronique', 'rock', 'burlesque', 'arts de la scène', 'concerts', 'vie nocturne'],
     neighborhood: 'Plateau-Mont-Royal',
