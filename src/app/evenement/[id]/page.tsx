@@ -1,22 +1,12 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Calendar, MapPin, Clock, DollarSign, Users, Tag, ExternalLink } from 'lucide-react';
 import { EventStatus } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 
 import { prisma } from '@/lib/prisma';
 import { buildEventJsonLd, canonicalUrlForPath } from '@/lib/seo';
 import { authOptions } from '@/lib/auth';
-import EventTabsSection from '@/components/EventTabsSection';
-import EventDetailMap from '@/components/EventDetailMap';
-import EventFeedPanel from '@/components/event-feed/EventFeedPanel';
-import EventDetailActions from '@/components/EventDetailActions';
-import EventTagsDisplay from '@/components/EventTagsDisplay';
-import EventPublishSection from '@/components/EventPublishSection';
-import SimilarEvents from '@/components/SimilarEvents';
-import InviteFriendButton from '@/components/social/InviteFriendButton';
+import EventPageClient from './EventPageClient';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -184,348 +174,44 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-            {/* Header avec image */}
-            <div className="relative mb-8 rounded-3xl overflow-hidden">
-              {event.imageUrl ? (
-                <div className="relative h-96">
-                  <Image
-                    src={event.imageUrl.startsWith('http') || event.imageUrl.startsWith('/')
-                      ? `/api/image-proxy?url=${encodeURIComponent(event.imageUrl)}`
-                      : event.imageUrl}
-                    alt={event.title}
-                    fill
-                    sizes="100vw"
-                    className="object-cover"
-                    priority
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent" />
-                </div>
-              ) : (
-                <div className="h-96 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 flex items-center justify-center">
-                  <Calendar className="w-32 h-32 text-white/50" />
-                </div>
-              )}
-              
-              {/* Titre et infos principales */}
-              <div className="absolute bottom-0 left-0 right-0 p-8">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{event.title}</h1>
-                <div className="flex flex-wrap items-center gap-4 text-white/90">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    <span>
-                      {new Date(event.startAt).toLocaleDateString('fr-CA', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        timeZone: 'America/Montreal',
-                      })}
-                    </span>
-                  </div>
-                  {event.venue && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5" />
-                      <span>{event.venue.name}</span>
-                    </div>
-                  )}
-                  {event.priceMin === 0 && event.priceMin !== null && (
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-5 h-5" />
-                      <span>Gratuit</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="mb-8">
-              <EventDetailActions 
-                eventId={event.id}
-                eventTitle={event.title}
-                eventVenue={event.venue}
-                eventStartAt={event.startAt}
-                eventNeighborhood={event.venue?.neighborhood}
-              />
-            </div>
-
-            {/* Contenu principal */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Colonne principale */}
-              <div className="lg:col-span-2 space-y-8">
-                {/* Description */}
-                {event.description && (
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                    <h2 className="text-2xl font-bold text-white mb-4">Description</h2>
-                    <div className="prose prose-invert max-w-none">
-                      <p className="text-slate-300 whitespace-pre-line">{event.description}</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* Tags */}
-                {((event.eventTags && event.eventTags.length > 0) || (event.tags && event.tags.length > 0)) && (
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                    <h2 className="text-2xl font-bold text-white mb-4">Tags</h2>
-                    {event.eventTags && event.eventTags.length > 0 ? (
-                      <EventTagsDisplay eventTags={event.eventTags as any} />
-                    ) : (
-                      <div className="flex flex-wrap gap-2">
-                        {event.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-3 py-1 bg-slate-700/50 text-slate-200 rounded-full text-sm"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Tabs Section */}
-                <EventTabsSection
-                  infoContent={
-                    <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                      <h3 className="text-xl font-bold text-white mb-4">Informations détaillées</h3>
-                      <div className="space-y-4">
-                        {event.venue && (
-                          <div>
-                            <div className="flex items-center gap-2 text-slate-400 mb-2">
-                              <MapPin className="w-5 h-5" />
-                              <span className="font-semibold">Lieu</span>
-                            </div>
-                            <Link
-                              href={event.venue.slug ? `/salle/${event.venue.slug}` : `/salle/${event.venue.id}`}
-                              className="text-white hover:text-blue-400 transition-colors block"
-                            >
-                              {event.venue.name}
-                            </Link>
-                            <p className="text-slate-400 text-sm mt-1">
-                              {event.venue.address}, {event.venue.city} {event.venue.postalCode}
-                            </p>
-                          </div>
-                        )}
-
-                        <div>
-                          <div className="flex items-center gap-2 text-slate-400 mb-2">
-                            <Clock className="w-5 h-5" />
-                            <span className="font-semibold">Date et heure</span>
-                          </div>
-                          <p className="text-white">
-                            {new Date(event.startAt).toLocaleDateString('fr-CA', {
-                              weekday: 'long',
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              timeZone: 'America/Montreal',
-                            })}
-                          </p>
-                          <p className="text-slate-400 text-sm mt-1">
-                            {new Date(event.startAt).toLocaleTimeString('fr-CA', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              timeZone: 'America/Montreal',
-                            })}
-                            {event.endAt && (
-                              <>
-                                {' - '}
-                                {new Date(event.endAt).toLocaleTimeString('fr-CA', {
-                                  hour: '2-digit',
-                                  minute: '2-digit',
-                                  timeZone: 'America/Montreal',
-                                })}
-                              </>
-                            )}
-                          </p>
-                        </div>
-
-                        {event.priceMin !== null && (
-                          <div>
-                            <div className="flex items-center gap-2 text-slate-400 mb-2">
-                              <DollarSign className="w-5 h-5" />
-                              <span className="font-semibold">Prix</span>
-                            </div>
-                            <p className="text-white">
-                              {event.priceMin === 0
-                                ? 'Gratuit'
-                                : event.priceMax && event.priceMax !== event.priceMin
-                                ? `${(event.priceMin / 100).toFixed(2)} $ - ${(event.priceMax / 100).toFixed(2)} $`
-                                : `${(event.priceMin / 100).toFixed(2)} $`}
-                            </p>
-                          </div>
-                        )}
-
-
-                        {event.organizer && (
-                          <div>
-                            <div className="flex items-center gap-2 text-slate-400 mb-2">
-                              <Users className="w-5 h-5" />
-                              <span className="font-semibold">Organisateur</span>
-                            </div>
-                            <Link
-                              href={event.organizer.slug ? `/organisateur/${event.organizer.slug}` : `/organisateur/${event.organizer.id}`}
-                              className="text-white hover:text-blue-400 transition-colors"
-                            >
-                              {event.organizer.displayName}
-                            </Link>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  }
-                  feedContent={
-                    <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                      <EventFeedPanel eventId={event.id} canPost={!!session} />
-                    </div>
-                  }
-                />
-
-                {/* Similar Events */}
-                <SimilarEvents eventId={event.id} />
-              </div>
-
-              {/* Sidebar */}
-              <div className="space-y-6">
-                {/* Informations pratiques */}
-                <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                  <h2 className="text-xl font-bold text-white mb-4">Informations pratiques</h2>
-                  <div className="space-y-4">
-                    {event.venue && (
-                      <div>
-                        <div className="flex items-center gap-2 text-slate-400 mb-1">
-                          <MapPin className="w-4 h-4" />
-                          <span className="text-sm">Lieu</span>
-                        </div>
-                        <Link
-                          href={event.venue.slug ? `/salle/${event.venue.slug}` : `/salle/${event.venue.id}`}
-                          className="text-white hover:text-blue-400 transition-colors"
-                        >
-                          {event.venue.name}
-                        </Link>
-                        <p className="text-slate-400 text-sm mt-1">
-                          {event.venue.address}, {event.venue.city}
-                        </p>
-                      </div>
-                    )}
-
-                    <div>
-                      <div className="flex items-center gap-2 text-slate-400 mb-1">
-                        <Clock className="w-4 h-4" />
-                        <span className="text-sm">Date et heure</span>
-                      </div>
-                      <p className="text-white">
-                        {new Date(event.startAt).toLocaleDateString('fr-CA', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          timeZone: 'America/Montreal',
-                        })}
-                      </p>
-                      <p className="text-slate-400 text-sm mt-1">
-                        {new Date(event.startAt).toLocaleTimeString('fr-CA', {
-                          hour: '2-digit',
-                          minute: '2-digit',
-                          timeZone: 'America/Montreal',
-                        })}
-                        {event.endAt && (
-                          <>
-                            {' - '}
-                            {new Date(event.endAt).toLocaleTimeString('fr-CA', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              timeZone: 'America/Montreal',
-                            })}
-                          </>
-                        )}
-                      </p>
-                    </div>
-
-                    {event.priceMin !== null && (
-                      <div>
-                        <div className="flex items-center gap-2 text-slate-400 mb-1">
-                          <DollarSign className="w-4 h-4" />
-                          <span className="text-sm">Prix</span>
-                        </div>
-                        <p className="text-white">
-                          {event.priceMin === 0
-                            ? 'Gratuit'
-                            : event.priceMax && event.priceMax !== event.priceMin
-                            ? `${(event.priceMin / 100).toFixed(2)} $ - ${(event.priceMax / 100).toFixed(2)} $`
-                            : `${(event.priceMin / 100).toFixed(2)} $`}
-                        </p>
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-
-                {/* Carte */}
-                {event.venue && event.venue.lat && event.venue.lon && (
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                    <h2 className="text-xl font-bold text-white mb-4">Localisation</h2>
-                    <EventDetailMap
-                      lat={event.venue.lat}
-                      lon={event.venue.lon}
-                      title={event.venue.name}
-                    />
-                  </div>
-                )}
-
-                {/* Organisateur */}
-                {event.organizer && (
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                    <h2 className="text-xl font-bold text-white mb-4">Organisateur</h2>
-                    <Link
-                      href={event.organizer.slug ? `/organisateur/${event.organizer.slug}` : `/organisateur/${event.organizer.id}`}
-                      className="flex items-center gap-3 hover:opacity-80 transition-opacity"
-                    >
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                        <Users className="w-6 h-6 text-white" />
-                      </div>
-                      <div>
-                        <p className="text-white font-semibold">{event.organizer.displayName}</p>
-                        {event.organizer.verified && (
-                          <p className="text-xs text-blue-400">Vérifié</p>
-                        )}
-                      </div>
-                    </Link>
-                  </div>
-                )}
-
-                {/* Lien externe */}
-                {event.url && (
-                  <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
-                    <a
-                      href={event.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold py-3 px-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                      <span>Billets</span>
-                    </a>
-                  </div>
-                )}
-
-                {/* Invite Friend */}
-                <InviteFriendButton eventId={event.id} eventTitle={event.title} eventUrl={event.url || undefined} />
-
-                {/* Event Feed Panel */}
-                <EventFeedPanel eventId={event.id} canPost={!!session} />
-
-                {/* Actions admin/organisateur */}
-                {(isOwner || isAdmin) && (
-                  <EventPublishSection eventId={event.id} organizerId={event.organizer?.id} />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        <EventPageClient
+          event={{
+            id: event.id,
+            title: event.title,
+            description: event.description,
+            startAt: event.startAt,
+            endAt: event.endAt,
+            imageUrl: event.imageUrl,
+            priceMin: event.priceMin,
+            priceMax: event.priceMax,
+            currency: event.currency,
+            url: event.url,
+            category: event.category,
+            tags: event.tags,
+            accessibility: event.accessibility,
+            venue: event.venue ? {
+              id: event.venue.id,
+              name: event.venue.name,
+              slug: event.venue.slug,
+              address: event.venue.address,
+              city: event.venue.city,
+              postalCode: event.venue.postalCode,
+              lat: event.venue.lat,
+              lon: event.venue.lon,
+              neighborhood: event.venue.neighborhood,
+            } : null,
+            organizer: event.organizer ? {
+              id: event.organizer.id,
+              displayName: event.organizer.displayName,
+              slug: event.organizer.slug,
+              userId: event.organizer.userId,
+            } : null,
+            eventTags: event.eventTags,
+            features: event.features,
+          }}
+          isOwner={isOwner}
+          isAdmin={isAdmin}
+        />
       </>
     );
   } catch (error) {
