@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Loader2, MapPin, Users } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Event } from '@/types';
 import EventCard from '../EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -21,6 +22,7 @@ export default function ContextualDiscovery({
   organizerId,
   limit = 5,
 }: ContextualDiscoveryProps) {
+  const t = useTranslations('eventDetail');
   const [similarEvents, setSimilarEvents] = useState<Event[]>([]);
   const [venueEvents, setVenueEvents] = useState<Event[]>([]);
   const [organizerEvents, setOrganizerEvents] = useState<Event[]>([]);
@@ -110,7 +112,7 @@ export default function ContextualDiscovery({
       {/* Similar events this week */}
       {similarEvents.length > 0 && (
         <section>
-          <h2 className="text-2xl font-bold text-white mb-6">Événements similaires cette semaine</h2>
+          <h2 className="text-2xl font-bold text-white mb-6">{t('similarEventsThisWeek')}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {similarEvents.map((event) => (
               <EventCard
@@ -133,7 +135,7 @@ export default function ContextualDiscovery({
         <section>
           <div className="flex items-center gap-3 mb-6">
             <MapPin className="w-6 h-6 text-blue-400" />
-            <h2 className="text-2xl font-bold text-white">Autres événements à ce lieu</h2>
+            <h2 className="text-2xl font-bold text-white">{t('otherEventsAtVenue')}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {venueEvents.map((event) => (
@@ -157,7 +159,7 @@ export default function ContextualDiscovery({
         <section>
           <div className="flex items-center gap-3 mb-6">
             <Users className="w-6 h-6 text-purple-400" />
-            <h2 className="text-2xl font-bold text-white">Plus d'événements par cet organisateur</h2>
+            <h2 className="text-2xl font-bold text-white">{t('moreEventsByOrganizer')}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {organizerEvents.map((event) => (

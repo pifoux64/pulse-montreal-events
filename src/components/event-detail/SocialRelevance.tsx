@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Heart, UserPlus } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 import InviteFriendButton from '../social/InviteFriendButton';
 
 interface SocialRelevanceProps {
@@ -22,6 +23,7 @@ export default function SocialRelevance({
   eventTitle,
   eventUrl,
 }: SocialRelevanceProps) {
+  const t = useTranslations('eventDetail');
   const { data: session } = useSession();
   const [friendsData, setFriendsData] = useState<FriendsData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,7 +71,7 @@ export default function SocialRelevance({
       <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
         <div className="flex items-center gap-3 mb-4">
           <Users className="w-5 h-5 text-blue-400" />
-          <h3 className="text-lg font-semibold text-white">Inviter des amis</h3>
+          <h3 className="text-lg font-semibold text-white">{t('inviteFriends')}</h3>
         </div>
         <InviteFriendButton eventId={eventId} eventTitle={eventTitle} eventUrl={eventUrl || undefined} />
       </div>
@@ -80,7 +82,7 @@ export default function SocialRelevance({
     <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-4">
       <div className="flex items-center gap-3 mb-4">
         <Users className="w-5 h-5 text-blue-400" />
-        <h3 className="text-lg font-semibold text-white">Réseau social</h3>
+        <h3 className="text-lg font-semibold text-white">{t('socialNetwork')}</h3>
       </div>
 
       {/* Friends attending/interested */}
@@ -90,7 +92,7 @@ export default function SocialRelevance({
             <div className="flex items-center gap-2 text-white">
               <Heart className="w-4 h-4 text-red-400" />
               <span className="text-sm">
-                {friendsData.friendsAttending} {friendsData.friendsAttending === 1 ? 'ami participe' : 'amis participent'}
+                {friendsData.friendsAttending} {friendsData.friendsAttending === 1 ? t('friendAttending') : t('friendsAttending')}
               </span>
             </div>
           )}
@@ -98,7 +100,7 @@ export default function SocialRelevance({
             <div className="flex items-center gap-2 text-white">
               <Heart className="w-4 h-4 text-pink-400" />
               <span className="text-sm">
-                {friendsData.friendsInterested} {friendsData.friendsInterested === 1 ? 'ami intéressé' : 'amis intéressés'}
+                {friendsData.friendsInterested} {friendsData.friendsInterested === 1 ? t('friendInterested') : t('friendsInterested')}
               </span>
             </div>
           )}
@@ -109,7 +111,7 @@ export default function SocialRelevance({
       {friendsData.tasteMatch !== undefined && (
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-slate-400">Correspondance avec vos goûts</span>
+            <span className="text-sm text-slate-400">{t('tasteMatch')}</span>
             <span className="text-sm font-semibold text-white">{friendsData.tasteMatch}%</span>
           </div>
           <div className="w-full bg-white/10 rounded-full h-2">

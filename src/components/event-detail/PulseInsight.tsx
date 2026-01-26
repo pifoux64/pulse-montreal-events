@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Sparkles, Loader2, Music, Users, Zap, Clock, Accessibility } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import EventTagsDisplay, { EventTag } from '../EventTagsDisplay';
 
 interface PulseInsightData {
@@ -32,20 +33,6 @@ interface PulseInsightProps {
   fallbackTags?: string[] | null;
 }
 
-const intensityLabels = {
-  chill: 'Chill',
-  moderate: 'Modéré',
-  high: 'Intense',
-  very_high: 'Très intense',
-};
-
-const danceLevelLabels = {
-  none: 'Pas de danse',
-  low: 'Danse légère',
-  medium: 'Danse modérée',
-  high: 'Danse intense',
-};
-
 export default function PulseInsight({
   eventId,
   eventTitle,
@@ -57,6 +44,7 @@ export default function PulseInsight({
   lineup,
   fallbackTags,
 }: PulseInsightProps) {
+  const t = useTranslations('eventDetail');
   const [insight, setInsight] = useState<PulseInsightData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -107,7 +95,7 @@ export default function PulseInsight({
       <div className="bg-gradient-to-br from-purple-600/20 via-blue-600/20 to-pink-600/20 backdrop-blur-xl rounded-2xl p-6 border border-purple-500/30">
         <div className="flex items-center gap-3 mb-4">
           <Sparkles className="w-6 h-6 text-purple-400 animate-pulse" />
-          <h2 className="text-2xl font-bold text-white">Pulse Insight</h2>
+          <h2 className="text-2xl font-bold text-white">{t('pulseInsight')}</h2>
         </div>
         <div className="flex items-center justify-center py-8">
           <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
@@ -121,10 +109,10 @@ export default function PulseInsight({
       <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
         <div className="flex items-center gap-3 mb-4">
           <Sparkles className="w-6 h-6 text-purple-400" />
-          <h2 className="text-2xl font-bold text-white">Pulse Insight</h2>
+          <h2 className="text-2xl font-bold text-white">{t('pulseInsight')}</h2>
         </div>
         <p className="text-slate-400">
-          {error || 'Insight non disponible pour le moment'}
+          {error || 'Insight not available at the moment'}
         </p>
       </div>
     );
@@ -142,9 +130,9 @@ export default function PulseInsight({
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <Sparkles className="w-6 h-6 text-purple-400" />
-        <h2 className="text-2xl font-bold text-white">Pulse Insight</h2>
+        <h2 className="text-2xl font-bold text-white">{t('pulseInsight')}</h2>
         <span className="text-xs px-2 py-1 bg-purple-500/30 text-purple-200 rounded-full">
-          IA
+          {t('ai')}
         </span>
       </div>
 
@@ -159,7 +147,7 @@ export default function PulseInsight({
           <div className="flex items-start gap-3">
             <Music className="w-5 h-5 text-blue-400 mt-0.5" />
             <div>
-              <div className="text-sm text-slate-400 mb-1">Style musical</div>
+              <div className="text-sm text-slate-400 mb-1">{t('musicStyle')}</div>
               <div className="text-white font-medium">{insight.musicStyle}</div>
             </div>
           </div>
@@ -168,7 +156,7 @@ export default function PulseInsight({
         <div className="flex items-start gap-3">
           <Zap className="w-5 h-5 text-yellow-400 mt-0.5" />
           <div>
-            <div className="text-sm text-slate-400 mb-1">Ambiance</div>
+            <div className="text-sm text-slate-400 mb-1">{t('vibe')}</div>
             <div className="text-white font-medium">{insight.vibe}</div>
           </div>
         </div>
@@ -176,7 +164,7 @@ export default function PulseInsight({
         <div className="flex items-start gap-3">
           <Users className="w-5 h-5 text-green-400 mt-0.5" />
           <div>
-            <div className="text-sm text-slate-400 mb-1">Public attendu</div>
+            <div className="text-sm text-slate-400 mb-1">{t('expectedAudience')}</div>
             <div className="text-white font-medium">{insight.expectedAudience}</div>
           </div>
         </div>
@@ -184,8 +172,8 @@ export default function PulseInsight({
         <div className="flex items-start gap-3">
           <Zap className="w-5 h-5 text-orange-400 mt-0.5" />
           <div>
-            <div className="text-sm text-slate-400 mb-1">Intensité</div>
-            <div className="text-white font-medium">{intensityLabels[insight.intensity]}</div>
+            <div className="text-sm text-slate-400 mb-1">{t('intensity')}</div>
+            <div className="text-white font-medium">{t(`intensities.${insight.intensity}`)}</div>
           </div>
         </div>
 
@@ -193,8 +181,8 @@ export default function PulseInsight({
           <div className="flex items-start gap-3">
             <Music className="w-5 h-5 text-pink-400 mt-0.5" />
             <div>
-              <div className="text-sm text-slate-400 mb-1">Niveau de danse</div>
-              <div className="text-white font-medium">{danceLevelLabels[insight.danceLevel]}</div>
+              <div className="text-sm text-slate-400 mb-1">{t('danceLevel')}</div>
+              <div className="text-white font-medium">{t(`danceLevels.${insight.danceLevel}`)}</div>
             </div>
           </div>
         )}
@@ -203,7 +191,7 @@ export default function PulseInsight({
       {/* Contexte culturel */}
       {insight.culturalContext && (
         <div className="mb-6 p-4 bg-black/20 rounded-lg border border-white/10">
-          <div className="text-sm text-slate-400 mb-2">Contexte montréalais</div>
+          <div className="text-sm text-slate-400 mb-2">{t('culturalContext')}</div>
           <p className="text-white/90">{insight.culturalContext}</p>
         </div>
       )}
@@ -211,7 +199,7 @@ export default function PulseInsight({
       {/* Tags visuels cliquables */}
       {displayTags.length > 0 && (
         <div>
-          <div className="text-sm text-slate-400 mb-3">Découvrir par</div>
+          <div className="text-sm text-slate-400 mb-3">{t('discoverBy')}</div>
           <EventTagsDisplay eventTags={displayTags} />
         </div>
       )}

@@ -5,7 +5,9 @@ import { useSession } from 'next-auth/react';
 import { Calendar, MapPin, DollarSign, Heart, Share2, ExternalLink, Loader2, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
+import { useLocale } from 'next-intl';
+import { fr, enUS, es } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
 import EventShareModal from '../EventShareModal';
 
@@ -52,6 +54,8 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
   const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites();
   const [showShareModal, setShowShareModal] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
+  const t = useTranslations('eventDetail');
+  const locale = useLocale();
 
   // Calculer la distance si la localisation utilisateur est disponible
   useEffect(() => {
@@ -79,7 +83,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
       return null;
     }
     if (event.priceMin === 0) {
-      return 'Gratuit';
+      return t('free');
     }
     const currency = event.currency || 'CAD';
     const min = (event.priceMin / 100).toFixed(2);
@@ -90,9 +94,17 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
     return `${min} $`;
   };
 
+  const getDateLocale = () => {
+    switch (locale) {
+      case 'en': return 'en-CA';
+      case 'es': return 'es-CA';
+      default: return 'fr-CA';
+    }
+  };
+
   const formatDate = () => {
     const date = new Date(event.startAt);
-    return date.toLocaleDateString('fr-CA', {
+    return date.toLocaleDateString(getDateLocale(), {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
@@ -103,7 +115,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
 
   const formatTime = () => {
     const start = new Date(event.startAt);
-    const startTime = start.toLocaleTimeString('fr-CA', {
+    const startTime = start.toLocaleTimeString(getDateLocale(), {
       hour: '2-digit',
       minute: '2-digit',
       timeZone: 'America/Montreal',
@@ -111,7 +123,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
     
     if (event.endAt) {
       const end = new Date(event.endAt);
-      const endTime = end.toLocaleTimeString('fr-CA', {
+      const endTime = end.toLocaleTimeString(getDateLocale(), {
         hour: '2-digit',
         minute: '2-digit',
         timeZone: 'America/Montreal',
@@ -197,7 +209,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
             ) : (
               <Heart className={`w-4 h-4 ${isFavorite(event.id) ? 'fill-current' : ''}`} />
             )}
-            <span>{isFavorite(event.id) ? 'Intéressé' : "S'intéresser"}</span>
+            <span>{isFavorite(event.id) ? t('interested') : t('showInterest')}</span>
           </button>
 
           {/* Share */}
@@ -206,7 +218,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
             className="flex items-center gap-2 px-4 py-2 bg-white/10 text-white border border-white/20 rounded-lg font-medium hover:bg-white/20 transition-all"
           >
             <Share2 className="w-4 h-4" />
-            <span>Partager</span>
+            <span>{t('share')}</span>
           </button>
 
           {/* Buy Tickets (external) */}
@@ -218,7 +230,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
               className="flex items-center gap-2 px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition-all"
             >
               <ExternalLink className="w-4 h-4" />
-              <span>Billets</span>
+              <span>{t('tickets')}</span>
             </a>
           )}
 
@@ -229,7 +241,7 @@ export default function EventHeader({ event, userLocation }: EventHeaderProps) {
               className="flex items-center gap-2 px-4 py-2 text-blue-400 hover:text-blue-300 transition-colors text-sm"
             >
               <LogIn className="w-4 h-4" />
-              <span>Se connecter pour sauvegarder</span>
+              <span>{t('loginToSave')}</span>
             </Link>
           )}
         </div>

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Music, Play, Pause } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 interface EventHeroMediaProps {
   imageUrl?: string | null;
@@ -67,6 +68,7 @@ export default function EventHeroMedia({
   isMusicEvent: propIsMusicEvent,
   eventTags,
 }: EventHeroMediaProps) {
+  const t = useTranslations('eventDetail');
   const [isPlaying, setIsPlaying] = useState(false);
   
   const musicEvent = propIsMusicEvent ?? isMusicEvent(eventTags);
@@ -101,7 +103,7 @@ export default function EventHeroMedia({
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center gap-4 mb-4">
               <Music className="w-6 h-6 text-purple-400" />
-              <h3 className="text-xl font-bold text-white">Écouter</h3>
+              <h3 className="text-xl font-bold text-white">{t('listen')}</h3>
             </div>
             
             <div className="space-y-3">
@@ -170,7 +172,7 @@ export default function EventHeroMedia({
             {/* Lineup si disponible */}
             {lineup && lineup.length > 0 && (
               <div className="mt-4 pt-4 border-t border-white/10">
-                <p className="text-sm text-white/70 mb-2">Line-up:</p>
+                <p className="text-sm text-white/70 mb-2">{t('lineup')}:</p>
                 <div className="flex flex-wrap gap-2">
                   {lineup.map((artist, index) => (
                     <span

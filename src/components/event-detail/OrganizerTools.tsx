@@ -3,6 +3,7 @@
 import { Edit, TrendingUp, Bell, Image as ImageIcon, Printer } from 'lucide-react';
 import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { useTranslations } from 'next-intl';
 
 interface OrganizerToolsProps {
   eventId: string;
@@ -17,6 +18,7 @@ export default function OrganizerTools({
   isOwner,
   isAdmin,
 }: OrganizerToolsProps) {
+  const t = useTranslations('eventDetail');
   const { data: session } = useSession();
 
   // Afficher uniquement si l'utilisateur est propriétaire ou admin
@@ -26,7 +28,7 @@ export default function OrganizerTools({
 
   return (
     <div className="bg-gradient-to-br from-blue-600/20 via-purple-600/20 to-pink-600/20 backdrop-blur-xl rounded-2xl border border-blue-500/30 p-6">
-      <h2 className="text-xl font-bold text-white mb-4">Outils organisateur</h2>
+      <h2 className="text-xl font-bold text-white mb-4">{t('organizerTools')}</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Edit event */}
@@ -35,7 +37,7 @@ export default function OrganizerTools({
           className="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all"
         >
           <Edit className="w-5 h-5 text-blue-400" />
-          <span className="text-white font-medium">Modifier l'événement</span>
+          <span className="text-white font-medium">{t('editEvent')}</span>
         </Link>
 
         {/* Boost visibility */}
@@ -43,11 +45,11 @@ export default function OrganizerTools({
           className="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all text-left"
           onClick={() => {
             // TODO: Implémenter le boost de visibilité
-            alert('Fonctionnalité à venir: Boost de visibilité');
+            alert(t('boostVisibility'));
           }}
         >
           <TrendingUp className="w-5 h-5 text-purple-400" />
-          <span className="text-white font-medium">Booster la visibilité</span>
+          <span className="text-white font-medium">{t('boostVisibility')}</span>
         </button>
 
         {/* Send notifications */}
@@ -55,11 +57,11 @@ export default function OrganizerTools({
           className="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all text-left"
           onClick={() => {
             // TODO: Implémenter l'envoi de notifications ciblées
-            alert('Fonctionnalité à venir: Notifications ciblées');
+            alert(t('targetedNotifications'));
           }}
         >
           <Bell className="w-5 h-5 text-yellow-400" />
-          <span className="text-white font-medium">Notifications ciblées</span>
+          <span className="text-white font-medium">{t('targetedNotifications')}</span>
         </button>
 
         {/* Generate flyer */}
@@ -68,7 +70,7 @@ export default function OrganizerTools({
           className="flex items-center gap-3 p-4 bg-white/10 hover:bg-white/20 rounded-lg border border-white/20 transition-all"
         >
           <ImageIcon className="w-5 h-5 text-pink-400" />
-          <span className="text-white font-medium">Générer un flyer</span>
+          <span className="text-white font-medium">{t('generateFlyer')}</span>
         </Link>
 
         {/* Print flyers (external partner) */}
@@ -80,7 +82,7 @@ export default function OrganizerTools({
           }}
         >
           <Printer className="w-5 h-5 text-green-400" />
-          <span className="text-white font-medium">Imprimer des flyers</span>
+          <span className="text-white font-medium">{t('printFlyers')}</span>
         </button>
       </div>
     </div>

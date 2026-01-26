@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { MapPin, Clock, Volume2, Accessibility, Navigation } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import EventDetailMap from '../EventDetailMap';
 
 interface PracticalInfoProps {
@@ -22,13 +23,6 @@ interface PracticalInfoProps {
   soundLevel?: 'quiet' | 'moderate' | 'loud' | 'very_loud' | null;
 }
 
-const soundLevelLabels = {
-  quiet: 'Calme',
-  moderate: 'Modéré',
-  loud: 'Fort',
-  very_loud: 'Très fort',
-};
-
 export default function PracticalInfo({
   venue,
   startAt,
@@ -37,6 +31,7 @@ export default function PracticalInfo({
   estimatedDuration,
   soundLevel,
 }: PracticalInfoProps) {
+  const t = useTranslations('eventDetail');
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
 
   useEffect(() => {
@@ -75,19 +70,19 @@ export default function PracticalInfo({
 
     const hints: string[] = [];
 
-    // Hints basés sur le quartier
+    // Hints basés sur le quartier (génériques pour éviter la traduction complexe)
     const neighborhood = venue.neighborhood.toLowerCase();
     if (neighborhood.includes('plateau') || neighborhood.includes('mile-end')) {
-      hints.push('Métro: Ligne Orange (Mont-Royal, Sherbrooke)');
-      hints.push('Stationnement: Limité, privilégier le transport en commun');
+      hints.push('Metro: Orange Line (Mont-Royal, Sherbrooke)');
+      hints.push('Parking: Limited, prefer public transit');
     } else if (neighborhood.includes('village') || neighborhood.includes('centre-ville')) {
-      hints.push('Métro: Lignes Verte et Orange (Beaudry, Berri-UQAM)');
-      hints.push('Stationnement: Parcomètres disponibles');
+      hints.push('Metro: Green and Orange Lines (Beaudry, Berri-UQAM)');
+      hints.push('Parking: Metered parking available');
     } else if (neighborhood.includes('petite-italie') || neighborhood.includes('rosemont')) {
-      hints.push('Métro: Ligne Bleue (Jean-Talon, De Castelnau)');
-      hints.push('Autobus: Lignes 18, 55');
+      hints.push('Metro: Blue Line (Jean-Talon, De Castelnau)');
+      hints.push('Bus: Lines 18, 55');
     } else {
-      hints.push('Vérifier les options de transport en commun sur STM.info');
+      hints.push('Check public transit options on STM.info');
     }
 
     return hints;
@@ -97,14 +92,14 @@ export default function PracticalInfo({
 
   return (
     <div className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6 space-y-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Informations pratiques</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">{t('practicalInfo')}</h2>
 
       {/* Map */}
       {venue?.lat && venue?.lon && (
         <div>
           <div className="flex items-center gap-2 mb-4">
             <MapPin className="w-5 h-5 text-blue-400" />
-            <h3 className="text-lg font-semibold text-white">Localisation</h3>
+            <h3 className="text-lg font-semibold text-white">{t('location')}</h3>
           </div>
           <div className="rounded-lg overflow-hidden border border-white/10">
             <EventDetailMap
@@ -126,7 +121,7 @@ export default function PracticalInfo({
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Navigation className="w-5 h-5 text-green-400" />
-            <h3 className="text-lg font-semibold text-white">Transport</h3>
+            <h3 className="text-lg font-semibold text-white">{t('transport')}</h3>
           </div>
           <ul className="space-y-2">
             {transportHints.map((hint, index) => (
@@ -144,12 +139,12 @@ export default function PracticalInfo({
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Clock className="w-5 h-5 text-purple-400" />
-            <h3 className="text-lg font-semibold text-white">Durée estimée</h3>
+            <h3 className="text-lg font-semibold text-white">{t('estimatedDuration')}</h3>
           </div>
           <p className="text-slate-300">
             {duration < 60 
-              ? `${duration} minutes`
-              : `${Math.floor(duration / 60)}h${duration % 60 > 0 ? ` ${duration % 60}min` : ''}`}
+              ? `${duration} ${t('minutes')}`
+              : `${Math.floor(duration / 60)}${t('h')}${duration % 60 > 0 ? ` ${duration % 60}${t('min')}` : ''}`}
           </p>
         </div>
       )}
@@ -159,9 +154,9 @@ export default function PracticalInfo({
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Volume2 className="w-5 h-5 text-orange-400" />
-            <h3 className="text-lg font-semibold text-white">Niveau sonore</h3>
+            <h3 className="text-lg font-semibold text-white">{t('soundLevel')}</h3>
           </div>
-          <p className="text-slate-300">{soundLevelLabels[soundLevel]}</p>
+          <p className="text-slate-300">{t(`soundLevels.${soundLevel}`)}</p>
         </div>
       )}
 
@@ -170,7 +165,7 @@ export default function PracticalInfo({
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Accessibility className="w-5 h-5 text-yellow-400" />
-            <h3 className="text-lg font-semibold text-white">Accessibilité</h3>
+            <h3 className="text-lg font-semibold text-white">{t('accessibility')}</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {accessibility.map((item, index) => (

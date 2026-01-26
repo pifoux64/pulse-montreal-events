@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Music, Clock, Eye, Accessibility, Users } from 'lucide-react';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface EventDescriptionStructuredProps {
   description?: string | null;
@@ -24,6 +25,8 @@ export default function EventDescriptionStructured({
   targetAudience,
   maxCapacity,
 }: EventDescriptionStructuredProps) {
+  const t = useTranslations('eventDetail');
+  const locale = useLocale();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     description: true,
     lineup: false,
@@ -39,16 +42,25 @@ export default function EventDescriptionStructured({
     }));
   };
 
+  const getDateLocale = () => {
+    switch (locale) {
+      case 'en': return 'en-CA';
+      case 'es': return 'es-CA';
+      default: return 'fr-CA';
+    }
+  };
+
   const formatSchedule = () => {
     const start = new Date(startAt);
-    const startDate = start.toLocaleDateString('fr-CA', {
+    const dateLocale = getDateLocale();
+    const startDate = start.toLocaleDateString(dateLocale, {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       timeZone: 'America/Montreal',
     });
-    const startTime = start.toLocaleTimeString('fr-CA', {
+    const startTime = start.toLocaleTimeString(dateLocale, {
       hour: '2-digit',
       minute: '2-digit',
       timeZone: 'America/Montreal',
@@ -56,7 +68,7 @@ export default function EventDescriptionStructured({
 
     if (endAt) {
       const end = new Date(endAt);
-      const endTime = end.toLocaleTimeString('fr-CA', {
+      const endTime = end.toLocaleTimeString(dateLocale, {
         hour: '2-digit',
         minute: '2-digit',
         timeZone: 'America/Montreal',
@@ -69,12 +81,12 @@ export default function EventDescriptionStructured({
       
       let durationText = '';
       if (durationHours > 0) {
-        durationText = `${durationHours}h`;
+        durationText = `${durationHours}${t('h')}`;
         if (durationMinutes > 0) {
-          durationText += ` ${durationMinutes}min`;
+          durationText += ` ${durationMinutes}${t('min')}`;
         }
       } else {
-        durationText = `${durationMinutes}min`;
+        durationText = `${durationMinutes}${t('min')}`;
       }
 
       return {
@@ -108,7 +120,7 @@ export default function EventDescriptionStructured({
             onClick={() => toggleSection('description')}
             className="w-full flex items-center justify-between p-6 hover:bg-white/5 transition-colors"
           >
-            <h3 className="text-xl font-bold text-white">Description</h3>
+            <h3 className="text-xl font-bold text-white">{t('description')}</h3>
             {expandedSections.description ? (
               <ChevronUp className="w-5 h-5 text-white/70" />
             ) : (
@@ -136,7 +148,7 @@ export default function EventDescriptionStructured({
           >
             <div className="flex items-center gap-3">
               <Music className="w-5 h-5 text-purple-400" />
-              <h3 className="text-xl font-bold text-white">Line-up</h3>
+              <h3 className="text-xl font-bold text-white">{t('lineup')}</h3>
             </div>
             {expandedSections.lineup ? (
               <ChevronUp className="w-5 h-5 text-white/70" />
@@ -169,7 +181,7 @@ export default function EventDescriptionStructured({
         >
           <div className="flex items-center gap-3">
             <Clock className="w-5 h-5 text-blue-400" />
-            <h3 className="text-xl font-bold text-white">Horaires</h3>
+            <h3 className="text-xl font-bold text-white">{t('schedule')}</h3>
           </div>
           {expandedSections.schedule ? (
             <ChevronUp className="w-5 h-5 text-white/70" />
@@ -180,16 +192,16 @@ export default function EventDescriptionStructured({
         {expandedSections.schedule && (
           <div className="px-6 pb-6 space-y-3">
             <div>
-              <div className="text-sm text-slate-400 mb-1">Date</div>
+              <div className="text-sm text-slate-400 mb-1">{t('date')}</div>
               <div className="text-white font-medium">{schedule.date}</div>
             </div>
             <div>
-              <div className="text-sm text-slate-400 mb-1">Heure</div>
+              <div className="text-sm text-slate-400 mb-1">{t('time')}</div>
               <div className="text-white font-medium">{schedule.time}</div>
             </div>
             {schedule.duration && (
               <div>
-                <div className="text-sm text-slate-400 mb-1">Durée estimée</div>
+                <div className="text-sm text-slate-400 mb-1">{t('estimatedDuration')}</div>
                 <div className="text-white font-medium">{schedule.duration}</div>
               </div>
             )}
@@ -206,7 +218,7 @@ export default function EventDescriptionStructured({
           >
             <div className="flex items-center gap-3">
               <Eye className="w-5 h-5 text-green-400" />
-              <h3 className="text-xl font-bold text-white">À quoi s'attendre</h3>
+              <h3 className="text-xl font-bold text-white">{t('whatToExpect')}</h3>
             </div>
             {expandedSections.whatToExpect ? (
               <ChevronUp className="w-5 h-5 text-white/70" />
@@ -218,7 +230,7 @@ export default function EventDescriptionStructured({
             <div className="px-6 pb-6 space-y-4">
               {targetAudience && targetAudience.length > 0 && (
                 <div>
-                  <div className="text-sm text-slate-400 mb-2">Public cible</div>
+                  <div className="text-sm text-slate-400 mb-2">{t('targetAudience')}</div>
                   <div className="flex flex-wrap gap-2">
                     {targetAudience.map((audience, index) => (
                       <span
@@ -233,10 +245,10 @@ export default function EventDescriptionStructured({
               )}
               {maxCapacity && (
                 <div>
-                  <div className="text-sm text-slate-400 mb-1">Capacité</div>
+                  <div className="text-sm text-slate-400 mb-1">{t('capacity')}</div>
                   <div className="text-white font-medium">
                     <Users className="w-4 h-4 inline mr-2" />
-                    {maxCapacity.toLocaleString()} personnes
+                    {maxCapacity.toLocaleString()} {t('people')}
                   </div>
                 </div>
               )}
@@ -254,7 +266,7 @@ export default function EventDescriptionStructured({
           >
             <div className="flex items-center gap-3">
               <Accessibility className="w-5 h-5 text-yellow-400" />
-              <h3 className="text-xl font-bold text-white">Accessibilité</h3>
+              <h3 className="text-xl font-bold text-white">{t('accessibility')}</h3>
             </div>
             {expandedSections.accessibility ? (
               <ChevronUp className="w-5 h-5 text-white/70" />
