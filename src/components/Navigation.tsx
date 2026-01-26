@@ -43,7 +43,7 @@ export default function Navigation() {
 
   // Navigation optimisée avec sous-menus logiques
   // "Pour toi" reste en premier (IA)
-  // "Explorer" regroupe Carte/Calendrier, Catégories, Top 5
+  // "Events" regroupe Carte/Calendrier, Catégories, Top 5
   // "Découvrir" regroupe Salles et Organisateurs
   // "Favoris" reste visible
   // "+ Publier" seulement si connecté
@@ -93,9 +93,9 @@ export default function Navigation() {
                 </span>
               </Link>
 
-              {/* Menu "Explorer" - Carte/Calendrier, Catégories, Top 5 */}
+              {/* Menu "Events" - Carte/Calendrier, Catégories, Top 5 */}
               <div className="relative group">
-                <button className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap" title="Explorer">
+                <button className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap" title="Events">
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="relative z-10 flex-shrink-0">
                     <Compass className="w-4 h-4" />
@@ -513,7 +513,7 @@ export default function Navigation() {
 
                 {/* Explorer - Section */}
                 <div className="space-y-2">
-                  <div className="px-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Explorer</div>
+                  <div className="px-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Events</div>
                   <div className="grid grid-cols-2 gap-3">
                     <Link
                       href="/carte"
