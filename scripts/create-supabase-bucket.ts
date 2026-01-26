@@ -1,8 +1,11 @@
 /**
- * Script pour créer le bucket Supabase Storage "events"
- * Usage: npx tsx scripts/create-supabase-bucket.ts
+ * Script pour créer les buckets Supabase Storage
+ * Usage: 
+ *   npx tsx scripts/create-supabase-bucket.ts          (crée le bucket "events")
+ *   npx tsx scripts/create-supabase-bucket.ts events    (crée le bucket "events")
+ *   npx tsx scripts/create-supabase-bucket.ts flyers    (crée le bucket "flyers")
  * 
- * Ce script crée le bucket "events" dans Supabase Storage s'il n'existe pas déjà.
+ * Ce script crée le bucket spécifié dans Supabase Storage s'il n'existe pas déjà.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -21,6 +24,20 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // Vous pouvez créer plusieurs buckets en modifiant cette variable
 // Options: 'events', 'flyers'
 const BUCKET_NAME = process.argv[2] || 'events';
+
+// Configuration par bucket
+const BUCKET_CONFIG: Record<string, { fileSizeLimit: number; allowedMimeTypes: string[] }> = {
+  events: {
+    fileSizeLimit: 5 * 1024 * 1024, // 5MB
+    allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  },
+  flyers: {
+    fileSizeLimit: 10 * 1024 * 1024, // 10MB
+    allowedMimeTypes: ['image/png'],
+  },
+};
+
+const config = BUCKET_CONFIG[BUCKET_NAME] || BUCKET_CONFIG.events;
 
 async function main() {
   try {
