@@ -27,7 +27,7 @@ const venueEnrichmentData: Record<string, {
   'place-des-arts': {
     description: 'La Place des Arts est le plus important complexe culturel et centre des arts de la scène au Canada. Située au cœur du Quartier des spectacles, elle accueille chaque année près de 1 000 représentations et héberge des organismes prestigieux comme l\'Orchestre symphonique de Montréal, l\'Opéra de Montréal, les Grands Ballets canadiens et la Compagnie Jean-Duceppe. Le complexe dispose de six salles totalisant 8 000 sièges, avec des capacités variant de 122 à 3 000 personnes.',
     capacity: 8000,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['centre_culturel', 'salle'],
     tags: ['musique classique', 'théâtre', 'danse', 'opéra', 'festivals', 'spectacles'],
     phone: '514-842-2112',
@@ -37,7 +37,7 @@ const venueEnrichmentData: Record<string, {
   'place-des-arts-1': {
     description: 'La Place des Arts est le plus important complexe culturel et centre des arts de la scène au Canada. Située au cœur du Quartier des spectacles, elle accueille chaque année près de 1 000 représentations et héberge des organismes prestigieux comme l\'Orchestre symphonique de Montréal, l\'Opéra de Montréal, les Grands Ballets canadiens et la Compagnie Jean-Duceppe. Le complexe dispose de six salles totalisant 8 000 sièges, avec des capacités variant de 122 à 3 000 personnes.',
     capacity: 8000,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['centre_culturel', 'salle'],
     tags: ['musique classique', 'théâtre', 'danse', 'opéra', 'festivals', 'spectacles'],
     phone: '514-842-2112',
@@ -47,7 +47,7 @@ const venueEnrichmentData: Record<string, {
   'salle-wilfrid-pelletier-place-des-arts': {
     description: 'La Salle Wilfrid-Pelletier est la plus grande salle de la Place des Arts, avec une capacité de 2 982 places. Elle accueille les grandes productions de l\'Orchestre symphonique de Montréal, de l\'Opéra de Montréal, des Grands Ballets canadiens et de nombreux spectacles de renommée internationale.',
     capacity: 2982,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle', 'centre_culturel'],
     tags: ['musique classique', 'opéra', 'ballet', 'spectacles', 'orchestre'],
     phone: '514-842-2112',
@@ -57,7 +57,7 @@ const venueEnrichmentData: Record<string, {
   'salle-wilfrid-pelletier-pn': {
     description: 'La Salle Wilfrid-Pelletier est la plus grande salle de la Place des Arts, avec une capacité de 2 982 places. Elle accueille les grandes productions de l\'Orchestre symphonique de Montréal, de l\'Opéra de Montréal, des Grands Ballets canadiens et de nombreux spectacles de renommée internationale.',
     capacity: 2982,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle', 'centre_culturel'],
     tags: ['musique classique', 'opéra', 'ballet', 'spectacles', 'orchestre'],
     phone: '514-842-2112',
@@ -67,7 +67,7 @@ const venueEnrichmentData: Record<string, {
   'wilfrid-pelletier': {
     description: 'La Salle Wilfrid-Pelletier est la plus grande salle de la Place des Arts, avec une capacité de 2 982 places. Elle accueille les grandes productions de l\'Orchestre symphonique de Montréal, de l\'Opéra de Montréal, des Grands Ballets canadiens et de nombreux spectacles de renommée internationale.',
     capacity: 2982,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle', 'centre_culturel'],
     tags: ['musique classique', 'opéra', 'ballet', 'spectacles', 'orchestre'],
     phone: '514-842-2112',
@@ -77,7 +77,7 @@ const venueEnrichmentData: Record<string, {
   'place-des-arts-montreal': {
     description: 'La Place des Arts est le plus important complexe culturel et centre des arts de la scène au Canada. Située au cœur du Quartier des spectacles, elle accueille chaque année près de 1 000 représentations et héberge des organismes prestigieux comme l\'Orchestre symphonique de Montréal, l\'Opéra de Montréal, les Grands Ballets canadiens et la Compagnie Jean-Duceppe. Le complexe dispose de six salles totalisant 8 000 sièges, avec des capacités variant de 122 à 3 000 personnes.',
     capacity: 8000,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['centre_culturel', 'salle'],
     tags: ['musique classique', 'théâtre', 'danse', 'opéra', 'festivals', 'spectacles'],
     phone: '514-842-2112',
@@ -153,7 +153,7 @@ const venueEnrichmentData: Record<string, {
   'olympia': {
     description: 'L\'Olympia de Montréal est une salle de spectacle iconique construite en 1925, située au 1004 rue Sainte-Catherine Est. Cette salle historique du patrimoine culturel montréalais peut accueillir jusqu\'à 2 438 places en configuration avec sièges, ou 2 600 personnes debout. Elle dispose d\'un système de son exceptionnel et combine l\'élégance de son histoire cinématographique avec des installations modernes. Un lounge peut accueillir jusqu\'à 350 personnes.',
     capacity: 2438,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'danse', 'cirque', 'variété', 'événements corporatifs'],
     website: 'https://www.olympiamontreal.com',
@@ -162,7 +162,7 @@ const venueEnrichmentData: Record<string, {
   'l-olympia': {
     description: 'L\'Olympia de Montréal est une salle de spectacle iconique construite en 1925, située au 1004 rue Sainte-Catherine Est. Cette salle historique du patrimoine culturel montréalais peut accueillir jusqu\'à 2 438 places en configuration avec sièges, ou 2 600 personnes debout. Elle dispose d\'un système de son exceptionnel et combine l\'élégance de son histoire cinématographique avec des installations modernes. Un lounge peut accueillir jusqu\'à 350 personnes.',
     capacity: 2438,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'danse', 'cirque', 'variété', 'événements corporatifs'],
     website: 'https://www.olympiamontreal.com',
@@ -173,7 +173,7 @@ const venueEnrichmentData: Record<string, {
   'theatre-corona': {
     description: 'Le Théâtre Corona (maintenant Théâtre Beanfield) est un lieu historique construit en 1912, situé au 2490 rue Notre-Dame Ouest. Ancien cinéma de films muets et lieu de spectacles de vaudeville, il a été rénové en 1997 par L\'Institut des Arts de la Scène. La salle peut accueillir jusqu\'à 753 personnes avec le balcon ouvert, ou 353 places en formule cabaret. Elle conserve son charme historique avec ses boiseries apparentes, son éclairage chaleureux et son excellente acoustique.',
     capacity: 753,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'rock', 'indie', 'pop', 'hip-hop', 'conférences'],
     neighborhood: 'Sud-Ouest',
@@ -181,7 +181,7 @@ const venueEnrichmentData: Record<string, {
   'theatre-beanfield': {
     description: 'Le Théâtre Corona (maintenant Théâtre Beanfield) est un lieu historique construit en 1912, situé au 2490 rue Notre-Dame Ouest. Ancien cinéma de films muets et lieu de spectacles de vaudeville, il a été rénové en 1997 par L\'Institut des Arts de la Scène. La salle peut accueillir jusqu\'à 753 personnes avec le balcon ouvert, ou 353 places en formule cabaret. Elle conserve son charme historique avec ses boiseries apparentes, son éclairage chaleureux et son excellente acoustique.',
     capacity: 753,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'rock', 'indie', 'pop', 'hip-hop', 'conférences'],
     neighborhood: 'Sud-Ouest',
@@ -189,7 +189,7 @@ const venueEnrichmentData: Record<string, {
   'beanfield-theatre': {
     description: 'Le Théâtre Corona (maintenant Théâtre Beanfield) est un lieu historique construit en 1912, situé au 2490 rue Notre-Dame Ouest. Ancien cinéma de films muets et lieu de spectacles de vaudeville, il a été rénové en 1997 par L\'Institut des Arts de la Scène. La salle peut accueillir jusqu\'à 753 personnes avec le balcon ouvert, ou 353 places en formule cabaret. Elle conserve son charme historique avec ses boiseries apparentes, son éclairage chaleureux et son excellente acoustique.',
     capacity: 753,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'rock', 'indie', 'pop', 'hip-hop', 'conférences'],
     neighborhood: 'Sud-Ouest',
@@ -197,7 +197,7 @@ const venueEnrichmentData: Record<string, {
   'theatre-beanfield-1': {
     description: 'Le Théâtre Corona (maintenant Théâtre Beanfield) est un lieu historique construit en 1912, situé au 2490 rue Notre-Dame Ouest. Ancien cinéma de films muets et lieu de spectacles de vaudeville, il a été rénové en 1997 par L\'Institut des Arts de la Scène. La salle peut accueillir jusqu\'à 753 personnes avec le balcon ouvert, ou 353 places en formule cabaret. Elle conserve son charme historique avec ses boiseries apparentes, son éclairage chaleureux et son excellente acoustique.',
     capacity: 753,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['théâtre', 'salle'],
     tags: ['concerts', 'spectacles', 'humour', 'rock', 'indie', 'pop', 'hip-hop', 'conférences'],
     neighborhood: 'Sud-Ouest',
@@ -207,7 +207,7 @@ const venueEnrichmentData: Record<string, {
   'club-soda': {
     description: 'Le Club Soda est une salle de spectacle professionnelle historique située au 1225 boulevard Saint-Laurent. Construit en 1908, ce bâtiment patrimonial (anciennement Crystal Palace) a été rénové et ouvert en 2000. La salle peut accueillir 950 personnes debout ou 450 personnes assises, avec plusieurs configurations possibles. Elle présente régulièrement des spectacles de différents genres musicaux (rock, rap, métal, pop, country) et des événements humoristiques.',
     capacity: 950,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Club_Soda%2C_Montr%C3%A9al_2011.jpg/1200px-Club_Soda%2C_Montr%C3%A9al_2011.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/09/Club_Soda%2C_Montr%C3%A9al_2011.jpg',
     types: ['club', 'salle'],
     tags: ['concerts', 'rock', 'rap', 'métal', 'pop', 'country', 'humour', 'spectacles'],
     website: 'https://www.clubsoda.ca',
@@ -237,7 +237,7 @@ const venueEnrichmentData: Record<string, {
   // Studio TD
   'studio-td': {
     description: 'Le Studio TD est une salle de spectacle située au cœur du Quartier des spectacles à Montréal, au 305 rue Sainte-Catherine Ouest. Cette salle moderne accueille régulièrement des spectacles musicaux et des événements variés dans une ambiance intime et professionnelle.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle'],
     tags: ['concerts', 'spectacles', 'musique', 'variétés'],
     phone: '514-492-1775',
@@ -246,7 +246,7 @@ const venueEnrichmentData: Record<string, {
   },
   'le-studio-td': {
     description: 'Le Studio TD est une salle de spectacle située au cœur du Quartier des spectacles à Montréal, au 305 rue Sainte-Catherine Ouest. Cette salle moderne accueille régulièrement des spectacles musicaux et des événements variés dans une ambiance intime et professionnelle.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle'],
     tags: ['concerts', 'spectacles', 'musique', 'variétés'],
     phone: '514-492-1775',
@@ -286,7 +286,7 @@ const venueEnrichmentData: Record<string, {
   'bar-le-ritz-pdb': {
     description: 'Le Bar le Ritz PDB (Punks Don\'t Bend) est une salle de concerts et d\'événements polyvalente située au 179 rue Jean-Talon Ouest dans le Mile-End/Mile-Ex. Ouvert en 2014 par Meyer Billurcu en partenariat avec des membres de Godspeed You! Black Emperor, ce lieu intime peut accueillir environ 300 personnes (ou 150 pour les soirées de spectacles). Le venue dispose d\'un bar en bois vintage, d\'un design mural coloré et d\'une petite scène. Il est accessible en fauteuil roulant avec des toilettes non genrées et accueille un mélange éclectique de concerts live, soirées DJ, spectacles d\'humour, projections de films et fêtes thématiques avec une forte atmosphère LGBTQ-friendly.',
     capacity: 300,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['bar', 'salle'],
     tags: ['concerts', 'rock', 'indie', 'DJ', 'humour', 'cinéma', 'LGBTQ', 'musique live'],
     neighborhood: 'Mile-End',
@@ -294,7 +294,7 @@ const venueEnrichmentData: Record<string, {
   'bar-le-ritz-pdb-1': {
     description: 'Le Bar le Ritz PDB (Punks Don\'t Bend) est une salle de concerts et d\'événements polyvalente située au 179 rue Jean-Talon Ouest dans le Mile-End/Mile-Ex. Ouvert en 2014 par Meyer Billurcu en partenariat avec des membres de Godspeed You! Black Emperor, ce lieu intime peut accueillir environ 300 personnes (ou 150 pour les soirées de spectacles). Le venue dispose d\'un bar en bois vintage, d\'un design mural coloré et d\'une petite scène. Il est accessible en fauteuil roulant avec des toilettes non genrées et accueille un mélange éclectique de concerts live, soirées DJ, spectacles d\'humour, projections de films et fêtes thématiques avec une forte atmosphère LGBTQ-friendly.',
     capacity: 300,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['bar', 'salle'],
     tags: ['concerts', 'rock', 'indie', 'DJ', 'humour', 'cinéma', 'LGBTQ', 'musique live'],
     neighborhood: 'Mile-End',
@@ -304,7 +304,7 @@ const venueEnrichmentData: Record<string, {
   'la-sala-rossa': {
     description: 'La Sala Rossa est une salle de spectacle emblématique située au 4848 Boulevard Saint-Laurent dans le Plateau-Mont-Royal. Construite en 1932 par l\'organisation juive Workmen\'s Circle, elle est devenue un lieu emblématique de la scène culturelle et musicale montréalaise. La salle se caractérise par ses murs rouges distinctifs, son acoustique exceptionnelle et son atmosphère intime. Elle peut accueillir 250 personnes et propose une programmation éclectique incluant du rock indépendant, du jazz, du flamenco, de la musique électronique et des performances expérimentales. Originellement créée comme espace de rassemblement pour la communauté juive montréalaise, elle a ensuite servi de centre social pour les immigrants espagnols.',
     capacity: 250,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle', 'centre_culturel'],
     tags: ['rock indépendant', 'jazz', 'flamenco', 'musique électronique', 'expérimental', 'concerts', 'spectacles'],
     neighborhood: 'Plateau-Mont-Royal',
@@ -334,7 +334,7 @@ const venueEnrichmentData: Record<string, {
   'stade-saputo': {
     description: 'Le Stade Saputo est le deuxième plus grand stade de soccer spécifique au Canada avec une capacité de 19 619 places. Situé au 4750 rue Sherbrooke Est dans le Parc olympique (arrondissement Mercier–Hochelaga-Maisonneuve), le stade a ouvert le 21 mai 2008. Il présente un design moderne et élégant et se trouve sur l\'ancien site d\'entraînement d\'athlétisme des Jeux olympiques d\'été de 1976. Le côté ouest offre des vues spectaculaires sur la tour inclinée emblématique du Stade olympique. Le stade est la maison du CF Montréal pour les matchs de Major League Soccer, le Championnat canadien et les compétitions Leagues Cup. Il accueille également des événements internationaux.',
     capacity: 19619,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Saputo_Stadium_2012.jpg/1200px-Saputo_Stadium_2012.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8a/Saputo_Stadium_2012.jpg',
     types: ['stade', 'sport'],
     tags: ['soccer', 'sport', 'football', 'CF Montréal', 'événements sportifs'],
     website: 'https://www.cfmontreal.com',
@@ -344,7 +344,7 @@ const venueEnrichmentData: Record<string, {
   // Musée des Beaux-Arts de Montréal
   'musee-des-beaux-arts-de-montreal': {
     description: 'Le Musée des beaux-arts de Montréal (MBAM) est l\'un des musées les plus importants au Canada. Situé au 1380 rue Sherbrooke Ouest, il propose une programmation variée incluant des expositions majeures, des visites guidées, des conférences, des activités famille et des ateliers. La Salle Bourgie accueille des concerts et événements musicaux. Le musée est ouvert du mardi au dimanche de 10 h à 17 h, ainsi que le mercredi de 10 h à 21 h. Les groupes de plus de 10 personnes doivent réserver. Le MBAM présente des collections permanentes et temporaires d\'art canadien, international et contemporain.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/Musee_Beaux_Arts_Montr%C3%A9al.JPG/1200px-Musee_Beaux_Arts_Montr%C3%A9al.JPG',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0a/Musee_Beaux_Arts_Montr%C3%A9al.JPG',
     types: ['musée', 'centre_culturel'],
     tags: ['art', 'expositions', 'culture', 'concerts', 'conférences', 'ateliers', 'visites guidées'],
     website: 'https://www.mbam.qc.ca',
@@ -354,7 +354,7 @@ const venueEnrichmentData: Record<string, {
   // Basilique Notre-Dame
   'basilique-notre-dame': {
     description: 'La Basilique Notre-Dame de Montréal est un monument néogothique construit entre 1824 et 1829, situé au 110 rue Notre-Dame Ouest dans le Vieux-Montréal. Réputée pour sa riche décoration intérieure sculptée, peinte et dorée à la feuille d\'or, elle propose plusieurs activités : visite touristique autoguidée d\'environ une heure explorant 24 points d\'intérêt (vitraux, sculptures, feuille d\'or et un orgue de 7 000 tuyaux), et l\'expérience AURA, un spectacle immersif de lumière et son créé par Moment Factory. Des travaux de restauration importants sont en cours jusqu\'en 2040.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Notre-Dame_Basilica_Montreal.jpg/1200px-Notre-Dame_Basilica_Montreal.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/4/4f/Notre-Dame_Basilica_Montreal.jpg',
     types: ['église', 'monument', 'centre_culturel'],
     tags: ['patrimoine', 'architecture', 'visites', 'spectacles immersifs', 'AURA', 'culture religieuse'],
     website: 'https://www.basiliquenotredame.ca',
@@ -364,7 +364,7 @@ const venueEnrichmentData: Record<string, {
   // Le Belmont
   'le-belmont': {
     description: 'Le Belmont est un établissement emblématique situé au 4483 Boulevard Saint-Laurent, au coin de Mont-Royal, dans le quartier du Plateau-Mont-Royal. C\'est un lieu au cœur de la vie nocturne montréalaise depuis plus de vingt ans. Il s\'agit d\'un café-bar-restaurant qui accueille des concerts et événements. Le Belmont présente chaque semaine une programmation originale et diversifiée incluant musique électronique, rock, burlesque et arts de la scène. L\'établissement dispose d\'une terrasse, d\'un bar complet, et d\'un vestiaire obligatoire.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Punk_performance%2C_Le_Belmont_%28Montreal%29.jpg/1200px-Punk_performance%2C_Le_Belmont_%28Montreal%29.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8e/Punk_performance%2C_Le_Belmont_%28Montreal%29.jpg',
     types: ['bar', 'café', 'salle'],
     tags: ['musique électronique', 'rock', 'burlesque', 'arts de la scène', 'concerts', 'vie nocturne'],
     neighborhood: 'Plateau-Mont-Royal',
@@ -374,7 +374,7 @@ const venueEnrichmentData: Record<string, {
   'le-ministere': {
     description: 'Le Ministère est une salle de spectacles située dans un immeuble patrimonial du boulevard Saint-Laurent, dans une ancienne banque. Ouverte en 2017, elle s\'est établie comme l\'une des salles les plus en demande de Montréal avec une capacité de 288 places. La salle est parfaitement insonorisée et équipée de matériel audiovisuel de pointe. Elle dispose d\'une régie conçue comme un studio de mixage avec une fenêtre de 10\' par 4\', de 4 caméras Sony A7s II en résolution 4K, et d\'un studio Livestream H550 capable de faire du montage en direct. La salle accueille les spectacles de tous genres, conférences, événements corporatifs et privés, lancements d\'albums, vidéoclips, et autres événements.',
     capacity: 288,
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['salle', 'studio'],
     tags: ['spectacles', 'concerts', 'conférences', 'événements corporatifs', 'livestream', 'vidéo'],
     website: 'https://leministere.ca',
@@ -392,7 +392,7 @@ const venueEnrichmentData: Record<string, {
   // Place Bell
   'place-bell': {
     description: 'Place Bell est une aréna polyvalente moderne située à Laval, dans la région métropolitaine de Montréal. Cette installation sportive et de divertissement accueille des événements sportifs, des concerts et des spectacles. Elle dispose d\'équipements modernes et d\'une capacité importante pour accueillir divers types d\'événements.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['arène', 'salle'],
     tags: ['sport', 'concerts', 'spectacles', 'événements'],
     neighborhood: 'Laval',
@@ -401,7 +401,7 @@ const venueEnrichmentData: Record<string, {
   // Vieux-Port de Montréal
   'vieux-port-de-montreal': {
     description: 'Le Vieux-Port de Montréal est un espace public emblématique situé le long du fleuve Saint-Laurent dans le Vieux-Montréal. Cet espace historique accueille de nombreux événements publics, festivals, concerts en plein air et activités culturelles tout au long de l\'année. Le Vieux-Port offre des vues spectaculaires sur le fleuve et la ville, avec des espaces ouverts pour des événements de grande envergure.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Old_Port_of_Montreal_%28French-_Vieux-Port_de_Montr%C3%A9al%29.jpg/1200px-Old_Port_of_Montreal_%28French-_Vieux-Port_de_Montr%C3%A9al%29.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/8/8c/Old_Port_of_Montreal_%28French-_Vieux-Port_de_Montr%C3%A9al%29.jpg',
     types: ['espace_public', 'quai'],
     tags: ['festivals', 'concerts en plein air', 'événements publics', 'culture', 'patrimoine'],
     neighborhood: 'Vieux-Montréal',
@@ -410,14 +410,14 @@ const venueEnrichmentData: Record<string, {
   // Parc du Mont-Royal
   'parc-du-mont-royal': {
     description: 'Le Parc du Mont-Royal est un grand espace vert public situé sur la montagne du même nom au cœur de Montréal. Conçu par Frederick Law Olmsted, le parc accueille de nombreux événements publics, concerts en plein air, festivals et activités culturelles. Il offre des vues panoramiques sur la ville et constitue un lieu de rassemblement populaire pour les Montréalais et les visiteurs.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg/1200px-Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg',
     types: ['parc', 'espace_public'],
     tags: ['concerts en plein air', 'festivals', 'événements publics', 'nature', 'culture'],
     neighborhood: 'Mont-Royal',
   },
   'parc-du-mont-royal-1': {
     description: 'Le Parc du Mont-Royal est un grand espace vert public situé sur la montagne du même nom au cœur de Montréal. Conçu par Frederick Law Olmsted, le parc accueille de nombreux événements publics, concerts en plein air, festivals et activités culturelles. Il offre des vues panoramiques sur la ville et constitue un lieu de rassemblement populaire pour les Montréalais et les visiteurs.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg/1200px-Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0c/Chalet_du_Mont-Royal_%40_Mount_Royal_%40_Ville-Marie_%40_Montreal_%2830414889885%29.jpg',
     types: ['parc', 'espace_public'],
     tags: ['concerts en plein air', 'festivals', 'événements publics', 'nature', 'culture'],
     neighborhood: 'Mont-Royal',
@@ -426,14 +426,14 @@ const venueEnrichmentData: Record<string, {
   // Quartier des Spectacles
   'quartier-des-spectacles': {
     description: 'Le Quartier des spectacles est un quartier culturel dynamique au cœur de Montréal, concentrant de nombreux lieux de spectacles, festivals et événements culturels. Cet espace public accueille des centaines d\'événements chaque année, incluant des festivals majeurs comme le Festival international de jazz de Montréal, les Francofolies, Juste pour Rire, et bien d\'autres. Le quartier dispose d\'espaces publics pour des événements en plein air et des installations culturelles de renommée mondiale.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['quartier', 'espace_public'],
     tags: ['festivals', 'spectacles', 'culture', 'événements publics', 'quartier culturel'],
     neighborhood: 'Quartier des spectacles',
   },
   'quartier-des-spectacles-1': {
     description: 'Le Quartier des spectacles est un quartier culturel dynamique au cœur de Montréal, concentrant de nombreux lieux de spectacles, festivals et événements culturels. Cet espace public accueille des centaines d\'événements chaque année, incluant des festivals majeurs comme le Festival international de jazz de Montréal, les Francofolies, Juste pour Rire, et bien d\'autres. Le quartier dispose d\'espaces publics pour des événements en plein air et des installations culturelles de renommée mondiale.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['quartier', 'espace_public'],
     tags: ['festivals', 'spectacles', 'culture', 'événements publics', 'quartier culturel'],
     neighborhood: 'Quartier des spectacles',
@@ -442,7 +442,7 @@ const venueEnrichmentData: Record<string, {
   // Bibliothèque et Archives nationales du Québec
   'bibliotheque-et-archives-nationales-du-quebec': {
     description: 'La Bibliothèque et Archives nationales du Québec (BAnQ) est une institution culturelle majeure qui accueille des événements, conférences, expositions et activités culturelles. Située dans le Quartier des spectacles, elle dispose d\'espaces pour accueillir divers types d\'événements éducatifs et culturels.',
-    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg',
+    imageUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/03/Place_des_Arts_de_Montr%C3%A9al.jpg',
     types: ['bibliothèque', 'centre_culturel'],
     tags: ['conférences', 'expositions', 'culture', 'éducation', 'archives'],
     website: 'https://www.banq.qc.ca',
