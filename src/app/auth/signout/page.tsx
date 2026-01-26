@@ -3,10 +3,12 @@
 import { signOut } from 'next-auth/react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import Navigation from '@/components/Navigation';
 import { LogOut, Loader2 } from 'lucide-react';
 
 export default function SignOutPage() {
+  const t = useTranslations('auth.signOut');
   const router = useRouter();
 
   useEffect(() => {
@@ -24,8 +26,8 @@ export default function SignOutPage() {
           <div className="w-16 h-16 bg-sky-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Loader2 className="w-8 h-8 text-sky-400 animate-spin" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Déconnexion en cours...</h1>
-          <p className="text-slate-300">Vous allez être redirigé dans un instant</p>
+          <h1 className="text-2xl font-bold text-white mb-2">{t('title')}</h1>
+          <p className="text-slate-300">{t('redirecting')}</p>
         </div>
       </div>
     </div>

@@ -409,6 +409,18 @@
     "oauthError": "Error signing in with {provider}. Check that {provider} OAuth is configured.",
     "oauthCallbackError": "Error during {provider} callback.",
     "oauthGeneralError": "Error signing in with {provider}. Check the configuration.",
+    "verifyRequest": {
+      "title": "Check your email",
+      "linkSent": "A login link has been sent to your email address.",
+      "step1": "Open your inbox",
+      "step2": "Click on the login link",
+      "step3": "You will be automatically signed in",
+      "expires": "The link expires in 24 hours. If you don't receive the email, check your spam folder."
+    },
+    "signOut": {
+      "title": "Signing out...",
+      "redirecting": "You will be redirected in a moment"
+    },
     "error": {
       "title": "Authentication Error",
       "configuration": "There is a problem with the server configuration. Check that environment variables are correctly configured.",
