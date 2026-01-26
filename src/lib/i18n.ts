@@ -12,13 +12,15 @@ export type Locale = (typeof locales)[number];
 // Langue par défaut
 export const defaultLocale: Locale = 'fr';
 
-export default getRequestConfig(async ({ locale }) => {
+export default getRequestConfig(async ({ requestLocale }) => {
   // Si la locale n'est pas fournie par next-intl (sans middleware),
   // utiliser la locale par défaut
   // Le client (AppWrapper) gère déjà la locale côté client via le cookie
-  const validLocale = (locale && locales.includes(locale as Locale)) ? locale : defaultLocale;
+  const requested = await requestLocale;
+  const validLocale = (requested && locales.includes(requested as Locale)) ? requested : defaultLocale;
 
   return {
+    locale: validLocale,
     messages: (await import(`../../messages/${validLocale}.json`)).default,
   };
 });
