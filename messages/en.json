@@ -80,6 +80,8 @@
       "dashboard": "Dashboard",
       "profile": "My Organizer Profile"
     },
+    "venues": "Venues",
+    "organizers": "Organizers",
     "social": "Social",
     "pulsers": "Pulsers",
     "messages": "Messages",
