@@ -610,9 +610,27 @@ async function enrichVenues() {
         updateData.capacity = enrichmentData.capacity;
       }
       
-      // Image : toujours ajouter si disponible (même si une existe déjà, on peut la remplacer par une meilleure)
-      if (enrichmentData.imageUrl && (!venue.imageUrl || isGenericEnrichment)) {
-        updateData.imageUrl = enrichmentData.imageUrl;
+      // Image : toujours ajouter si disponible, ou ajouter une image générique si aucune n'existe
+      if (enrichmentData.imageUrl) {
+        // Si on a une image spécifique, l'utiliser
+        if (!venue.imageUrl || isGenericEnrichment) {
+          updateData.imageUrl = enrichmentData.imageUrl;
+        }
+      } else if (!venue.imageUrl) {
+        // Si aucune image n'existe et qu'on n'a pas d'image spécifique, ajouter une image générique selon le type
+        const venueNameLower = venue.name.toLowerCase();
+        if (venueNameLower.includes('eglise') || venueNameLower.includes('église') || venueNameLower.includes('church')) {
+          updateData.imageUrl = 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=1200&h=600&fit=crop';
+        } else if (venueNameLower.includes('parc') || venueNameLower.includes('park') || venueNameLower.includes('place') || venueNameLower.includes('esplanade')) {
+          updateData.imageUrl = 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&h=600&fit=crop';
+        } else if (venueNameLower.includes('bar') || venueNameLower.includes('club') || venueNameLower.includes('rittz') || venueNameLower.includes('escogriffe') || venueNameLower.includes('belmont')) {
+          updateData.imageUrl = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop';
+        } else if (venueNameLower.includes('theatre') || venueNameLower.includes('théâtre') || venueNameLower.includes('theater')) {
+          updateData.imageUrl = 'https://images.unsplash.com/photo-1503095396549-807759245b35?w=1200&h=600&fit=crop';
+        } else {
+          // Image générique par défaut
+          updateData.imageUrl = 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=1200&h=600&fit=crop';
+        }
       }
       
       // Types : fusionner avec les types existants, toujours ajouter si enrichissement générique

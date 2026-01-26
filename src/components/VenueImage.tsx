@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Building2 } from 'lucide-react';
 
 interface VenueImageProps {
@@ -28,6 +28,12 @@ export function VenueImage({
   unoptimized = false,
 }: VenueImageProps) {
   const [imageError, setImageError] = useState(false);
+  const [imageSrc, setImageSrc] = useState(src);
+
+  useEffect(() => {
+    setImageSrc(src);
+    setImageError(false);
+  }, [src]);
 
   if (imageError) {
     return (
@@ -40,28 +46,40 @@ export function VenueImage({
   if (fill) {
     return (
       <Image
-        src={src}
+        src={imageSrc}
         alt={alt}
         fill
         sizes={sizes}
         className={className}
         priority={priority}
         unoptimized={unoptimized}
-        onError={() => setImageError(true)}
+        onError={() => {
+          console.error('[VenueImage] Erreur de chargement:', imageSrc);
+          setImageError(true);
+        }}
+        onLoad={() => {
+          console.log('[VenueImage] Image chargée avec succès:', imageSrc);
+        }}
       />
     );
   }
 
   return (
     <Image
-      src={src}
+      src={imageSrc}
       alt={alt}
       width={width}
       height={height}
       className={className}
       priority={priority}
       unoptimized={unoptimized}
-      onError={() => setImageError(true)}
+      onError={() => {
+        console.error('[VenueImage] Erreur de chargement:', imageSrc);
+        setImageError(true);
+      }}
+      onLoad={() => {
+        console.log('[VenueImage] Image chargée avec succès:', imageSrc);
+      }}
     />
   );
 }
