@@ -201,12 +201,12 @@ export default function Navigation() {
 
               {/* Menu "Découvrir" - Salles et Organisateurs */}
               <div className="relative group">
-                <button className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap" title="Découvrir">
+                <button className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap" title={t('discover')}>
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <div className="relative z-10 flex-shrink-0">
                     <Globe className="w-4 h-4" />
                   </div>
-                  <span className="relative z-10 text-xs">Découvrir</span>
+                  <span className="relative z-10 text-xs">{t('discover')}</span>
                   <div className="relative z-10 ml-0.5 flex-shrink-0">
                     <svg className="w-3 h-3 transition-transform group-hover:rotate-180 duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -225,7 +225,7 @@ export default function Navigation() {
                       <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 group-hover/item:scale-110 transition-transform">
                         <Building2 className="w-4 h-4 text-blue-400" />
                       </div>
-                      <span className="font-medium">Salles</span>
+                      <span className="font-medium">{t('venues')}</span>
                     </Link>
                     
                     <Link
@@ -235,7 +235,7 @@ export default function Navigation() {
                       <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 group-hover/item:scale-110 transition-transform">
                         <Users className="w-4 h-4 text-purple-400" />
                       </div>
-                      <span className="font-medium">Organisateurs</span>
+                      <span className="font-medium">{t('organizers')}</span>
                     </Link>
                   </div>
                   
@@ -579,7 +579,7 @@ export default function Navigation() {
 
                 {/* Découvrir - Section */}
                 <div className="space-y-2">
-                  <div className="px-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">Découvrir</div>
+                  <div className="px-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">{t('discover')}</div>
                   <div className="grid grid-cols-2 gap-3">
                     <Link
                       href="/salles"
@@ -587,7 +587,7 @@ export default function Navigation() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Building2 className="w-6 h-6 text-slate-200 group-hover:text-blue-300 group-hover:scale-105 transition-transform duration-300" />
-                      <span className="font-semibold text-slate-100">Salles</span>
+                      <span className="font-semibold text-slate-100">{t('venues')}</span>
                     </Link>
                     <Link
                       href="/organisateurs"
@@ -595,7 +595,7 @@ export default function Navigation() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       <Users className="w-6 h-6 text-slate-200 group-hover:text-purple-300 group-hover:scale-105 transition-transform duration-300" />
-                      <span className="font-semibold text-slate-100">Organisateurs</span>
+                      <span className="font-semibold text-slate-100">{t('organizers')}</span>
                     </Link>
                   </div>
                 </div>
