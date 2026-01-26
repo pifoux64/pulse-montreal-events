@@ -18,7 +18,9 @@ if (!supabaseUrl || !supabaseServiceKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-const BUCKET_NAME = 'events';
+// Vous pouvez créer plusieurs buckets en modifiant cette variable
+// Options: 'events', 'flyers'
+const BUCKET_NAME = process.argv[2] || 'events';
 
 async function main() {
   try {
@@ -56,8 +58,8 @@ async function main() {
     // Créer le bucket
     const { data, error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
       public: true,
-      fileSizeLimit: 5 * 1024 * 1024, // 5MB
-      allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+      fileSizeLimit: config.fileSizeLimit,
+      allowedMimeTypes: config.allowedMimeTypes,
     });
     
     if (createError) {
@@ -83,8 +85,8 @@ async function main() {
     
     console.log(`✅ Bucket "${BUCKET_NAME}" créé avec succès!`);
     console.log(`   - Public: Oui`);
-    console.log(`   - Taille max: 5MB`);
-    console.log(`   - Types autorisés: JPEG, JPG, PNG, WEBP`);
+    console.log(`   - Taille max: ${(config.fileSizeLimit / 1024 / 1024).toFixed(0)}MB`);
+    console.log(`   - Types autorisés: ${config.allowedMimeTypes.join(', ').toUpperCase()}`);
     
   } catch (error: any) {
     console.error('❌ Erreur inattendue:', error.message);
