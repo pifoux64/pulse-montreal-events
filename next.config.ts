@@ -61,6 +61,12 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: '*.unsplash.com',
       },
+      // Supabase Storage
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
     ],
     localPatterns: [
       {
@@ -76,7 +82,7 @@ const nextConfig: NextConfig = {
         pathname: '/placeholder-event.jpg',
       },
       {
-        pathname: '/venues',
+        pathname: '/venues/**',
       },
     ],
     formats: ['image/webp', 'image/avif'],
