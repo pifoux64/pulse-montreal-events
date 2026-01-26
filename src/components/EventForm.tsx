@@ -347,7 +347,7 @@ const EventForm = ({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Erreur lors de l\'import');
+        throw new Error(errorData.error || t('import.importError'));
       }
 
       const result = await response.json();
