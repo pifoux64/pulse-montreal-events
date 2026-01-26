@@ -113,20 +113,39 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
             : `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-event-default.png`
         ],
       },
-      other: {
-        'event:start_time': event.startAt.toISOString(),
-        'event:end_time': event.endAt ? event.endAt.toISOString() : undefined,
-        'event:location:latitude': event.venue?.lat?.toString() ?? undefined,
-        'event:location:longitude': event.venue?.lon?.toString() ?? undefined,
-        'event:location:venue': event.venue?.name ?? undefined,
-        'event:location:address': event.venue
-          ? `${event.venue.address}, ${event.venue.city} ${event.venue.postalCode}`
-          : undefined,
-        'event:organizer': event.organizer?.displayName,
-        'event:price:min': event.priceMin != null ? (event.priceMin / 100).toString() : undefined,
-        'event:price:max': event.priceMax != null ? (event.priceMax / 100).toString() : undefined,
-        'event:price:currency': event.currency,
-      },
+      other: (() => {
+        const other: Record<string, string> = {
+          'event:start_time': event.startAt.toISOString(),
+        };
+        if (event.endAt) {
+          other['event:end_time'] = event.endAt.toISOString();
+        }
+        if (event.venue?.lat) {
+          other['event:location:latitude'] = event.venue.lat.toString();
+        }
+        if (event.venue?.lon) {
+          other['event:location:longitude'] = event.venue.lon.toString();
+        }
+        if (event.venue?.name) {
+          other['event:location:venue'] = event.venue.name;
+        }
+        if (event.venue) {
+          other['event:location:address'] = `${event.venue.address}, ${event.venue.city} ${event.venue.postalCode}`;
+        }
+        if (event.organizer?.displayName) {
+          other['event:organizer'] = event.organizer.displayName;
+        }
+        if (event.priceMin != null) {
+          other['event:price:min'] = (event.priceMin / 100).toString();
+        }
+        if (event.priceMax != null) {
+          other['event:price:max'] = (event.priceMax / 100).toString();
+        }
+        if (event.currency) {
+          other['event:price:currency'] = event.currency;
+        }
+        return other;
+      })(),
     };
   } catch (error) {
     console.error('Erreur metadata event:', error);
@@ -223,7 +242,13 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
 
             {/* Actions */}
             <div className="mb-8">
-              <EventDetailActions event={event} />
+              <EventDetailActions 
+                eventId={event.id}
+                eventTitle={event.title}
+                eventVenue={event.venue}
+                eventStartAt={event.startAt}
+                eventNeighborhood={event.venue?.neighborhood}
+              />
             </div>
 
             {/* Contenu principal */}
@@ -241,15 +266,123 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                 )}
 
                 {/* Tags */}
-                {event.tags && event.tags.length > 0 && (
+                {((event.eventTags && event.eventTags.length > 0) || (event.tags && event.tags.length > 0)) && (
                   <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
                     <h2 className="text-2xl font-bold text-white mb-4">Tags</h2>
-                    <EventTagsDisplay event={event} />
+                    {event.eventTags && event.eventTags.length > 0 ? (
+                      <EventTagsDisplay eventTags={event.eventTags as any} />
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {event.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-3 py-1 bg-slate-700/50 text-slate-200 rounded-full text-sm"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Tabs Section */}
-                <EventTabsSection event={event} />
+                <EventTabsSection
+                  infoContent={
+                    <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                      <h3 className="text-xl font-bold text-white mb-4">Informations détaillées</h3>
+                      <div className="space-y-4">
+                        {event.venue && (
+                          <div>
+                            <div className="flex items-center gap-2 text-slate-400 mb-2">
+                              <MapPin className="w-5 h-5" />
+                              <span className="font-semibold">Lieu</span>
+                            </div>
+                            <Link
+                              href={event.venue.slug ? `/salle/${event.venue.slug}` : `/salle/${event.venue.id}`}
+                              className="text-white hover:text-blue-400 transition-colors block"
+                            >
+                              {event.venue.name}
+                            </Link>
+                            <p className="text-slate-400 text-sm mt-1">
+                              {event.venue.address}, {event.venue.city} {event.venue.postalCode}
+                            </p>
+                          </div>
+                        )}
+
+                        <div>
+                          <div className="flex items-center gap-2 text-slate-400 mb-2">
+                            <Clock className="w-5 h-5" />
+                            <span className="font-semibold">Date et heure</span>
+                          </div>
+                          <p className="text-white">
+                            {new Date(event.startAt).toLocaleDateString('fr-CA', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              timeZone: 'America/Montreal',
+                            })}
+                          </p>
+                          <p className="text-slate-400 text-sm mt-1">
+                            {new Date(event.startAt).toLocaleTimeString('fr-CA', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              timeZone: 'America/Montreal',
+                            })}
+                            {event.endAt && (
+                              <>
+                                {' - '}
+                                {new Date(event.endAt).toLocaleTimeString('fr-CA', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                  timeZone: 'America/Montreal',
+                                })}
+                              </>
+                            )}
+                          </p>
+                        </div>
+
+                        {event.priceMin !== null && (
+                          <div>
+                            <div className="flex items-center gap-2 text-slate-400 mb-2">
+                              <DollarSign className="w-5 h-5" />
+                              <span className="font-semibold">Prix</span>
+                            </div>
+                            <p className="text-white">
+                              {event.priceMin === 0
+                                ? 'Gratuit'
+                                : event.priceMax && event.priceMax !== event.priceMin
+                                ? `${(event.priceMin / 100).toFixed(2)} $ - ${(event.priceMax / 100).toFixed(2)} $`
+                                : `${(event.priceMin / 100).toFixed(2)} $`}
+                            </p>
+                          </div>
+                        )}
+
+
+                        {event.organizer && (
+                          <div>
+                            <div className="flex items-center gap-2 text-slate-400 mb-2">
+                              <Users className="w-5 h-5" />
+                              <span className="font-semibold">Organisateur</span>
+                            </div>
+                            <Link
+                              href={event.organizer.slug ? `/organisateur/${event.organizer.slug}` : `/organisateur/${event.organizer.id}`}
+                              className="text-white hover:text-blue-400 transition-colors"
+                            >
+                              {event.organizer.displayName}
+                            </Link>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  }
+                  feedContent={
+                    <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
+                      <EventFeedPanel eventId={event.id} canPost={!!session} />
+                    </div>
+                  }
+                />
 
                 {/* Similar Events */}
                 <SimilarEvents eventId={event.id} />
@@ -328,18 +461,6 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                       </div>
                     )}
 
-                    {event.minAttendees && (
-                      <div>
-                        <div className="flex items-center gap-2 text-slate-400 mb-1">
-                          <Users className="w-4 h-4" />
-                          <span className="text-sm">Participants</span>
-                        </div>
-                        <p className="text-white">
-                          {event.minAttendees}
-                          {event.maxAttendees && ` - ${event.maxAttendees}`} personnes
-                        </p>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -349,8 +470,8 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                     <h2 className="text-xl font-bold text-white mb-4">Localisation</h2>
                     <EventDetailMap
                       lat={event.venue.lat}
-                      lng={event.venue.lon}
-                      venueName={event.venue.name}
+                      lon={event.venue.lon}
+                      title={event.venue.name}
                     />
                   </div>
                 )}
@@ -363,19 +484,9 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                       href={event.organizer.slug ? `/organisateur/${event.organizer.slug}` : `/organisateur/${event.organizer.id}`}
                       className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                     >
-                      {event.organizer.user?.image ? (
-                        <Image
-                          src={event.organizer.user.image}
-                          alt={event.organizer.displayName}
-                          width={48}
-                          height={48}
-                          className="rounded-full"
-                        />
-                      ) : (
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                          <Users className="w-6 h-6 text-white" />
-                        </div>
-                      )}
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                        <Users className="w-6 h-6 text-white" />
+                      </div>
                       <div>
                         <p className="text-white font-semibold">{event.organizer.displayName}</p>
                         {event.organizer.verified && (
@@ -402,14 +513,14 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
                 )}
 
                 {/* Invite Friend */}
-                <InviteFriendButton eventId={event.id} />
+                <InviteFriendButton eventId={event.id} eventTitle={event.title} eventUrl={event.url || undefined} />
 
                 {/* Event Feed Panel */}
-                <EventFeedPanel eventId={event.id} />
+                <EventFeedPanel eventId={event.id} canPost={!!session} />
 
                 {/* Actions admin/organisateur */}
                 {(isOwner || isAdmin) && (
-                  <EventPublishSection event={event} />
+                  <EventPublishSection eventId={event.id} organizerId={event.organizer?.id} />
                 )}
               </div>
             </div>
