@@ -64,26 +64,29 @@ export async function GET(
       },
     });
 
+    // Récupérer les IDs des événements de l'organisateur
+    const eventIds = events.map(e => e.id);
+
     // Récupérer les vues des 30 derniers jours
-    const viewsLast30Days = await prisma.eventView.count({
+    const viewsLast30Days = eventIds.length > 0 ? await prisma.eventView.count({
       where: {
-        event: {
-          organizerId: id,
+        eventId: {
+          in: eventIds,
         },
         createdAt: {
           gte: thirtyDaysAgo,
         },
       },
-    });
+    }) : 0;
 
     // Récupérer toutes les vues
-    const totalViews = await prisma.eventView.count({
+    const totalViews = eventIds.length > 0 ? await prisma.eventView.count({
       where: {
-        event: {
-          organizerId: id,
+        eventId: {
+          in: eventIds,
         },
       },
-    });
+    }) : 0;
 
     // Calculer les favoris (30 jours et total)
     const eventsWithFavorites = await prisma.event.findMany({
