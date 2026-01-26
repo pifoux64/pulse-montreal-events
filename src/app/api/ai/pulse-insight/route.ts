@@ -11,17 +11,17 @@ import { z } from 'zod';
 
 const PulseInsightSchema = z.object({
   summary: z.string().describe('Résumé immersif de 2-3 phrases décrivant l\'événement'),
-  musicStyle: z.string().optional().describe('Style musical principal (si applicable)'),
+  musicStyle: z.string().optional().nullable().describe('Style musical principal (si applicable)'),
   vibe: z.string().describe('Ambiance/atmosphère attendue (ex: warehouse, intime, festif)'),
   expectedAudience: z.string().describe('Public attendu (ex: 18-30 ans, mélomanes, familles)'),
   intensity: z.enum(['chill', 'moderate', 'high', 'very_high']).describe('Intensité (chill, moderate, high, very_high)'),
-  danceLevel: z.enum(['none', 'low', 'medium', 'high']).optional().describe('Niveau de danse attendu'),
-  culturalContext: z.string().optional().describe('Contexte culturel montréalais (quartier, scène, histoire)'),
+  danceLevel: z.enum(['none', 'low', 'medium', 'high']).optional().nullable().describe('Niveau de danse attendu'),
+  culturalContext: z.string().optional().nullable().describe('Contexte culturel montréalais (quartier, scène, histoire)'),
   tags: z.array(z.object({
     category: z.enum(['genre', 'ambiance', 'time', 'crowd', 'accessibility']),
     value: z.string(),
     label: z.string(),
-  })).describe('Tags visuels cliquables pour la découverte'),
+  })).default([]).describe('Tags visuels cliquables pour la découverte'),
 });
 
 export async function POST(request: NextRequest) {
@@ -81,29 +81,65 @@ ${lineup.length > 0 ? `Line-up: ${lineup.join(', ')}` : ''}
 Tags existants: ${tags.join(', ') || 'Aucun'}
 Tags structurés: ${eventTags.map((t: any) => `${t.category}:${t.value}`).join(', ') || 'Aucun'}
 
+IMPORTANT: Tu dois répondre avec un objet JSON valide contenant exactement ces champs:
+{
+  "summary": "Résumé immersif de 2-3 phrases",
+  "musicStyle": "Style musical ou null si non applicable",
+  "vibe": "Ambiance/atmosphère",
+  "expectedAudience": "Public attendu",
+  "intensity": "chill|moderate|high|very_high",
+  "danceLevel": "none|low|medium|high ou null si non applicable",
+  "culturalContext": "Contexte montréalais ou null",
+  "tags": [
+    {"category": "genre|ambiance|time|crowd|accessibility", "value": "valeur", "label": "libellé"}
+  ]
+}
+
 Génère:
 1. Un résumé immersif (2-3 phrases)
-2. Style musical si applicable
+2. Style musical si applicable (sinon null)
 3. Ambiance/vibe
 4. Public attendu
 5. Intensité (chill/moderate/high/very_high)
-6. Niveau de danse si applicable
-7. Contexte culturel montréalais
-8. Tags cliquables pour découverte`;
+6. Niveau de danse si applicable (sinon null)
+7. Contexte culturel montréalais (sinon null)
+8. Tags cliquables pour découverte (tableau, peut être vide)`;
 
-    const result = await callOpenAI(
-      systemPrompt,
-      userPrompt,
-      PulseInsightSchema,
-      {
-        model: 'gpt-4o-mini',
-        temperature: 0.7, // Créatif mais cohérent
-        cacheKey: `pulse-insight:${eventId}`,
-        cacheTTL: 86400, // Cache 24h
-      }
-    );
+    try {
+      const result = await callOpenAI(
+        systemPrompt,
+        userPrompt,
+        PulseInsightSchema,
+        {
+          model: 'gpt-4o-mini',
+          temperature: 0.7, // Créatif mais cohérent
+          cacheKey: `pulse-insight:${eventId}`,
+          cacheTTL: 86400, // Cache 24h
+        }
+      );
 
-    return NextResponse.json(result.data);
+      return NextResponse.json(result.data);
+    } catch (validationError: any) {
+      // Si erreur de validation, logger les détails et retourner une réponse par défaut
+      console.error('Erreur validation Pulse Insight:', validationError);
+      
+      // Retourner un insight par défaut plutôt qu'une erreur
+      const fallbackInsight = {
+        summary: `${title} est un événement ${category || 'culturel'} à Montréal.`,
+        vibe: 'Ambiance à découvrir',
+        expectedAudience: 'Public varié',
+        intensity: 'moderate' as const,
+        tags: eventTags && eventTags.length > 0 
+          ? eventTags.slice(0, 5).map((t: any) => ({
+              category: t.category || 'genre',
+              value: t.value,
+              label: t.value,
+            }))
+          : [],
+      };
+      
+      return NextResponse.json(fallbackInsight);
+    }
 
   } catch (error: any) {
     console.error('Erreur génération Pulse Insight:', error);

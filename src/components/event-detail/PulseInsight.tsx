@@ -84,7 +84,9 @@ export default function PulseInsight({
         });
 
         if (!response.ok) {
-          throw new Error('Erreur lors du chargement de l\'insight');
+          const errorData = await response.json().catch(() => ({ error: 'Erreur inconnue' }));
+          console.error('Erreur API Pulse Insight:', errorData);
+          throw new Error(errorData.error || 'Erreur lors du chargement de l\'insight');
         }
 
         const data = await response.json();
