@@ -88,9 +88,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
   }
 
+  const { getTranslations } = await import('next-intl/server');
+  const t = await getTranslations('venues');
+  
   const descriptionSnippet = venue.description
     ? venue.description.substring(0, SAFE_DESCRIPTION_LENGTH)
-    : `Découvrez ${venue.name}, ${venue.address}, ${venue.city}. Événements à venir, informations pratiques.`;
+    : t('discoverVenue', { name: venue.name, address: venue.address, city: venue.city });
 
   const canonical = canonicalUrlForPath(`/salle/${venue.slug}`);
 
@@ -136,6 +139,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function VenuePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { getTranslations } = await import('next-intl/server');
+  const t = await getTranslations('venues');
+  
   try {
     const { slug } = await params;
     const venue = await fetchVenue(slug);
@@ -246,7 +252,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                         <div className="px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30">
                           <span className="text-sm font-semibold text-amber-300 flex items-center gap-2">
                             <TrendingUp className="w-4 h-4" />
-                            Populaire
+                            {t('popular')}
                           </span>
                         </div>
                       )}
@@ -303,7 +309,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                   <div className="mb-8">
                     <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-purple-400" />
-                      Styles d'événements
+                      {t('eventStyles')}
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {venue.tags.map((tag) => (
@@ -327,7 +333,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                         <Calendar className="h-5 w-5 text-blue-300" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400 uppercase tracking-wider">Événements</p>
+                        <p className="text-xs text-slate-400 uppercase tracking-wider">{t('events')}</p>
                         <p className="text-2xl font-bold text-white">
                           {venue._count.events}
                         </p>
@@ -343,7 +349,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                           <Users className="h-5 w-5 text-purple-300" />
                         </div>
                         <div>
-                          <p className="text-xs text-slate-400 uppercase tracking-wider">Capacité</p>
+                          <p className="text-xs text-slate-400 uppercase tracking-wider">{t('capacityLabel')}</p>
                           <p className="text-2xl font-bold text-white">
                             {venue.capacity.toLocaleString('fr-CA')}
                           </p>
@@ -359,7 +365,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                         <MapPin className="h-5 w-5 text-emerald-300" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">Adresse</p>
+                        <p className="text-xs text-slate-400 uppercase tracking-wider mb-1">{t('address')}</p>
                         <p className="text-sm text-white font-medium leading-tight">
                           {venue.address}
                           <br />
@@ -377,7 +383,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                           <Phone className="h-5 w-5 text-amber-300" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">Contact</p>
+                          <p className="text-xs text-slate-400 uppercase tracking-wider mb-2">{t('contact')}</p>
                           <div className="space-y-1.5">
                             {venue.phone && (
                               <a
@@ -395,7 +401,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                                 className="flex items-center gap-1 text-sm text-white font-medium hover:text-amber-300 transition-colors"
                               >
                                 <Globe className="h-3 w-3" />
-                                Site web
+                                {t('website')}
                               </a>
                             )}
                             {venue.contactEmail && (
@@ -404,7 +410,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                                 className="flex items-center gap-1 text-sm text-white font-medium hover:text-amber-300 transition-colors"
                               >
                                 <Mail className="h-3 w-3" />
-                                Email
+                                {t('email')}
                               </a>
                             )}
                           </div>
@@ -431,7 +437,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                       className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white hover:text-blue-300 transition-all text-sm font-medium"
                     >
                       <ExternalLink className="h-4 w-4" />
-                      Ouvrir dans Google Maps
+                      {t('openInGoogleMaps')}
                     </a>
                     <VenueRequestButton venueId={venue.id} venueName={venue.slug || venue.name} />
                   </div>
@@ -453,10 +459,10 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                   </div>
                   <div>
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">
-                      Événements à venir
+                      {t('upcomingEvents')}
                     </h2>
                     <p className="text-slate-400">
-                      {upcomingEvents.length} événement{upcomingEvents.length > 1 ? 's' : ''} programmé{upcomingEvents.length > 1 ? 's' : ''}
+                      {t('eventsScheduled', { count: upcomingEvents.length })}
                     </p>
                   </div>
                 </div>
@@ -480,10 +486,10 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                 </div>
                 <div>
                   <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">
-                    Ce week-end
+                    {t('thisWeekend')}
                   </h2>
                   <p className="text-slate-400">
-                    {weekendEvents.length} événement{weekendEvents.length > 1 ? 's' : ''} à ne pas manquer
+                    {t('eventsNotToMiss', { count: weekendEvents.length })}
                   </p>
                 </div>
               </div>
@@ -507,10 +513,10 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                   </div>
                   <div>
                     <h2 className="text-3xl md:text-4xl font-bold text-white mb-1">
-                      Événements passés
+                      {t('pastEvents')}
                     </h2>
                     <p className="text-slate-400">
-                      Historique des {pastEvents.length} derniers événements organisés dans cette salle
+                      {t('historyOfLast', { count: pastEvents.length })}
                     </p>
                   </div>
                 </div>
@@ -521,7 +527,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                 <div className="mb-8 p-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
                   <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                     <Award className="h-5 w-5 text-amber-400" />
-                    Types d'événements organisés
+                    {t('eventTypesOrganized')}
                   </h3>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(pastEventsStats.categories)
@@ -557,10 +563,10 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                 <Building2 className="h-12 w-12 text-blue-400" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-3">
-                Aucun événement pour le moment
+                {t('noEventsAtMoment')}
               </h3>
               <p className="text-slate-400 text-lg mb-6">
-                Cette salle n'a pas encore d'événements programmés.
+                {t('noEventsScheduled')}
               </p>
               <VenueRequestButton venueId={venue.id} venueName={venue.slug || venue.name} />
             </div>
