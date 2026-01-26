@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,9 +22,11 @@ export async function GET(
       );
     }
 
+    const { id } = await params;
+
     // Vérifier que la venue appartient à l'utilisateur
     const venue = await prisma.venue.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         id: true,
         name: true,
@@ -56,7 +58,7 @@ export async function GET(
     // Récupérer les événements
     const allEvents = await prisma.event.findMany({
       where: {
-        venueId: params.id,
+        venueId: id,
         startAt: {
           gte: sixMonthsAgo,
         },

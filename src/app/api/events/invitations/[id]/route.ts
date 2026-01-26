@@ -10,7 +10,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -21,6 +21,8 @@ export async function PATCH(
         { status: 401 }
       );
     }
+
+    const { id } = await params;
 
     const body = await request.json();
     const { status } = body;
@@ -34,7 +36,7 @@ export async function PATCH(
 
     // Récupérer l'invitation
     const invitation = await prisma.eventInvitation.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: {
         receiverId: true,
         status: true,
@@ -64,7 +66,7 @@ export async function PATCH(
 
     // Mettre à jour l'invitation
     const updated = await prisma.eventInvitation.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         status,
         respondedAt: new Date(),
