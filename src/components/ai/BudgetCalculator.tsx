@@ -317,7 +317,12 @@ export default function BudgetCalculator() {
                         return validPrice.toFixed(2);
                       })()} $
                     </div>
-                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.low?.target || ''}</div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      {result.suggestedPricing?.low?.target === 'Broad audience' ? t('targetBroad') :
+                       result.suggestedPricing?.low?.target === 'Public large' ? t('targetBroad') :
+                       result.suggestedPricing?.low?.target === 'Audiencia amplia' ? t('targetBroad') :
+                       result.suggestedPricing?.low?.target || t('targetBroad')}
+                    </div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">{t('medium')}</div>
@@ -329,7 +334,12 @@ export default function BudgetCalculator() {
                         return validPrice.toFixed(2);
                       })()} $
                     </div>
-                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.medium?.target || ''}</div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      {result.suggestedPricing?.medium?.target === 'Target audience' ? t('targetAudience') :
+                       result.suggestedPricing?.medium?.target === 'Public cible' ? t('targetAudience') :
+                       result.suggestedPricing?.medium?.target === 'Audiencia objetivo' ? t('targetAudience') :
+                       result.suggestedPricing?.medium?.target || t('targetAudience')}
+                    </div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">{t('high')}</div>
@@ -341,7 +351,12 @@ export default function BudgetCalculator() {
                         return validPrice.toFixed(2);
                       })()} $
                     </div>
-                    <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.high?.target || ''}</div>
+                    <div className="text-xs text-slate-400 mt-1">
+                      {result.suggestedPricing?.high?.target === 'Premium audience' ? t('targetPremium') :
+                       result.suggestedPricing?.high?.target === 'Public premium' ? t('targetPremium') :
+                       result.suggestedPricing?.high?.target === 'Audiencia premium' ? t('targetPremium') :
+                       result.suggestedPricing?.high?.target || t('targetPremium')}
+                    </div>
                   </div>
                 </div>
               </div>

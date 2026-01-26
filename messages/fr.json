@@ -1173,10 +1173,13 @@
     "lossHigh": "Perte importante",
     "lossMedium": "Perte modérée",
     "lossLow": "Petite perte",
-    "profitLow": "Petit bénéfice",
-    "profitMedium": "Bénéfice modéré",
-    "profitHigh": "Excellent bénéfice"
-  },
+      "profitLow": "Petit bénéfice",
+      "profitMedium": "Bénéfice modéré",
+      "profitHigh": "Excellent bénéfice",
+      "targetBroad": "Public large",
+      "targetAudience": "Public cible",
+      "targetPremium": "Public premium"
+    },
   "flyer": {
     "title": "Générateur de Flyer IA",
     "description": "Créez des flyers professionnels pour vos événements avec l'intelligence artificielle. Choisissez le format et le style, et téléchargez votre flyer prêt pour les réseaux sociaux.",

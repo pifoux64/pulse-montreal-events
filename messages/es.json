@@ -1041,7 +1041,10 @@
     "lossLow": "Pérdida baja",
     "profitLow": "Beneficio bajo",
     "profitMedium": "Beneficio medio",
-    "profitHigh": "Beneficio alto"
+    "profitHigh": "Beneficio alto",
+    "targetBroad": "Audiencia amplia",
+    "targetAudience": "Audiencia objetivo",
+    "targetPremium": "Audiencia premium"
   },
   "flyer": {
     "title": "Generador de Flyer IA",

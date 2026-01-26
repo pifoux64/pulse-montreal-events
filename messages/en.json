@@ -1048,7 +1048,10 @@
     "lossLow": "Low loss",
     "profitLow": "Low profit",
     "profitMedium": "Medium profit",
-    "profitHigh": "High profit"
+    "profitHigh": "High profit",
+    "targetBroad": "Broad audience",
+    "targetAudience": "Target audience",
+    "targetPremium": "Premium audience"
   },
   "flyer": {
     "title": "AI Flyer Generator",
