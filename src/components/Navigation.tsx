@@ -87,7 +87,7 @@ export default function Navigation() {
                 <div className="relative z-10 flex-shrink-0">
                   <Sparkles className="w-4 h-4" />
                 </div>
-                <span className="relative z-10 text-xs">{t('pourToiShort')}</span>
+                <span className="relative z-10 text-xs" suppressHydrationWarning>{t('pourToiShort')}</span>
                 <span className="relative z-10 ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/50 text-purple-200 font-bold">
                   IA
                 </span>

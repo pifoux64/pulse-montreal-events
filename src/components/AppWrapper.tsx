@@ -39,23 +39,20 @@ function getCookieLocale(): Locale {
 }
 
 export default function AppWrapper({ children }: AppWrapperProps) {
+  // État pour savoir si le composant est monté côté client
+  const [mounted, setMounted] = useState(false);
+  
   // Lire la locale depuis le cookie immédiatement
-  const [locale, setLocale] = useState<Locale>(() => {
-    // Essayer de lire le cookie même au premier rendu si on est côté client
-    if (typeof window !== 'undefined') {
-      return getCookieLocale();
-    }
-    // Au premier rendu serveur, utiliser defaultLocale pour éviter les erreurs d'hydratation
-    return defaultLocale;
-  });
+  const [locale, setLocale] = useState<Locale>(defaultLocale);
 
-  // Lire la locale depuis le cookie après le montage
+  // Après le montage, lire la locale depuis le cookie
   useEffect(() => {
+    setMounted(true);
     const cookieLocale = getCookieLocale();
     if (cookieLocale !== locale) {
       setLocale(cookieLocale);
     }
-  }, [locale]);
+  }, []);
 
   // Écouter les changements de cookie (quand la langue change)
   useEffect(() => {
@@ -75,11 +72,14 @@ export default function AppWrapper({ children }: AppWrapperProps) {
     return () => clearInterval(interval);
   }, [locale]);
 
+  // Utiliser defaultLocale jusqu'à ce que le composant soit monté pour éviter les erreurs d'hydratation
+  const displayLocale = mounted ? locale : defaultLocale;
+
   return (
     <SessionProvider>
       <NextIntlClientProvider 
-        locale={locale} 
-        messages={messages[locale]} 
+        locale={displayLocale} 
+        messages={messages[displayLocale]} 
         timeZone="America/Montreal"
       >
         <Navigation suppressHydrationWarning />
