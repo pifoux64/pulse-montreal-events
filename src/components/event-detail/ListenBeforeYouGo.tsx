@@ -156,9 +156,24 @@ export default function ListenBeforeYouGo({
     availablePlatforms.length > 0 ? availablePlatforms[0] : null
   );
   
-  // Si on a des URLs mais que ce n'est pas détecté comme musical, afficher quand même
+  // Si on a des URLs, afficher le bloc même si l'événement n'est pas détecté comme musical
   // (l'utilisateur a explicitement ajouté des URLs musicales)
-  const shouldShow = availablePlatforms.length > 0 && (musicEvent || availablePlatforms.length > 0);
+  const shouldShow = availablePlatforms.length > 0;
+  
+  // Debug en développement
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[ListenBeforeYouGo] Debug:', {
+      shouldShow,
+      availablePlatforms,
+      musicEvent,
+      hasSpotify: !!spotifyUrl,
+      hasSoundCloud: !!soundcloudUrl,
+      hasMixcloud: !!mixcloudUrl,
+      hasYouTube: !!youtubeUrl,
+      eventTags,
+      category,
+    });
+  }
   
   if (!shouldShow) {
     return null;
