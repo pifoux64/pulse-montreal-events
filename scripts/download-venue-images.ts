@@ -1,28 +1,35 @@
 /**
  * Script pour télécharger et précharger les images des venues
- * Télécharge les images depuis Wikimedia Commons et les stocke localement
- * Met à jour les URLs dans la base de données pour pointer vers les images locales
+ * Télécharge les images depuis Wikimedia Commons et les stocke dans Supabase Storage
+ * Met à jour les URLs dans la base de données pour pointer vers les images Supabase
  */
 
 import { PrismaClient } from '@prisma/client';
-import fs from 'fs';
+import { createClient } from '@supabase/supabase-js';
 import path from 'path';
 import https from 'https';
 import http from 'http';
 
 const prisma = new PrismaClient();
 
-const VENUES_IMAGES_DIR = path.join(process.cwd(), 'public', 'venues');
+// Configuration Supabase
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-// Créer le dossier si il n'existe pas
-if (!fs.existsSync(VENUES_IMAGES_DIR)) {
-  fs.mkdirSync(VENUES_IMAGES_DIR, { recursive: true });
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('❌ Variables d\'environnement Supabase manquantes:');
+  console.error('   - NEXT_PUBLIC_SUPABASE_URL');
+  console.error('   - SUPABASE_SERVICE_ROLE_KEY (ou NEXT_PUBLIC_SUPABASE_ANON_KEY)');
+  process.exit(1);
 }
 
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const BUCKET_NAME = 'venues';
+
 /**
- * Télécharge une image depuis une URL
+ * Télécharge une image depuis une URL et retourne le buffer
  */
-async function downloadImage(url: string, filePath: string): Promise<boolean> {
+async function downloadImageBuffer(url: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const protocol = url.startsWith('https') ? https : http;
     
@@ -38,7 +45,7 @@ async function downloadImage(url: string, filePath: string): Promise<boolean> {
     protocol.get(url, options, (response) => {
       if (response.statusCode === 301 || response.statusCode === 302) {
         // Suivre les redirections
-        return downloadImage(response.headers.location!, filePath)
+        return downloadImageBuffer(response.headers.location!)
           .then(resolve)
           .catch(reject);
       }
@@ -48,23 +55,74 @@ async function downloadImage(url: string, filePath: string): Promise<boolean> {
         return;
       }
       
-      const fileStream = fs.createWriteStream(filePath);
-      response.pipe(fileStream);
-      
-      fileStream.on('finish', () => {
-        fileStream.close();
-        console.log(`✅ Téléchargé: ${path.basename(filePath)}`);
-        resolve(true);
+      const chunks: Buffer[] = [];
+      response.on('data', (chunk) => chunks.push(chunk));
+      response.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        resolve(buffer);
       });
-      
-      fileStream.on('error', (err) => {
-        fs.unlink(filePath, () => {}); // Supprimer le fichier partiel
-        reject(err);
-      });
-    }).on('error', (err) => {
-      reject(err);
-    });
+      response.on('error', reject);
+    }).on('error', reject);
   });
+}
+
+/**
+ * Upload une image vers Supabase Storage
+ */
+async function uploadToSupabase(fileName: string, buffer: Buffer, contentType: string = 'image/jpeg'): Promise<string> {
+  // Vérifier si le bucket existe, sinon le créer
+  const { data: buckets } = await supabase.storage.listBuckets();
+  const bucketExists = buckets?.some(b => b.name === BUCKET_NAME);
+  
+  if (!bucketExists) {
+    console.log(`📦 Création du bucket "${BUCKET_NAME}"...`);
+    const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+      public: true,
+      fileSizeLimit: 5242880, // 5MB
+    });
+    
+    if (createError) {
+      throw new Error(`Erreur création bucket: ${createError.message}`);
+    }
+  }
+  
+  // Vérifier si le fichier existe déjà
+  const { data: existingFiles } = await supabase.storage
+    .from(BUCKET_NAME)
+    .list(path.dirname(fileName) || '.', {
+      limit: 1000,
+    });
+  
+  const fileExists = existingFiles?.some(f => f.name === path.basename(fileName));
+  
+  if (fileExists) {
+    console.log(`⏭️  Fichier déjà présent dans Supabase: ${fileName}`);
+    // Retourner l'URL publique
+    const { data } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(fileName);
+    return data.publicUrl;
+  }
+  
+  // Uploader le fichier
+  const { data, error } = await supabase.storage
+    .from(BUCKET_NAME)
+    .upload(fileName, buffer, {
+      contentType,
+      upsert: false,
+    });
+  
+  if (error) {
+    throw new Error(`Erreur upload Supabase: ${error.message}`);
+  }
+  
+  // Retourner l'URL publique
+  const { data: urlData } = supabase.storage
+    .from(BUCKET_NAME)
+    .getPublicUrl(data.path);
+  
+  console.log(`✅ Uploadé vers Supabase: ${fileName}`);
+  return urlData.publicUrl;
 }
 
 /**
@@ -151,7 +209,7 @@ async function downloadVenueImages() {
   
   let successCount = 0;
   let errorCount = 0;
-  const updates: Array<{ id: string; localPath: string }> = [];
+  const updates: Array<{ id: string; supabaseUrl: string }> = [];
   
   for (const venue of venues) {
     if (!venue.imageUrl) continue;
@@ -160,27 +218,25 @@ async function downloadVenueImages() {
       // Convertir l'URL thumbnail en URL originale
       const originalUrl = convertToOriginalUrl(venue.imageUrl);
       const fileName = generateFileName(venue.slug, venue.name, originalUrl);
-      const filePath = path.join(VENUES_IMAGES_DIR, fileName);
-      
-      // Vérifier si l'image existe déjà
-      if (fs.existsSync(filePath)) {
-        console.log(`⏭️  Déjà présent: ${fileName}`);
-        updates.push({
-          id: venue.id,
-          localPath: `/venues/${fileName}`,
-        });
-        successCount++;
-        continue;
-      }
       
       console.log(`⬇️  Téléchargement: ${venue.name}...`);
       
       try {
-        await downloadImage(originalUrl, filePath);
+        // Télécharger l'image en mémoire
+        const imageBuffer = await downloadImageBuffer(originalUrl);
+        
+        // Déterminer le type MIME
+        const extension = path.extname(fileName).toLowerCase();
+        const contentType = extension === '.png' ? 'image/png' : 
+                           extension === '.gif' ? 'image/gif' : 
+                           extension === '.webp' ? 'image/webp' : 'image/jpeg';
+        
+        // Uploader vers Supabase Storage
+        const supabaseUrl = await uploadToSupabase(fileName, imageBuffer, contentType);
         
         updates.push({
           id: venue.id,
-          localPath: `/venues/${fileName}`,
+          supabaseUrl,
         });
         
         successCount++;
@@ -189,10 +245,15 @@ async function downloadVenueImages() {
         if (originalUrl !== venue.imageUrl && venue.imageUrl.includes('/thumb/')) {
           console.log(`   ⚠️  Tentative avec URL thumbnail...`);
           try {
-            await downloadImage(venue.imageUrl, filePath);
+            const imageBuffer = await downloadImageBuffer(venue.imageUrl);
+            const extension = path.extname(fileName).toLowerCase();
+            const contentType = extension === '.png' ? 'image/png' : 
+                               extension === '.gif' ? 'image/gif' : 
+                               extension === '.webp' ? 'image/webp' : 'image/jpeg';
+            const supabaseUrl = await uploadToSupabase(fileName, imageBuffer, contentType);
             updates.push({
               id: venue.id,
-              localPath: `/venues/${fileName}`,
+              supabaseUrl,
             });
             successCount++;
           } catch (retryError) {
@@ -219,13 +280,13 @@ async function downloadVenueImages() {
   console.log(`   ✅ ${successCount} images téléchargées/mises à jour`);
   console.log(`   ❌ ${errorCount} erreurs`);
   
-  // Mettre à jour la base de données avec les chemins locaux
+  // Mettre à jour la base de données avec les URLs Supabase
   console.log(`\n💾 Mise à jour de la base de données...`);
   
   for (const update of updates) {
     await prisma.venue.update({
       where: { id: update.id },
-      data: { imageUrl: update.localPath },
+      data: { imageUrl: update.supabaseUrl },
     });
   }
   
