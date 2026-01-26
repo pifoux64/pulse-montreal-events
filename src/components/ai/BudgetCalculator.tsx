@@ -310,27 +310,36 @@ export default function BudgetCalculator() {
                   <div className="p-3 bg-white/5 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">{t('low')}</div>
                     <div className="text-white font-semibold">
-                      {result.suggestedPricing?.low?.price != null && typeof result.suggestedPricing.low.price === 'number'
-                        ? result.suggestedPricing.low.price.toFixed(2)
-                        : '0.00'} $
+                      {(() => {
+                        const price = result.suggestedPricing?.low?.price;
+                        const numPrice = typeof price === 'number' ? price : (typeof price === 'string' ? parseFloat(price) : 0);
+                        const validPrice = isNaN(numPrice) || numPrice <= 0 || numPrice > 500 ? 0 : numPrice;
+                        return validPrice.toFixed(2);
+                      })()} $
                     </div>
                     <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.low?.target || ''}</div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">{t('medium')}</div>
                     <div className="text-white font-semibold">
-                      {result.suggestedPricing?.medium?.price != null && typeof result.suggestedPricing.medium.price === 'number'
-                        ? result.suggestedPricing.medium.price.toFixed(2)
-                        : '0.00'} $
+                      {(() => {
+                        const price = result.suggestedPricing?.medium?.price;
+                        const numPrice = typeof price === 'number' ? price : (typeof price === 'string' ? parseFloat(price) : 0);
+                        const validPrice = isNaN(numPrice) || numPrice <= 0 || numPrice > 500 ? 0 : numPrice;
+                        return validPrice.toFixed(2);
+                      })()} $
                     </div>
                     <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.medium?.target || ''}</div>
                   </div>
                   <div className="p-3 bg-white/5 rounded-lg">
                     <div className="text-xs text-slate-400 mb-1">{t('high')}</div>
                     <div className="text-white font-semibold">
-                      {result.suggestedPricing?.high?.price != null && typeof result.suggestedPricing.high.price === 'number'
-                        ? result.suggestedPricing.high.price.toFixed(2)
-                        : '0.00'} $
+                      {(() => {
+                        const price = result.suggestedPricing?.high?.price;
+                        const numPrice = typeof price === 'number' ? price : (typeof price === 'string' ? parseFloat(price) : 0);
+                        const validPrice = isNaN(numPrice) || numPrice <= 0 || numPrice > 500 ? 0 : numPrice;
+                        return validPrice.toFixed(2);
+                      })()} $
                     </div>
                     <div className="text-xs text-slate-400 mt-1">{result.suggestedPricing?.high?.target || ''}</div>
                   </div>
