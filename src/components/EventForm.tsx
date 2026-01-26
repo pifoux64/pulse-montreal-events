@@ -371,7 +371,7 @@ const EventForm = ({
         <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg shadow-sm border border-purple-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <ImageIcon className="w-6 h-6 text-purple-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Coller un lien d'événement</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('pasteEventLink')}</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
             {t('import.pasteGenericUrl')}
@@ -381,7 +381,7 @@ const EventForm = ({
               type="url"
               value={genericUrl}
               onChange={(e) => setGenericUrl(e.target.value)}
-              placeholder="https://www.facebook.com/events/... ou https://www.eventbrite.com/e/... ou toute autre URL d'événement"
+              placeholder={t('pasteEventLinkPlaceholder')}
               className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               disabled={isImportingUrl}
             />
@@ -408,7 +408,7 @@ const EventForm = ({
             <div className="mt-2">
               <p className="text-sm text-red-600">{urlImportError}</p>
               <p className="text-xs text-gray-500 mt-1">
-                Ce site ne permet pas l'import automatique. Veuillez copier manuellement les informations et télécharger l'image.
+                {t('manualCopyRequired')}
               </p>
             </div>
           )}
@@ -420,7 +420,7 @@ const EventForm = ({
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-sm border border-blue-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Facebook className="w-6 h-6 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Importer depuis Facebook</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('importFromFacebook')}</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
             {t('import.pasteFacebookUrl')}
@@ -462,7 +462,7 @@ const EventForm = ({
         <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-lg shadow-sm border border-orange-200 p-6">
           <div className="flex items-center gap-3 mb-4">
             <Ticket className="w-6 h-6 text-orange-600" />
-            <h3 className="text-lg font-semibold text-gray-900">Importer depuis Eventbrite</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('importFromEventbrite')}</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">
             {t('import.pasteEventbriteUrl')}
@@ -504,12 +504,12 @@ const EventForm = ({
 
       {/* Informations de base */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations de base</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('basicInfo')}</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Titre de l'événement *
+              {t('eventTitle')} *
             </label>
             <Controller
               name="title"
@@ -519,7 +519,7 @@ const EventForm = ({
                   {...field}
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: Festival Reggae Montréal 2024"
+                  placeholder={t('eventTitlePlaceholder')}
                 />
               )}
             />
@@ -540,7 +540,7 @@ const EventForm = ({
                   {...field}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="">Sélectionnez une catégorie</option>
+                  <option value="">{t('selectCategory')}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
@@ -557,7 +557,7 @@ const EventForm = ({
           {watchedCategory && getSubCategories().length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sous-catégorie
+                {t('subCategory')}
               </label>
               <Controller
                 name="subCategory"
@@ -567,7 +567,7 @@ const EventForm = ({
                     {...field}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    <option value="">Sélectionnez une sous-catégorie</option>
+                    <option value="">{t('selectSubCategory')}</option>
                     {getSubCategories().map((subCat) => (
                       <option key={subCat.id} value={subCat.id}>
                         {subCat.name}
@@ -581,7 +581,7 @@ const EventForm = ({
 
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description *
+              {t('description')} *
             </label>
             <Controller
               name="description"
@@ -603,7 +603,7 @@ const EventForm = ({
           {/* SPRINT 4: Description longue pour Facebook/Eventbrite */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description longue <span className="text-gray-500">(optionnel)</span>
+              {t('longDescription')} <span className="text-gray-500">{t('optional')}</span>
             </label>
             <Controller
               name="longDescription"
@@ -613,19 +613,19 @@ const EventForm = ({
                   {...field}
                   rows={6}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Description détaillée pour Facebook et Eventbrite (optionnel, sinon la description standard sera utilisée)..."
+                  placeholder={t('longDescriptionPlaceholder')}
                 />
               )}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Cette description sera utilisée pour les publications sur Facebook et Eventbrite. Si vide, la description standard sera utilisée.
+              {t('longDescriptionHelp')}
             </p>
           </div>
 
           {/* SPRINT 4: Lineup (artistes) pour RA/Bandsintown */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Lineup (artistes) <span className="text-gray-500">(optionnel)</span>
+              {t('lineup')} <span className="text-gray-500">{t('optional')}</span>
             </label>
             <Controller
               name="lineup"
@@ -647,7 +647,7 @@ const EventForm = ({
                           }
                         }}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Ajouter un artiste et appuyez sur Entrée"
+                        placeholder={t('addArtist')}
                       />
                       <button
                         type="button"
@@ -876,13 +876,13 @@ const EventForm = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
           <Calendar className="w-5 h-5 text-blue-600" />
-          <span>Dates et horaires</span>
+          <span>{t('datesAndTimes')}</span>
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date et heure de début *
+              {t('startDate')} *
             </label>
             <Controller
               name="startDate"
@@ -926,13 +926,13 @@ const EventForm = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
           <MapPin className="w-5 h-5 text-blue-600" />
-          <span>Localisation</span>
+          <span>{t('location')}</span>
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nom du lieu *
+              {t('venueName')} *
             </label>
             <Controller
               name="location.name"
@@ -942,7 +942,7 @@ const EventForm = ({
                   {...field}
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: Parc Jean-Drapeau"
+                  placeholder={t('venueNamePlaceholder')}
                 />
               )}
             />
@@ -953,7 +953,7 @@ const EventForm = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Ville *
+              {t('city')} *
             </label>
             <Controller
               name="location.city"
@@ -963,7 +963,7 @@ const EventForm = ({
                   {...field}
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Montréal"
+                  placeholder={t('cityPlaceholder')}
                 />
               )}
             />
@@ -984,7 +984,7 @@ const EventForm = ({
                   {...field}
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: 1 Circuit Gilles Villeneuve"
+                  placeholder={t('addressPlaceholder')}
                 />
               )}
             />
@@ -1005,7 +1005,7 @@ const EventForm = ({
                   {...field}
                   type="text"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: H3C 1A9"
+                  placeholder={t('postalCodePlaceholder')}
                 />
               )}
             />
@@ -1021,7 +1021,7 @@ const EventForm = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
           <DollarSign className="w-5 h-5 text-blue-600" />
-          <span>Prix et billetterie</span>
+          <span>{t('pricingAndTickets')}</span>
         </h3>
         
         <div className="space-y-4">
@@ -1037,7 +1037,7 @@ const EventForm = ({
                     onChange={field.onChange}
                     className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span className="text-sm font-medium text-gray-700">Événement gratuit</span>
+                  <span className="text-sm font-medium text-gray-700">{t('freeEvent')}</span>
                 </label>
               )}
             />
@@ -1047,7 +1047,7 @@ const EventForm = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Prix *
+                  {t('price')} *
                 </label>
                 <Controller
                   name="price.amount"
@@ -1059,7 +1059,7 @@ const EventForm = ({
                       min="0"
                       step="0.01"
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="0.00"
+                      placeholder={t('pricePlaceholder')}
                     />
                   )}
                 />
@@ -1070,7 +1070,7 @@ const EventForm = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Devise *
+                  {t('currency')} *
                 </label>
                 <Controller
                   name="price.currency"
@@ -1080,9 +1080,9 @@ const EventForm = ({
                       {...field}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
-                      <option value="CAD">CAD (Dollar canadien)</option>
-                      <option value="USD">USD (Dollar américain)</option>
-                      <option value="EUR">EUR (Euro)</option>
+                      <option value="CAD">{t('currencyCAD')}</option>
+                      <option value="USD">{t('currencyUSD')}</option>
+                      <option value="EUR">{t('currencyEUR')}</option>
                     </select>
                   )}
                 />
@@ -1092,7 +1092,7 @@ const EventForm = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Lien de billetterie
+              {t('ticketLink')}
             </label>
             <Controller
               name="ticketUrl"
@@ -1102,7 +1102,7 @@ const EventForm = ({
                   {...field}
                   type="url"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="https://example.com/tickets"
+                  placeholder={t('ticketLinkPlaceholder')}
                 />
               )}
             />
@@ -1123,7 +1123,7 @@ const EventForm = ({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tags *
+              {t('tags')} *
             </label>
             <div className="flex items-center space-x-2 mb-3">
               <input
@@ -1132,7 +1132,7 @@ const EventForm = ({
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Ajouter un tag..."
+                placeholder={t('addTag')}
               />
               <button
                 type="button"
@@ -1173,20 +1173,20 @@ const EventForm = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
           <Users className="w-5 h-5 text-blue-600" />
-          <span>Public cible et capacité</span>
+          <span>{t('targetAudienceAndCapacity')}</span>
         </h3>
         
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Public cible *
+              {t('targetAudience')} *
             </label>
             <Controller
               name="targetAudience"
               control={control}
               render={({ field }) => (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {['Adulte', 'Famille', 'Étudiant', 'Senior', 'Enfant'].map((audience) => (
+                  {[t('adult'), t('family'), t('student'), t('senior'), t('child')].map((audience) => (
                     <label key={audience} className="flex items-center space-x-2">
                       <input
                         type="checkbox"
@@ -1212,7 +1212,7 @@ const EventForm = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Capacité maximale
+              {t('maxCapacity')}
             </label>
             <Controller
               name="maxCapacity"
@@ -1223,12 +1223,12 @@ const EventForm = ({
                   type="number"
                   min="1"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Ex: 1000"
+                  placeholder={t('maxCapacityPlaceholder')}
                 />
               )}
             />
             <p className="mt-1 text-xs text-gray-500">
-              Laissez vide si illimité
+              {t('maxCapacityHelp')}
             </p>
           </div>
         </div>
@@ -1238,16 +1238,16 @@ const EventForm = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
           <Accessibility className="w-5 h-5 text-blue-600" />
-          <span>Accessibilité</span>
+          <span>{t('accessibility')}</span>
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { key: 'wheelchairAccessible', label: 'Accessible en fauteuil roulant' },
-            { key: 'hearingAssistance', label: 'Assistance auditive disponible' },
-            { key: 'visualAssistance', label: 'Assistance visuelle disponible' },
-            { key: 'quietSpace', label: 'Espace calme disponible' },
-            { key: 'genderNeutralBathrooms', label: 'Toilettes neutres disponibles' },
+            { key: 'wheelchairAccessible', label: t('wheelchairAccessible') },
+            { key: 'hearingAssistance', label: t('hearingAssistance') },
+            { key: 'visualAssistance', label: t('visualAssistance') },
+            { key: 'quietSpace', label: t('quietSpace') },
+            { key: 'genderNeutralBathrooms', label: t('genderNeutralBathrooms') },
           ].map((item) => (
             <Controller
               key={item.key}
@@ -1272,7 +1272,7 @@ const EventForm = ({
       {/* Filtres personnalisés */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Filtres personnalisés</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('customFilters')}</h3>
           <button
             type="button"
             onClick={() => setShowCustomFilters(!showCustomFilters)}
@@ -1289,7 +1289,7 @@ const EventForm = ({
                 type="text"
                 value={newCustomFilter.name || ''}
                 onChange={(e) => setNewCustomFilter({ ...newCustomFilter, name: e.target.value })}
-                placeholder="Nom du filtre"
+                placeholder={t('filterName')}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
               
@@ -1298,11 +1298,11 @@ const EventForm = ({
                 onChange={(e) => setNewCustomFilter({ ...newCustomFilter, type: e.target.value as any })}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">Type de filtre</option>
-                <option value="text">Texte</option>
-                <option value="boolean">Oui/Non</option>
-                <option value="select">Sélection</option>
-                <option value="number">Nombre</option>
+                <option value="">{t('selectFilterType')}</option>
+                <option value="text">{t('text')}</option>
+                <option value="boolean">{t('boolean')}</option>
+                <option value="select">{t('select')}</option>
+                <option value="number">{t('number')}</option>
               </select>
               
               <button
@@ -1311,7 +1311,7 @@ const EventForm = ({
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
-                <span>Ajouter</span>
+                <span>{t('add')}</span>
               </button>
             </div>
             
@@ -1324,7 +1324,7 @@ const EventForm = ({
                       <span className="text-sm text-gray-500">({filter.type})</span>
                       {filter.isRequired && (
                         <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
-                          Requis
+                          {t('required')}
                         </span>
                       )}
                     </div>
@@ -1351,14 +1351,14 @@ const EventForm = ({
           disabled={isSubmitting}
           className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Annuler
+          {t('cancel')}
         </button>
         
         <button
           type="submit"
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
         >
-          Publier l'événement
+          {t('publishEvent')}
         </button>
       </div>
     </form>
