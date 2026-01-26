@@ -9,34 +9,48 @@ interface ProfitMatrixTableProps {
   maxTicketPrice?: number;
   minAttendees?: number;
   maxAttendees?: number;
+  centerAttendees?: number; // Nombre d'attendees central pour la plage +/- 25
 }
 
 export default function ProfitMatrixTable({
   totalCosts,
   minTicketPrice = 15,
-  maxTicketPrice = 300,
+  maxTicketPrice = 100,
   minAttendees = 15,
   maxAttendees = 25,
+  centerAttendees,
 }: ProfitMatrixTableProps) {
   const t = useTranslations('budget');
 
-  // Générer les prix de billets (par pas de 25$)
+  // Générer les prix de billets pour les colonnes (par pas de 5$)
   const ticketPrices = useMemo(() => {
     const prices: number[] = [];
-    for (let price = minTicketPrice; price <= maxTicketPrice; price += 25) {
+    for (let price = minTicketPrice; price <= maxTicketPrice; price += 5) {
       prices.push(price);
     }
     return prices;
   }, [minTicketPrice, maxTicketPrice]);
 
-  // Générer les nombres d'entrées (par pas de 2.5)
+  // Générer les nombres d'attendees pour les lignes (plage +/- 25 autour d'une valeur centrale)
   const attendeeCounts = useMemo(() => {
     const counts: number[] = [];
-    for (let count = minAttendees; count <= maxAttendees; count += 2.5) {
-      counts.push(count);
+    if (centerAttendees) {
+      // Utiliser la valeur centrale avec plage +/- 25
+      const start = Math.max(1, centerAttendees - 25);
+      const end = centerAttendees + 25;
+      for (let count = start; count <= end; count += 25) {
+        counts.push(count);
+      }
+    } else {
+      // Fallback : utiliser min/max avec pas de 25
+      const start = minAttendees;
+      const end = maxAttendees;
+      for (let count = start; count <= end; count += 25) {
+        counts.push(count);
+      }
     }
     return counts;
-  }, [minAttendees, maxAttendees]);
+  }, [minAttendees, maxAttendees, centerAttendees]);
 
   // Calculer le bénéfice pour chaque combinaison
   const calculateProfit = (ticketPrice: number, attendees: number): number => {
@@ -97,23 +111,28 @@ export default function ProfitMatrixTable({
               <th className="p-2 bg-white/10 text-white font-semibold text-left border border-white/20">
                 {t('profitMatrixLabel')}
               </th>
-              {attendeeCounts.map((count) => (
+              {ticketPrices.map((price) => (
                 <th
-                  key={count}
+                  key={price}
                   className="p-2 bg-white/10 text-white font-semibold text-center border border-white/20 min-w-[80px]"
                 >
-                  {count.toFixed(count % 1 === 0 ? 0 : 1)}
+                  {price} $
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {ticketPrices.map((price) => (
-              <tr key={price}>
+            {attendeeCounts.map((attendees) => (
+              <tr key={attendees}>
                 <td className="p-2 bg-white/5 text-white font-medium border border-white/20">
-                  {price} $
+                  {Math.round(attendees)}
+                  {centerAttendees && (
+                    <span className="text-slate-400 text-xs ml-1">
+                      ({attendees - centerAttendees >= 0 ? '+' : ''}{attendees - centerAttendees})
+                    </span>
+                  )}
                 </td>
-                {attendeeCounts.map((attendees) => {
+                {ticketPrices.map((price) => {
                   const profit = calculateProfit(price, attendees);
                   const colorClass = getProfitColor(profit);
                   return (

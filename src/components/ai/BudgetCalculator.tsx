@@ -384,9 +384,8 @@ export default function BudgetCalculator() {
               <ProfitMatrixTable
                 totalCosts={result.estimatedCosts.total}
                 minTicketPrice={15}
-                maxTicketPrice={300}
-                minAttendees={15}
-                maxAttendees={25}
+                maxTicketPrice={100}
+                centerAttendees={formData.expectedAttendance ? parseInt(formData.expectedAttendance, 10) : (formData.venueCapacity ? parseInt(formData.venueCapacity, 10) : 200)}
               />
             )}
 
