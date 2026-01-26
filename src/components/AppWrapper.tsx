@@ -41,8 +41,11 @@ function getCookieLocale(): Locale {
 export default function AppWrapper({ children }: AppWrapperProps) {
   // Lire la locale depuis le cookie immédiatement
   const [locale, setLocale] = useState<Locale>(() => {
-    // Au premier rendu, utiliser defaultLocale pour éviter les erreurs d'hydratation
-    // La locale sera mise à jour après le montage
+    // Essayer de lire le cookie même au premier rendu si on est côté client
+    if (typeof window !== 'undefined') {
+      return getCookieLocale();
+    }
+    // Au premier rendu serveur, utiliser defaultLocale pour éviter les erreurs d'hydratation
     return defaultLocale;
   });
 
@@ -52,7 +55,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
     if (cookieLocale !== locale) {
       setLocale(cookieLocale);
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [locale]);
 
   // Écouter les changements de cookie (quand la langue change)
   useEffect(() => {
