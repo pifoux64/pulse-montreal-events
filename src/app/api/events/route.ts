@@ -127,6 +127,16 @@ const CreateEventSchema = z.object({
   subcategory: z.string().optional(),
   accessibility: z.array(z.string()).default([]),
   ageRestriction: z.string().optional(),
+  ticketUrl: z.string()
+    .transform((val) => val ? normalizeUrl(val) || val : val)
+    .refine((val) => !val || /^https?:\/\/.+/.test(val), 'URL invalide')
+    .optional(),
+  musicUrls: z.object({
+    spotifyUrl: z.string().optional().or(z.literal('')),
+    youtubeUrl: z.string().optional().or(z.literal('')),
+    soundcloudUrl: z.string().optional().or(z.literal('')),
+    mixcloudUrl: z.string().optional().or(z.literal('')),
+  }).optional(),
 });
 
 // Schéma pour les filtres de recherche
