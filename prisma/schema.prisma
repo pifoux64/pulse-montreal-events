@@ -132,15 +132,15 @@ enum LegalStatus {
 // Modèles principaux
 
 model User {
-  id            String    @id @default(uuid()) @db.Uuid
-  name          String?
-  email         String    @unique
-  image         String?
-  emailVerified DateTime? @map("email_verified")
-  role          UserRole  @default(USER) // Legacy: gardé pour compatibilité, utiliser UserRoleAssignment
-  roles         UserRoleAssignment[] // Multi-rôles support
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id              String               @id @default(uuid()) @db.Uuid
+  name            String?
+  email           String               @unique
+  image           String?
+  emailVerified   DateTime?            @map("email_verified")
+  role            UserRole             @default(USER) // Legacy: gardé pour compatibilité, utiliser roleAssignments
+  roleAssignments UserRoleAssignment[] @relation("UserRoleAssignments") // Multi-rôles support
+  createdAt       DateTime             @default(now()) @map("created_at")
+  updatedAt       DateTime             @updatedAt @map("updated_at")
 
   // Relations
   organizer                 Organizer?
@@ -164,9 +164,8 @@ model User {
   receivedInvitations       EventInvitation[]          @relation("InvitationReceiver")
   sentMessages              Message[]                  @relation("MessageSender")
   receivedMessages          Message[]                  @relation("MessageReceiver")
-  roleAssignments           UserRoleAssignment[]
   venueClaims               VenueClaim[]
-  reviewedVenueClaims        VenueClaim[]               @relation("VenueClaimReviewer")
+  reviewedVenueClaims       VenueClaim[]               @relation("VenueClaimReviewer")
 
   @@map("users")
 }
@@ -986,7 +985,7 @@ model UserRoleAssignment {
   createdAt DateTime @default(now()) @map("created_at")
 
   // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation("UserRoleAssignments", fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, role], name: "unique_user_role")
   @@index([userId], name: "idx_user_role_user")
@@ -996,25 +995,25 @@ model UserRoleAssignment {
 
 // Système de claim de venues: permet aux utilisateurs de revendiquer une venue
 model VenueClaim {
-  id              String           @id @default(uuid()) @db.Uuid
-  venueId         String           @map("venue_id") @db.Uuid
-  userId          String           @map("user_id") @db.Uuid
-  status          VenueClaimStatus @default(PENDING)
-  roleAtVenue     String?          @map("role_at_venue") // "owner", "manager", "booker"
-  professionalEmail String?        @map("professional_email")
-  website         String?
-  socialLink      String?          @map("social_link")
-  submittedInfo   Json?            @map("submitted_info") // Informations supplémentaires
-  reviewedBy      String?          @map("reviewed_by") @db.Uuid // Admin qui a approuvé/rejeté
-  reviewedAt      DateTime?       @map("reviewed_at")
-  rejectionReason String?         @map("rejection_reason") @db.Text
-  createdAt       DateTime         @default(now()) @map("created_at")
-  updatedAt       DateTime         @updatedAt @map("updated_at")
+  id                String           @id @default(uuid()) @db.Uuid
+  venueId           String           @map("venue_id") @db.Uuid
+  userId            String           @map("user_id") @db.Uuid
+  status            VenueClaimStatus @default(PENDING)
+  roleAtVenue       String?          @map("role_at_venue") // "owner", "manager", "booker"
+  professionalEmail String?          @map("professional_email")
+  website           String?
+  socialLink        String?          @map("social_link")
+  submittedInfo     Json?            @map("submitted_info") // Informations supplémentaires
+  reviewedBy        String?          @map("reviewed_by") @db.Uuid // Admin qui a approuvé/rejeté
+  reviewedAt        DateTime?        @map("reviewed_at")
+  rejectionReason   String?          @map("rejection_reason") @db.Text
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
 
   // Relations
-  venue     Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
-  user      User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviewer  User? @relation("VenueClaimReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  venue    Venue @relation(fields: [venueId], references: [id], onDelete: Cascade)
+  user     User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reviewer User? @relation("VenueClaimReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
 
   @@unique([venueId, userId], name: "unique_venue_claim")
   @@index([venueId], name: "idx_venue_claim_venue")
