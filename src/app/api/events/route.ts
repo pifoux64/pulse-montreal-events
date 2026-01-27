@@ -1003,31 +1003,61 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // SPRINT 4: Stocker longDescription et lineup dans EventFeature
-    if (eventData.longDescription || (eventData.lineup && eventData.lineup.length > 0)) {
-      const featuresToCreate: Array<{ eventId: string; featureKey: string; featureValue: any }> = [];
-      
-      if (eventData.longDescription) {
+    // SPRINT 4: Stocker longDescription, lineup et URLs musicales dans EventFeature
+    const featuresToCreate: Array<{ eventId: string; featureKey: string; featureValue: any }> = [];
+    
+    if (eventData.longDescription) {
+      featuresToCreate.push({
+        eventId: event.id,
+        featureKey: 'longDescription',
+        featureValue: eventData.longDescription,
+      });
+    }
+    
+    if (eventData.lineup && eventData.lineup.length > 0) {
+      featuresToCreate.push({
+        eventId: event.id,
+        featureKey: 'lineup',
+        featureValue: eventData.lineup,
+      });
+    }
+    
+    // URLs musicales
+    if (eventData.musicUrls) {
+      if (eventData.musicUrls.spotifyUrl && eventData.musicUrls.spotifyUrl.trim()) {
         featuresToCreate.push({
           eventId: event.id,
-          featureKey: 'longDescription',
-          featureValue: eventData.longDescription,
+          featureKey: 'spotifyUrl',
+          featureValue: eventData.musicUrls.spotifyUrl.trim(),
         });
       }
-      
-      if (eventData.lineup && eventData.lineup.length > 0) {
+      if (eventData.musicUrls.youtubeUrl && eventData.musicUrls.youtubeUrl.trim()) {
         featuresToCreate.push({
           eventId: event.id,
-          featureKey: 'lineup',
-          featureValue: eventData.lineup,
+          featureKey: 'youtubeUrl',
+          featureValue: eventData.musicUrls.youtubeUrl.trim(),
         });
       }
-      
-      if (featuresToCreate.length > 0) {
-        await prisma.eventFeature.createMany({
-          data: featuresToCreate,
+      if (eventData.musicUrls.soundcloudUrl && eventData.musicUrls.soundcloudUrl.trim()) {
+        featuresToCreate.push({
+          eventId: event.id,
+          featureKey: 'soundcloudUrl',
+          featureValue: eventData.musicUrls.soundcloudUrl.trim(),
         });
       }
+      if (eventData.musicUrls.mixcloudUrl && eventData.musicUrls.mixcloudUrl.trim()) {
+        featuresToCreate.push({
+          eventId: event.id,
+          featureKey: 'mixcloudUrl',
+          featureValue: eventData.musicUrls.mixcloudUrl.trim(),
+        });
+      }
+    }
+    
+    if (featuresToCreate.length > 0) {
+      await prisma.eventFeature.createMany({
+        data: featuresToCreate,
+      });
     }
 
     // Stocker source_url si fourni (URL d'origine de l'import)

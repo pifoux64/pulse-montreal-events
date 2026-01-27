@@ -209,6 +209,12 @@ export interface EventFormData {
   imageUrl?: string;
   ticketUrl?: string;
   sourceUrl?: string; // URL source de l'import (Facebook, Eventbrite, etc.)
+  musicUrls?: {
+    spotifyUrl?: string;
+    youtubeUrl?: string;
+    soundcloudUrl?: string;
+    mixcloudUrl?: string;
+  };
   customFilters: Omit<CustomFilter, 'id' | 'eventId'>[];
   accessibility: AccessibilityInfo;
   targetAudience: string[];

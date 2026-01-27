@@ -30,6 +30,12 @@ const UpdateEventSchema = z.object({
   accessibility: z.array(z.string()).optional(),
   ageRestriction: z.string().optional(),
   status: z.nativeEnum(EventStatus).optional(),
+  musicUrls: z.object({
+    spotifyUrl: z.string().optional().or(z.literal('')),
+    youtubeUrl: z.string().optional().or(z.literal('')),
+    soundcloudUrl: z.string().optional().or(z.literal('')),
+    mixcloudUrl: z.string().optional().or(z.literal('')),
+  }).optional(),
 });
 
 /**
@@ -171,11 +177,14 @@ export async function PATCH(
       parsedData.endAt = new Date(parsedData.endAt);
     }
 
+    // Extraire musicUrls du parsedData avant la mise à jour
+    const { musicUrls, ...eventUpdateData } = parsedData;
+
     // Mettre à jour l'événement
     const updatedEvent = await prisma.event.update({
       where: { id },
       data: {
-        ...parsedData,
+        ...eventUpdateData,
         updatedAt: new Date(),
       },
       include: {
@@ -205,7 +214,92 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(updatedEvent);
+    // Mettre à jour les URLs musicales si fournies
+    if (musicUrls) {
+      const musicFeatureKeys = ['spotifyUrl', 'youtubeUrl', 'soundcloudUrl', 'mixcloudUrl'];
+      
+      for (const key of musicFeatureKeys) {
+        const url = musicUrls[key as keyof typeof musicUrls];
+        const trimmedUrl = url?.trim() || '';
+        
+        // Vérifier si la feature existe déjà
+        const existingFeature = await prisma.eventFeature.findUnique({
+          where: {
+            unique_event_feature: {
+              eventId: id,
+              featureKey: key,
+            },
+          },
+        });
+
+        if (trimmedUrl) {
+          // Créer ou mettre à jour la feature
+          if (existingFeature) {
+            await prisma.eventFeature.update({
+              where: {
+                unique_event_feature: {
+                  eventId: id,
+                  featureKey: key,
+                },
+              },
+              data: {
+                featureValue: trimmedUrl,
+              },
+            });
+          } else {
+            await prisma.eventFeature.create({
+              data: {
+                eventId: id,
+                featureKey: key,
+                featureValue: trimmedUrl,
+              },
+            });
+          }
+        } else if (existingFeature) {
+          // Supprimer la feature si l'URL est vide
+          await prisma.eventFeature.delete({
+            where: {
+              unique_event_feature: {
+                eventId: id,
+                featureKey: key,
+              },
+            },
+          });
+        }
+      }
+    }
+
+    // Récupérer l'événement avec les features mises à jour
+    const finalEvent = await prisma.event.findUnique({
+      where: { id },
+      include: {
+        venue: true,
+        organizer: {
+          include: {
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        features: true,
+        eventTags: true,
+        promotions: {
+          where: {
+            startsAt: { lte: new Date() },
+            endsAt: { gte: new Date() },
+          },
+        },
+        _count: {
+          select: {
+            favorites: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(finalEvent);
 
   } catch (error) {
     console.error('Erreur lors de la modification de l\'événement:', error);

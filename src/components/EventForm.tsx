@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslations } from 'next-intl';
-import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image as ImageIcon, Facebook, Loader2, Ticket, Upload } from 'lucide-react';
+import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image as ImageIcon, Facebook, Loader2, Ticket, Upload, Music } from 'lucide-react';
 import { EventFormData, EventCategory, CustomFilter } from '@/types';
 import { normalizeUrl } from '@/lib/utils';
 import VenueSearchInput from './VenueSearchInput';
@@ -41,6 +41,12 @@ const createEventFormSchema = (t: (key: string) => string) => z.object({
     .refine((val) => !val || val === '' || /^https?:\/\/.+/.test(val), t('validation.ticketUrlInvalid'))
     .optional()
     .or(z.literal('')),
+  musicUrls: z.object({
+    spotifyUrl: z.string().optional().or(z.literal('')),
+    youtubeUrl: z.string().optional().or(z.literal('')),
+    soundcloudUrl: z.string().optional().or(z.literal('')),
+    mixcloudUrl: z.string().optional().or(z.literal('')),
+  }).optional(),
   customFilters: z.array(z.object({
     name: z.string().min(1, t('validation.filterNameRequired')),
     value: z.string().min(1, t('validation.filterValueRequired')),
@@ -127,6 +133,12 @@ const EventForm = ({
       },
       imageUrl: initialData?.imageUrl || '',
       ticketUrl: initialData?.ticketUrl || '',
+      musicUrls: initialData?.musicUrls || {
+        spotifyUrl: '',
+        youtubeUrl: '',
+        soundcloudUrl: '',
+        mixcloudUrl: '',
+      },
       customFilters: initialData?.customFilters || [],
       accessibility: initialData?.accessibility || {
         wheelchairAccessible: false,
@@ -1133,6 +1145,91 @@ const EventForm = ({
             {errors.ticketUrl && (
               <p className="mt-1 text-sm text-red-600">{errors.ticketUrl.message}</p>
             )}
+          </div>
+        </div>
+      </div>
+
+      {/* URLs musicales */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+          <Music className="w-5 h-5 text-blue-600" />
+          <span>{t('musicUrls')}</span>
+        </h3>
+        <p className="text-sm text-gray-600 mb-4">
+          {t('musicUrlsDescription')}
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Spotify
+            </label>
+            <Controller
+              name="musicUrls.spotifyUrl"
+              control={control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  type="url"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://open.spotify.com/track/..."
+                />
+              )}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              YouTube
+            </label>
+            <Controller
+              name="musicUrls.youtubeUrl"
+              control={control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  type="url"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+              )}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              SoundCloud
+            </label>
+            <Controller
+              name="musicUrls.soundcloudUrl"
+              control={control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  type="url"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://soundcloud.com/..."
+                />
+              )}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Mixcloud
+            </label>
+            <Controller
+              name="musicUrls.mixcloudUrl"
+              control={control}
+              render={({ field }) => (
+                <input
+                  {...field}
+                  type="url"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="https://www.mixcloud.com/..."
+                />
+              )}
+            />
           </div>
         </div>
       </div>

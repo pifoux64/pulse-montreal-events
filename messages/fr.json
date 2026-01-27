@@ -991,6 +991,8 @@
     "currencyEUR": "EUR (Euro)",
     "ticketLink": "Lien de billetterie",
     "ticketLinkPlaceholder": "https://example.com/tickets",
+    "musicUrls": "Musique - Écouter avant d'y aller",
+    "musicUrlsDescription": "Ajoutez des liens vers de la musique liée à votre événement (Spotify, YouTube, SoundCloud, Mixcloud). Ces liens apparaîtront dans le bloc \"Listen before you go\" sur la page de l'événement.",
     "tagsAndCategorization": "Tags et catégorisation",
     "tags": "Tags",
     "addTag": "Ajouter un tag...",
