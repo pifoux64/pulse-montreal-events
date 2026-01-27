@@ -1139,7 +1139,9 @@
       "submitClaim": "Submit claim",
       "submitting": "Submitting...",
       "claimSubmitted": "Claim submitted!",
-      "claimPendingMessage": "Your request is pending verification. You will receive an email once it is approved."
+      "claimPendingMessage": "Your request is pending verification. You will receive an email once it is approved.",
+      "claimPending": "Your venue claim request is pending verification.",
+      "claimRejected": "Retry venue claim"
     },
     "editEvent": "Edit event",
     "boostVisibility": "Boost visibility",

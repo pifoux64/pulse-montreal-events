@@ -1131,7 +1131,9 @@
       "submitClaim": "Enviar solicitud",
       "submitting": "Enviando...",
       "claimSubmitted": "¡Solicitud enviada!",
-      "claimPendingMessage": "Su solicitud está pendiente de verificación. Recibirá un correo electrónico una vez que sea aprobada."
+      "claimPendingMessage": "Su solicitud está pendiente de verificación. Recibirá un correo electrónico una vez que sea aprobada.",
+      "claimPending": "Su solicitud de reclamación del lugar está pendiente de verificación.",
+      "claimRejected": "Reintentar reclamación del lugar"
     },
     "editEvent": "Editar evento",
     "boostVisibility": "Aumentar visibilidad",

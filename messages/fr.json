@@ -1265,7 +1265,9 @@
       "submitClaim": "Soumettre la demande",
       "submitting": "Envoi...",
       "claimSubmitted": "Demande soumise !",
-      "claimPendingMessage": "Votre demande est en attente de vérification. Vous recevrez un email une fois qu'elle sera approuvée."
+      "claimPendingMessage": "Votre demande est en attente de vérification. Vous recevrez un email une fois qu'elle sera approuvée.",
+      "claimPending": "Votre demande de claim est en attente de vérification.",
+      "claimRejected": "Réessayer la demande de claim"
     },
     "editEvent": "Modifier l'événement",
     "boostVisibility": "Booster la visibilité",

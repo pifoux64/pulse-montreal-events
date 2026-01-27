@@ -11,6 +11,7 @@ import { VenueImage } from '@/components/VenueImage';
 import EventDetailMap from '@/components/EventDetailMap';
 import VenueEventCard from '@/components/VenueEventCard';
 import VenueRequestButton from '@/components/VenueRequestButton';
+import VenuePageActions from '@/components/VenuePageActions';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -436,7 +437,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
                       <ExternalLink className="h-4 w-4" />
                       {t('openInGoogleMaps')}
                     </a>
-                    <VenueRequestButton venueId={venue.id} venueName={venue.slug || venue.name} />
+                    <VenuePageActions venueId={venue.id} venueName={venue.slug || venue.name} />
                   </div>
                 </div>
               </div>
@@ -565,7 +566,7 @@ export default async function VenuePage({ params }: { params: Promise<{ slug: st
               <p className="text-slate-400 text-lg mb-6">
                 {t('noEventsScheduled')}
               </p>
-              <VenueRequestButton venueId={venue.id} venueName={venue.slug || venue.name} />
+              <VenuePageActions venueId={venue.id} venueName={venue.slug || venue.name} />
             </div>
           )}
         </div>
