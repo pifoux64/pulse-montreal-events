@@ -9,7 +9,7 @@ import { Menu, X, Map, Calendar, Heart, Plus, Filter, Search, User, Bell, LogOut
 import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
 import NotificationBell from './NotificationBell';
-import LanguageSelector from './LanguageSelector';
+import LanguageSwitcherFlag from './LanguageSwitcherFlag';
 
 export default function Navigation() {
   const t = useTranslations('navigation');
@@ -302,7 +302,7 @@ export default function Navigation() {
             <NotificationBell />
 
             {/* Sélecteur de langue */}
-            <LanguageSelector />
+            <LanguageSwitcherFlag />
 
             {/* Profil utilisateur avec menu déroulant */}
             {status === 'loading' ? (
@@ -313,20 +313,25 @@ export default function Navigation() {
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="p-2 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md"
+                  className="p-1 rounded-xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/25 to-emerald-500/25 backdrop-blur-md hover:border-sky-400/60 hover:from-sky-500/35 hover:to-emerald-500/35 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20 hover:scale-105"
                 >
                   {session.user.image ? (
                     <Image
                       src={session.user.image}
                       alt={session.user.name || 'User'}
-                      width={32}
-                      height={32}
-                      className="rounded-full"
+                      width={44}
+                      height={44}
+                      className="rounded-lg border-2 border-white/30 shadow-md"
                     />
                   ) : (
-                    <User className="w-6 h-6" />
+                    <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-sky-500 via-sky-400 to-emerald-500 flex items-center justify-center border-2 border-white/30 shadow-md">
+                      <User className="w-6 h-6 text-white drop-shadow-sm" />
+                    </div>
                   )}
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {isUserMenuOpen && (
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-slate-950 shadow-sm" />
+                  )}
+                  <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-sky-500/30 to-emerald-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </button>
                 {isUserMenuOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-slate-900/95 backdrop-blur-xl rounded-2xl border border-white/15 shadow-2xl overflow-hidden z-50">

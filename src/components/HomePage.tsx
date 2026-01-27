@@ -21,7 +21,7 @@ import { useRouter } from 'next/navigation';
 import type { ReadonlyURLSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useTranslations, useLocale } from 'next-intl';
-import Navigation from '@/components/Navigation';
+// Navigation handled by AppWrapper (NavigationMinimal)
 import EventCard from '@/components/EventCard';
 import { useFavorites } from '@/hooks/useFavorites';
 import { Event } from '@/types';
@@ -457,7 +457,7 @@ export default function HomePage({ searchParams: searchParamsProp }: HomePagePro
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <Navigation />
+      {/* Navigation handled by AppWrapper */}
 
       {/* Hero Section - Design moderne et direct */}
       <section className="relative px-4 pt-24 pb-12 md:pt-32 md:pb-16 overflow-hidden">
