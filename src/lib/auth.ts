@@ -228,11 +228,26 @@ export const authOptions: NextAuthOptions = {
           select: {
             id: true,
             role: true,
+            roleAssignments: {
+              select: { role: true },
+            },
           },
         });
 
         session.user.id = dbUser?.id ?? user.id;
         session.user.role = dbUser?.role ?? user.role;
+        
+        // Récupérer tous les rôles (multi-rôles support)
+        const allRoles = new Set<UserRole>();
+        if (dbUser?.role) {
+          allRoles.add(dbUser.role);
+        }
+        if (dbUser?.roleAssignments) {
+          dbUser.roleAssignments.forEach(ra => allRoles.add(ra.role));
+        }
+        // Toujours inclure USER
+        allRoles.add('USER');
+        session.user.roles = Array.from(allRoles);
 
         // Récupérer le profil organisateur si la table existe
         try {

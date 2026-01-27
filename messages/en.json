@@ -1099,6 +1099,28 @@
     "friendsInterested": "friends interested",
     "tasteMatch": "Match with your tastes",
     "organizerTools": "Organizer tools",
+    "venueTools": "Venue tools",
+    "settings": "Settings",
+    "organizer": {
+      "dashboard": "Dashboard",
+      "profile": "My organizer profile",
+      "myEvents": "My events",
+      "createEvent": "Create event",
+      "importEvent": "Import event",
+      "aiAssistant": "AI Assistant",
+      "flyers": "Flyers & Printing",
+      "promotions": "Promotions",
+      "analytics": "Analytics",
+      "billing": "Billing"
+    },
+    "venue": {
+      "dashboard": "Dashboard",
+      "myVenuePage": "My venue page",
+      "calendar": "Calendar",
+      "requests": "Booking requests",
+      "analytics": "Analytics",
+      "billing": "Billing"
+    },
     "editEvent": "Edit event",
     "boostVisibility": "Boost visibility",
     "targetedNotifications": "Targeted notifications",

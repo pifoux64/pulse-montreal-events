@@ -1091,6 +1091,28 @@
     "friendsInterested": "amigos interesados",
     "tasteMatch": "Coincidencia con tus gustos",
     "organizerTools": "Herramientas del organizador",
+    "venueTools": "Herramientas del lugar",
+    "settings": "Configuración",
+    "organizer": {
+      "dashboard": "Panel de control",
+      "profile": "Mi perfil de organizador",
+      "myEvents": "Mis eventos",
+      "createEvent": "Crear evento",
+      "importEvent": "Importar evento",
+      "aiAssistant": "Asistente IA",
+      "flyers": "Flyers e Impresión",
+      "promotions": "Promociones",
+      "analytics": "Análisis",
+      "billing": "Facturación"
+    },
+    "venue": {
+      "dashboard": "Panel de control",
+      "myVenuePage": "Mi página del lugar",
+      "calendar": "Calendario",
+      "requests": "Solicitudes de reserva",
+      "analytics": "Análisis",
+      "billing": "Facturación"
+    },
     "editEvent": "Editar evento",
     "boostVisibility": "Aumentar visibilidad",
     "targetedNotifications": "Notificaciones dirigidas",

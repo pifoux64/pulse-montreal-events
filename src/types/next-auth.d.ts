@@ -13,7 +13,8 @@ declare module 'next-auth' {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      role: UserRole;
+      role: UserRole; // Legacy: rôle principal, utiliser roles[] pour multi-rôles
+      roles?: UserRole[]; // Multi-rôles support
       organizer?: {
         id: string;
         displayName: string;
@@ -24,7 +25,8 @@ declare module 'next-auth' {
 
   interface User {
     id: string;
-    role: UserRole;
+    role: UserRole; // Legacy
+    roles?: UserRole[]; // Multi-rôles support
     organizer?: {
       id: string;
       displayName: string;

@@ -1225,6 +1225,28 @@
     "friendsInterested": "amis intéressés",
     "tasteMatch": "Correspondance avec vos goûts",
     "organizerTools": "Outils organisateur",
+    "venueTools": "Outils salle",
+    "settings": "Paramètres",
+    "organizer": {
+      "dashboard": "Tableau de bord",
+      "profile": "Mon profil organisateur",
+      "myEvents": "Mes événements",
+      "createEvent": "Créer un événement",
+      "importEvent": "Importer un événement",
+      "aiAssistant": "Assistant IA",
+      "flyers": "Flyers & Impression",
+      "promotions": "Promotions",
+      "analytics": "Analyses",
+      "billing": "Facturation"
+    },
+    "venue": {
+      "dashboard": "Tableau de bord",
+      "myVenuePage": "Ma page salle",
+      "calendar": "Calendrier",
+      "requests": "Demandes de réservation",
+      "analytics": "Analyses",
+      "billing": "Facturation"
+    },
     "editEvent": "Modifier l'événement",
     "boostVisibility": "Booster la visibilité",
     "targetedNotifications": "Notifications ciblées",
