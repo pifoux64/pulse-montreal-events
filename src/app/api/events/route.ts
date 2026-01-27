@@ -1033,33 +1033,34 @@ export async function POST(request: NextRequest) {
     }
     
     // URLs musicales
-    if (eventData.musicUrls) {
-      if (eventData.musicUrls.spotifyUrl && eventData.musicUrls.spotifyUrl.trim()) {
+    if ((eventData as any).musicUrls) {
+      const musicUrls = (eventData as any).musicUrls;
+      if (musicUrls.spotifyUrl && musicUrls.spotifyUrl.trim()) {
         featuresToCreate.push({
           eventId: event.id,
           featureKey: 'spotifyUrl',
-          featureValue: eventData.musicUrls.spotifyUrl.trim(),
+          featureValue: musicUrls.spotifyUrl.trim(),
         });
       }
-      if (eventData.musicUrls.youtubeUrl && eventData.musicUrls.youtubeUrl.trim()) {
+      if (musicUrls.youtubeUrl && musicUrls.youtubeUrl.trim()) {
         featuresToCreate.push({
           eventId: event.id,
           featureKey: 'youtubeUrl',
-          featureValue: eventData.musicUrls.youtubeUrl.trim(),
+          featureValue: musicUrls.youtubeUrl.trim(),
         });
       }
-      if (eventData.musicUrls.soundcloudUrl && eventData.musicUrls.soundcloudUrl.trim()) {
+      if (musicUrls.soundcloudUrl && musicUrls.soundcloudUrl.trim()) {
         featuresToCreate.push({
           eventId: event.id,
           featureKey: 'soundcloudUrl',
-          featureValue: eventData.musicUrls.soundcloudUrl.trim(),
+          featureValue: musicUrls.soundcloudUrl.trim(),
         });
       }
-      if (eventData.musicUrls.mixcloudUrl && eventData.musicUrls.mixcloudUrl.trim()) {
+      if (musicUrls.mixcloudUrl && musicUrls.mixcloudUrl.trim()) {
         featuresToCreate.push({
           eventId: event.id,
           featureKey: 'mixcloudUrl',
-          featureValue: eventData.musicUrls.mixcloudUrl.trim(),
+          featureValue: musicUrls.mixcloudUrl.trim(),
         });
       }
     }
