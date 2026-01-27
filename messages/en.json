@@ -61,6 +61,7 @@
     "pourToi": "For You",
     "pourToiShort": "For You",
     "favoritesShort": "Favorites",
+    "explore": "Explore",
     "publishShort": "Publish",
     "discover": "Discover",
     "music": "Music",
@@ -1111,7 +1112,12 @@
       "flyers": "Flyers & Printing",
       "promotions": "Promotions",
       "analytics": "Analytics",
-      "billing": "Billing"
+      "billing": "Billing",
+      "enableTitle": "Enable Organizer Mode",
+      "enableMessage": "You're about to enable Organizer mode. This will allow you to create and manage events on Pulse.",
+      "enableMessageWithAction": "To {action}, you need to enable Organizer mode.",
+      "enable": "Enable",
+      "enabling": "Enabling..."
     },
     "venue": {
       "dashboard": "Dashboard",

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { NextIntlClientProvider } from 'next-intl';
 import { SessionProvider } from 'next-auth/react';
-import Navigation from './Navigation';
+import NavigationMinimal from './NavigationMinimal';
 import Footer from './Footer';
 import CookieConsent from './CookieConsent';
 import PWAInstallPrompt from './PWAInstallPrompt';
@@ -82,7 +82,7 @@ export default function AppWrapper({ children }: AppWrapperProps) {
         messages={messages[displayLocale]} 
         timeZone="America/Montreal"
       >
-        <Navigation suppressHydrationWarning />
+        <NavigationMinimal />
         <main className="min-h-screen flex flex-col">
           {children}
         </main>
