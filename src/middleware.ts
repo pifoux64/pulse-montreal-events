@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { locales, defaultLocale } from '@/lib/i18n';
+import { prisma } from '@/lib/prisma';
+import { UserRole } from '@prisma/client';
 
 export async function middleware(request: NextRequest) {
   // Exclure les routes API
@@ -28,6 +30,116 @@ export async function middleware(request: NextRequest) {
   
   // Définir le header x-next-intl-locale pour que getRequestConfig puisse le détecter
   response.headers.set('x-next-intl-locale', locale);
+
+  // Guards pour routes protégées par rôles
+  const pathname = request.nextUrl.pathname;
+  
+  // Routes nécessitant ORGANIZER
+  if (pathname.startsWith('/organisateur/') || pathname.startsWith('/organizer/')) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    
+    if (!token?.sub) {
+      // Non authentifié, rediriger vers login
+      const loginUrl = new URL('/api/auth/signin', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Vérifier le rôle ORGANIZER
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: token.sub },
+        select: {
+          role: true,
+          roleAssignments: {
+            select: { role: true },
+          },
+        },
+      });
+
+      const userRoles = new Set([user?.role || 'USER']);
+      user?.roleAssignments?.forEach(ra => userRoles.add(ra.role));
+      
+      if (!userRoles.has('ORGANIZER') && !userRoles.has('ADMIN')) {
+        // Pas organisateur, rediriger vers la page d'accueil avec message
+        const homeUrl = new URL('/', request.url);
+        homeUrl.searchParams.set('error', 'organizer_required');
+        return NextResponse.redirect(homeUrl);
+      }
+    } catch (error) {
+      console.error('[Middleware] Erreur vérification rôle ORGANIZER:', error);
+      // En cas d'erreur, laisser passer pour ne pas bloquer
+    }
+  }
+
+  // Routes nécessitant VENUE
+  if (pathname.startsWith('/venue/')) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    
+    if (!token?.sub) {
+      const loginUrl = new URL('/api/auth/signin', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Vérifier le rôle VENUE
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: token.sub },
+        select: {
+          role: true,
+          roleAssignments: {
+            select: { role: true },
+          },
+        },
+      });
+
+      const userRoles = new Set([user?.role || 'USER']);
+      user?.roleAssignments?.forEach(ra => userRoles.add(ra.role));
+      
+      if (!userRoles.has('VENUE') && !userRoles.has('ADMIN')) {
+        const homeUrl = new URL('/', request.url);
+        homeUrl.searchParams.set('error', 'venue_required');
+        return NextResponse.redirect(homeUrl);
+      }
+    } catch (error) {
+      console.error('[Middleware] Erreur vérification rôle VENUE:', error);
+    }
+  }
+
+  // Routes admin
+  if (pathname.startsWith('/admin/')) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    
+    if (!token?.sub) {
+      const loginUrl = new URL('/api/auth/signin', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: token.sub },
+        select: {
+          role: true,
+          roleAssignments: {
+            select: { role: true },
+          },
+        },
+      });
+
+      const userRoles = new Set([user?.role || 'USER']);
+      user?.roleAssignments?.forEach(ra => userRoles.add(ra.role));
+      
+      if (!userRoles.has('ADMIN')) {
+        const homeUrl = new URL('/', request.url);
+        homeUrl.searchParams.set('error', 'admin_required');
+        return NextResponse.redirect(homeUrl);
+      }
+    } catch (error) {
+      console.error('[Middleware] Erreur vérification rôle ADMIN:', error);
+    }
+  }
 
   // Ensuite, gérer la logique d'onboarding
   const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
