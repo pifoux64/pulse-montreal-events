@@ -8,7 +8,7 @@ import {
   User, Bell, Heart, Settings, LogOut, 
   BarChart3, Calendar, Plus, FileText, Sparkles, 
   Palette, TrendingUp, CreditCard, Building2, 
-  MessageSquare, Users
+  MessageSquare, Users, Database
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -62,7 +62,7 @@ export default function ProfileMenu({ onClose }: ProfileMenuProps) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-2xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border border-white/10 bg-white/5 backdrop-blur-md"
+        className="p-1 rounded-xl text-slate-200 hover:text-sky-300 transition-all duration-300 relative group border-2 border-sky-400/40 bg-gradient-to-br from-sky-500/25 to-emerald-500/25 backdrop-blur-md hover:border-sky-400/60 hover:from-sky-500/35 hover:to-emerald-500/35 shadow-lg shadow-sky-500/10 hover:shadow-sky-500/20 hover:scale-105"
         aria-label="Menu utilisateur"
         aria-expanded={isOpen}
       >
@@ -70,14 +70,19 @@ export default function ProfileMenu({ onClose }: ProfileMenuProps) {
           <Image
             src={session.user.image}
             alt={session.user.name || 'User'}
-            width={32}
-            height={32}
-            className="rounded-full"
+            width={44}
+            height={44}
+            className="rounded-lg border-2 border-white/30 shadow-md"
           />
         ) : (
-          <User className="w-6 h-6" />
+          <div className="w-11 h-11 rounded-lg bg-gradient-to-br from-sky-500 via-sky-400 to-emerald-500 flex items-center justify-center border-2 border-white/30 shadow-md">
+            <User className="w-6 h-6 text-white drop-shadow-sm" />
+          </div>
         )}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/15 to-emerald-500/15 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        {isOpen && (
+          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-slate-950 shadow-sm" />
+        )}
+        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-sky-500/30 to-emerald-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </button>
 
       {isOpen && (
@@ -293,6 +298,34 @@ export default function ProfileMenu({ onClose }: ProfileMenuProps) {
                 >
                   <CreditCard className="w-4 h-4 text-slate-400 group-hover:text-emerald-400 transition-colors" />
                   <span>{t('venue.billing')}</span>
+                </Link>
+              </>
+            )}
+
+            {/* Section ADMIN */}
+            {isAdmin && (
+              <>
+                <div className="border-t border-white/10 my-2" />
+                <div className="px-3 py-1.5 mb-1">
+                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    Admin
+                  </div>
+                </div>
+                <Link
+                  href="/admin/ingestion"
+                  onClick={handleLinkClick}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
+                >
+                  <Database className="w-4 h-4 text-slate-400 group-hover:text-blue-400 transition-colors" />
+                  <span>Ingestion</span>
+                </Link>
+                <Link
+                  href="/admin/venue-claims"
+                  onClick={handleLinkClick}
+                  className="flex items-center gap-3 px-3 py-2.5 text-sm text-slate-200 hover:bg-white/10 rounded-lg transition-colors group"
+                >
+                  <Building2 className="w-4 h-4 text-slate-400 group-hover:text-purple-400 transition-colors" />
+                  <span>Venue Claims</span>
                 </Link>
               </>
             )}

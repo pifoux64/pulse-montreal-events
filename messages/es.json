@@ -359,7 +359,29 @@
     "ingestion": "Ingesta",
     "moderation": "Moderación",
     "reports": "Informes",
-    "logs": "Registros"
+    "logs": "Registros",
+    "venueClaims": {
+      "title": "Moderación de Reclamaciones de Lugares",
+      "subtitle": "Aprobar o rechazar solicitudes de reclamación de lugares",
+      "searchPlaceholder": "Buscar por lugar, email de usuario...",
+      "allStatuses": "Todos los estados",
+      "pending": "Pendiente",
+      "verified": "Aprobado",
+      "rejected": "Rechazado",
+      "noClaims": "No se encontraron reclamaciones",
+      "role": "Rol",
+      "created": "Creado",
+      "reviewed": "Revisado",
+      "by": "por",
+      "rejectionReason": "Razón del rechazo",
+      "approve": "Aprobar",
+      "reject": "Rechazar",
+      "processing": "Procesando...",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "page": "Página {page} de {total}",
+      "page_plural": "Página {page} de {total}"
+    }
   },
   "errors": {
     "404": "Página no encontrada",

@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import Navigation from '@/components/Navigation';
 import ModernLoader from '@/components/ModernLoader';
+import AdminNav from '@/components/AdminNav';
 import {
   Database,
   RefreshCw,
@@ -215,6 +216,9 @@ export default function IngestionDashboard() {
       <Navigation />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        {/* Admin Navigation */}
+        <AdminNav />
+        
         {/* En-tête */}
         <div className="mb-8">
           <div className="flex items-center justify-between">

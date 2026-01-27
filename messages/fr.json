@@ -595,7 +595,29 @@
     "ingestion": "Ingestion",
     "moderation": "Modération",
     "reports": "Rapports",
-    "logs": "Logs"
+    "logs": "Logs",
+    "venueClaims": {
+      "title": "Modération des Venue Claims",
+      "subtitle": "Approuvez ou rejetez les demandes de revendication de venues",
+      "searchPlaceholder": "Rechercher par venue, email utilisateur...",
+      "allStatuses": "Tous les statuts",
+      "pending": "En attente",
+      "verified": "Approuvé",
+      "rejected": "Rejeté",
+      "noClaims": "Aucun claim trouvé",
+      "role": "Rôle",
+      "created": "Créé",
+      "reviewed": "Modéré",
+      "by": "par",
+      "rejectionReason": "Raison du rejet",
+      "approve": "Approuver",
+      "reject": "Rejeter",
+      "processing": "Traitement...",
+      "previous": "Précédent",
+      "next": "Suivant",
+      "page": "Page {page} sur {total}",
+      "page_plural": "Page {page} sur {total}"
+    }
   },
   "errors": {
     "404": "Page non trouvée",

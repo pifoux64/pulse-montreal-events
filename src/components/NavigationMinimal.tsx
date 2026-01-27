@@ -155,11 +155,11 @@ export default function NavigationMinimal() {
           </div>
 
           {/* Actions droite - Desktop */}
-          <div className="hidden lg:flex items-center space-x-3">
+          <div className="hidden lg:flex items-center space-x-2">
             <NotificationBell />
             <LanguageSwitcherFlag />
             {status === 'loading' ? (
-              <div className="w-8 h-8 rounded-full bg-white/10 animate-pulse" />
+              <div className="w-10 h-10 rounded-xl bg-white/10 animate-pulse border border-white/20" />
             ) : session?.user ? (
               <ProfileMenu />
             ) : (

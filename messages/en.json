@@ -505,7 +505,29 @@
     "ingestion": "Ingestion",
     "moderation": "Moderation",
     "reports": "Reports",
-    "logs": "Logs"
+    "logs": "Logs",
+    "venueClaims": {
+      "title": "Venue Claims Moderation",
+      "subtitle": "Approve or reject venue claim requests",
+      "searchPlaceholder": "Search by venue, user email...",
+      "allStatuses": "All statuses",
+      "pending": "Pending",
+      "verified": "Approved",
+      "rejected": "Rejected",
+      "noClaims": "No claims found",
+      "role": "Role",
+      "created": "Created",
+      "reviewed": "Reviewed",
+      "by": "by",
+      "rejectionReason": "Rejection reason",
+      "approve": "Approve",
+      "reject": "Reject",
+      "processing": "Processing...",
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page {page} of {total}",
+      "page_plural": "Page {page} of {total}"
+    }
   },
   "errors": {
     "404": "Page Not Found",

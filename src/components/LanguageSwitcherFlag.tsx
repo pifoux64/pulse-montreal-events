@@ -69,12 +69,13 @@ export default function LanguageSwitcherFlag() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-950"
-        aria-label="Change language"
+        className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-950 opacity-80 hover:opacity-100"
+        aria-label={`Change language (current: ${LOCALE_LABELS[currentLocale]})`}
         aria-expanded={isOpen}
         aria-haspopup="true"
+        title={LOCALE_LABELS[currentLocale]}
       >
-        <span className="text-2xl" role="img" aria-label={LOCALE_LABELS[currentLocale]}>
+        <span className="text-lg" role="img" aria-label={LOCALE_LABELS[currentLocale]}>
           {LOCALE_FLAGS[currentLocale]}
         </span>
       </button>
