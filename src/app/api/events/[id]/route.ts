@@ -180,6 +180,12 @@ export async function PATCH(
     // Extraire musicUrls du parsedData avant la mise à jour
     const { musicUrls, ...eventUpdateData } = parsedData;
 
+    // Enregistrer les nouveaux tags en base (TagDefinition) pour les prochaines fois
+    if (eventUpdateData.tags?.length) {
+      const { ensureTagDefinitions } = await import('@/lib/tagging/ensureTagDefinitions');
+      await ensureTagDefinitions(eventUpdateData.tags);
+    }
+
     // Mettre à jour l'événement
     const updatedEvent = await prisma.event.update({
       where: { id },

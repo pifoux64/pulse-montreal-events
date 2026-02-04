@@ -936,37 +936,52 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const eventData = CreateEventSchema.parse(body);
 
-    // Créer ou récupérer le venue
+    // Créer ou récupérer le venue (réutiliser une salle existante si même nom + ville)
     let venueId = eventData.venueId;
     if (!venueId && eventData.venue) {
       const venueInput = { ...eventData.venue };
-      let lat = venueInput.lat;
-      let lon = venueInput.lon;
+      const nameNorm = venueInput.name?.trim() || '';
+      const cityNorm = venueInput.city?.trim() || '';
 
-      if (
-        lat === undefined ||
-        lon === undefined ||
-        Number.isNaN(lat) ||
-        Number.isNaN(lon)
-      ) {
-        const coords =
-          (await geocodeAddress({
-            address: venueInput.address,
-            city: venueInput.city,
-            postalCode: venueInput.postalCode,
-          })) || getDefaultCoordinates();
-        lat = coords.lat;
-        lon = coords.lon;
+      const existingVenue = nameNorm && cityNorm
+        ? await prisma.venue.findFirst({
+            where: {
+              name: { equals: nameNorm, mode: 'insensitive' },
+              city: { equals: cityNorm, mode: 'insensitive' },
+            },
+            select: { id: true },
+          })
+        : null;
+
+      if (existingVenue) {
+        venueId = existingVenue.id;
+      } else {
+        let lat = venueInput.lat;
+        let lon = venueInput.lon;
+        if (
+          lat === undefined ||
+          lon === undefined ||
+          Number.isNaN(lat) ||
+          Number.isNaN(lon)
+        ) {
+          const coords =
+            (await geocodeAddress({
+              address: venueInput.address,
+              city: venueInput.city,
+              postalCode: venueInput.postalCode,
+            })) || getDefaultCoordinates();
+          lat = coords.lat;
+          lon = coords.lon;
+        }
+        const venue = await prisma.venue.create({
+          data: {
+            ...venueInput,
+            lat,
+            lon,
+          },
+        });
+        venueId = venue.id;
       }
-
-      const venue = await prisma.venue.create({
-        data: {
-          ...venueInput,
-          lat,
-          lon,
-        },
-      });
-      venueId = venue.id;
     }
 
     // Récupérer l'organisateur
@@ -984,6 +999,10 @@ export async function POST(request: NextRequest) {
     // Générer les tags automatiques basés sur le contenu
     const autoTags = generateAutoTags(eventData);
     const allTags = [...new Set([...autoTags, ...(eventData.tags || [])])];
+
+    // Enregistrer les nouveaux tags en base (TagDefinition) pour les prochaines fois
+    const { ensureTagDefinitions } = await import('@/lib/tagging/ensureTagDefinitions');
+    await ensureTagDefinitions(allTags);
 
     // Créer l'événement
     const event = await prisma.event.create({

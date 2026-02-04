@@ -9,7 +9,7 @@ import { User, Globe, Facebook, Instagram, Twitter, Linkedin, Save, Loader2, Che
 export const dynamic = 'force-dynamic';
 
 // Délai (ms) avant de considérer la session comme vraiment absente (évite redirection pendant l’hydratation)
-const SESSION_CHECK_DELAY = 800;
+const SESSION_CHECK_DELAY = 1000;
 
 interface OrganizerProfile {
   id: string;
@@ -86,9 +86,10 @@ export default function MonProfilOrganisateurPage() {
     return `https://${finalDomain}${path}`;
   };
 
-  // Éviter de rediriger vers la connexion pendant que la session peut encore être en cours de chargement (navigation client)
+  // Éviter de rediriger pendant que la session peut encore être en cours de chargement (navigation client)
   const mountedAt = useRef<number>(Date.now());
   useEffect(() => {
+    if (status === 'loading') return;
     if (status === 'authenticated') {
       loadProfile();
       return;

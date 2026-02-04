@@ -17,14 +17,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const post = await prisma.editorialPost.findUnique({
     where: { slug },
-    include: {
-      events: {
-        take: 1,
-        select: {
-          imageUrl: true,
-        },
-      },
-    },
   });
 
   if (!post) {
@@ -42,8 +34,16 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       : `Découvrez la sélection Pulse des meilleurs événements ${post.theme} à Montréal.`);
   
   const canonical = `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/top-5/${post.slug}`;
-  // Récupérer l'image du premier événement si disponible
-  const firstEventImage = post.events && post.events.length > 0 ? post.events[0]?.imageUrl : null;
+  // EditorialPost n'a pas de relation "events", seulement eventsOrder (IDs) ; on utilise l'image par défaut ou on charge le premier événement si besoin
+  const firstEventId = post.eventsOrder?.[0];
+  let firstEventImage: string | null = null;
+  if (firstEventId) {
+    const firstEvent = await prisma.event.findUnique({
+      where: { id: firstEventId },
+      select: { imageUrl: true },
+    });
+    firstEventImage = firstEvent?.imageUrl ?? null;
+  }
   const ogImage = firstEventImage
     ? `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/api/og/top5/${post.slug}`
     : `${process.env.NEXT_PUBLIC_APP_URL || 'https://pulse-event.ca'}/og-top5-default.png`;

@@ -10,6 +10,7 @@ import { EventFormData, EventCategory, CustomFilter } from '@/types';
 import { normalizeUrl } from '@/lib/utils';
 import VenueSearchInput from './VenueSearchInput';
 import RichTextEditor from './RichTextEditor';
+import TagSearchInput from './TagSearchInput';
 
 // Fonction pour créer le schéma de validation avec traductions
 const createEventFormSchema = (t: (key: string) => string) => z.object({
@@ -96,7 +97,6 @@ const EventForm = ({
   const eventFormSchema = createEventFormSchema(t);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCustomFilters, setShowCustomFilters] = useState(false);
-  const [newTag, setNewTag] = useState('');
   const [newCustomFilter, setNewCustomFilter] = useState<Partial<CustomFilter>>({});
   const [facebookUrl, setFacebookUrl] = useState('');
   const [isImportingFacebook, setIsImportingFacebook] = useState(false);
@@ -183,10 +183,9 @@ const EventForm = ({
   const watchedTags = watch('tags');
   const watchedImageUrl = watch('imageUrl');
 
-  const handleAddTag = () => {
-    if (newTag.trim() && !watchedTags.includes(newTag.trim())) {
-      setValue('tags', [...watchedTags, newTag.trim()]);
-      setNewTag('');
+  const handleAddTag = (tag: string) => {
+    if (tag.trim() && !watchedTags.includes(tag.trim())) {
+      setValue('tags', [...watchedTags, tag.trim()]);
     }
   };
 
@@ -1300,22 +1299,13 @@ const EventForm = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('tags')} *
             </label>
-            <div className="flex items-center space-x-2 mb-3">
-              <input
-                type="text"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddTag())}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            <div className="mb-3">
+              <TagSearchInput
+                selectedTags={watchedTags}
+                onAddTag={handleAddTag}
                 placeholder={t('addTag')}
+                error={errors.tags?.message}
               />
-              <button
-                type="button"
-                onClick={handleAddTag}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-              >
-                Ajouter
-              </button>
             </div>
             
             {watchedTags.length > 0 && (
@@ -1336,9 +1326,6 @@ const EventForm = ({
                   </span>
                 ))}
               </div>
-            )}
-            {errors.tags && (
-              <p className="mt-1 text-sm text-red-600">{errors.tags.message}</p>
             )}
           </div>
         </div>

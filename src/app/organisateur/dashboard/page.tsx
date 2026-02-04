@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
@@ -78,6 +78,10 @@ export default function OrganisateurDashboard() {
   const [showAITools, setShowAITools] = useState(false);
   const [activeAITool, setActiveAITool] = useState<'assistant' | 'content' | 'budget' | 'flyer'>('assistant');
   const [selectedEventForFlyer, setSelectedEventForFlyer] = useState<Event | null>(null);
+
+  // Délai avant de considérer la session comme vraiment absente (évite redirection pendant restauration session)
+  const mountedAt = useRef<number>(Date.now());
+  const SESSION_CHECK_DELAY = 1000;
   
   // Détecter la locale pour date-fns
   const dateLocale = typeof window !== 'undefined' 
@@ -141,15 +145,24 @@ export default function OrganisateurDashboard() {
   }, [t]);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin?callbackUrl=/organisateur/dashboard');
-    } else if (status === 'authenticated') {
+    if (status === 'loading') return;
+    if (status === 'authenticated') {
       if (session?.user?.role !== 'ORGANIZER' && session?.user?.role !== 'ADMIN') {
         router.push('/organisateur/mon-profil');
       } else {
         loadDashboard();
       }
+      return;
     }
+    if (status !== 'unauthenticated') return;
+    const elapsed = Date.now() - mountedAt.current;
+    if (elapsed < SESSION_CHECK_DELAY) {
+      const t = setTimeout(() => {
+        router.push('/auth/signin?callbackUrl=/organisateur/dashboard');
+      }, SESSION_CHECK_DELAY - elapsed);
+      return () => clearTimeout(t);
+    }
+    router.push('/auth/signin?callbackUrl=/organisateur/dashboard');
   }, [status, session, router, loadDashboard]);
 
   const handleDeleteEvent = async (eventId: string) => {
