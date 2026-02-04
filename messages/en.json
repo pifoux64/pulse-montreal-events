@@ -1196,7 +1196,11 @@
     "min": "min",
     "h": "h",
     "listen": "Listen",
-    "listenBeforeYouGo": "Listen before you go"
+    "listenBeforeYouGo": "Listen before you go",
+    "listenOnSpotify": "Listen on Spotify",
+    "listenOnSoundCloud": "Listen on SoundCloud",
+    "listenOnMixcloud": "Listen on Mixcloud",
+    "watchOnYouTube": "Watch on YouTube"
   },
   "flyer": {
     "title": "AI Flyer Generator",

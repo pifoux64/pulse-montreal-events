@@ -1188,7 +1188,11 @@
     "min": "min",
     "h": "h",
     "listen": "Escuchar",
-    "listenBeforeYouGo": "Escucha antes de ir"
+    "listenBeforeYouGo": "Escucha antes de ir",
+    "listenOnSpotify": "Escuchar en Spotify",
+    "listenOnSoundCloud": "Escuchar en SoundCloud",
+    "listenOnMixcloud": "Escuchar en Mixcloud",
+    "watchOnYouTube": "Ver en YouTube"
   },
   "flyer": {
     "title": "Generador de Flyer IA",

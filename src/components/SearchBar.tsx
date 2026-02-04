@@ -17,6 +17,7 @@ interface SearchSuggestion {
   text: string;
   type: 'event' | 'venue' | 'organizer' | 'genre' | 'tag';
   eventId?: string;
+  subtitle?: string;
   relevance: number;
 }
 
@@ -25,7 +26,7 @@ export default function SearchBar({
   placeholder = 'Rechercher des événements, artistes, lieux...',
   events = [],
   showSuggestions = true,
-  debounceMs = 300,
+  debounceMs = 200,
 }: SearchBarProps) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -47,75 +48,100 @@ export default function SearchBar({
     return () => clearTimeout(timer);
   }, [query, debounceMs, onSearch]);
 
-  // Génération des suggestions
+  // Génération des suggestions (événements en priorité, avec sous-titre lieu/date)
   const generateSuggestions = useMemo(() => {
-    if (!showSuggestions || !debouncedQuery.trim() || events.length === 0) {
+    if (!showSuggestions || !debouncedQuery.trim()) {
       return [];
     }
 
     const queryLower = debouncedQuery.toLowerCase().trim();
     const suggestionsList: SearchSuggestion[] = [];
+    const seenEventIds = new Set<string>();
+    const seenText = new Set<string>();
 
-    // Rechercher dans les événements
-    events.forEach((event) => {
-      const titleMatch = event.title.toLowerCase().includes(queryLower);
-      const descMatch = event.description.toLowerCase().includes(queryLower);
-      const venueMatch = event.location?.name?.toLowerCase().includes(queryLower);
-      const organizerMatch = event.organizer?.name?.toLowerCase().includes(queryLower);
-      const tagMatch = event.tags.some(tag => tag.toLowerCase().includes(queryLower));
+    // Si on a des événements, chercher dedans
+    if (events.length > 0) {
+      events.forEach((event) => {
+        const title = event.title ?? '';
+        const desc = (event.description ?? '').toLowerCase();
+        const venueName = event.location?.name ?? (event as any).venue?.name ?? '';
+        const organizerName = event.organizer?.name ?? '';
+        const tags = event.tags ?? [];
 
-      if (titleMatch) {
-        suggestionsList.push({
-          text: event.title,
-          type: 'event',
-          eventId: event.id,
-          relevance: 10,
-        });
-      }
+        const titleMatch = title.toLowerCase().includes(queryLower);
+        const descMatch = queryLower.length >= 2 && desc.includes(queryLower);
+        const venueMatch = venueName && venueName.toLowerCase().includes(queryLower);
+        const organizerMatch = organizerName && organizerName.toLowerCase().includes(queryLower);
+        const tagMatch = tags.some((tag: string) => String(tag).toLowerCase().includes(queryLower));
 
-      if (venueMatch && event.location?.name) {
-        suggestionsList.push({
-          text: event.location.name,
-          type: 'venue',
-          relevance: 7,
-        });
-      }
+        if (titleMatch && event.id && !seenEventIds.has(event.id)) {
+          seenEventIds.add(event.id);
+          const subtitle = [venueName, event.startDate ? new Date(event.startDate).toLocaleDateString('fr-CA', { weekday: 'short', month: 'short', day: 'numeric' }) : ''].filter(Boolean).join(' · ');
+          suggestionsList.push({
+            text: title,
+            type: 'event',
+            eventId: event.id,
+            subtitle,
+            relevance: 10,
+          });
+        }
 
-      if (organizerMatch && event.organizer?.name) {
-        suggestionsList.push({
-          text: event.organizer.name,
-          type: 'organizer',
-          relevance: 6,
-        });
-      }
+        if (venueMatch && venueName && !seenText.has(`venue:${venueName}`)) {
+          seenText.add(`venue:${venueName}`);
+          suggestionsList.push({
+            text: venueName,
+            type: 'venue',
+            relevance: 7,
+          });
+        }
 
-      if (tagMatch) {
-        event.tags.forEach(tag => {
-          if (tag.toLowerCase().includes(queryLower)) {
-            suggestionsList.push({
-              text: tag,
-              type: 'tag',
-              relevance: 5,
-            });
-          }
-        });
-      }
-    });
+        if (organizerMatch && organizerName && !seenText.has(`org:${organizerName}`)) {
+          seenText.add(`org:${organizerName}`);
+          suggestionsList.push({
+            text: organizerName,
+            type: 'organizer',
+            relevance: 6,
+          });
+        }
 
-    // Dédupliquer et trier par pertinence
-    const uniqueSuggestions = Array.from(
-      new Map(suggestionsList.map(s => [s.text, s])).values()
-    ).sort((a, b) => b.relevance - a.relevance).slice(0, 8);
+        if (tagMatch) {
+          tags.forEach((tag: string) => {
+            const t = String(tag);
+            if (t.toLowerCase().includes(queryLower) && !seenText.has(`tag:${t}`)) {
+              seenText.add(`tag:${t}`);
+              suggestionsList.push({
+                text: t,
+                type: 'tag',
+                relevance: 5,
+              });
+            }
+          });
+        }
+      });
+    }
 
-    return uniqueSuggestions;
+    // Trier par pertinence et limiter (événements en premier)
+    const sorted = suggestionsList
+      .sort((a, b) => b.relevance - a.relevance)
+      .slice(0, 10);
+
+    return sorted;
   }, [debouncedQuery, events, showSuggestions]);
 
   useEffect(() => {
     setSuggestions(generateSuggestions);
-    setShowSuggestionsList(generateSuggestions.length > 0 && debouncedQuery.trim().length > 0);
-  }, [generateSuggestions, debouncedQuery]);
+  }, [generateSuggestions]);
 
-  // Fermer les suggestions en cliquant à l'extérieur
+  // Ouvrir le menu dès qu'on tape au moins 1 caractère
+  useEffect(() => {
+    if (query.trim().length >= 1 && showSuggestions) {
+      setShowSuggestionsList(true);
+    } else if (query.trim().length === 0) {
+      setShowSuggestionsList(false);
+    }
+  }, [query, showSuggestions]);
+
+  // Fermer les suggestions en cliquant à l'extérieur (click pour ne pas fermer avant le clic sur une suggestion)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -123,27 +149,25 @@ export default function SearchBar({
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const handleSuggestionClick = (suggestion: SearchSuggestion) => {
     setQuery(suggestion.text);
     setShowSuggestionsList(false);
-    
+
     if (suggestion.type === 'event' && suggestion.eventId) {
       router.push(`/evenement/${suggestion.eventId}`);
     } else if (suggestion.type === 'organizer') {
-      // Rechercher l'organisateur et rediriger
-      const event = events.find(e => e.organizer?.name === suggestion.text);
+      const event = events.find((e) => e.organizer?.name === suggestion.text);
       if (event?.organizerId) {
-        const organizerUrl = event.organizerSlug 
-          ? `/organisateur/${event.organizerSlug}` 
+        const organizerUrl = event.organizerSlug
+          ? `/organisateur/${event.organizerSlug}`
           : `/organisateur/${event.organizerId}`;
         router.push(organizerUrl);
       }
     } else {
-      // Recherche normale
       if (onSearch) {
         onSearch(suggestion.text);
       }
@@ -196,10 +220,11 @@ export default function SearchBar({
           onChange={(e) => {
             setQuery(e.target.value);
             setIsSearching(true);
-            setTimeout(() => setIsSearching(false), 200);
+            setShowSuggestionsList(e.target.value.trim().length >= 1);
+            setTimeout(() => setIsSearching(false), 150);
           }}
           onFocus={() => {
-            if (suggestions.length > 0) {
+            if (query.trim().length >= 1) {
               setShowSuggestionsList(true);
             }
           }}
@@ -222,29 +247,45 @@ export default function SearchBar({
         )}
       </div>
 
-      {/* Suggestions */}
-      {showSuggestionsList && suggestions.length > 0 && (
+      {/* Menu de suggestions : ouvert dès qu'on tape */}
+      {showSuggestionsList && query.trim().length >= 1 && (
         <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
           <div className="max-h-96 overflow-y-auto">
-            {suggestions.map((suggestion, index) => (
-              <button
-                key={`${suggestion.type}-${suggestion.text}-${index}`}
-                onClick={() => handleSuggestionClick(suggestion)}
-                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-emerald-50 transition-colors duration-150 text-left border-b border-gray-100 last:border-b-0"
-              >
-                <div className="flex-shrink-0 text-emerald-600">
-                  {getSuggestionIcon(suggestion.type)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-gray-900 truncate">
-                    {suggestion.text}
+            {isSearching && suggestions.length === 0 ? (
+              <div className="px-4 py-4 flex items-center gap-3 text-gray-500">
+                <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
+                <span className="text-sm">Recherche en cours...</span>
+              </div>
+            ) : suggestions.length === 0 ? (
+              <div className="px-4 py-4 text-sm text-gray-500">
+                Aucun événement ou lieu trouvé pour « {query.trim()} »
+              </div>
+            ) : (
+              suggestions.map((suggestion, index) => (
+                <button
+                  key={suggestion.eventId ? `event-${suggestion.eventId}` : `${suggestion.type}-${suggestion.text}-${index}`}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSuggestionClick(suggestion);
+                  }}
+                  className="w-full px-4 py-3 flex items-center gap-3 hover:bg-emerald-50 transition-colors duration-150 text-left border-b border-gray-100 last:border-b-0"
+                >
+                  <div className="flex-shrink-0 text-emerald-600">
+                    {getSuggestionIcon(suggestion.type)}
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
-                    {getSuggestionLabel(suggestion.type)}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {suggestion.text}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-0.5">
+                      {suggestion.subtitle ?? getSuggestionLabel(suggestion.type)}
+                    </div>
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              ))
+            )}
           </div>
         </div>
       )}

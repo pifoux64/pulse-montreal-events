@@ -1323,7 +1323,11 @@
     "min": "min",
     "h": "h",
     "listen": "Écouter",
-    "listenBeforeYouGo": "Écoutez avant d'y aller"
+    "listenBeforeYouGo": "Écoutez avant d'y aller",
+    "listenOnSpotify": "Écouter sur Spotify",
+    "listenOnSoundCloud": "Écouter sur SoundCloud",
+    "listenOnMixcloud": "Écouter sur Mixcloud",
+    "watchOnYouTube": "Voir sur YouTube"
   },
   "flyer": {
     "title": "Générateur de Flyer IA",

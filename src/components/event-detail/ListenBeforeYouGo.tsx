@@ -83,18 +83,15 @@ function isMusicEvent(
  * Extrait l'ID d'une URL Spotify
  */
 function extractSpotifyId(url: string): { type: 'track' | 'album' | 'playlist' | 'artist'; id: string } | null {
-  const trackMatch = url.match(/spotify\.com\/track\/([a-zA-Z0-9]+)/);
+  const u = url.trim();
+  const trackMatch = u.match(/(?:open\.)?spotify\.com\/track\/([a-zA-Z0-9]+)/);
   if (trackMatch) return { type: 'track', id: trackMatch[1] };
-  
-  const albumMatch = url.match(/spotify\.com\/album\/([a-zA-Z0-9]+)/);
+  const albumMatch = u.match(/(?:open\.)?spotify\.com\/album\/([a-zA-Z0-9]+)/);
   if (albumMatch) return { type: 'album', id: albumMatch[1] };
-  
-  const playlistMatch = url.match(/spotify\.com\/playlist\/([a-zA-Z0-9]+)/);
+  const playlistMatch = u.match(/(?:open\.)?spotify\.com\/playlist\/([a-zA-Z0-9]+)/);
   if (playlistMatch) return { type: 'playlist', id: playlistMatch[1] };
-  
-  const artistMatch = url.match(/spotify\.com\/artist\/([a-zA-Z0-9]+)/);
+  const artistMatch = u.match(/(?:open\.)?spotify\.com\/artist\/([a-zA-Z0-9]+)/);
   if (artistMatch) return { type: 'artist', id: artistMatch[1] };
-  
   return null;
 }
 
@@ -142,15 +139,23 @@ export default function ListenBeforeYouGo({
   category,
 }: ListenBeforeYouGoProps) {
   const t = useTranslations('eventDetail');
+
+  // Normaliser les URLs (string, trim) au cas où featureValue vient en Json
+  const n = (v: string | null | undefined): string | undefined =>
+    v == null ? undefined : typeof v === 'string' ? v.trim() || undefined : undefined;
+  const sUrl = n(spotifyUrl);
+  const scUrl = n(soundcloudUrl);
+  const mUrl = n(mixcloudUrl);
+  const yUrl = n(youtubeUrl);
   
   const musicEvent = propIsMusicEvent ?? isMusicEvent(eventTags, category);
   
   // Collecter toutes les plateformes disponibles
   const availablePlatforms: Platform[] = [];
-  if (spotifyUrl) availablePlatforms.push('spotify');
-  if (soundcloudUrl) availablePlatforms.push('soundcloud');
-  if (mixcloudUrl) availablePlatforms.push('mixcloud');
-  if (youtubeUrl) availablePlatforms.push('youtube');
+  if (sUrl) availablePlatforms.push('spotify');
+  if (scUrl) availablePlatforms.push('soundcloud');
+  if (mUrl) availablePlatforms.push('mixcloud');
+  if (yUrl) availablePlatforms.push('youtube');
   
   // État pour la plateforme sélectionnée
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(
@@ -167,14 +172,27 @@ export default function ListenBeforeYouGo({
       shouldShow,
       availablePlatforms,
       musicEvent,
-      hasSpotify: !!spotifyUrl,
-      hasSoundCloud: !!soundcloudUrl,
-      hasMixcloud: !!mixcloudUrl,
-      hasYouTube: !!youtubeUrl,
+      hasSpotify: !!sUrl,
+      hasSoundCloud: !!scUrl,
+      hasMixcloud: !!mUrl,
+      hasYouTube: !!yUrl,
       eventTags,
       category,
     });
   }
+
+  const linkFallback = (url: string, label: string) => (
+    <div className="bg-black/40 backdrop-blur-sm rounded-lg p-4 border border-white/10">
+      <a
+        href={url.startsWith('http') ? url : `https://${url}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-400 hover:text-blue-300 underline break-all"
+      >
+        {label}
+      </a>
+    </div>
+  );
   
   if (!shouldShow) {
     return null;
@@ -185,9 +203,9 @@ export default function ListenBeforeYouGo({
     
     switch (selectedPlatform) {
       case 'spotify': {
-        if (!spotifyUrl) return null;
-        const spotifyData = extractSpotifyId(spotifyUrl);
-        if (!spotifyData) return null;
+        if (!sUrl) return null;
+        const spotifyData = extractSpotifyId(sUrl);
+        if (!spotifyData) return linkFallback(sUrl, t('listenOnSpotify'));
         
         return (
           <div className="bg-black/40 backdrop-blur-sm rounded-lg p-4 border border-white/10">
@@ -205,9 +223,9 @@ export default function ListenBeforeYouGo({
       }
       
       case 'soundcloud': {
-        if (!soundcloudUrl) return null;
-        const scId = extractSoundCloudId(soundcloudUrl);
-        if (!scId) return null;
+        if (!scUrl) return null;
+        const scId = extractSoundCloudId(scUrl);
+        if (!scId) return linkFallback(scUrl, t('listenOnSoundCloud'));
         
         return (
           <div className="bg-black/40 backdrop-blur-sm rounded-lg p-4 border border-white/10">
@@ -217,7 +235,7 @@ export default function ListenBeforeYouGo({
               scrolling="no"
               frameBorder="no"
               allow="autoplay"
-              src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(soundcloudUrl)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`}
+              src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(scUrl)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`}
               className="rounded-lg"
             />
           </div>
@@ -225,9 +243,9 @@ export default function ListenBeforeYouGo({
       }
       
       case 'mixcloud': {
-        if (!mixcloudUrl) return null;
-        const mcId = extractMixcloudId(mixcloudUrl);
-        if (!mcId) return null;
+        if (!mUrl) return null;
+        const mcId = extractMixcloudId(mUrl);
+        if (!mcId) return linkFallback(mUrl, t('listenOnMixcloud'));
         
         return (
           <div className="bg-black/40 backdrop-blur-sm rounded-lg p-4 border border-white/10">
@@ -235,7 +253,7 @@ export default function ListenBeforeYouGo({
               width="100%"
               height="120"
               frameBorder="0"
-              src={`https://www.mixcloud.com/widget/iframe/?hide_cover=1&light=1&feed=${encodeURIComponent(mixcloudUrl)}`}
+              src={`https://www.mixcloud.com/widget/iframe/?hide_cover=1&light=1&feed=${encodeURIComponent(mUrl)}`}
               className="rounded-lg"
             />
           </div>
@@ -243,9 +261,9 @@ export default function ListenBeforeYouGo({
       }
       
       case 'youtube': {
-        if (!youtubeUrl) return null;
-        const youtubeId = extractYouTubeId(youtubeUrl);
-        if (!youtubeId) return null;
+        if (!yUrl) return null;
+        const youtubeId = extractYouTubeId(yUrl);
+        if (!youtubeId) return linkFallback(yUrl, t('watchOnYouTube'));
         
         return (
           <div className="bg-black/40 backdrop-blur-sm rounded-lg p-4 border border-white/10">

@@ -95,22 +95,23 @@ export default function VenueSearchInput({
     };
   }, [searchQuery]);
 
-  // Fermer le dropdown si on clique en dehors
+  // Fermer le dropdown si on clique en dehors (utilisation de click pour éviter de fermer avant la sélection)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
       if (
         dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node) &&
+        !dropdownRef.current.contains(target) &&
         inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
+        !inputRef.current.contains(target)
       ) {
         setShowDropdown(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('click', handleClickOutside);
     };
   }, []);
 
@@ -211,7 +212,11 @@ export default function VenueSearchInput({
             <button
               key={venue.id}
               type="button"
-              onClick={() => handleVenueSelect(venue)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleVenueSelect(venue);
+              }}
               className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors ${
                 index === selectedIndex ? 'bg-blue-50' : ''
               } ${index > 0 ? 'border-t border-gray-100' : ''}`}

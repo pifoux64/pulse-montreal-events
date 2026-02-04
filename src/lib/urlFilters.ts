@@ -24,6 +24,7 @@ const FILTER_PARAM_KEYS = [
   'tags',
   'aud',
   'acc',
+  'past',
 ];
 
 type SanitizeOptions = {
@@ -130,6 +131,10 @@ export const sanitizeFilters = (filters: EventFilter, options: SanitizeOptions =
     sanitized.customFilters = filters.customFilters;
   }
 
+  if (filters.includePast === true) {
+    sanitized.includePast = true;
+  }
+
   if (options.preserveEmpty) {
     return { ...(options.preserveEmpty ? filters : {}), ...sanitized };
   }
@@ -196,6 +201,10 @@ export const serializeFiltersToString = (filters: EventFilter): string => {
 
   if (sanitized.customFilters && Object.keys(sanitized.customFilters).length > 0) {
     params.set('custom', JSON.stringify(sanitized.customFilters));
+  }
+
+  if (sanitized.includePast) {
+    params.set('past', '1');
   }
 
   params.sort();
@@ -280,6 +289,11 @@ export const parseFiltersFromString = (rawParams: string): EventFilter => {
     } catch (error) {
       // Ignore malformed custom filters
     }
+  }
+
+  const past = params.get('past');
+  if (past === '1' || past === 'true') {
+    filters.includePast = true;
   }
 
   return sanitizeFilters(filters);

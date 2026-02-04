@@ -148,18 +148,20 @@ export async function getPersonalizedRecommendations(
     return await getPopularEvents(limit, scope);
   }
 
-  // Calculer les scores pour chaque événement
-  const scoredEvents: RecommendationResult[] = events
-    .map((event) => {
-      const score = calculateEventScore(event, userProfile);
-      const reasons = generateReasons(event, userProfile, score);
-      return {
-        event,
-        score,
-        reasons,
-      };
-    })
-    .filter((result) => result.score >= minScore)
+  // Calculer les scores et dédupliquer par event.id (un même événement ne doit apparaître qu'une fois)
+  const byId = new Map<string, RecommendationResult>();
+  for (const event of events) {
+    const score = calculateEventScore(event, userProfile);
+    if (score < minScore) continue;
+    const existing = byId.get(event.id);
+    if (existing && existing.score >= score) continue;
+    byId.set(event.id, {
+      event,
+      score,
+      reasons: generateReasons(event, userProfile, score),
+    });
+  }
+  const scoredEvents = Array.from(byId.values())
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 

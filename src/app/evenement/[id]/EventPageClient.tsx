@@ -94,12 +94,15 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
     })));
   }
   
+  const toStr = (v: unknown): string | undefined =>
+    v == null ? undefined : typeof v === 'string' ? v.trim() || undefined : String(v).trim() || undefined;
+
   const longDescription = longDescriptionFeature?.featureValue as string | undefined;
   const lineup = lineupFeature?.featureValue as string[] | undefined;
-  const spotifyUrl = spotifyUrlFeature?.featureValue as string | undefined;
-  const soundcloudUrl = soundcloudUrlFeature?.featureValue as string | undefined;
-  const mixcloudUrl = mixcloudUrlFeature?.featureValue as string | undefined;
-  const youtubeUrl = youtubeUrlFeature?.featureValue as string | undefined;
+  const spotifyUrl = toStr(spotifyUrlFeature?.featureValue);
+  const soundcloudUrl = toStr(soundcloudUrlFeature?.featureValue);
+  const mixcloudUrl = toStr(mixcloudUrlFeature?.featureValue);
+  const youtubeUrl = toStr(youtubeUrlFeature?.featureValue);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">

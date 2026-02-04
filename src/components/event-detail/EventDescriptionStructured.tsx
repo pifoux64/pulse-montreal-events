@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Music, Clock, Eye, Accessibility, Users } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
+import { looksLikeHtml, sanitizeDescriptionHtml } from '@/lib/sanitizeHtml';
 
 interface EventDescriptionStructuredProps {
   description?: string | null;
@@ -129,10 +130,26 @@ export default function EventDescriptionStructured({
           </button>
           {expandedSections.description && (
             <div className="px-6 pb-6">
-              <div className="prose prose-invert max-w-none">
-                <p className="text-slate-300 whitespace-pre-line leading-relaxed">
-                  {longDescription || description}
-                </p>
+              <div className="prose prose-invert max-w-none text-slate-300 leading-relaxed [&_a]:text-blue-400 [&_a]:underline [&_a]:hover:text-blue-300 [&_h2]:text-white [&_h2]:text-xl [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-white [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-3 [&_h3]:mb-1">
+                {[description, longDescription].filter(Boolean).map((text, i) => {
+                  if (!text) return null;
+                  const isHtml = looksLikeHtml(text);
+                  const key = i === 0 ? 'desc' : 'longDesc';
+                  if (isHtml) {
+                    return (
+                      <div
+                        key={key}
+                        className={i > 0 ? 'mt-4' : ''}
+                        dangerouslySetInnerHTML={{ __html: sanitizeDescriptionHtml(text) }}
+                      />
+                    );
+                  }
+                  return (
+                    <p key={key} className={i > 0 ? 'mt-4' : ''} style={{ whiteSpace: 'pre-line' }}>
+                      {text}
+                    </p>
+                  );
+                })}
               </div>
             </div>
           )}

@@ -191,36 +191,45 @@ export const transformApiEvent = (event: ApiEvent): Event => {
   };
 };
 
-// Hook principal pour récupérer tous les événements
-export const useEvents = () => {
+export interface UseEventsOptions {
+  /** Inclure les événements passés (false par défaut = uniquement les futurs) */
+  includePast?: boolean;
+}
+
+// Hook principal pour récupérer les événements (par défaut: uniquement futurs)
+export const useEvents = (options: UseEventsOptions = {}) => {
+  const includePast = options.includePast ?? false;
+
   return useQuery({
-    queryKey: ['events'],
+    queryKey: ['events', includePast],
     queryFn: async (): Promise<Event[]> => {
-      // Utiliser l'API /api/events qui inclut les tags structurés
-      // Récupérer plusieurs pages pour avoir tous les événements (max 100 par page)
+      const futureOnly = !includePast;
       const allEvents: ApiEvent[] = [];
       let page = 1;
       let hasMore = true;
-      
-      while (hasMore && page <= 10) { // Limiter à 10 pages max (1000 événements)
-        const response = await fetch(`/api/events?pageSize=100&page=${page}`);
+
+      while (hasMore && page <= 10) {
+        const params = new URLSearchParams({
+          pageSize: '100',
+          page: String(page),
+          futureOnly: String(futureOnly),
+        });
+        const response = await fetch(`/api/events?${params.toString()}`);
         if (!response.ok) {
           throw new Error(`Erreur API: ${response.status}`);
         }
         const data: ApiResponse = await response.json();
         allEvents.push(...(data.items || []));
-        
-        // Vérifier s'il y a plus de pages
         hasMore = page < data.totalPages;
         page++;
       }
-      
+
       return allEvents.map(transformApiEvent);
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes - cohérent avec la config globale
-    gcTime: 10 * 60 * 1000, // 10 minutes en cache
-    refetchOnWindowFocus: false, // Éviter les refetch inutiles
-    refetchOnMount: false, // Utiliser le cache si disponible
+    staleTime: 2 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 };
 
@@ -230,9 +239,9 @@ export const usePrefetchEvents = () => {
   
   return () => {
     queryClient.prefetchQuery({
-      queryKey: ['events'],
+      queryKey: ['events', false],
       queryFn: async (): Promise<Event[]> => {
-        const response = await fetch('/api/events?pageSize=200');
+        const response = await fetch('/api/events?pageSize=200&futureOnly=true');
         if (!response.ok) {
           throw new Error(`Erreur API: ${response.status}`);
         }

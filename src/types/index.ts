@@ -122,6 +122,8 @@ export interface EventFilter {
   type?: string; // Type d'événement (concert, dj_set, festival, etc.)
   ambiance?: string; // Ambiance (intime, grande_salle, underground, etc.)
   public?: string; // Public cible (tout_public, 18_plus, famille)
+  /** Inclure les événements passés (par défaut: false = afficher uniquement les futurs) */
+  includePast?: boolean;
 }
 
 export interface FavoriteEvent {

@@ -9,12 +9,15 @@ import { Plus, X, MapPin, Calendar, DollarSign, Users, Accessibility, Tag, Image
 import { EventFormData, EventCategory, CustomFilter } from '@/types';
 import { normalizeUrl } from '@/lib/utils';
 import VenueSearchInput from './VenueSearchInput';
+import RichTextEditor from './RichTextEditor';
 
 // Fonction pour créer le schéma de validation avec traductions
 const createEventFormSchema = (t: (key: string) => string) => z.object({
   title: z.string().min(3, t('validation.titleMin')),
-  description: z.string().min(20, t('validation.descriptionMin')),
-  longDescription: z.string().optional(), // SPRINT 4: Description longue optionnelle
+  description: z
+    .string()
+    .refine((val) => (val ? val.replace(/<[^>]*>/g, '').trim().length >= 20 : false), t('validation.descriptionMin')),
+  longDescription: z.string().optional(),
   lineup: z.array(z.string()).optional(), // SPRINT 4: Lineup optionnel
   startDate: z.string().min(1, t('validation.startDateRequired')),
   endDate: z.string().min(1, t('validation.endDateRequired')),
@@ -681,11 +684,12 @@ const EventForm = ({
               name="description"
               control={control}
               render={({ field }) => (
-                <textarea
-                  {...field}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Décrivez votre événement en détail..."
+                <RichTextEditor
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  placeholder={t('descriptionPlaceholder')}
+                  minHeight="140px"
                 />
               )}
             />
@@ -694,7 +698,6 @@ const EventForm = ({
             )}
           </div>
 
-          {/* SPRINT 4: Description longue pour Facebook/Eventbrite */}
           <div className="md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               {t('longDescription')} <span className="text-gray-500">{t('optional')}</span>
@@ -703,11 +706,12 @@ const EventForm = ({
               name="longDescription"
               control={control}
               render={({ field }) => (
-                <textarea
-                  {...field}
-                  rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <RichTextEditor
+                  value={field.value ?? ''}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
                   placeholder={t('longDescriptionPlaceholder')}
+                  minHeight="180px"
                 />
               )}
             />

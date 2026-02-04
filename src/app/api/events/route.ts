@@ -165,7 +165,7 @@ const EventFiltersSchema = z.object({
   tags: z.array(z.string()).optional(),
   dateFrom: z.string().optional(), // Accepte ISO datetime ou date simple
   dateTo: z.string().optional(), // Accepte ISO datetime ou date simple
-  futureOnly: z.boolean().optional(), // Si true, ne retourne que les événements futurs (par défaut: false = inclut les événements passés)
+  futureOnly: z.boolean().optional(), // Si true, ne retourne que les événements futurs (par défaut: true = uniquement futurs)
   priceMin: z.number().int().min(0).optional(),
   priceMax: z.number().int().min(0).optional(),
   free: z.boolean().optional(),
@@ -215,7 +215,8 @@ export async function GET(request: NextRequest) {
       // SPRINT 2: Support dateFrom et dateTo pour dates personnalisées
       dateFrom: params.dateFrom || undefined,
       dateTo: params.dateTo || undefined,
-      futureOnly: params.futureOnly === 'true' ? true : (params.futureOnly === 'false' ? false : (typeof params.futureOnly === 'boolean' ? params.futureOnly : undefined)),
+      // Par défaut: uniquement les événements futurs (futureOnly=true). Passer futureOnly=false pour inclure les passés.
+      futureOnly: params.futureOnly === 'false' ? false : true,
     });
 
     // SPRINT 1: Logique temporelle selon scope (timezone Montréal)
@@ -473,13 +474,12 @@ export async function GET(request: NextRequest) {
           lte: weekendEndUTC,
         };
       } else {
-        // Par défaut : tous les événements (passés et futurs) sauf si futureOnly est true
-        if (filters.futureOnly) {
+        // Par défaut : uniquement les événements futurs (futureOnly=true). Si futureOnly=false, pas de filtre date.
+        if (filters.futureOnly !== false) {
           where.startAt = {
             gte: now,
           };
         }
-        // Sinon, pas de filtre de date = tous les événements
       }
     } else {
       // Si on a dateFrom/dateTo, on initialise startAt pour les dates personnalisées
@@ -573,22 +573,19 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // S'assurer qu'on a au moins un filtre de date si aucun n'a été défini
-    // Seulement si futureOnly est true, on filtre les événements futurs
+    // Par défaut (scope all, pas de dateFrom/dateTo) : uniquement futurs sauf si futureOnly=false
     if (!where.startAt || (typeof where.startAt === 'object' && Object.keys(where.startAt).length === 0)) {
-      if (filters.futureOnly) {
+      if (filters.futureOnly !== false) {
         where.startAt = {
-          gte: now, // Seulement si futureOnly est true
+          gte: now,
         };
       }
-      // Sinon, pas de filtre = tous les événements (passés et futurs)
     }
     
     // Validation : s'assurer que where.startAt a au moins une propriété valide
     if (where.startAt && typeof where.startAt === 'object') {
       const startAtKeys = Object.keys(where.startAt);
-      // Si vide et futureOnly est true, ajouter le filtre
-      if (startAtKeys.length === 0 && filters.futureOnly) {
+      if (startAtKeys.length === 0 && filters.futureOnly !== false) {
         where.startAt.gte = now;
       }
       // S'assurer que les dates sont des objets Date valides

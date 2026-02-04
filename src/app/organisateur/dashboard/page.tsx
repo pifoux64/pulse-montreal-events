@@ -96,7 +96,7 @@ export default function OrganisateurDashboard() {
       const organizer = await organizerResponse.json();
       
       // Charger tous les événements de l'organisateur
-      const allEventsResponse = await fetch(`/api/events?organizerId=${organizer.id}&pageSize=100`);
+      const allEventsResponse = await fetch(`/api/events?organizerId=${organizer.id}&pageSize=100&futureOnly=false`);
       let loadedEvents: Event[] = [];
       if (allEventsResponse.ok) {
         const eventsData = await allEventsResponse.json();

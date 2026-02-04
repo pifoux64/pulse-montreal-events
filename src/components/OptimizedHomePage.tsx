@@ -195,8 +195,10 @@ export default function OptimizedHomePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showFreeOnly, setShowFreeOnly] = useState(false);
 
-  // Utilisation du hook React Query pour charger tous les événements
-  const { data: events = [], isLoading: loading, error } = useEvents();
+  // Utilisation du hook React Query (par défaut: uniquement événements futurs)
+  const { data: events = [], isLoading: loading, error } = useEvents({
+    includePast: filters.includePast ?? false,
+  });
   
   // Système de favoris
   const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(events);
@@ -581,7 +583,16 @@ export default function OptimizedHomePage() {
             </div>
             
             {/* Contrôles de vue et filtres */}
-            <div className="flex items-center space-x-4 mt-6 lg:mt-0">
+            <div className="flex flex-wrap items-center gap-4 mt-6 lg:mt-0">
+              <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 hover:text-gray-900">
+                <input
+                  type="checkbox"
+                  checked={filters.includePast ?? false}
+                  onChange={(e) => setFilters((prev) => ({ ...prev, includePast: e.target.checked }))}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span>Inclure les événements passés</span>
+              </label>
               <div className="flex items-center bg-gray-100 rounded-lg p-1">
                 <button
                   onClick={() => setViewMode('grid')}
@@ -604,7 +615,6 @@ export default function OptimizedHomePage() {
                   <List className="w-5 h-5" />
                 </button>
               </div>
-              
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

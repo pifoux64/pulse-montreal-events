@@ -242,8 +242,17 @@ export default function PourToiPage() {
     retry: 1,
   });
 
-  const recommendations: (Event & { recommendationScore?: number; recommendationReasons?: string[] })[] =
-    (recommendationsData?.recommendations || []).map(transformRecommendationEvent);
+  // Dédupliquer par event.id (au cas où l'API renverrait le même événement deux fois)
+  const rawRecs = recommendationsData?.recommendations ?? [];
+  const seenIds = new Set<string>();
+  const recommendations: (Event & { recommendationScore?: number; recommendationReasons?: string[] })[] = rawRecs
+    .filter((rec) => {
+      const id = rec.event?.id;
+      if (!id || seenIds.has(id)) return false;
+      seenIds.add(id);
+      return true;
+    })
+    .map(transformRecommendationEvent);
 
   // Système de favoris
   const { isFavorite, toggleFavorite, isFavoriteLoading } = useFavorites(recommendations);
