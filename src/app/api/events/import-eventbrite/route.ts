@@ -45,7 +45,7 @@ function extractEventIdFromUrl(url: string): string | null {
 /**
  * Parse les données d'un événement Eventbrite depuis le HTML
  */
-function parseEventbriteHtml(html: string, eventId: string): EventbriteEventData {
+function parseEventbriteHtml(html: string, eventId: string, eventUrl: string): EventbriteEventData {
   const $ = cheerio.load(html);
   const data: EventbriteEventData = {};
 
@@ -200,8 +200,8 @@ function parseEventbriteHtml(html: string, eventId: string): EventbriteEventData
     }
   }
 
-  // URL de billetterie - utiliser l'URL originale
-  data.ticketUrl = url;
+  // URL de billetterie - utiliser l'URL de l'événement
+  data.ticketUrl = eventUrl;
 
   return data;
 }
@@ -301,7 +301,7 @@ export async function POST(request: NextRequest) {
 
         if (response.ok) {
           const html = await response.text();
-          const scrapedData = parseEventbriteHtml(html, eventId);
+          const scrapedData = parseEventbriteHtml(html, eventId, normalizedUrl);
           eventData = { ...eventData, ...scrapedData };
         }
       } catch (error) {

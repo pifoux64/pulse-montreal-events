@@ -134,6 +134,15 @@ DATABASE_URL="postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabas
 
 **Référence** : [Documentation Supabase - Connection Pooler](https://supabase.com/docs/guides/database/connecting-to-postgres#connection-pooler)
 
+## Stockage (Storage) – bucket "events"
+
+L’upload d’images d’événements (page Publier) utilise le bucket Supabase **events**. Si vous voyez l’erreur *« Le bucket de stockage "events" n'existe pas »* :
+
+1. **Création automatique** : L’API tente de créer le bucket si `SUPABASE_SERVICE_ROLE_KEY` est définie (sur Vercel et en local). Vérifiez que cette variable est bien configurée (Settings → Environment Variables).
+2. **Création manuelle** : Dans le [dashboard Supabase](https://app.supabase.com) → **Storage** → **New bucket** → nommez le bucket **events** → cochez **Public** → Create.
+
+Sans bucket "events" (ou sans clé service role), les images téléversées depuis le formulaire de publication ne pourront pas être enregistrées.
+
 ## Support
 
 Si le problème persiste :

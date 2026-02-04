@@ -35,8 +35,8 @@ const URL_MAPPING: Record<string, string> = {
 function convertToOriginalUrl(thumbnailUrl: string): string | null {
   try {
     const urlObj = new URL(thumbnailUrl);
-    const pathname = urlObj.pathname;
-    
+    let pathname = urlObj.pathname;
+
     // Vérifier d'abord le mapping manuel pour les chemins incorrects (même si pas thumbnail)
     for (const [wrongPath, correctPath] of Object.entries(URL_MAPPING)) {
       if (pathname.includes(wrongPath)) {
@@ -44,36 +44,26 @@ function convertToOriginalUrl(thumbnailUrl: string): string | null {
         return urlObj.toString();
       }
     }
-    
-    // Si c'est déjà une URL originale (pas de /thumb/), vérifier quand même le mapping
+
+    // Si c'est déjà une URL originale (pas de /thumb/), pas besoin de conversion
     if (!thumbnailUrl.includes('/thumb/')) {
-      return null; // Pas besoin de conversion
+      return null;
     }
-  
-  try {
-    const urlObj = new URL(thumbnailUrl);
-    let pathname = urlObj.pathname;
-    
-    // Format thumbnail: /wikipedia/commons/thumb/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg/1200px-Place_des_Arts_de_Montr%C3%A9al.jpg
-    // Format original: /wikipedia/commons/4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg
-    
-    // Remplacer /thumb/ par rien et supprimer la dernière partie (dimensions)
+
+    // Format thumbnail: /wikipedia/commons/thumb/4/4e/.../1200px-....jpg
+    // Format original: /wikipedia/commons/4/4e/....jpg
     const match = pathname.match(/^(\/wikipedia\/commons)\/thumb\/(.+?)\/(\d+px-.+)$/);
     if (match) {
-      // match[1] = /wikipedia/commons
-      // match[2] = 4/4e/Place_des_Arts_de_Montr%C3%A9al.jpg
       pathname = `${match[1]}/${match[2]}`;
     } else {
-      // Fallback: méthode simple
       pathname = pathname.replace(/\/thumb\//, '/');
       const parts = pathname.split('/');
-      // Supprimer la dernière partie qui contient les dimensions
       if (parts.length > 0 && parts[parts.length - 1].match(/^\d+px-/)) {
         parts.pop();
         pathname = parts.join('/');
       }
     }
-    
+
     urlObj.pathname = pathname;
     return urlObj.toString();
   } catch (error) {

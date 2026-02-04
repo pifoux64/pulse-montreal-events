@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -63,7 +63,13 @@ const createEventFormSchema = (t: (key: string) => string) => z.object({
     other: z.array(z.string()),
   }),
   targetAudience: z.array(z.string()).min(1, t('validation.targetAudienceMin')),
-  maxCapacity: z.number().min(1, t('validation.capacityMin')).optional(),
+  maxCapacity: z.preprocess(
+    (val) => (val === '' || val === undefined ? undefined : Number(val)),
+    z.union([
+      z.undefined(),
+      z.number().min(1, t('validation.capacityMin')),
+    ])
+  ),
 });
 
 type EventFormSchema = z.infer<ReturnType<typeof createEventFormSchema>>;
@@ -101,6 +107,8 @@ const EventForm = ({
   const [sourceUrl, setSourceUrl] = useState<string | null>(null);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
+  const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     control,
@@ -189,6 +197,65 @@ const EventForm = ({
   const handleRemoveCustomFilter = (index: number) => {
     const currentFilters = watch('customFilters');
     setValue('customFilters', currentFilters.filter((_, i) => i !== index));
+  };
+
+  const handleImageFile = async (file: File) => {
+    if (!file) return;
+    const ALLOWED = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!ALLOWED.includes(file.type)) {
+      setImageUploadError(t('imageInvalid'));
+      return;
+    }
+    setIsUploadingImage(true);
+    setImageUploadError(null);
+    try {
+      const MAX_SIZE = 5 * 1024 * 1024;
+      if (file.size > MAX_SIZE) {
+        throw new Error(t('imageTooLarge', { maxSize: '5MB' }));
+      }
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const MIN_WIDTH = 400;
+          const MIN_HEIGHT = 300;
+          const MAX_WIDTH = 4000;
+          const MAX_HEIGHT = 4000;
+          if (img.width < MIN_WIDTH || img.height < MIN_HEIGHT) {
+            reject(new Error(t('imageTooSmall', { minWidth: MIN_WIDTH, minHeight: MIN_HEIGHT, width: img.width, height: img.height })));
+            return;
+          }
+          if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
+            reject(new Error(t('imageTooBig', { maxWidth: MAX_WIDTH, maxHeight: MAX_HEIGHT, width: img.width, height: img.height })));
+            return;
+          }
+          resolve();
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          reject(new Error(t('imageInvalid')));
+        };
+        img.src = url;
+      });
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || t('uploadError'));
+      }
+      const data = await response.json();
+      setValue('imageUrl', data.url);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : t('uploadError');
+      setImageUploadError(message);
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const handleFormSubmit = async (data: EventFormSchema) => {
@@ -412,7 +479,7 @@ const EventForm = ({
               ) : (
                 <>
                   <ImageIcon className="w-4 h-4" />
-                  {t('import')}
+                  {t('importLabel')}
                 </>
               )}
             </button>
@@ -461,7 +528,7 @@ const EventForm = ({
               ) : (
                 <>
                   <Facebook className="w-4 h-4" />
-                  {t('import')}
+                  {t('importLabel')}
                 </>
               )}
             </button>
@@ -503,7 +570,7 @@ const EventForm = ({
               ) : (
                 <>
                   <Ticket className="w-4 h-4" />
-                  {t('import')}
+                  {t('importLabel')}
                 </>
               )}
             </button>
@@ -720,10 +787,53 @@ const EventForm = ({
               {t('imageLabel')} <span className="text-red-500">*</span>
             </label>
             
-            {/* Upload de fichier */}
+            {/* Upload de fichier (clic ou glisser-déposer) */}
             <div className="mb-4">
-              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImageFile(file);
+                  e.target.value = '';
+                }}
+              />
+              <div
+                role="button"
+                tabIndex={0}
+                className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
+                  isDraggingImage
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-300 bg-gray-50 hover:bg-gray-100'
+                }`}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fileInputRef.current?.click();
+                  }
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDraggingImage(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDraggingImage(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDraggingImage(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) handleImageFile(file);
+                }}
+              >
+                <div className="flex flex-col items-center justify-center pt-5 pb-6 pointer-events-none">
                   {isUploadingImage ? (
                     <>
                       <Loader2 className="w-8 h-8 mb-2 text-blue-600 animate-spin" />
@@ -739,81 +849,7 @@ const EventForm = ({
                     </>
                   )}
                 </div>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    setIsUploadingImage(true);
-                    setImageUploadError(null);
-
-                    try {
-                      // Valider la taille du fichier (5MB max)
-                      const MAX_SIZE = 5 * 1024 * 1024;
-                      if (file.size > MAX_SIZE) {
-                        throw new Error(t('imageTooLarge', { maxSize: '5MB' }));
-                      }
-
-                      // Valider les dimensions
-                      const img = new Image();
-                      const url = URL.createObjectURL(file);
-                      
-                      await new Promise<void>((resolve, reject) => {
-                        img.onload = () => {
-                          URL.revokeObjectURL(url);
-                          const MIN_WIDTH = 400;
-                          const MIN_HEIGHT = 300;
-                          const MAX_WIDTH = 4000;
-                          const MAX_HEIGHT = 4000;
-                          
-                          if (img.width < MIN_WIDTH || img.height < MIN_HEIGHT) {
-                            reject(new Error(t('imageTooSmall', { minWidth: MIN_WIDTH, minHeight: MIN_HEIGHT, width: img.width, height: img.height })));
-                            return;
-                          }
-                          
-                          if (img.width > MAX_WIDTH || img.height > MAX_HEIGHT) {
-                            reject(new Error(t('imageTooBig', { maxWidth: MAX_WIDTH, maxHeight: MAX_HEIGHT, width: img.width, height: img.height })));
-                            return;
-                          }
-                          
-                          resolve();
-                        };
-                        
-                        img.onerror = () => {
-                          URL.revokeObjectURL(url);
-                          reject(new Error(t('imageInvalid')));
-                        };
-                        
-                        img.src = url;
-                      });
-
-                      const formData = new FormData();
-                      formData.append('file', file);
-
-                      const response = await fetch('/api/upload/image', {
-                        method: 'POST',
-                        body: formData,
-                      });
-
-                      if (!response.ok) {
-                        const error = await response.json();
-                        throw new Error(error.error || t('uploadError'));
-                      }
-
-                      const data = await response.json();
-                      setValue('imageUrl', data.url);
-                    } catch (error: any) {
-                      console.error('Erreur upload:', error);
-                      setImageUploadError(error.message || t('uploadError'));
-                    } finally {
-                      setIsUploadingImage(false);
-                    }
-                  }}
-                />
-              </label>
+              </div>
               {imageUploadError && (
                 <p className="mt-2 text-sm text-red-600">{imageUploadError}</p>
               )}
@@ -1341,6 +1377,7 @@ const EventForm = ({
               render={({ field }) => (
                 <input
                   {...field}
+                  value={field.value ?? ''}
                   type="number"
                   min="1"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1348,6 +1385,9 @@ const EventForm = ({
                 />
               )}
             />
+            {errors.maxCapacity && (
+              <p className="mt-1 text-sm text-red-600">{errors.maxCapacity.message}</p>
+            )}
             <p className="mt-1 text-xs text-gray-500">
               {t('maxCapacityHelp')}
             </p>

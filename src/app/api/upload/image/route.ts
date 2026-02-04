@@ -89,38 +89,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Essayer de créer le bucket s'il n'existe pas (mais ne pas bloquer si ça échoue)
-    // Le bucket peut déjà exister ou on peut ne pas avoir les permissions pour le créer
+    // Créer le bucket s'il n'existe pas (nécessite SUPABASE_SERVICE_ROLE_KEY)
     try {
-      const { data: buckets } = await supabase.storage.listBuckets();
-      const bucketExists = buckets?.some(b => b.name === BUCKET_NAME);
-      
-      if (!bucketExists) {
-        // Essayer de créer le bucket, mais ignorer l'erreur si ça échoue
-        // (le bucket peut exister mais on n'a peut-être pas les permissions pour le lister)
-        const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
-          public: true,
-          fileSizeLimit: MAX_FILE_SIZE,
-          allowedMimeTypes: ALLOWED_TYPES,
-        });
-        
-        if (createError) {
-          // Si l'erreur indique que le bucket existe déjà, c'est OK
-          if (createError.message?.includes('already exists') || 
-              createError.message?.includes('duplicate') ||
-              createError.message?.includes('Bucket already exists')) {
-            console.log(`Bucket "${BUCKET_NAME}" existe déjà`);
-          } else {
-            // Autre erreur : logger mais continuer quand même
-            // (on essaiera l'upload et si ça échoue, on retournera une erreur plus claire)
-            console.warn(`Impossible de créer le bucket "${BUCKET_NAME}":`, createError.message);
-          }
+      const { error: createError } = await supabase.storage.createBucket(BUCKET_NAME, {
+        public: true,
+      });
+      if (createError) {
+        const msg = createError.message ?? '';
+        const alreadyExists =
+          /already exists|duplicate|Bucket already exists/i.test(msg);
+        if (!alreadyExists) {
+          console.warn(`[upload/image] createBucket "${BUCKET_NAME}":`, msg);
         }
       }
-    } catch (bucketError: any) {
-      // Ignorer les erreurs de vérification/création du bucket
-      // On essaiera quand même l'upload
-      console.warn('Erreur lors de la vérification du bucket (ignorée):', bucketError.message);
+    } catch (bucketErr: unknown) {
+      const msg = bucketErr instanceof Error ? bucketErr.message : String(bucketErr);
+      console.warn('[upload/image] createBucket check (ignored):', msg);
     }
 
     // Générer un nom de fichier unique
@@ -141,12 +125,16 @@ export async function POST(request: NextRequest) {
       console.error('Erreur upload Supabase:', error);
       
       // Si l'erreur indique que le bucket n'existe pas, donner un message plus clair
-      if (error.message?.includes('Bucket not found') || 
+      const statusCode = (error as { statusCode?: number }).statusCode;
+      if (error.message?.includes('Bucket not found') ||
           error.message?.includes('does not exist') ||
-          error.statusCode === 404) {
+          statusCode === 404) {
+        const dashboardHint = supabaseUrl
+          ? ` Allez dans Supabase → Storage → New bucket → nommez-le "${BUCKET_NAME}" et cochez "Public".`
+          : '';
         return NextResponse.json(
-          { 
-            error: `Le bucket de stockage "${BUCKET_NAME}" n'existe pas. Veuillez le créer dans votre dashboard Supabase ou contacter l'administrateur.` 
+          {
+            error: `Le bucket de stockage "${BUCKET_NAME}" n'existe pas.${dashboardHint} Vérifiez que SUPABASE_SERVICE_ROLE_KEY est bien configurée pour une création automatique, ou créez le bucket manuellement.`,
           },
           { status: 500 }
         );

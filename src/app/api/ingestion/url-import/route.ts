@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     console.error('[API URL Import][POST] Erreur:', error);
     if (error instanceof z.ZodError) {
       return NextResponse.json(
-        { error: 'URL invalide', details: error.errors },
+        { error: 'URL invalide', details: error.issues },
         { status: 400 }
       );
     }

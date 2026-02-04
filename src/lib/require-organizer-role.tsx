@@ -8,7 +8,6 @@
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { UserRole } from '@prisma/client';
 import OrganizerEnableModal from '@/components/OrganizerEnableModal';
 
 interface UseRequireOrganizerOptions {
