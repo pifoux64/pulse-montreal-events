@@ -136,12 +136,27 @@ DATABASE_URL="postgresql://postgres.xxx:[PASSWORD]@aws-0-[REGION].pooler.supabas
 
 ## Stockage (Storage) – bucket "events"
 
-L’upload d’images d’événements (page Publier) utilise le bucket Supabase **events**. Si vous voyez l’erreur *« Le bucket de stockage "events" n'existe pas »* :
+L’upload d’images d’événements (page Publier) utilise le bucket Supabase **events**.
 
-1. **Création automatique** : L’API tente de créer le bucket si `SUPABASE_SERVICE_ROLE_KEY` est définie (sur Vercel et en local). Vérifiez que cette variable est bien configurée (Settings → Environment Variables).
-2. **Création manuelle** : Dans le [dashboard Supabase](https://app.supabase.com) → **Storage** → **New bucket** → nommez le bucket **events** → cochez **Public** → Create.
+### Erreur « new row violates row-level security policy »
 
-Sans bucket "events" (ou sans clé service role), les images téléversées depuis le formulaire de publication ne pourront pas être enregistrées.
+Cette erreur apparaît quand l’API utilise la **clé anon** au lieu de la **clé service role**. Le Storage Supabase applique alors les règles RLS et refuse l’insertion.
+
+**À faire** : Définir **SUPABASE_SERVICE_ROLE_KEY** (et pas seulement `NEXT_PUBLIC_SUPABASE_ANON_KEY`) :
+
+1. [Supabase](https://app.supabase.com) → votre projet → **Settings** → **API**.
+2. Dans **Project API keys**, copiez la clé **service_role** (secret).
+3. Sur Vercel : **Settings** → **Environment Variables** → ajoutez `SUPABASE_SERVICE_ROLE_KEY` avec cette valeur.
+4. Redéployez le projet.
+
+L’API d’upload utilise uniquement la clé service role pour le Storage ; elle ne retombe plus sur la clé anon, ce qui évite l’erreur RLS.
+
+### Erreur « Le bucket de stockage "events" n'existe pas »
+
+1. **Création automatique** : L’API tente de créer le bucket si `SUPABASE_SERVICE_ROLE_KEY` est définie.
+2. **Création manuelle** : Supabase → **Storage** → **New bucket** → nom **events** → cochez **Public** → Create.
+
+Sans bucket "events" ou sans clé service role, les images téléversées depuis le formulaire de publication ne pourront pas être enregistrées.
 
 ## Support
 

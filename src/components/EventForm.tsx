@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -110,6 +110,20 @@ const EventForm = ({
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Dates par défaut avec minutes à 00 (calculées une fois au montage)
+  const defaultStartDate = useMemo(() => {
+    const d = new Date();
+    d.setMinutes(0, 0, 0);
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    return d.toISOString().slice(0, 16);
+  }, []);
+  const defaultEndDate = useMemo(() => {
+    const d = new Date();
+    d.setMinutes(0, 0, 0);
+    d.setHours(d.getHours() + 4, 0, 0, 0);
+    return d.toISOString().slice(0, 16);
+  }, []);
+
   const {
     control,
     handleSubmit,
@@ -123,8 +137,8 @@ const EventForm = ({
       description: initialData?.description || '',
       longDescription: initialData?.longDescription || '',
       lineup: initialData?.lineup || [],
-      startDate: initialData?.startDate || '',
-      endDate: initialData?.endDate || '',
+      startDate: initialData?.startDate || defaultStartDate,
+      endDate: initialData?.endDate || defaultEndDate,
       location: initialData?.location || {
         name: '',
         address: '',
@@ -1126,9 +1140,9 @@ const EventForm = ({
                       value={field.value ?? ''}
                       onChange={(e) => {
                         const value = e.target.value;
-                        // Convertir en nombre si la valeur n'est pas vide
                         field.onChange(value === '' ? undefined : parseFloat(value) || 0);
                       }}
+                      onFocus={(e) => e.target.select()}
                       onBlur={field.onBlur}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder={t('pricePlaceholder')}

@@ -4,13 +4,13 @@ import { authOptions } from '@/lib/auth';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+// L’upload doit utiliser la clé service role pour contourner la RLS du Storage.
+// Avec la clé anon, Supabase applique la RLS et renvoie "new row violates row-level security policy".
+const supabase =
+  supabaseUrl && supabaseServiceKey
+    ? createClient(supabaseUrl, supabaseServiceKey)
+    : null;
 const BUCKET_NAME = 'events';
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -39,6 +39,16 @@ async function validateImageDimensions(buffer: Buffer, mimeType: string): Promis
 
 export async function POST(request: NextRequest) {
   try {
+    if (!supabase) {
+      return NextResponse.json(
+        {
+          error:
+            'Configuration Supabase manquante : définissez SUPABASE_SERVICE_ROLE_KEY (clé « service role ») pour permettre l’upload d’images. Sans elle, le stockage applique la RLS et refuse l’upload.',
+        },
+        { status: 500 }
+      );
+    }
+
     // Vérifier l'authentification
     const session = await getServerSession(authOptions);
     if (!session?.user) {
@@ -123,12 +133,27 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Erreur upload Supabase:', error);
-      
-      // Si l'erreur indique que le bucket n'existe pas, donner un message plus clair
+
+      const msg = error.message ?? '';
+
+      // RLS : la clé anon est utilisée au lieu de la service role
+      if (/row-level security|RLS|violates.*policy/i.test(msg)) {
+        return NextResponse.json(
+          {
+            error:
+              'Le stockage a refusé l’upload (règles de sécurité). Définissez la variable SUPABASE_SERVICE_ROLE_KEY dans les paramètres du projet (Vercel ou .env) puis redéployez. La clé « service role » se trouve dans Supabase → Settings → API.',
+          },
+          { status: 500 }
+        );
+      }
+
+      // Bucket absent
       const statusCode = (error as { statusCode?: number }).statusCode;
-      if (error.message?.includes('Bucket not found') ||
-          error.message?.includes('does not exist') ||
-          statusCode === 404) {
+      if (
+        msg.includes('Bucket not found') ||
+        msg.includes('does not exist') ||
+        statusCode === 404
+      ) {
         const dashboardHint = supabaseUrl
           ? ` Allez dans Supabase → Storage → New bucket → nommez-le "${BUCKET_NAME}" et cochez "Public".`
           : '';
@@ -139,9 +164,9 @@ export async function POST(request: NextRequest) {
           { status: 500 }
         );
       }
-      
+
       return NextResponse.json(
-        { error: `Erreur lors de l'upload de l'image: ${error.message || 'Erreur inconnue'}` },
+        { error: `Erreur lors de l'upload de l'image: ${msg || 'Erreur inconnue'}` },
         { status: 500 }
       );
     }

@@ -89,8 +89,20 @@ const CreateEventSchema = z.object({
   description: z.string().min(10),
   longDescription: z.string().optional(), // SPRINT 4: Description longue pour Facebook/Eventbrite
   lineup: z.array(z.string()).optional(), // SPRINT 4: Liste d'artistes pour RA/Bandsintown
-  startAt: z.string().datetime(),
-  endAt: z.string().datetime().optional(),
+  startAt: z.string().transform((s) => {
+    const d = new Date(s);
+    if (Number.isNaN(d.getTime())) throw new Error('Date de début invalide');
+    return d.toISOString();
+  }),
+  endAt: z
+    .string()
+    .optional()
+    .transform((s) => {
+      if (!s) return undefined;
+      const d = new Date(s);
+      if (Number.isNaN(d.getTime())) return undefined;
+      return d.toISOString();
+    }),
   venueId: z.string().uuid().optional(),
   venue: z.object({
     name: z.string(),

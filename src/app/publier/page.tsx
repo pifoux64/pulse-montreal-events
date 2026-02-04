@@ -92,16 +92,16 @@ const mockCategories: EventCategory[] = [
   }
 ];
 
-// Mapping des catégories du frontend vers Prisma
+// Mapping des catégories du frontend vers Prisma (enum: MUSIC, THEATRE, EXHIBITION, FAMILY, SPORT, NIGHTLIFE, EDUCATION, COMMUNITY, OTHER)
 const mapCategoryToPrisma = (category: string): PrismaEventCategory => {
   const mapping: Record<string, PrismaEventCategory> = {
     'Musique': PrismaEventCategory.MUSIC,
-    'Art & Culture': PrismaEventCategory.ARTS_THEATRE,
+    'Art & Culture': PrismaEventCategory.THEATRE,
     'Sport': PrismaEventCategory.SPORT,
     'Famille': PrismaEventCategory.FAMILY,
-    'Gastronomie': PrismaEventCategory.FOOD_DRINK,
+    'Gastronomie': PrismaEventCategory.OTHER,
   };
-  return mapping[category] || PrismaEventCategory.MISCELLANEOUS;
+  return mapping[category] ?? PrismaEventCategory.OTHER;
 };
 
 export default function PublierPage() {
@@ -179,7 +179,8 @@ export default function PublierPage() {
           ...(data.accessibility.visualAssistance ? ['visual_aid'] : []),
           ...(data.accessibility.quietSpace ? ['quiet_space'] : []),
         ],
-        ageRestriction: undefined, // À implémenter si nécessaire
+        ageRestriction: undefined,
+        musicUrls: data.musicUrls,
       };
 
       const response = await fetch('/api/events', {
@@ -189,8 +190,13 @@ export default function PublierPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || t('publishError'));
+        const errorData = await response.json().catch(() => ({}));
+        const msg = errorData.error || t('publishError');
+        const details = errorData.details;
+        const detailStr = Array.isArray(details) && details.length > 0
+          ? details.map((d: { path?: string[]; message?: string }) => `${d.path?.join('.') || '?'}: ${d.message || ''}`).join('; ')
+          : '';
+        throw new Error(detailStr ? `${msg} (${detailStr})` : msg);
       }
 
       const createdEvent = await response.json();
