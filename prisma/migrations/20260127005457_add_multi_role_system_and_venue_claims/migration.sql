@@ -1,3 +1,4 @@
+-- Alias du contenu de 20260125000000 (référence en base 20260127005457)
 -- AlterEnum: Add VENUE to UserRole enum
 ALTER TYPE "UserRole" ADD VALUE IF NOT EXISTS 'VENUE';
 

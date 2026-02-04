@@ -38,8 +38,8 @@ export async function POST(request: NextRequest) {
         category,
         tags,
         eventTags,
-        venue ? { name: venue.name, neighborhood: venue.neighborhood } : null,
-        organizer ? { displayName: organizer.displayName } : null,
+        venue: venue ? { name: venue.name, neighborhood: venue.neighborhood } : null,
+        organizer: organizer ? { displayName: organizer.displayName } : null,
         lineup,
       },
       {
