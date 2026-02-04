@@ -4,9 +4,21 @@ import { EventStatus } from '@prisma/client';
 import { getServerSession } from 'next-auth';
 
 import { prisma } from '@/lib/prisma';
+
+/** Forme du Pulse Insight stocké en JSON en base */
+type PulseInsightJson = {
+  summary: string;
+  vibe: string;
+  expectedAudience: string;
+  intensity: string;
+  musicStyle?: string | null;
+  danceLevel?: string | null;
+  culturalContext?: string | null;
+  tags?: Array<{ category: string; value: string; label: string }>;
+};
 import { buildEventJsonLd, canonicalUrlForPath } from '@/lib/seo';
 import { authOptions } from '@/lib/auth';
-import EventPageClient from './EventPageClient';
+import EventPageClient, { type EventPageClientProps } from './EventPageClient';
 
 const SAFE_DESCRIPTION_LENGTH = 160;
 export const revalidate = 600; // 10 minutes
@@ -208,6 +220,7 @@ export default async function EventPage({ params }: { params: Promise<{ id: stri
             } : null,
             eventTags: event.eventTags,
             features: event.features,
+            pulseInsight: ((event as { pulseInsight?: PulseInsightJson | null }).pulseInsight ?? null) as EventPageClientProps['event']['pulseInsight'],
           }}
           isOwner={isOwner}
           isAdmin={isAdmin}

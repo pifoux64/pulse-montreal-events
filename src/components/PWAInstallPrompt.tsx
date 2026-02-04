@@ -25,19 +25,18 @@ export default function PWAInstallPrompt() {
 
     // Écouter l'événement beforeinstallprompt
     const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      
-      // Vérifier si l'utilisateur a déjà refusé l'installation
       const hasDeclined = localStorage.getItem('pwa-install-declined');
       const lastDeclined = hasDeclined ? new Date(hasDeclined) : null;
-      const daysSinceDeclined = lastDeclined 
-        ? (Date.now() - lastDeclined.getTime()) / (1000 * 60 * 60 * 24) 
+      const daysSinceDeclined = lastDeclined
+        ? (Date.now() - lastDeclined.getTime()) / (1000 * 60 * 60 * 24)
         : Infinity;
-      
-      // Afficher le prompt seulement si l'utilisateur n'a pas refusé récemment (7 jours)
-      if (daysSinceDeclined > 7) {
-        setTimeout(() => setShowPrompt(true), 3000); // Attendre 3 secondes
+      const willShowPrompt = daysSinceDeclined > 7;
+
+      // preventDefault uniquement si on va afficher notre bannière (évite le warning console)
+      if (willShowPrompt) {
+        e.preventDefault();
+        setDeferredPrompt(e as BeforeInstallPromptEvent);
+        setTimeout(() => setShowPrompt(true), 3000);
       }
     };
 

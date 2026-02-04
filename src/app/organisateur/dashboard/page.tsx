@@ -81,7 +81,7 @@ export default function OrganisateurDashboard() {
 
   // Délai avant de considérer la session comme vraiment absente (évite redirection pendant restauration session)
   const mountedAt = useRef<number>(Date.now());
-  const SESSION_CHECK_DELAY = 1000;
+  const SESSION_CHECK_DELAY = 2000;
   
   // Détecter la locale pour date-fns
   const dateLocale = typeof window !== 'undefined' 

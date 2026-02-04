@@ -344,6 +344,7 @@ model Event {
   subcategory    String?
   accessibility  String[]      @default([]) // ["wheelchair", "hearing_aid", etc.]
   ageRestriction String?       @map("age_restriction")
+  pulseInsight   Json?         @map("pulse_insight") // Résumé IA généré une fois à la création
   createdAt      DateTime      @default(now()) @map("created_at")
   updatedAt      DateTime      @updatedAt @map("updated_at")
 

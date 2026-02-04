@@ -5,8 +5,9 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import ModernLoader from '@/components/ModernLoader';
 import AdminNav from '@/components/AdminNav';
@@ -62,8 +63,12 @@ interface ImportJob {
   errorSample: string | null;
 }
 
+const SESSION_CHECK_DELAY = 2000;
+
 export default function IngestionDashboard() {
   const { data: session, status } = useSession();
+  const router = useRouter();
+  const mountedAt = useRef<number>(Date.now());
   const [sources, setSources] = useState<Source[]>([]);
   const [recentJobs, setRecentJobs] = useState<ImportJob[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,8 +78,18 @@ export default function IngestionDashboard() {
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.role === 'ADMIN') {
       loadData();
+      return;
     }
-  }, [status, session]);
+    if (status !== 'unauthenticated') return;
+    const elapsed = Date.now() - mountedAt.current;
+    if (elapsed < SESSION_CHECK_DELAY) {
+      const t = setTimeout(() => {
+        router.push('/auth/signin?callbackUrl=/admin/ingestion');
+      }, SESSION_CHECK_DELAY - elapsed);
+      return () => clearTimeout(t);
+    }
+    router.push('/auth/signin?callbackUrl=/admin/ingestion');
+  }, [status, session, router]);
 
   const loadData = async () => {
     try {
@@ -170,7 +185,11 @@ export default function IngestionDashboard() {
     }
   };
 
-  if (status === 'loading' || loading) {
+  // Attendre la session (éviter redirection avant hydratation)
+  const elapsed = typeof window !== 'undefined' ? Date.now() - mountedAt.current : 0;
+  const waitingForSession = status === 'loading' || (status === 'unauthenticated' && elapsed < SESSION_CHECK_DELAY);
+
+  if (waitingForSession || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 to-gray-950">
         <Navigation />

@@ -14,6 +14,7 @@ import { EventCategory, EventLanguage, EventStatus, UserRole, PromotionStatus, N
 import { enrichEventWithTags } from '@/lib/tagging/eventTaggingService';
 import { normalizeUrl } from '@/lib/utils';
 import { sendEmailViaResend } from '@/lib/email/resend';
+import { generatePulseInsight } from '@/lib/ai/generatePulseInsight';
 
 /**
  * Génère des tags automatiques basés sur le contenu de l'événement
@@ -1099,6 +1100,30 @@ export async function POST(request: NextRequest) {
       await prisma.eventFeature.createMany({
         data: featuresToCreate,
       });
+    }
+
+    // Générer et sauvegarder le Pulse Insight une fois à la création
+    try {
+      const insight = await generatePulseInsight(
+        event.id,
+        {
+          title: event.title,
+          description: event.description,
+          category: event.category,
+          tags: allTags,
+          eventTags: [],
+          venue: event.venue ? { name: event.venue.name, neighborhood: event.venue.neighborhood } : null,
+          organizer: event.organizer ? { displayName: event.organizer.displayName } : null,
+          lineup: eventData.lineup ?? [],
+        },
+        { locale: 'fr' }
+      );
+      await prisma.event.update({
+        where: { id: event.id },
+        data: { pulseInsight: insight as object },
+      });
+    } catch (insightErr) {
+      console.warn('Erreur génération Pulse Insight à la création:', insightErr);
     }
 
     // Stocker source_url si fourni (URL d'origine de l'import)

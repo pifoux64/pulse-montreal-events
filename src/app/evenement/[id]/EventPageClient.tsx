@@ -11,7 +11,7 @@ import PracticalInfo from '@/components/event-detail/PracticalInfo';
 import OrganizerTools from '@/components/event-detail/OrganizerTools';
 import ListenBeforeYouGo from '@/components/event-detail/ListenBeforeYouGo';
 
-interface EventPageClientProps {
+export interface EventPageClientProps {
   event: {
     id: string;
     title: string;
@@ -45,9 +45,22 @@ interface EventPageClientProps {
     } | null;
     eventTags?: Array<{ category: string; value: string }> | null;
     features?: Array<{ featureKey: string; featureValue: any }> | null;
+    pulseInsight?: PulseInsightData | null;
   };
   isOwner: boolean;
   isAdmin: boolean;
+}
+
+/** Forme du Pulse Insight (BD ou API) */
+interface PulseInsightData {
+  summary: string;
+  musicStyle?: string | null;
+  vibe: string;
+  expectedAudience: string;
+  intensity: 'chill' | 'moderate' | 'high' | 'very_high' | string;
+  danceLevel?: 'none' | 'low' | 'medium' | 'high' | null;
+  culturalContext?: string | null;
+  tags: Array<{ category: string; value: string; label: string }>;
 }
 
 export default function EventPageClient({ event, isOwner, isAdmin }: EventPageClientProps) {
@@ -131,7 +144,7 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
           eventTags={event.eventTags}
         />
 
-        {/* 3. Pulse Insight (AI) */}
+        {/* 3. Pulse Insight (AI) - lu depuis la BD si présent, sinon généré une fois et sauvegardé */}
         <PulseInsight
           eventId={event.id}
           eventTitle={event.title}
@@ -142,6 +155,7 @@ export default function EventPageClient({ event, isOwner, isAdmin }: EventPageCl
           organizer={event.organizer}
           lineup={lineup}
           fallbackTags={event.tags}
+          initialInsight={event.pulseInsight ?? undefined}
         />
 
         {/* 4. Listen Before You Go */}

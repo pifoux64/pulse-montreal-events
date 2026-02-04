@@ -23,6 +23,16 @@ interface SearchSuggestion {
   relevance: number;
 }
 
+/** Événement brut renvoyé par GET /api/events */
+interface ApiEventItem {
+  id: string;
+  title?: string | null;
+  startAt?: string | null;
+  venue?: { name?: string | null } | null;
+  organizer?: { displayName?: string | null; user?: { name?: string | null } } | null;
+  tags?: string[] | null;
+}
+
 export default function SearchBar({
   initialQuery = '',
   onSearch,
@@ -36,6 +46,7 @@ export default function SearchBar({
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestionsList, setShowSuggestionsList] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -59,89 +70,97 @@ export default function SearchBar({
     return () => clearTimeout(timer);
   }, [query, debounceMs, onSearch]);
 
-  // Génération des suggestions (événements en priorité, avec sous-titre lieu/date)
-  const generateSuggestions = useMemo(() => {
-    if (!showSuggestions || !debouncedQuery.trim()) {
-      return [];
+  // Appel API pour les suggestions d'événements dès qu'on tape (résultats en direct)
+  useEffect(() => {
+    const q = debouncedQuery.trim();
+    if (!showSuggestions || q.length < 1) {
+      setSuggestions([]);
+      setIsLoadingSuggestions(false);
+      return;
     }
 
-    const queryLower = debouncedQuery.toLowerCase().trim();
-    const suggestionsList: SearchSuggestion[] = [];
-    const seenEventIds = new Set<string>();
-    const seenText = new Set<string>();
+    setSuggestions([]);
+    const controller = new AbortController();
+    setIsLoadingSuggestions(true);
 
-    // Si on a des événements, chercher dedans
-    if (events.length > 0) {
-      events.forEach((event) => {
-        const title = event.title ?? '';
-        const desc = (event.description ?? '').toLowerCase();
-        const venueName = event.location?.name ?? (event as any).venue?.name ?? '';
-        const organizerName = event.organizer?.name ?? '';
-        const tags = event.tags ?? [];
+    const params = new URLSearchParams({
+      q: q,
+      pageSize: '15',
+      futureOnly: 'true',
+    });
+    fetch(`/api/events?${params.toString()}`, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error('Erreur recherche');
+        return res.json();
+      })
+      .then((data: { items?: ApiEventItem[] }) => {
+        const items = data.items ?? [];
+        const seenVenues = new Set<string>();
+        const seenOrgs = new Set<string>();
+        const list: SearchSuggestion[] = [];
 
-        const titleMatch = title.toLowerCase().includes(queryLower);
-        const descMatch = queryLower.length >= 2 && desc.includes(queryLower);
-        const venueMatch = venueName && venueName.toLowerCase().includes(queryLower);
-        const organizerMatch = organizerName && organizerName.toLowerCase().includes(queryLower);
-        const tagMatch = tags.some((tag: string) => String(tag).toLowerCase().includes(queryLower));
+        items.forEach((ev) => {
+          const title = ev.title ?? '';
+          const venueName = ev.venue?.name ?? '';
+          const orgName = ev.organizer?.displayName ?? ev.organizer?.user?.name ?? '';
+          const dateStr = ev.startAt
+            ? new Date(ev.startAt).toLocaleDateString('fr-CA', { weekday: 'short', month: 'short', day: 'numeric' })
+            : '';
+          const subtitle = [venueName, dateStr].filter(Boolean).join(' · ');
 
-        if (titleMatch && event.id && !seenEventIds.has(event.id)) {
-          seenEventIds.add(event.id);
-          const subtitle = [venueName, event.startDate ? new Date(event.startDate).toLocaleDateString('fr-CA', { weekday: 'short', month: 'short', day: 'numeric' }) : ''].filter(Boolean).join(' · ');
-          suggestionsList.push({
+          list.push({
             text: title,
             type: 'event',
-            eventId: event.id,
+            eventId: ev.id,
             subtitle,
             relevance: 10,
           });
-        }
+          if (venueName && !seenVenues.has(venueName)) {
+            seenVenues.add(venueName);
+            list.push({ text: venueName, type: 'venue', relevance: 7 });
+          }
+          if (orgName && !seenOrgs.has(orgName)) {
+            seenOrgs.add(orgName);
+            list.push({ text: orgName, type: 'organizer', relevance: 6 });
+          }
+        });
 
-        if (venueMatch && venueName && !seenText.has(`venue:${venueName}`)) {
-          seenText.add(`venue:${venueName}`);
-          suggestionsList.push({
-            text: venueName,
-            type: 'venue',
-            relevance: 7,
-          });
-        }
-
-        if (organizerMatch && organizerName && !seenText.has(`org:${organizerName}`)) {
-          seenText.add(`org:${organizerName}`);
-          suggestionsList.push({
-            text: organizerName,
-            type: 'organizer',
-            relevance: 6,
-          });
-        }
-
-        if (tagMatch) {
-          tags.forEach((tag: string) => {
-            const t = String(tag);
-            if (t.toLowerCase().includes(queryLower) && !seenText.has(`tag:${t}`)) {
-              seenText.add(`tag:${t}`);
-              suggestionsList.push({
-                text: t,
-                type: 'tag',
-                relevance: 5,
-              });
-            }
-          });
-        }
+        setSuggestions(list.slice(0, 12));
+      })
+      .catch((err) => {
+        if (err.name !== 'AbortError') setSuggestions([]);
+      })
+      .finally(() => {
+        setIsLoadingSuggestions(false);
       });
-    }
 
-    // Trier par pertinence et limiter (événements en premier)
-    const sorted = suggestionsList
-      .sort((a, b) => b.relevance - a.relevance)
-      .slice(0, 10);
+    return () => controller.abort();
+  }, [debouncedQuery, showSuggestions]);
 
-    return sorted;
+  // Fallback: suggestions depuis les events du parent (si pas de requête ou avant réponse API)
+  const generateSuggestionsFromEvents = useMemo(() => {
+    if (!showSuggestions || !debouncedQuery.trim() || events.length === 0) return [];
+    const queryLower = debouncedQuery.toLowerCase().trim();
+    const suggestionsList: SearchSuggestion[] = [];
+    const seenEventIds = new Set<string>();
+    events.forEach((event) => {
+      const title = event.title ?? '';
+      const venueName = event.location?.name ?? (event as any).venue?.name ?? '';
+      const titleMatch = title.toLowerCase().includes(queryLower);
+      if (titleMatch && event.id && !seenEventIds.has(event.id)) {
+        seenEventIds.add(event.id);
+        const subtitle = [venueName, event.startDate ? new Date(event.startDate).toLocaleDateString('fr-CA', { weekday: 'short', month: 'short', day: 'numeric' }) : ''].filter(Boolean).join(' · ');
+        suggestionsList.push({ text: title, type: 'event', eventId: event.id, subtitle, relevance: 10 });
+      }
+    });
+    return suggestionsList.slice(0, 10);
   }, [debouncedQuery, events, showSuggestions]);
 
+  // Afficher les suggestions API en priorité; sinon le fallback
   useEffect(() => {
-    setSuggestions(generateSuggestions);
-  }, [generateSuggestions]);
+    if (suggestions.length > 0) return;
+    setSuggestions(generateSuggestionsFromEvents);
+  }, [suggestions.length, generateSuggestionsFromEvents]);
 
   // Ouvrir le menu dès qu'on tape au moins 1 caractère
   useEffect(() => {
@@ -170,18 +189,20 @@ export default function SearchBar({
 
     if (suggestion.type === 'event' && suggestion.eventId) {
       router.push(`/evenement/${suggestion.eventId}`);
-    } else if (suggestion.type === 'organizer') {
+      return;
+    }
+    if (suggestion.type === 'organizer') {
       const event = events.find((e) => e.organizer?.name === suggestion.text);
       if (event?.organizerId) {
         const organizerUrl = event.organizerSlug
           ? `/organisateur/${event.organizerSlug}`
           : `/organisateur/${event.organizerId}`;
         router.push(organizerUrl);
+        return;
       }
-    } else {
-      if (onSearch) {
-        onSearch(suggestion.text);
-      }
+    }
+    if (onSearch) {
+      onSearch(suggestion.text);
     }
   };
 
@@ -262,10 +283,10 @@ export default function SearchBar({
       {showSuggestionsList && query.trim().length >= 1 && (
         <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden">
           <div className="max-h-96 overflow-y-auto">
-            {isSearching && suggestions.length === 0 ? (
+            {(isSearching || isLoadingSuggestions) && suggestions.length === 0 ? (
               <div className="px-4 py-4 flex items-center gap-3 text-gray-500">
                 <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
-                <span className="text-sm">Recherche en cours...</span>
+                <span className="text-sm">Recherche d'événements...</span>
               </div>
             ) : suggestions.length === 0 ? (
               <div className="px-4 py-4 text-sm text-gray-500">

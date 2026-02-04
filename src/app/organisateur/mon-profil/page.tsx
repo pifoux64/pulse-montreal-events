@@ -9,7 +9,7 @@ import { User, Globe, Facebook, Instagram, Twitter, Linkedin, Save, Loader2, Che
 export const dynamic = 'force-dynamic';
 
 // Délai (ms) avant de considérer la session comme vraiment absente (évite redirection pendant l’hydratation)
-const SESSION_CHECK_DELAY = 1000;
+const SESSION_CHECK_DELAY = 2000;
 
 interface OrganizerProfile {
   id: string;

@@ -31,6 +31,8 @@ interface PulseInsightProps {
   organizer?: { displayName?: string | null } | null;
   lineup?: string[] | null;
   fallbackTags?: string[] | null;
+  /** Si fourni, affiché directement sans appel API (insight déjà en BD) */
+  initialInsight?: PulseInsightData | null;
 }
 
 export default function PulseInsight({
@@ -43,14 +45,21 @@ export default function PulseInsight({
   organizer,
   lineup,
   fallbackTags,
+  initialInsight,
 }: PulseInsightProps) {
   const t = useTranslations('eventDetail');
   const locale = useLocale();
-  const [insight, setInsight] = useState<PulseInsightData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [insight, setInsight] = useState<PulseInsightData | null>(initialInsight ?? null);
+  const [loading, setLoading] = useState(!initialInsight);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (initialInsight) {
+      setInsight(initialInsight);
+      setLoading(false);
+      return;
+    }
+
     const fetchInsight = async () => {
       try {
         setLoading(true);
@@ -69,7 +78,7 @@ export default function PulseInsight({
             venue: venue ? { name: venue.name, neighborhood: venue.neighborhood } : null,
             organizer: organizer ? { displayName: organizer.displayName } : null,
             lineup: lineup || [],
-            locale: locale, // Passer la locale pour générer l'insight dans la bonne langue
+            locale,
           }),
         });
 
@@ -90,7 +99,7 @@ export default function PulseInsight({
     };
 
     fetchInsight();
-  }, [eventId, eventTitle, eventDescription, eventCategory, eventTags, venue, organizer, lineup, fallbackTags, locale]);
+  }, [eventId, initialInsight, eventTitle, eventDescription, eventCategory, eventTags, venue, organizer, lineup, fallbackTags, locale]);
 
   if (loading) {
     return (
