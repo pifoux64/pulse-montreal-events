@@ -195,9 +195,10 @@ export default function OptimizedHomePage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showFreeOnly, setShowFreeOnly] = useState(false);
 
-  // Utilisation du hook React Query (par défaut: uniquement événements futurs)
+  // Utilisation du hook React Query (recherche serveur si searchQuery renseigné)
   const { data: events = [], isLoading: loading, error } = useEvents({
     includePast: filters.includePast ?? false,
+    searchQuery: filters.searchQuery?.trim() || undefined,
   });
   
   // Système de favoris
@@ -522,6 +523,7 @@ export default function OptimizedHomePage() {
             {/* Barre de recherche moderne avec suggestions */}
             <div className="max-w-2xl mx-auto mb-12">
               <SearchBar
+                initialQuery={filters.searchQuery ?? ''}
                 onSearch={(query) => {
                   setFilters((prev) => ({ ...prev, searchQuery: query }));
                   if (query.trim()) {

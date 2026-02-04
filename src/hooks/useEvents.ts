@@ -194,14 +194,17 @@ export const transformApiEvent = (event: ApiEvent): Event => {
 export interface UseEventsOptions {
   /** Inclure les événements passés (false par défaut = uniquement les futurs) */
   includePast?: boolean;
+  /** Recherche textuelle : envoie q à l'API pour filtrer côté serveur */
+  searchQuery?: string;
 }
 
 // Hook principal pour récupérer les événements (par défaut: uniquement futurs)
 export const useEvents = (options: UseEventsOptions = {}) => {
   const includePast = options.includePast ?? false;
+  const searchQuery = options.searchQuery?.trim() ?? '';
 
   return useQuery({
-    queryKey: ['events', includePast],
+    queryKey: ['events', includePast, searchQuery],
     queryFn: async (): Promise<Event[]> => {
       const futureOnly = !includePast;
       const allEvents: ApiEvent[] = [];
@@ -214,6 +217,9 @@ export const useEvents = (options: UseEventsOptions = {}) => {
           page: String(page),
           futureOnly: String(futureOnly),
         });
+        if (searchQuery) {
+          params.set('q', searchQuery);
+        }
         const response = await fetch(`/api/events?${params.toString()}`);
         if (!response.ok) {
           throw new Error(`Erreur API: ${response.status}`);

@@ -632,24 +632,26 @@ export async function GET(request: NextRequest) {
       where.language = filters.lang;
     }
 
-    // Recherche textuelle
+    // Recherche textuelle (titre, description, tags, lieu, organisateur)
     if (filters.q) {
-      // Pour la recherche, on utilise une condition OR
+      const q = filters.q.trim();
       const searchOr = [
-        { title: { contains: filters.q, mode: 'insensitive' } },
-        { description: { contains: filters.q, mode: 'insensitive' } },
-        { tags: { has: filters.q } }
+        { title: { contains: q, mode: 'insensitive' } },
+        { description: { contains: q, mode: 'insensitive' } },
+        { tags: { has: q } },
+        { venue: { name: { contains: q, mode: 'insensitive' } } },
+        { organizer: { displayName: { contains: q, mode: 'insensitive' } } },
       ];
-      
-      // Si on a déjà un OR (pour free), on doit combiner avec AND
+
       if (where.OR && Array.isArray(where.OR)) {
         where.AND = [
+          ...(where.AND || []),
           { OR: where.OR },
-          { OR: searchOr }
+          { OR: searchOr },
         ];
         delete where.OR;
       } else {
-        where.OR = searchOr;
+        where.AND = [...(where.AND || []), { OR: searchOr }];
       }
     }
 

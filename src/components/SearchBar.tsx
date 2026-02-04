@@ -6,6 +6,8 @@ import { Event } from '@/types';
 import { useRouter } from 'next/navigation';
 
 interface SearchBarProps {
+  /** Requête initiale (ex. depuis l'URL ?q=...) pour afficher et synchroniser la recherche */
+  initialQuery?: string;
   onSearch?: (query: string) => void;
   placeholder?: string;
   events?: Event[];
@@ -22,19 +24,28 @@ interface SearchSuggestion {
 }
 
 export default function SearchBar({
+  initialQuery = '',
   onSearch,
   placeholder = 'Rechercher des événements, artistes, lieux...',
   events = [],
   showSuggestions = true,
   debounceMs = 200,
 }: SearchBarProps) {
-  const [query, setQuery] = useState('');
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [showSuggestionsList, setShowSuggestionsList] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  // Synchroniser la requête depuis l'extérieur (ex. URL ?q=...)
+  useEffect(() => {
+    if (initialQuery !== undefined && initialQuery !== query) {
+      setQuery(initialQuery);
+      setDebouncedQuery(initialQuery);
+    }
+  }, [initialQuery]);
 
   // Debounce de la requête
   useEffect(() => {
