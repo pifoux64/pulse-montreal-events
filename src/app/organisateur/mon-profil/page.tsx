@@ -1,12 +1,15 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import { User, Globe, Facebook, Instagram, Twitter, Linkedin, Save, Loader2, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
+
+// Délai (ms) avant de considérer la session comme vraiment absente (évite redirection pendant l’hydratation)
+const SESSION_CHECK_DELAY = 800;
 
 interface OrganizerProfile {
   id: string;
@@ -83,15 +86,23 @@ export default function MonProfilOrganisateurPage() {
     return `https://${finalDomain}${path}`;
   };
 
+  // Éviter de rediriger vers la connexion pendant que la session peut encore être en cours de chargement (navigation client)
+  const mountedAt = useRef<number>(Date.now());
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin?callbackUrl=/organisateur/mon-profil');
-      return;
-    }
-
     if (status === 'authenticated') {
       loadProfile();
+      return;
     }
+    if (status !== 'unauthenticated') return;
+
+    const elapsed = Date.now() - mountedAt.current;
+    if (elapsed < SESSION_CHECK_DELAY) {
+      const t = setTimeout(() => {
+        router.push('/auth/signin?callbackUrl=/organisateur/mon-profil');
+      }, SESSION_CHECK_DELAY - elapsed);
+      return () => clearTimeout(t);
+    }
+    router.push('/auth/signin?callbackUrl=/organisateur/mon-profil');
   }, [status, router]);
 
   const loadProfile = async () => {
