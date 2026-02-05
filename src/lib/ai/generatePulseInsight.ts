@@ -34,6 +34,121 @@ export interface GeneratePulseInsightInput {
   lineup?: string[];
 }
 
+function buildFrUser(input: GeneratePulseInsightInput): string {
+  const venueLine = `${input.venue?.name || 'Non spécifié'}${input.venue?.neighborhood ? ` (${input.venue.neighborhood})` : ''}`;
+  const eventTagsStr = (input.eventTags ?? []).map((t) => `${t.category}:${t.value}`).join(', ') || 'Aucun';
+  return `Génère un insight Pulse pour cet événement:
+
+Titre: ${input.title}
+Catégorie: ${input.category || 'Non spécifié'}
+Description: ${input.description || 'Non disponible'}
+Lieu: ${venueLine}
+Organisateur: ${input.organizer?.displayName || 'Non spécifié'}
+${(input.lineup?.length ?? 0) > 0 ? `Line-up: ${input.lineup!.join(', ')}` : ''}
+Tags existants: ${(input.tags ?? []).join(', ') || 'Aucun'}
+Tags structurés: ${eventTagsStr}
+
+IMPORTANT: Tu dois répondre avec un objet JSON valide contenant exactement ces champs:
+{
+  "summary": "Résumé immersif de 2-3 phrases",
+  "musicStyle": "Style musical ou null si non applicable",
+  "vibe": "Ambiance/atmosphère",
+  "expectedAudience": "Public attendu",
+  "intensity": "chill|moderate|high|very_high",
+  "danceLevel": "none|low|medium|high ou null si non applicable",
+  "culturalContext": "Contexte montréalais ou null",
+  "tags": [
+    {"category": "genre|ambiance|time|crowd|accessibility", "value": "valeur", "label": "libellé"}
+  ]
+}
+
+Génère:
+1. Un résumé immersif (2-3 phrases) qui donne envie et décrit concrètement l'événement
+2. Style musical si applicable (sinon null)
+3. Ambiance/vibe (lieu, énergie, type de soirée)
+4. Public attendu (âge, profil)
+5. Intensité (chill/moderate/high/very_high)
+6. Niveau de danse si applicable (sinon null)
+7. Contexte culturel montréalais (quartier, scène, histoire) si pertinent, sinon null
+8. Tags cliquables pour découverte (genre, ambiance, time, crowd, accessibility)`;
+}
+
+function buildEnUser(input: GeneratePulseInsightInput): string {
+  const venueLine = `${input.venue?.name || 'Not specified'}${input.venue?.neighborhood ? ` (${input.venue.neighborhood})` : ''}`;
+  const eventTagsStr = (input.eventTags ?? []).map((t) => `${t.category}:${t.value}`).join(', ') || 'None';
+  return `Generate a Pulse insight for this event:
+
+Title: ${input.title}
+Category: ${input.category || 'Not specified'}
+Description: ${input.description || 'Not available'}
+Venue: ${venueLine}
+Organizer: ${input.organizer?.displayName || 'Not specified'}
+${(input.lineup?.length ?? 0) > 0 ? `Line-up: ${input.lineup!.join(', ')}` : ''}
+Existing tags: ${(input.tags ?? []).join(', ') || 'None'}
+Structured tags: ${eventTagsStr}
+
+IMPORTANT: Respond with a valid JSON object containing exactly these fields:
+{
+  "summary": "Immersive summary in 2-3 sentences",
+  "musicStyle": "Main music style or null if not applicable",
+  "vibe": "Atmosphere/vibe",
+  "expectedAudience": "Expected audience",
+  "intensity": "chill|moderate|high|very_high",
+  "danceLevel": "none|low|medium|high or null if not applicable",
+  "culturalContext": "Montreal context or null",
+  "tags": [
+    {"category": "genre|ambiance|time|crowd|accessibility", "value": "value", "label": "label"}
+  ]
+}
+
+Generate:
+1. An immersive summary (2-3 sentences) that makes people want to go and describes the event concretely
+2. Music style if applicable (otherwise null)
+3. Atmosphere/vibe (venue, energy, type of night)
+4. Expected audience (age, profile)
+5. Intensity (chill/moderate/high/very_high)
+6. Dance level if applicable (otherwise null)
+7. Montreal cultural context (neighborhood, scene, history) if relevant, otherwise null
+8. Clickable tags for discovery (genre, ambiance, time, crowd, accessibility)`;
+}
+
+function buildEsUser(input: GeneratePulseInsightInput): string {
+  const venueLine = `${input.venue?.name || 'No especificado'}${input.venue?.neighborhood ? ` (${input.venue.neighborhood})` : ''}`;
+  const eventTagsStr = (input.eventTags ?? []).map((t) => `${t.category}:${t.value}`).join(', ') || 'Ninguna';
+  return `Genera un insight Pulse para este evento:
+
+Título: ${input.title}
+Categoría: ${input.category || 'No especificado'}
+Descripción: ${input.description || 'No disponible'}
+Lugar: ${venueLine}
+Organizador: ${input.organizer?.displayName || 'No especificado'}
+${(input.lineup?.length ?? 0) > 0 ? `Line-up: ${input.lineup!.join(', ')}` : ''}
+Etiquetas existentes: ${(input.tags ?? []).join(', ') || 'Ninguna'}
+Etiquetas estructuradas: ${eventTagsStr}
+
+IMPORTANTE: Responde con un objeto JSON válido con exactamente estos campos:
+{
+  "summary": "Resumen inmersivo de 2-3 frases",
+  "musicStyle": "Estilo musical o null si no aplica",
+  "vibe": "Ambiente/vibra",
+  "expectedAudience": "Público esperado",
+  "intensity": "chill|moderate|high|very_high",
+  "danceLevel": "none|low|medium|high o null si no aplica",
+  "culturalContext": "Contexto de Montreal o null",
+  "tags": [{"category": "genre|ambiance|time|crowd|accessibility", "value": "valor", "label": "etiqueta"}]
+}
+
+Genera:
+1. Resumen inmersivo (2-3 frases) que dé ganas de ir y describa el evento de forma concreta
+2. Estilo musical si aplica (sino null)
+3. Ambiente/vibra (lugar, energía, tipo de noche)
+4. Público esperado (edad, perfil)
+5. Intensidad (chill/moderate/high/very_high)
+6. Nivel de baile si aplica (sino null)
+7. Contexto cultural de Montreal si es relevante (sino null)
+8. Etiquetas clicables para descubrimiento`;
+}
+
 const PROMPTS = {
   fr: {
     system: `Tu es un expert de la scène culturelle montréalaise. 
@@ -48,54 +163,37 @@ Ton objectif:
 Style: Éditorial, immersif, authentique. Évite le marketing, sois descriptif et utile.
 
 IMPORTANT: Tu dois toujours répondre avec un objet JSON valide, sans aucun texte ou formatage supplémentaire.`,
-    buildUser: (input: GeneratePulseInsightInput) => `Génère un insight Pulse pour cet événement:
-
-Titre: ${input.title}
-Catégorie: ${input.category || 'Non spécifié'}
-Description: ${input.description || 'Non disponible'}
-Lieu: ${input.venue?.name || 'Non spécifié'}${input.venue?.neighborhood ? ` (${input.venue.neighborhood})` : ''}
-Organisateur: ${input.organizer?.displayName || 'Non spécifié'}
-${(input.lineup?.length ?? 0) > 0 ? `Line-up: ${input.lineup!.join(', ')}` : ''}
-Tags existants: ${(input.tags ?? []).join(', ') || 'Aucun'}
-Tags structurés: ${(input.eventTags ?? []).map((t) => `${t.category}:${t.value}`).join(', ') || 'Aucun'}
-
-IMPORTANT: Réponds avec un objet JSON valide contenant exactement: summary, musicStyle, vibe, expectedAudience, intensity, danceLevel, culturalContext, tags (array).`,
+    buildUser: buildFrUser,
   },
   en: {
     system: `You are an expert on Montreal's cultural scene. 
 You generate immersive and editorial insights about events to help people discover and quickly understand if an event suits them.
 
+Your goal:
+- Describe the atmosphere, style, expected audience in 2-3 engaging sentences
+- Explain the Montreal cultural context (neighborhood, scene, history)
+- Identify intensity (chill to very_high) and dance level if applicable
+- Generate clickable tags for discovery (genre, ambiance, time, crowd, accessibility)
+
 Style: Editorial, immersive, authentic. Avoid marketing, be descriptive and useful.
 
 IMPORTANT: You must always respond with a valid JSON object, without any additional text or formatting.`,
-    buildUser: (input: GeneratePulseInsightInput) => `Generate a Pulse insight for this event:
-
-Title: ${input.title}
-Category: ${input.category || 'Not specified'}
-Description: ${input.description || 'Not available'}
-Venue: ${input.venue?.name || 'Not specified'}${input.venue?.neighborhood ? ` (${input.venue.neighborhood})` : ''}
-Organizer: ${input.organizer?.displayName || 'Not specified'}
-${(input.lineup?.length ?? 0) > 0 ? `Line-up: ${input.lineup!.join(', ')}` : ''}
-Existing tags: ${(input.tags ?? []).join(', ') || 'None'}
-Structured tags: ${(input.eventTags ?? []).map((t) => `${t.category}:${t.value}`).join(', ') || 'None'}
-
-IMPORTANT: Respond with a valid JSON object containing exactly: summary, musicStyle, vibe, expectedAudience, intensity, danceLevel, culturalContext, tags (array).`,
+    buildUser: buildEnUser,
   },
   es: {
     system: `Eres un experto de la escena cultural de Montreal. 
-Generas insights inmersivos y editoriales sobre eventos. Estilo: editorial, inmersivo, auténtico.
+Generas insights inmersivos y editoriales sobre eventos para ayudar a las personas a descubrir y entender rápidamente si un evento les conviene.
 
-IMPORTANTE: Siempre debes responder con un objeto JSON válido.`,
-    buildUser: (input: GeneratePulseInsightInput) => `Genera un insight Pulse para este evento:
+Tu objetivo:
+- Describir el ambiente, estilo, público esperado en 2-3 frases atractivas
+- Explicar el contexto cultural de Montreal (barrio, escena, historia)
+- Identificar la intensidad (chill a very_high) y el nivel de baile si aplica
+- Generar etiquetas clicables para descubrimiento (género, ambiente, tiempo, multitud, accesibilidad)
 
-Título: ${input.title}
-Categoría: ${input.category || 'No especificado'}
-Descripción: ${input.description || 'No disponible'}
-Lugar: ${input.venue?.name || 'No especificado'}
-Organizador: ${input.organizer?.displayName || 'No especificado'}
-${(input.lineup?.length ?? 0) > 0 ? `Line-up: ${input.lineup!.join(', ')}` : ''}
+Estilo: Editorial, inmersivo, auténtico. Evita el marketing, sé descriptivo y útil.
 
-IMPORTANTE: Responde con un objeto JSON válido con: summary, musicStyle, vibe, expectedAudience, intensity, danceLevel, culturalContext, tags.`,
+IMPORTANTE: Siempre debes responder con un objeto JSON válido, sin ningún texto o formato adicional.`,
+    buildUser: buildEsUser,
   },
 } as const;
 

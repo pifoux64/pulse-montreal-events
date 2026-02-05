@@ -258,8 +258,8 @@ export default function Navigation() {
                 <span className="relative z-10 text-xs">{t('favoritesShort')}</span>
               </Link>
 
-              {/* Publier - Seulement si connecté */}
-              {session?.user && (
+              {/* Publier - Afficher aussi pendant le chargement pour éviter disparition pour organisateurs */}
+              {(status === 'loading' || session?.user) && (
                 <Link
                   href="/publier"
                   className="group relative px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-200 hover:text-white transition-all duration-300 flex items-center space-x-2 whitespace-nowrap"
@@ -618,8 +618,8 @@ export default function Navigation() {
                   <span className="font-semibold text-slate-100">{t('favorites')}</span>
                 </Link>
 
-                {/* Publier - Seulement si connecté */}
-                {session?.user && (
+                {/* Publier - Afficher aussi pendant le chargement pour éviter disparition pour organisateurs */}
+                {(status === 'loading' || session?.user) && (
                   <Link
                     href="/publier"
                     className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 transition-all duration-300 flex items-center space-x-3 group text-slate-100"
