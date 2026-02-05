@@ -111,6 +111,7 @@ const EventForm = ({
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imageUploadError, setImageUploadError] = useState<string | null>(null);
   const [isDraggingImage, setIsDraggingImage] = useState(false);
+  const [newLineupArtist, setNewLineupArtist] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Dates par défaut avec minutes à 00 (calculées une fois au montage)
@@ -734,13 +735,13 @@ const EventForm = ({
                     <div className="flex gap-2">
                       <input
                         type="text"
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
+                        value={newLineupArtist}
+                        onChange={(e) => setNewLineupArtist(e.target.value)}
                         onKeyPress={(e) => {
-                          if (e.key === 'Enter' && newTag.trim()) {
+                          if (e.key === 'Enter' && newLineupArtist.trim()) {
                             e.preventDefault();
-                            field.onChange([...lineup, newTag.trim()]);
-                            setNewTag('');
+                            field.onChange([...lineup, newLineupArtist.trim()]);
+                            setNewLineupArtist('');
                           }
                         }}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -749,9 +750,9 @@ const EventForm = ({
                       <button
                         type="button"
                         onClick={() => {
-                          if (newTag.trim()) {
-                            field.onChange([...lineup, newTag.trim()]);
-                            setNewTag('');
+                          if (newLineupArtist.trim()) {
+                            field.onChange([...lineup, newLineupArtist.trim()]);
+                            setNewLineupArtist('');
                           }
                         }}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
